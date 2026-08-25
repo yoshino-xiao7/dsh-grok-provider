@@ -1,0 +1,12 @@
+{
+  "name": "dsh-grok-provider-protocol-spike",
+  "version": "0.0.0-private",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

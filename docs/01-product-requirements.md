@@ -1,0 +1,119 @@
+# 产品需求
+
+## 1. 产品定义
+
+提供一个原创的 DeepSeek Harness LLM Provider，使 Harness 能把 Grok Build 当作模型后端使用，同时保留 Harness 自己的会话、权限、工具和附件边界。
+
+冻结的 npm 身份：
+
+- 包名：`dsh-grok-provider-yukiryou`
+- 首个精确版本：`0.1.0`
+- Provider ID：`grok`
+- 当前真机模型快照：`grok-4.6`、`grok-4.5`；生产目录动态发现账号可用的全部模型
+
+项目选择无需 scope 所有权的唯一名称，避免把脚手架和 credential owner 绑定到尚未确认的 `@yukiryou` scope。该名称在 2026-08-25 查询时未公开发布；发布前仍必须重新检查占用状态。
+
+## 2. P0 用户目标
+
+- 在 Harness `0.1.1-rc.2` 中安装精确 npm 版本后出现 Grok Provider，并动态列出当前账号通过 Grok Build 可用的全部模型。
+- macOS 和 Windows 用户使用相同的插件包，不需要平台专属脚本。
+- 用户可明确选择 `official-cli` 浏览器登录或插件自管 `managed-device` OAuth；插件能识别登录中、已登录、取消、过期、刷新失败和未登录状态。
+- 首版只接受与发布绑定 CLI 版本的 xAI 第一方 OIDC schema 相符的候选。CLI 有效配置若选择外部 auth provider、企业 OIDC、API key 或无法判定的凭据结构，插件必须显示“不受支持的认证配置”并拒绝由本插件把该 token 发给 xAI CLI Chat Proxy；这不把未签名 metadata 宣称成来源证明。
+- 支持多轮文本对话、reasoning 增量、流式文本、工具调用、usage 和明确 finish 原因。
+- Harness 中止请求时，网络流和解析器都能及时终止。
+- 热更新设置或重新认证不会让同一调用混用两组路由或凭据。
+- 凭据不进入 renderer、RPC、settings、workspace、本插件日志、错误详情、诊断包或 npm tarball；官方 CLI 自身的日志、网络与遥测属于独立 vendor boundary。
+- 本插件拥有并注入 Bearer 的推理请求只到固定 xAI origin，任何 3xx 都失败；官方 CLI 登录网络是独立信任边界。
+- 发布物在 macOS 与 Windows 的受管安装、重启和真实聊天 smoke test 中通过。
+
+## 3. P0 安全负需求
+
+首版明确禁止：
+
+- 复制第三方或 xAI 官方 CLI 的 OAuth Client ID 来冒充该客户端；自管模式只接受 xAI 明确授权给本插件的 public client ID。
+- 保存 client secret，或把自管 access/refresh token 写到 Harness credentials grant record 以外的文件、settings、环境、日志或 renderer。
+- 由插件直接启动 shell、PowerShell、`cmd /c start`、`open`、`xdg-open` 或任意 URL opener；本约束不伪装成对官方 CLI 内部行为的保证。
+- 通过 renderer/RPC 接收任意可执行路径、命令、参数、环境变量或 cwd；唯一允许的进程入口是 Host 内部验证后的官方 `grok`，参数只能来自闭合命令表。
+- 接受用户、模型、远端响应或 marketplace 配置提供的 `baseURL`。
+- 跟随重定向发送 Authorization。
+- 把 Authorization、Cookie 或 Referer 带到图片、附件或远端返回的 URL。
+- 将远端错误 body、请求 headers、完整 SSE 事件或凭据文件内容原样返回 UI。
+- 在安装期间运行 `preinstall`、`install` 或 `postinstall`。
+
+## 4. `0.1.0` 范围
+
+包含：
+
+- 通过固定 `/v1/models` 动态发现的全部账号可用 Grok Build 模型；当前真实快照为 `grok-4.6` 与 `grok-4.5`。
+- 文本输入与输出。
+- reasoning 增量（远端协议实际支持时）。
+- Harness 定义的工具调用增量。
+- 流式 usage、finish、超时、取消与稳定错误码。
+- 只读官方 Grok CLI 会话凭据。
+- 插件自管 OAuth 2.0 device flow、refresh rotation、revoke 与 Harness credential grant record。
+- Host 侧官方 CLI 登录桥：`login`、`cancel`、`status`、`logout`。
+- Web 设置页：认证状态、“使用 Grok 登录”、取消、退出、安装说明和隐私说明。
+- TUI 闭合命令：`/grok status`、`use <mode>`、`login [mode]`、`cancel`、`logout <mode>`；Web 与 TUI 共用同一认证协调器。
+
+不包含：
+
+- 自管 authorization-code loopback callback、任意 URL opener 或 client secret；自管首版只做 RFC 8628 device flow。
+- xAI API Key 模式。
+- Grok ACP 或 `grok -p` headless 代理。
+- 厂商侧 Web Search、X Search、远程抓取。
+- 图片生成、图片 URL 下载或文件落盘。
+- 图片输入；后续版本只有在 Harness attachment 限额与协议兼容测试完成后再考虑。
+- 自定义 endpoint、企业 OIDC、自定义代理或多账号。
+- 自动安装或更新 Grok CLI。
+- official-cli 在远程 Web/headless 主机自动打开浏览器的承诺；managed-device 可在另一台浏览器完成 device code，但首版仍不承诺无人值守登录。
+- Linux 的发布承诺；实现应避免无谓的平台绑定，但首版只验收 macOS 与 Windows。
+
+## 5. 用户流程
+
+### 首次使用
+
+1. 用户从 xAI 官方渠道安装与本机架构匹配的 Grok Build CLI。
+2. 用户在 Web 设置页点击“使用 Grok 登录”，或在 TUI 输入 `/grok login`。
+3. Host 从官方默认目录解析并对 `grok`/`grok.exe` 做路径、owner 和版本约束，通过 Harness `ctx.subprocess` 用固定 argv `[constrainedExecutable, "login", "--oauth"]` 启动它；该 seam 不做 shell 解释。
+4. 在受支持的标准配置下，官方 CLI 打开系统浏览器、处理 OAuth/loopback callback，并管理自己的共享凭据；它可能先清除旧会话并在成功后同步 managed config。
+5. 插件只向 UI 返回 `starting`、`running`、`succeeded`、`cancelled`、`failed` 等可观察闭合状态；不猜测“浏览器已打开”，也不回传原始 stdout/stderr、授权 URL 或 token。
+6. 登录进程以成功、失败、取消或超时结算后，插件都先等待受管树、失效缓存并重新检查凭据；只有唯一、非歧义且符合绑定 CLI 版本第一方 OIDC schema 的记录才能把当前 credential 状态标成 `valid`，其他模式失败关闭。登录尝试 outcome 与当前 credential 状态分开显示。
+7. 插件刷新固定 `/v1/models` 目录，用户选择当前账号可用模型并开始对话。
+
+### 凭据过期
+
+1. `official-cli` 凭据过期或进入固定 skew 时，在发送前以 LLM `AUTH` 失败；`managed-device` 在 Harness credential record 的排他 mutation 中尝试一次 refresh rotation。
+2. 首个 401 使内存中的 lease 失效；已经发送的 POST 不自动重放。
+3. refresh 失败时设置页显示“重新登录”；下一次明确用户动作才启动所选模式的登录。
+4. 插件不删除、不修改官方 `auth.json`。
+
+### 退出
+
+Web 的“退出”或 TUI `/grok logout` 先中止本插件所有在途 Grok 请求并推进认证 generation，再由 Host 以同样的受限方式执行官方 `grok logout`，最后清除插件内存缓存。较早请求不得在退出后重新填充旧 token。插件不直接删除或修改其他应用的凭据文件。
+
+## 6. 隐私与可观察性
+
+- 提示词、工具参数、附件、搜索词默认不写日志。
+- 普通日志只允许 endpoint ID、状态码、耗时、字节计数、插件错误码和随机 diagnostic ID；Harness RPC correlation 由 carrier 内部所有。
+- 设置页明确说明提示词与工具结果会发送给 xAI Grok Build 服务。
+- 插件只能保证自己不声明厂商侧搜索工具，不能保证服务商内部永不检索；此残余行为需依据 xAI 当时文档披露。
+
+## 7. 成功指标
+
+- 受管市场安装结果为 `artifact-verified`。
+- macOS arm64 和 Windows x64 的自动测试通过。macOS x64 不在当前官方 CLI 支持矩阵，也不属于 `0.1.0` 承诺。
+- 至少一台真实 macOS 和一台真实 Windows 设备完成安装、登录、流式对话、工具调用、中止、重启与重新认证 smoke。
+- canary secret 扫描确认日志、RPC、错误、临时文件和打包产物无泄漏。
+- 协议测试确认第二个测试 origin 永远收不到 Authorization。
+
+## 8. 发布阻断项
+
+任一条件不满足都不得发布：
+
+- xAI 官方文档不再明确允许使用官方会话凭据调用 CLI Chat Proxy，或 xAI 未向自管模式提供合法 public client ID/书面许可。
+- 服务条款或官方答复不允许独立插件使用该路径。
+- 任一真实发现模型的基础流无法映射，或声明支持的工具调用无法无损映射到 Harness。
+- 凭据只能通过不安全的 renderer、RPC 或明文复制方式获得。
+- official-cli 凭据筛选无法阻止 schema 不符 token 进入固定 Proxy，或 managed-device 的轮换/持久化无法通过并发与泄漏测试。
+- macOS 或 Windows 任一平台验收失败。
+- GitHub repository 或 provenance 发布链未确定，或冻结包名在发布前被他人占用。
