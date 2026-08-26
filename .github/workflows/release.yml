@@ -25,18 +25,13 @@ jobs:
           RELEASE_TAG: ${{ inputs.tag }}
         run: |
           set -euo pipefail
-          if [[ "$RELEASE_TAG" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
-            npm_dist_tag=latest
-          elif [[ "$RELEASE_TAG" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)-rc\.(0|[1-9][0-9]*)$ ]]; then
-            npm_dist_tag=next
-          else
-            echo "release tag must be v<major>.<minor>.<patch> or v<major>.<minor>.<patch>-rc.<number>" >&2
+          if [[ ! "$RELEASE_TAG" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+            echo "release tag must be v<major>.<minor>.<patch>" >&2
             exit 1
           fi
           release_version="${RELEASE_TAG#v}"
           echo "RELEASE_VERSION=$release_version" >> "$GITHUB_ENV"
           echo "ARTIFACT_NAME=dsh-grok-provider-$release_version.tgz" >> "$GITHUB_ENV"
-          echo "NPM_DIST_TAG=$npm_dist_tag" >> "$GITHUB_ENV"
 
       - name: Download immutable release artifact
         shell: bash
@@ -50,11 +45,7 @@ jobs:
             --pattern "$ARTIFACT_NAME" \
             --dir release
           is_prerelease="$(gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --json isPrerelease --jq .isPrerelease)"
-          if [[ "$NPM_DIST_TAG" = next ]]; then
-            test "$is_prerelease" = true
-          else
-            test "$is_prerelease" = false
-          fi
+          test "$is_prerelease" = false
 
       - name: Verify artifact digest and manifest
         shell: bash
@@ -89,5 +80,5 @@ jobs:
           node "$RUNNER_TEMP/npm-cli/node_modules/npm/bin/npm-cli.js" \
             publish "./release/$ARTIFACT_NAME" \
             --access public \
-            --tag "$NPM_DIST_TAG" \
+            --tag latest \
             --provenance

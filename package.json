@@ -1,6 +1,6 @@
 {
   "name": "dsh-grok-provider",
-  "version": "0.1.2-rc.1",
+  "version": "0.1.2",
   "description": "Clean-room Grok Build provider for DeepSeek Harness with official CLI browser authentication",
   "type": "module",
   "license": "MIT",

@@ -1,12 +1,13 @@
 # Changelog
 
-## 0.1.2-rc.1 - 2026-08-26
+## 0.1.2 - 2026-08-26
 
 - Fix Windows browser sign-in for official Grok Build CLI `0.2.82`, which `0.1.1` rejected before invoking `login --oauth`.
 - Replace the complete CLI-version allowlist with bounded version diagnostics plus a `login --help` capability probe for the independent `--oauth` option.
 - Keep the security boundary closed: official default path and executable checks, fixed argv, scrubbed environment, no plugin shell, post-login production OIDC credential validation, and pinned Grok Build endpoints remain mandatory.
 - Add regression coverage for the real Windows `0.2.82` output shape, compatible unknown versions, missing OAuth capability, and malformed version output.
-- Require Windows x64 candidate acceptance before publication because this release changes the Windows authentication path.
+- Document Windows x64 as code- and CI-supported without claiming independent real-device acceptance; publish later stable fixes for any discovered defect.
+- Adopt stable-only releases: future defects are resolved by incrementing the stable version instead of publishing prereleases.
 
 ## 0.1.1 - 2026-08-26
 
