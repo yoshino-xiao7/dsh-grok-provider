@@ -31,6 +31,7 @@ types/*
 grok-provider.patch.yml
 package.json
 README.md
+README.en.md
 LICENSE
 CHANGELOG.md
 ```
@@ -42,7 +43,7 @@ CHANGELOG.md
 - auth.json、token、真实 prompt/响应和用户路径。
 - symlink、hardlink、socket 或设备文件。
 
-`docs/` 与根 `README.md` 一起进入 tarball，使安装后的架构、安全边界和发布门禁链接保持可读。发布前的证据文档只记录脱敏事实、hash 与固定公开地址，不得包含 token、真实 prompt/响应或用户身份数据。
+`docs/` 与根目录中相互链接的中文默认页 `README.md`、英文版 `README.en.md` 一起进入 tarball，使安装后的架构、安全边界和发布门禁链接保持可读。发布前的证据文档只记录脱敏事实、hash 与固定公开地址，不得包含 token、真实 prompt/响应或用户身份数据。
 
 目标为零普通 runtime dependencies。DSH peer 精确使用 `0.1.1-rc.2`；Cordis `4.0.1`、Schemastery `3.18.1` 由目标桌面 Runtime snapshot 满足。`@deepseek-ai/dsh-subprocess`、settings、commands、connection 和 client UI/locale 等 profile-specific peer 通过 `peerDependenciesMeta.optional: true` 标注，并有 Web/TUI/headless 缺失-peer 测试。插件不打包本地 subprocess 实现。
 

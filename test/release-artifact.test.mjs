@@ -24,6 +24,7 @@ test("the exact 0.1.0 manifest exports runtime artifacts and Web loader metadata
     "types",
     "grok-provider.patch.yml",
     "README.md",
+    "README.en.md",
     "LICENSE",
     "CHANGELOG.md",
   ])
@@ -32,6 +33,12 @@ test("the exact 0.1.0 manifest exports runtime artifacts and Web loader metadata
   assert.equal(manifest.devDependencies["@deepseek-ai/dsh-credentials"], undefined)
   assert.equal(manifest.scripts.prepack, "npm run build")
   assert.equal(manifest.scripts["pack:check"], "npm pack --dry-run --json")
+
+  const chineseReadme = await fs.readFile(path.join(root, "README.md"), "utf8")
+  const englishReadme = await fs.readFile(path.join(root, "README.en.md"), "utf8")
+  assert.match(chineseReadme, /\[English\]\(README\.en\.md\)/u)
+  assert.match(englishReadme, /\[简体中文\]\(README\.md\)/u)
+  assert.match(chineseReadme, /## 身份认证/u)
 
   const host = await fs.readFile(path.join(root, "dist/host/index.mjs"), "utf8")
   const client = await fs.readFile(path.join(root, "dist/client/client.js"), "utf8")
