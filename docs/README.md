@@ -2,7 +2,7 @@
 
 - 状态：**`0.1.1` 发布线已冻结：修正发布事实，并启用长期 npm Trusted Publisher OIDC 流程**
 - 当前版本：`0.1.1`
-- 发布分支：`yukiryou/v0.1.1`
+- 下一版本分支：`yukiryou/v0.1.2`
 - 兼容基线：DeepSeek Harness `0.1.1-rc.2`
 - 目标平台：macOS arm64、Windows x64
 

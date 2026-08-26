@@ -185,7 +185,7 @@ scoped 包首次公开发布必须保留 `--access public`。
 npm 发布不会自动成为受管可安装项。`0.1.0` 当前发现状态：
 
 - GitHub 仓库已添加 DeepSeek Harness 官方推荐的 `dsh-plugin` 与 `dsh` Topics，可被 Topic 驱动来源发现。
-- YukiRyou curated catalog 已加入精确 `dsh-grok-provider@0.1.0`，只标记完成真实验收的 `darwin-arm64`。
+- YukiRyou curated catalog 已加入精确 `dsh-grok-provider@0.1.0`，只标记完成真实验收的 `darwin-arm64`。`0.1.1` 是文档与发布流程修正版，按仓库所有者决定不重复真机；catalog schema 又只允许精确版本 `installed` 语义，因此条目保持 `0.1.0`，不把制品校验或模块加载冒充受管 Harness 真机安装。
 - 公共 `awesome-dsh-plugin` curated 目录要求仓库创建满 1 天且至少 10 个提交；提交数已满足，需在年龄门槛满足后提交外部 PR。
 - Windows x64 仍需对 Registry 精确 `0.1.0` 完成首次 production inspector、安装、重启、浏览器登录、聊天、工具调用和重新认证；完成前保持“代码支持、真机未验证”。
 

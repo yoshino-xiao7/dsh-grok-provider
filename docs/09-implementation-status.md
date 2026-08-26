@@ -2,7 +2,7 @@
 
 状态日期：2026-08-26
 当前发布线：`dsh-grok-provider@0.1.1`
-发布分支：`yukiryou/v0.1.1`
+下一版本分支：`yukiryou/v0.1.2`
 
 ## 已实现
 
@@ -50,3 +50,12 @@
 Windows x64 真机不再是 `0.1.0` 预发布阻断项。首次发布后必须从 Registry 安装精确 `0.1.0`，完成官方安装物 Authenticode/hash、浏览器登录、取消/超时/卸载、动态全部模型、聊天、reasoning replay、工具调用和 production inspector；完成前对 Windows 保持“代码支持、真机未验证”标识。`0.1.1` 及后续版本不要求重复真机验证，以两平台 CI、契约测试、干净安装和制品校验作为常规门禁。
 
 仓库所有者已于 2026-08-26 明确授权发布精确 `dsh-grok-provider@0.1.1`。该版本只修正发布事实与长期发布流程，不改变运行时协议或能力边界。
+
+## `0.1.1` 发布结果
+
+- 受保护 PR #3 合并后的 release commit 为 `a973828bcdd906836b68018f7592e73f769f9c3e`，`v0.1.1` 精确指向该 commit。
+- GitHub Release 采用中文在前、英文在后且正文不重复版本标题，只附加唯一 `dsh-grok-provider-0.1.1.tgz`。
+- 正式 tarball 为 48 个文件、93,992 bytes；SHA-256 为 `9bcd2362af369ace69763cfed11d843d9574a43b134c7e194e589750ba4081c7`，npm SRI 为 `sha512-O2Rh21NBZkqwXu7iUWKi8OwKzZaOHZ5sB0+Ny0w9VYgxXzVRXWHtsPfqmz4EpY6Cn8kSBsiJ3jVOJT/UQpEFKw==`。
+- Trusted Publisher OIDC workflow run `32936282879` 发布成功；npm `latest` 指向 `0.1.1`，provenance 绑定 canonical repository、`release.yml`、`yukiryou/main` 与上述 release commit。
+- Registry 重新下载文件与本地/GitHub Release 候选逐字节一致；9 个 Registry 签名与 1 个 provenance attestation 验证通过；npm 页面 README 已回读为 `0.1.1` 最终公开状态。
+- YukiRyou catalog 仍精确保留已完成受管 Harness 真机安装的 `0.1.0`。其 schema 不允许把仅完成完整性、provenance、Node 24 干净安装和模块加载的 `0.1.1` 标成 `installed`；遵循“不重复真机验证”决定，因此不做虚假升级。

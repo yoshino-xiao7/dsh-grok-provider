@@ -47,7 +47,7 @@
 - [x] 本地完整测试 57 项通过（55 pass、2 项 Windows-only 按预期跳过），`npm audit --omit=dev` 为 0 vulnerability，GitHub macOS/Windows CI 均通过。
 - [x] 从提交 `d35bda3402db5b16edd83d81420f1068006254a8` 生成预审 tarball；48 个文件、93,652 bytes，SHA-256 `bdaf7c32a22afd74e1c526e07c91f441942fedab3e0d34c01134fedda6e323b9`，SRI `sha512-ENpeVSsHDiByG6Cf03pl1j4eRHAsYQkrwU4sVAMct4D2aFXoZoFTivP0ZpwaM1tzD0NdXlPzlLdtlSd0F48wCw==`；同一文件在全新临时目录完成 peer 安装、manifest 回读与 Host 模块加载。
 - [x] 仓库所有者于 2026-08-26 明确授权发布精确 `dsh-grok-provider@0.1.1`；README/状态页已切换为最终公开事实，CHANGELOG 日期已冻结。
-- [ ] 从最终 release commit 生成并验收唯一发布 tarball；预审 tarball 不进入 Release。
-- [ ] 完成 GitHub Release、OIDC npm 发布和 Registry/provenance 回读。
+- [x] 从最终 release commit `a973828bcdd906836b68018f7592e73f769f9c3e` 生成并验收唯一发布 tarball；预审 tarball 未进入 Release。正式制品 48 个文件、93,992 bytes，SHA-256 `9bcd2362af369ace69763cfed11d843d9574a43b134c7e194e589750ba4081c7`，SRI `sha512-O2Rh21NBZkqwXu7iUWKi8OwKzZaOHZ5sB0+Ny0w9VYgxXzVRXWHtsPfqmz4EpY6Cn8kSBsiJ3jVOJT/UQpEFKw==`。
+- [x] GitHub Release、Trusted Publisher OIDC npm 发布、Registry 逐字节回读、签名与 provenance 验证全部完成；npm `latest` 指向 `0.1.1`。
 
 English summary: every release must close documentation, security, tests, deterministic artifact, bilingual release notes, OIDC identity, integrity, and post-publish readback gates before publication. A green checklist never replaces explicit owner approval.
