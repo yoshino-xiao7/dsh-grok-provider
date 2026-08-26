@@ -70,6 +70,6 @@ English summary: every release must close documentation, security, tests, determ
 - [x] 仓库所有者明确授权直接发布精确稳定 `dsh-grok-provider@0.1.2`，Windows 独立真机验收不再作为阻断项。
 - [x] 仓库所有者决定以后不再发行预发行版；正式版缺陷使用新的递增稳定版本修复。
 - [x] 中英文 README、正式 Release 说明、安全状态和发布政策已同步，并公开披露 Windows 独立真机尚未完成。
-- [ ] 稳定 manifest、稳定版专用 Trusted Publisher workflow、完整测试、审计与双平台 CI 通过。
+- [x] 稳定 manifest、稳定版专用 Trusted Publisher workflow、完整测试、审计与双平台 CI 通过；CI run `32980619235` 的 macOS 14 与 Windows 2022 job 均成功。
 - [ ] 版本分支经 PR 合并 `yukiryou/main`，从 release commit 冻结唯一稳定 tarball与不可变 `v0.1.2` tag。
 - [ ] GitHub Release、npm `latest`、Registry 逐字节回读、签名与 provenance 验证完成。
