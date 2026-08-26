@@ -2,6 +2,8 @@
 
 本文件是每个 npm 版本的强制发布门禁。准备者必须从版本分支逐项完成并保存证据；未全部关闭前不得合并发布基线、创建最终 tag、发布 GitHub Release 或执行 `npm publish`。发布还需要仓库所有者明确授权，检查表全绿本身不构成发布授权。
 
+预发行候选是例外流程：`vX.Y.Z-rc.N` 可保留在对应版本分支并发布到 npm `next`，不得合并稳定基线或移动 `latest`。它仍必须完成双语文档、唯一制品、完整性、provenance、Registry 回读和精确预发行版本授权。稳定 `vX.Y.Z` 继续执行下列完整合并门禁。
+
 ## 每版发布前
 
 - [ ] 冻结精确稳定版本，并同步 `package.json`、CHANGELOG、中英文 README、release notes 和候选文件名。
@@ -51,3 +53,12 @@
 - [x] GitHub Release、Trusted Publisher OIDC npm 发布、Registry 逐字节回读、签名与 provenance 验证全部完成；npm `latest` 指向 `0.1.1`。
 
 English summary: every release must close documentation, security, tests, deterministic artifact, bilingual release notes, OIDC identity, integrity, and post-publish readback gates before publication. A green checklist never replaces explicit owner approval.
+
+## `0.1.2-rc.1` 预发行记录
+
+- [x] 使用版本分支 `yukiryou/v0.1.2`，不提前合并稳定基线。
+- [x] Windows `0.2.82` 回归、macOS/Windows CI、生产依赖审计与 dry-run 打包通过。
+- [x] 仓库所有者明确授权发布精确 `dsh-grok-provider@0.1.2-rc.1` 到 npm `next`；未授权稳定 `0.1.2`。
+- [ ] 冻结唯一预发行 tarball、GitHub prerelease、SHA-256/base64 SHA-512 与 provenance。
+- [ ] Registry 回读确认 `next=0.1.2-rc.1`、`latest=0.1.1`，并与 GitHub 候选逐字节一致。
+- [ ] Windows x64 从 npm 精确预发行版本完成浏览器登录、凭据复验、模型刷新与最小对话。

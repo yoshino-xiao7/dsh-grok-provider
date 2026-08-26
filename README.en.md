@@ -4,7 +4,7 @@
 
 Use an already authenticated official Grok Build account from DeepSeek Harness, with dynamic model discovery, streaming reasoning, tool calls, and an account quota/model capability dashboard.
 
-> Unofficial community project; not affiliated with xAI or DeepSeek Harness. The current published version is `0.1.1`. The `0.1.2` candidate fixes Windows login compatibility and will not be published before Windows real-device acceptance.
+> Unofficial community project; not affiliated with xAI or DeepSeek Harness. The current stable version is `0.1.1`. `0.1.2-rc.1` is a prerelease only for Windows login acceptance and does not replace npm `latest`.
 
 ## What it provides
 
@@ -41,7 +41,7 @@ The official CLI opens a browser on first use. The provider supports only the of
 Install the published exact version from npm:
 
 ```sh
-dsh plugin --profile web add dsh-grok-provider@0.1.1
+dsh plugin --profile web add dsh-grok-provider@0.1.2-rc.1
 dsh web
 ```
 
@@ -97,8 +97,8 @@ Uninstalling the provider does not remove the official Grok CLI or directly modi
 
 ## Sources and discovery
 
-- Exact npm version: [dsh-grok-provider@0.1.1](https://www.npmjs.com/package/dsh-grok-provider/v/0.1.1)
-- GitHub release and integrity values: [v0.1.1](https://github.com/yoshino-xiao7/dsh-grok-provider/releases/tag/v0.1.1)
+- Exact npm prerelease: [dsh-grok-provider@0.1.2-rc.1](https://www.npmjs.com/package/dsh-grok-provider/v/0.1.2-rc.1)
+- GitHub prerelease and integrity values: [v0.1.2-rc.1](https://github.com/yoshino-xiao7/dsh-grok-provider/releases/tag/v0.1.2-rc.1)
 - GitHub community discovery: the repository carries the DeepSeek Harness-recommended `dsh-plugin` and `dsh` topics
 - YukiRyou managed source: [deepseek-yukiryou-plugin-catalog](https://github.com/yoshino-xiao7/deepseek-yukiryou-plugin-catalog), following the exact verified stable version and currently marking only verified macOS arm64
 

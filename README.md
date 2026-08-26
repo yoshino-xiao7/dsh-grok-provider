@@ -4,7 +4,7 @@
 
 让 DeepSeek Harness 使用你已登录的官方 Grok Build 账号：动态模型发现、流式推理、工具调用，以及账号额度与模型能力面板。
 
-> 非官方社区项目，与 xAI 或 DeepSeek Harness 官方无隶属关系。当前发布版本为 `0.1.1`；`0.1.2` 候选正在修复 Windows 登录兼容性，完成 Windows 真机验收前不会发布。
+> 非官方社区项目，与 xAI 或 DeepSeek Harness 官方无隶属关系。当前稳定版本为 `0.1.1`；`0.1.2-rc.1` 是仅供 Windows 登录真机验收的预发行版本，不会替代 npm `latest`。
 
 ## 它解决什么问题
 
@@ -41,7 +41,7 @@ grok models
 从 npm 安装已发布的精确版本：
 
 ```sh
-dsh plugin --profile web add dsh-grok-provider@0.1.1
+dsh plugin --profile web add dsh-grok-provider@0.1.2-rc.1
 dsh web
 ```
 
@@ -97,8 +97,8 @@ dsh web
 
 ## 项目来源与发现
 
-- npm 精确版本：[dsh-grok-provider@0.1.1](https://www.npmjs.com/package/dsh-grok-provider/v/0.1.1)
-- GitHub 发行版与校验值：[v0.1.1](https://github.com/yoshino-xiao7/dsh-grok-provider/releases/tag/v0.1.1)
+- npm 精确预发行版本：[dsh-grok-provider@0.1.2-rc.1](https://www.npmjs.com/package/dsh-grok-provider/v/0.1.2-rc.1)
+- GitHub 预发行版与校验值：[v0.1.2-rc.1](https://github.com/yoshino-xiao7/dsh-grok-provider/releases/tag/v0.1.2-rc.1)
 - GitHub 社区发现：仓库已添加 DeepSeek Harness 官方推荐的 `dsh-plugin` 与 `dsh` Topics
 - YukiRyou 受管来源：[deepseek-yukiryou-plugin-catalog](https://github.com/yoshino-xiao7/deepseek-yukiryou-plugin-catalog)，跟随已验证的精确稳定版本，当前只标记已验证的 macOS arm64
 
