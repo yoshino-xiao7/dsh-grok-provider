@@ -1,12 +1,13 @@
 import { AuthDriverUnavailableError, AuthLoginBusyError } from "./auth-controller.mjs"
 
-export function createAuthRpcHandler({ controller }) {
+export function createAuthRpcHandler({ controller, dashboard }) {
   if (
     !controller ||
     typeof controller.status !== "function" ||
     typeof controller.beginLogin !== "function" ||
     typeof controller.cancel !== "function" ||
-    typeof controller.logout !== "function"
+    typeof controller.logout !== "function" ||
+    typeof dashboard !== "function"
   ) throw new TypeError("Invalid Grok auth RPC controller")
 
   return async function handleAuthRpc(endpoint, payload, signal) {
@@ -16,6 +17,10 @@ export function createAuthRpcHandler({ controller }) {
         if (!hasExactKeys(payload, [])) return badRequest()
         const status = serializable(await controller.status())
         return ok({ kind: "status", status })
+      }
+      if (endpoint === "dashboard") {
+        if (!hasExactKeys(payload, [])) return badRequest()
+        return ok({ kind: "dashboard", dashboard: serializable(await dashboard({ signal })) })
       }
       if (endpoint === "login") {
         if (!hasExactKeys(payload, [])) return badRequest()

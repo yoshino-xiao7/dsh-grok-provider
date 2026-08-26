@@ -40,6 +40,7 @@
 - [ADR-0003：已被取代的双认证设计](./adr/0003-dual-authentication.md)
 - [ADR-0004：动态全模型目录](./adr/0004-dynamic-model-catalog.md)
 - [ADR-0005：官方 CLI 单一认证路径](./adr/0005-official-cli-only-authentication.md)
+- [ADR-0006：账户额度与模型能力面板](./adr/0006-account-dashboard.md)
 
 ## 开发门禁
 
@@ -48,6 +49,7 @@
 ## 官方依据
 
 - [xAI Grok Build 官方仓库](https://github.com/xai-org/grok-build)
+- [Grok Build 官方 billing extension：额度比例、周期与固定 CLI Proxy 请求](https://github.com/xai-org/grok-build/blob/main/crates/codegen/xai-grok-shell/src/extensions/billing.rs)
 - [Grok Build 官方 README：认证、auth.json API 调用、Headless 与 ACP](https://github.com/xai-org/grok-build/blob/main/crates/codegen/xai-grok-shell/README.md)
 - [Grok Build 官方认证指南：browser login 与凭据边界](https://github.com/xai-org/grok-build/blob/main/crates/codegen/xai-grok-pager/docs/user-guide/02-authentication.md)
 - [`dsh-codex`：Web/TUI 登录体验参考，不作为代码来源](https://github.com/Yan-Zero/dsh-codex)
@@ -55,4 +57,4 @@
 - [RFC 9700：OAuth 2.0 Security Best Current Practice](https://www.rfc-editor.org/rfc/rfc9700)
 - DeepSeek Harness `0.1.1-rc.2` 内置公开类型：`@deepseek-ai/dsh-llm`、`@deepseek-ai/dsh-subprocess`、`@deepseek-ai/dsh-settings`、`@deepseek-ai/dsh-client-connection`
 
-外部文档核对日期：2026-08-25。正式开发和发布前必须重新核对上游接口与服务条款。
+外部文档核对日期：2026-08-26。正式发布前必须重新核对上游接口与服务条款。

@@ -12,6 +12,7 @@ import {
   createCredentialSource,
 } from "../internal/credential-source.mjs"
 import { AuthModeUnavailableError } from "../internal/auth-registry.mjs"
+import { createAccountDashboard } from "../internal/account-dashboard.mjs"
 import { createAuthController } from "../internal/auth-controller.mjs"
 import { createAuthRpcHandler } from "../internal/auth-rpc.mjs"
 import { createGrokAdapter } from "../internal/grok-adapter.mjs"
@@ -71,7 +72,12 @@ export function apply(ctx) {
     randomUUID,
   })
   const commandHandler = createGrokCommandHandler({ controller: authController })
-  const authRpcHandler = createAuthRpcHandler({ controller: authController })
+  const dashboard = createAccountDashboard({
+    listModels: () => runtime.adapter.listModels("grok"),
+    getBilling: ({ signal } = {}) => runtime.auth.getGeneration().transport.getBilling({ signal }),
+    now: () => new Date(),
+  })
+  const authRpcHandler = createAuthRpcHandler({ controller: authController, dashboard })
 
   ctx.inject(["subprocess"], (subprocessCtx) => {
     const officialAuth = createOfficialCliAuth({

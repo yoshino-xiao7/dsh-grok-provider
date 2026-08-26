@@ -175,11 +175,14 @@ ctx.connection.rpc.handle(
 闭合方法：
 
 - `status`
+- `dashboard`
 - `login`
 - `cancel`
 - `logout`
 
 `status`、`login`、`logout` 只接受空对象；`cancel` 只接受当前公开状态中的 `sessionId`。不存在 `authMode`、模式选择、OAuth URL、device code、access/refresh token、identity 或 token endpoint 字段。
+
+`dashboard` 也只接受空对象，并且只在 `status.available === true` 时由页面调用。它返回脱敏模型 capability 和额度摘要；不得返回 credential metadata、用户身份、上游原文、headers 或 endpoint。额度重置时间只能来自 billing period end，不得使用 OAuth credential expiry。
 
 业务状态不能冒充 rc.2 的 `RpcErrorCode`。成功分支承载闭合 outcome：
 

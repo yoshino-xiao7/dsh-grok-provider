@@ -29,6 +29,10 @@ test("the browser bundle registers one localized loopback-only Grok settings sec
   let definition
   const source = await fs.readFile(path.join(root, "dist/client/client.js"), "utf8")
   assert.doesNotMatch(source, /managed-device|authMode|verificationUri|deviceCode/u)
+  assert.match(source, /使用额度/u)
+  assert.match(source, /当前账号可用的模型/u)
+  assert.match(source, /call\("dashboard"\)/u)
+  assert.doesNotMatch(source, /userId|user_id|subscriptionTier|prepaidBalance/u)
   vm.runInNewContext(source, {
     window: { __ModuleLoader__: { load(value) { definition = value } } },
     document: {

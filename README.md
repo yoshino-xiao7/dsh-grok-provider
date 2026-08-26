@@ -19,7 +19,7 @@ The Host invokes only the verified default executable with fixed `--version`, `l
 
 ## User surfaces
 
-The bundle contributes a bilingual, responsive `Grok Build` settings page on a loopback Harness Web surface. It supports status, official CLI browser login, cancellation and double-confirmed logout. Tokens never reach the renderer.
+The bundle contributes a bilingual, responsive `Grok Build` settings page on a loopback Harness Web surface. It supports status, official CLI browser login, cancellation and double-confirmed logout, plus a live account dashboard with billing-period reset time and dynamic model capability cards. It restores an omitted protobuf zero percentage only when a complete typed current period makes that meaning unambiguous; other missing values remain unknown. Tokens and identity never reach the renderer.
 
 The TUI exposes the closed command grammar:
 
@@ -40,11 +40,11 @@ If a future account exposes an unverified backend, discovery fails closed instea
 
 ## Security boundary
 
-- Inference endpoints are compile-time fixed HTTPS origins and reject redirects.
+- Model, inference and billing endpoints are compile-time fixed HTTPS origins and reject redirects.
 - Renderer/RPC inputs cannot provide commands, executable paths, environment variables, credential paths or base URLs.
 - Official login uses a scrubbed environment, bounded output and plugin-owned deadlines; cancellation and capability teardown wait for the spawned process tree.
 - The official CLI and its valid user/system/MDM configuration remain a trusted local component. The plugin's no-shell guarantee covers its own spawn boundary, not opaque behavior inside the official CLI.
-- Official `auth.json` contains a refresh token in its raw bytes. The Host necessarily reads those bounded bytes transiently, ignores the refresh token and identity fields, and does not log or persist them.
+- Official `auth.json` contains a refresh token and identity metadata in its raw bytes. The Host necessarily reads those bounded bytes transiently, ignores the refresh token, and uses `user_id` only as the official fixed billing request requires; neither is logged, persisted by the plugin or returned to the renderer.
 - The plugin does not create a second credential record; login persistence remains entirely owned by the official CLI.
 
 Full architecture, threat model, tests, evidence and unresolved release blockers live in [`docs/`](docs/README.md).

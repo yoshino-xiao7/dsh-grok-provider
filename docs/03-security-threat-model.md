@@ -25,7 +25,7 @@ Host AuthCoordinator
   ├─ OfficialSessionCredentialSource
   │    └─ 只读 ~/.grok/auth.json
   └─ PinnedGrokTransport
-       └─ cli-chat-proxy.grok.com
+       └─ cli-chat-proxy.grok.com（models / responses / billing?format=credits）
 ```
 
 受保护资产：
@@ -53,6 +53,8 @@ Host AuthCoordinator
 | Authorization 被继承到远端 URL | 账号接管 | `0.1.0` 无图片下载和任意 URL 请求；transport 不接受 URL | P0 |
 | SSE/压缩响应无限增长 | 内存、CPU、磁盘 DoS | 字节、行、事件、总时长和 idle timeout 双重上限 | P0 |
 | 原始远端错误返回 UI | token、账号或内部信息泄漏 | 只返回插件稳定错误码和安全文案；Harness RPC correlation 留在 carrier 内部 | P0 |
+| billing 响应或 credential metadata 越界进入 renderer | 身份、订阅或凭据泄漏 | Host 严格抽取百分比、周期与模型 capability；拒绝/忽略 identity、balance、history、headers、URL 和原始响应 | P0 |
+| token 到期被误标为额度重置 | 错误产品决策、误导用户 | 重置时间只接受 billing period end；credential `expires_at` 不进入 dashboard DTO | P0 |
 | 凭据轮换期间读到半写文件 | 认证失败或旧 token 重放 | 只接受完整 JSON；短退避重读；不写回；已发送请求不自动重放 | P1 |
 | CLI 更新改变协议或文件格式 | 静默错误 | 登录前后重查 realpath/identity/version；只允许发布时冻结的有限精确版本集合，未知更高/更低版本都失败；CLI 自身更新行为属于 vendor boundary | P1 |
 | 未授权复用官方/第三方 OAuth Client ID | 客户端冒充、封禁或条款违约 | 包中不存在独立 OAuth client；只调用官方 CLI 的公开登录命令 | P0 |

@@ -54,6 +54,7 @@ export function createCredentialSource({ contract, load, now, refresh }) {
       let rawText
       let parsed
       let accessToken
+      let metadata
       let refreshAttempted = false
 
       try {
@@ -92,6 +93,9 @@ export function createCredentialSource({ contract, load, now, refresh }) {
             if (!isFutureDateTime(record.expires_at, currentTime)) throw new CredentialRefreshRequiredError()
 
             accessToken = record.key
+            metadata = Object.freeze({
+              ...(isHeaderValue(record.user_id) ? { userId: record.user_id } : {}),
+            })
           } catch (error) {
             if (
               error instanceof CredentialRefreshRequiredError &&
@@ -120,8 +124,9 @@ export function createCredentialSource({ contract, load, now, refresh }) {
           }
         }
 
-        return await operation(accessToken)
+        return await operation(accessToken, metadata)
       } finally {
+        metadata = undefined
         accessToken = undefined
         parsed = undefined
         rawText = undefined
@@ -129,6 +134,10 @@ export function createCredentialSource({ contract, load, now, refresh }) {
       }
     },
   })
+}
+
+function isHeaderValue(value) {
+  return typeof value === "string" && value.length > 0 && value.length <= 16 * 1024 && !/[\r\n\0]/u.test(value)
 }
 
 function utf8ByteLength(value) {

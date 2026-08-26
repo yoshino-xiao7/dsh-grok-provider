@@ -33,8 +33,9 @@ test("a unique Grok CLI 1.0.5 production OIDC record authorizes one operation", 
     now: () => new Date("2030-01-01T00:30:00.000Z"),
   })
 
-  const result = await source.withAccessToken(async (token) => {
+  const result = await source.withAccessToken(async (token, metadata) => {
     assert.equal(token, "fixture-access-token")
+    assert.deepEqual(metadata, { userId: "fixture-user-id" })
     return { authorized: true }
   })
 

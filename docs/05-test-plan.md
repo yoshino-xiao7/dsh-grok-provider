@@ -104,6 +104,13 @@
 - `listModels()` 返回全部合法去重记录；`resolveModel()` 对未列出 ID 做一次有界刷新，但目录缺失本身不被误当作路由拒绝。
 - macOS/Windows 真机将插件目录与同一账号同时刻的 `grok models` 对比，不得漏模型；当前 fixture 包含 `grok-4.6` 与 `grok-4.5`，不把它们当永久全集。
 
+### 账户额度
+
+- 新版 credits shape 有显式 `creditUsagePercent` 时直接使用，并拒绝非有限数或 0–100 之外的值。
+- 只有官方 weekly/monthly `currentPeriod` 同时具有有效 `start`、`end` 时，才把缺失百分比恢复为 proto3 省略的 `0%`；周期不完整或类型未知时保持 unknown。
+- 旧版 shape 仅在 `monthlyLimit.val > 0` 且 `0 <= used.val <= monthlyLimit.val` 时计算百分比。
+- reset 只来自 billing 周期结束时间，不得使用 OAuth token expiry；原始 billing、identity、balance 与 history 不进入 renderer。
+
 ### Codec 与 adapter
 
 - 文本、reasoning、交错 block 和 UTF-8 边界。
@@ -190,6 +197,9 @@ Web 与 TUI 分别验证：
 - subprocess service 替换时对应 child fiber 卸载，login tree 终止并 `waitForExit()` 后才重新安装 capability。
 - teardown wait 有界；`waitForExit()` 返回 `false` 时 HMR 不永久挂起，登录 capability 保持隔离并要求 Host 重启或 subprocess service replacement，不能自动启动第二棵树。
 - Web、TUI、headless profile 分别覆盖缺失 optional peer/service；缺少 subprocess 时登录按钮/命令明确不可用，但已有合格会话的 Provider 可安全启动。
+- Web dashboard 只在 credential ready 后请求固定 billing/models；分别覆盖百分比+重置时间、仅重置时间、旧 monthly counters、空 config 与两个分支独立失败。
+- dashboard RPC 与 client bundle 断言不含 token、credential path、`user_id`、email、team/principal ID、balance、history、原始响应或远端错误。
+- 视觉验收覆盖桌面双列模型卡和 `max-width:680px` 单列规则；刷新操作不得触发重复登录或持久化额度。
 
 ## 8. 打包与供应链
 

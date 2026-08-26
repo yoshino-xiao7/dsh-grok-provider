@@ -2,6 +2,7 @@ const BASE_URL = "https://cli-chat-proxy.grok.com"
 const MAX_JSON_RESPONSE_BYTES = 256 * 1024
 const MAX_REQUEST_BYTES = 16 * 1024 * 1024
 const DEFAULT_MODEL_TIMEOUT_MS = 30 * 1000
+const DEFAULT_BILLING_TIMEOUT_MS = 15 * 1000
 const DEFAULT_RESPONSE_TIMEOUT_MS = 10 * 60 * 1000
 const MAX_TIMER_DELAY_MS = 2_147_483_647
 
@@ -20,6 +21,7 @@ export function createGrokTransport({
   clientIdentifier,
   clientVersion,
   modelTimeoutMs = DEFAULT_MODEL_TIMEOUT_MS,
+  billingTimeoutMs = DEFAULT_BILLING_TIMEOUT_MS,
   responseTimeoutMs = DEFAULT_RESPONSE_TIMEOUT_MS,
 }) {
   if (
@@ -30,12 +32,46 @@ export function createGrokTransport({
     !isHeaderValue(clientIdentifier) ||
     !isHeaderValue(clientVersion) ||
     !isTimeout(modelTimeoutMs) ||
+    !isTimeout(billingTimeoutMs) ||
     !isTimeout(responseTimeoutMs)
   ) {
     throw new TypeError("Invalid Grok transport dependencies")
   }
 
   return Object.freeze({
+    async getBilling({ signal } = {}) {
+      const deadline = createDeadline(signal, billingTimeoutMs)
+      try {
+        return await credentialSource.withAccessToken(async (accessToken, metadata) => {
+          if (!isPlainObject(metadata) || !isHeaderValue(metadata.userId)) throw new GrokTransportError()
+          let response
+          try {
+            const headers = buildHeaders({ accessToken, attributionHeaders, clientIdentifier, clientVersion })
+            headers.set("x-userid", metadata.userId)
+            response = await fetch(`${BASE_URL}/v1/billing?format=credits`, {
+              method: "GET",
+              redirect: "error",
+              headers,
+              signal: deadline.signal,
+            })
+            validateJsonResponse(response)
+            if (response.status !== 200) throw new GrokTransportError(response.status)
+            return await readBoundedText(response, MAX_JSON_RESPONSE_BYTES)
+          } catch (error) {
+            if (error instanceof GrokTransportError) throw error
+            if (signal?.aborted && error?.name === "AbortError") throw error
+            throw new GrokTransportError()
+          } finally {
+            response = undefined
+            metadata = undefined
+            accessToken = undefined
+          }
+        })
+      } finally {
+        deadline.dispose()
+      }
+    },
+
     async listModels({ signal } = {}) {
       const deadline = createDeadline(signal, modelTimeoutMs)
       try {

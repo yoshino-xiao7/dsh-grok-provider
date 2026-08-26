@@ -83,6 +83,47 @@ test("Responses streaming posts only to the pinned endpoint and yields response 
   assert.equal(requests[0].init.headers.get("authorization"), "Bearer fixture-access-token")
 })
 
+test("billing uses the pinned credits endpoint and keeps credential metadata in Host headers", async () => {
+  const requests = []
+  const transport = createGrokTransport({
+    credentialSource: {
+      async withAccessToken(operation) {
+        return operation("fixture-access-token", { userId: "fixture-user-id" })
+      },
+    },
+    fetch: async (url, init) => {
+      requests.push({ url, init })
+      return {
+        status: 200,
+        headers: new Headers({ "content-type": "application/json" }),
+        text: async () => '{"config":{"creditUsagePercent":25}}',
+      }
+    },
+    attributionHeaders: () => ({ "User-Agent": "deepseek-harness/0.1.1-rc.2" }),
+    clientIdentifier: "dsh-grok-provider",
+    clientVersion: "1.0.5",
+  })
+
+  assert.equal(await transport.getBilling(), '{"config":{"creditUsagePercent":25}}')
+  assert.equal(requests[0].url, "https://cli-chat-proxy.grok.com/v1/billing?format=credits")
+  assert.equal(requests[0].init.method, "GET")
+  assert.equal(requests[0].init.redirect, "error")
+  assert.equal(requests[0].init.headers.get("x-userid"), "fixture-user-id")
+})
+
+test("billing fails closed before fetch when the official credential has no safe user id", async () => {
+  let fetchCalled = false
+  const transport = createGrokTransport({
+    credentialSource: { async withAccessToken(operation) { return operation("fixture-access-token", {}) } },
+    fetch: async () => { fetchCalled = true },
+    attributionHeaders: () => ({ "User-Agent": "deepseek-harness/0.1.1-rc.2" }),
+    clientIdentifier: "dsh-grok-provider",
+    clientVersion: "1.0.5",
+  })
+  await assert.rejects(transport.getBilling(), { name: "GrokTransportError" })
+  assert.equal(fetchCalled, false)
+})
+
 test("model discovery owns a deadline and classifies an internal timeout as transport failure", async () => {
   const transport = createGrokTransport({
     credentialSource: { async withAccessToken(operation) { return operation("fixture-access-token") } },
