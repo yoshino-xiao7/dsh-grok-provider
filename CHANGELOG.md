@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.2 - 2026-08-26
+## 0.1.2-rc.1 - 2026-08-26
 
 - Fix Windows browser sign-in for official Grok Build CLI `0.2.82`, which `0.1.1` rejected before invoking `login --oauth`.
 - Replace the complete CLI-version allowlist with bounded version diagnostics plus a `login --help` capability probe for the independent `--oauth` option.

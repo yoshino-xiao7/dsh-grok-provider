@@ -6,12 +6,12 @@ import test from "node:test"
 
 const root = path.resolve(import.meta.dirname, "..")
 
-test("the exact 0.1.2 manifest exports runtime artifacts and Web loader metadata", async () => {
+test("the exact 0.1.2-rc.1 manifest exports runtime artifacts and Web loader metadata", async () => {
   const attributes = await fs.readFile(path.join(root, ".gitattributes"), "utf8")
   assert.match(attributes, /^\*\.yml text eol=lf$/mu)
   const manifest = JSON.parse(await fs.readFile(path.join(root, "package.json"), "utf8"))
   assert.equal(manifest.name, "dsh-grok-provider")
-  assert.equal(manifest.version, "0.1.2")
+  assert.equal(manifest.version, "0.1.2-rc.1")
   assert.deepEqual(manifest.repository, {
     type: "git",
     url: "git+https://github.com/yoshino-xiao7/dsh-grok-provider.git",
@@ -56,6 +56,10 @@ test("the exact 0.1.2 manifest exports runtime artifacts and Web loader metadata
   assert.match(releaseWorkflow, /^\s*id-token: write$/mu)
   assert.match(releaseWorkflow, /^\s*environment: npm$/mu)
   assert.doesNotMatch(releaseWorkflow, /NODE_AUTH_TOKEN|NPM_TOKEN|secrets\./u)
+  assert.match(releaseWorkflow, /^\s*npm_dist_tag=next$/mu)
+  assert.match(releaseWorkflow, /^\s*npm_dist_tag=latest$/mu)
+  assert.match(releaseWorkflow, /--tag "\$NPM_DIST_TAG"/u)
+  assert.doesNotMatch(releaseWorkflow, /inputs\.dist[_-]tag/u)
 
   const chineseReadme = await fs.readFile(path.join(root, "README.md"), "utf8")
   const englishReadme = await fs.readFile(path.join(root, "README.en.md"), "utf8")
