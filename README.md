@@ -4,7 +4,7 @@
 
 让 DeepSeek Harness 使用你已登录的官方 Grok Build 账号：动态模型发现、流式推理、工具调用，以及账号额度与模型能力面板。
 
-> 非官方社区项目，与 xAI 或 DeepSeek Harness 官方无隶属关系。当前版本为 `0.1.1`；Windows x64 已完成代码与 CI 支持，首次 Registry 真机验证仍在发布后跟进中。
+> 非官方社区项目，与 xAI 或 DeepSeek Harness 官方无隶属关系。当前稳定版本为 `0.1.2`。项目不再发行预发行版；正式版缺陷通过新的递增稳定版本修复。
 
 ## 它解决什么问题
 
@@ -25,7 +25,7 @@
 - DeepSeek Harness `0.1.1-rc.2`
 - Node.js `24.19.0` 或更高版本
 - macOS arm64 或 Windows x64
-- 官方 Grok Build CLI `1.0.5 (5115b46bc909)`
+- 官方 Grok Build CLI（支持 `login --oauth`，并使用官方默认 Grok home）
 
 请从 [Grok Build 官方文档](https://docs.x.ai/build/overview) 安装 CLI，并先确认：
 
@@ -41,7 +41,7 @@ grok models
 从 npm 安装已发布的精确版本：
 
 ```sh
-dsh plugin --profile web add dsh-grok-provider@0.1.1
+dsh plugin --profile web add dsh-grok-provider@0.1.2
 dsh web
 ```
 
@@ -97,8 +97,8 @@ dsh web
 
 ## 项目来源与发现
 
-- npm 精确版本：[dsh-grok-provider@0.1.1](https://www.npmjs.com/package/dsh-grok-provider/v/0.1.1)
-- GitHub 发行版与校验值：[v0.1.1](https://github.com/yoshino-xiao7/dsh-grok-provider/releases/tag/v0.1.1)
+- npm 精确版本：[dsh-grok-provider@0.1.2](https://www.npmjs.com/package/dsh-grok-provider/v/0.1.2)
+- GitHub 发行版与校验值：[v0.1.2](https://github.com/yoshino-xiao7/dsh-grok-provider/releases/tag/v0.1.2)
 - GitHub 社区发现：仓库已添加 DeepSeek Harness 官方推荐的 `dsh-plugin` 与 `dsh` Topics
 - YukiRyou 受管来源：[deepseek-yukiryou-plugin-catalog](https://github.com/yoshino-xiao7/deepseek-yukiryou-plugin-catalog)，跟随已验证的精确稳定版本，当前只标记已验证的 macOS arm64
 
@@ -106,14 +106,14 @@ dsh web
 
 ## 兼容性与范围
 
-| 项目 | `0.1.1` 状态 |
+| 项目 | `0.1.2` 状态 |
 | --- | --- |
 | DeepSeek Harness | 精确支持 `0.1.1-rc.2` |
 | Node.js | `>=24.19.0` |
 | macOS arm64 | 已完成真实网络与隔离 Harness 验收 |
-| Windows x64 | 代码支持；首版发布后真机验证 |
+| Windows x64 | 代码与 Windows CI 支持；本次正式发布未完成独立真机验收 |
 | macOS x64 / Linux | 不支持 |
-| Grok CLI | 精确支持 `1.0.5 (5115b46bc909)` |
+| Grok CLI | 不锁完整版本；严格校验官方路径、`login --oauth` 能力与生产 OIDC 凭据契约 |
 | 模型 | 当前账号目录中 backend 已被严格 codec 支持的全部模型 |
 
 首版不包含图片输入、Web/X Search、任意文件下载、API Key 模式、多账号、企业 OIDC、ACP 或 Headless agent 封装。完整范围见[产品需求](docs/01-product-requirements.md)。
@@ -154,7 +154,7 @@ dsh-grok-provider Host
 
 ### 页面要求重新登录
 
-在设置页点击登录，或先在终端运行 `grok login --oauth`。如果官方 CLI 已更新到未验证版本，插件会失败关闭，而不是跳过版本检查。
+在设置页点击登录，或先在终端运行 `grok login --oauth`。插件不锁完整 CLI 版本，但路径、`--oauth` 能力或生产 OIDC 凭据契约不匹配时会失败关闭。
 
 ### 没有看到某个模型
 
@@ -166,7 +166,7 @@ dsh-grok-provider Host
 
 ### Windows 能用吗
 
-代码和自动测试覆盖 Windows x64，但 `0.1.0` 首次 Registry 真机验收将在发布后完成；在此之前按“代码支持、真机未验证”处理。
+代码和 Windows CI 覆盖 Windows x64；仓库所有者决定直接发布 `0.1.2`，未把独立真机验收作为阻断项。如果正式版出现 Windows 问题，将通过新的递增稳定版本修复。
 
 ## 开发
 
@@ -195,7 +195,8 @@ npm run pack:check
 - [x] 发布 `0.1.0` 并完成 Registry/provenance 回读
 - [x] 配置 npm Trusted Publisher、撤销首发 Token，并加入 `dsh-plugin` Topic 与 YukiRyou catalog
 - [x] 发布 `0.1.1` 文档与发布流程修正版
-- [ ] 发布后完成 Windows x64 首次真机验收
+- [x] 发布 `0.1.2` Windows CLI 兼容性修正版
+- [ ] 完成 Windows x64 独立真机验收并按需发布后续稳定修复版
 - [ ] 根据已验证的 Harness/xAI 协议逐项评估更多内容类型和平台
 
 路线图不是兼容性承诺；新增能力必须通过文档决策与安全门禁。

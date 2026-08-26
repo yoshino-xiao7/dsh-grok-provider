@@ -1,7 +1,7 @@
 import os from "node:os"
 import path from "node:path"
 
-import { GROK_CLI_1_0_5_AUTH_CONTRACT, createCredentialSource } from "../src/internal/credential-source.mjs"
+import { GROK_PRODUCTION_OIDC_AUTH_CONTRACT, createCredentialSource } from "../src/internal/credential-source.mjs"
 import { createGrokAdapter } from "../src/internal/grok-adapter.mjs"
 import { createGrokTransport } from "../src/internal/grok-transport.mjs"
 import { createOfficialCredentialLoader } from "../src/internal/official-credential-loader.mjs"
@@ -9,7 +9,7 @@ import { createOfficialCredentialLoader } from "../src/internal/official-credent
 if (process.platform !== "darwin") throw new Error("This smoke script is macOS-only")
 
 const source = createCredentialSource({
-  contract: GROK_CLI_1_0_5_AUTH_CONTRACT,
+  contract: GROK_PRODUCTION_OIDC_AUTH_CONTRACT,
   load: createOfficialCredentialLoader({
     authPath: path.join(os.homedir(), ".grok", "auth.json"),
     platform: "darwin",

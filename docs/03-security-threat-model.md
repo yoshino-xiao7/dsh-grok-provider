@@ -17,7 +17,7 @@ Web renderer / TUI
   ▼
 Host AuthCoordinator
   ├─ OfficialGrokLoginBridge
-  │    └─ path/version-constrained ~/.grok/bin/grok[.exe] login --oauth
+  │    └─ path/capability-constrained ~/.grok/bin/grok[.exe] login --oauth
   │         ├─ 标准配置：系统浏览器与 xAI OAuth
   │         ├─ 有效配置也可能选择 external helper / devbox / 企业 OIDC
   │         ├─ CLI 自己的代理、托管配置同步与遥测
@@ -56,7 +56,7 @@ Host AuthCoordinator
 | billing 响应或 credential metadata 越界进入 renderer | 身份、订阅或凭据泄漏 | Host 严格抽取百分比、周期与模型 capability；拒绝/忽略 identity、balance、history、headers、URL 和原始响应 | P0 |
 | token 到期被误标为额度重置 | 错误产品决策、误导用户 | 重置时间只接受 billing period end；credential `expires_at` 不进入 dashboard DTO | P0 |
 | 凭据轮换期间读到半写文件 | 认证失败或旧 token 重放 | 只接受完整 JSON；短退避重读；不写回；已发送请求不自动重放 | P1 |
-| CLI 更新改变协议或文件格式 | 静默错误 | 登录前后重查 realpath/identity/version；只允许发布时冻结的有限精确版本集合，未知更高/更低版本都失败；CLI 自身更新行为属于 vendor boundary | P1 |
+| CLI 更新改变命令或凭据格式 | 静默错误 | 登录前重查 realpath/identity；版本只作有界诊断；探测 `login --help` 的独立 `--oauth` 选项；登录后重验生产 OIDC 凭据契约与固定服务端 codec；CLI 自身更新行为属于 vendor boundary | P1 |
 | 未授权复用官方/第三方 OAuth Client ID | 客户端冒充、封禁或条款违约 | 包中不存在独立 OAuth client；只调用官方 CLI 的公开登录命令 | P0 |
 | 恶意 device-flow URI/code | 用户被引向钓鱼站或 token 被劫持 | discovery 与 device/token/revoke endpoint 全部固定；verification URI 只允许 `https://auth.x.ai` 精确路径；device_code 永不进入 renderer | P0 |
 | 凭据 generation/账号目录混用 | 把请求发到错误账号 | 每次 prepare 冻结 auth generation；catalog、lease、logout、401 都绑定同一 generation；禁止 silent fallback | P0 |
@@ -80,6 +80,7 @@ macOS 官方默认路径可能是 symlink；验证时允许 symlink，但 `realp
 | 用户动作 | 可执行参数 | 说明 |
 |---|---|---|
 | 检查版本 | `--version` | 10 秒、16 KiB 输出上限 |
+| 探测浏览器登录 | `login --help` | 只确认独立 `--oauth` 选项，不执行登录 |
 | 浏览器登录 | `login --oauth` | 标准配置下官方 CLI 打开浏览器并处理 callback |
 | 退出 | `logout` | 官方 CLI 删除自己的凭据 |
 
@@ -104,7 +105,7 @@ macOS 官方默认路径可能是 symlink；验证时允许 symlink，但 `realp
 
 官方 loopback 登录可能先清除旧 credential，取消/失败也可能使共享会话失效；成功后 CLI 还可能同步 managed config 或发送其自身已启用的遥测。插件无法撤销这些官方副作用。登录前 UI 必须提示，`logout` 必须经前台用户确认，且会影响所有共享同一 `GROK_HOME` 的应用。
 
-“插件不自动更新”只约束本插件；官方 CLI 自身的更新检查/替换仍属于 vendor boundary。登录前后必须重新解析 executable identity 与版本，若发生变化或落出已测集合，凭据状态失败关闭并要求重新验证兼容性。
+“插件不自动更新”只约束本插件；官方 CLI 自身的更新检查/替换仍属于 vendor boundary。版本输出仅用于有界诊断，不能充当信任证明。每次动作仍重新解析 executable identity；登录还必须通过命令能力探测，并在完成后重新验证生产 OIDC 凭据契约。任何检查失败都不得回退到 PATH、其他命令、shell 或非生产凭据。
 
 ### 状态机
 
@@ -144,7 +145,7 @@ type PublicAuthStatus = {
 - `1.0.5` 的真实 `auth.json` 同时包含 refresh token。Host 对文件的有界读取会短暂接触包含它的原始字节；实现不得缓存、使用、记录或写回 refresh token，解析后只保留闭合校验元数据与短期 access-token lease。该约束缩短暴露窗口但不构成进程级隔离。
 - 文件路径只由 OS home、官方 `GROK_HOME` 约定和 Host 环境解析；UI 不可选择路径。
 - 读取前后检查文件元数据，降低替换竞态；解析失败时不保留部分值。
-- 生产 OIDC schema 候选筛选必须版本化：顶层对象有界且只有一个候选；map key 等于规范化 issuer 与 client ID 组合；`auth_mode === "oidc"`；issuer 精确等于该固定 CLI 版本的 xAI 生产 issuer；scope、client ID、access token 和 `expires_at` 关系闭合。拒绝 external、api_key、web_login、legacy scope、企业 issuer、多候选和未知关键模式。最终字段和值必须在协议 spike 绑定到精确 CLI tag/commit，不能长期依赖 mutable `main`。
+- 生产 OIDC schema 候选筛选必须契约化：顶层对象有界且只有一个候选；map key 等于规范化 issuer 与 client ID 组合；`auth_mode === "oidc"`；issuer 精确等于 xAI 生产 issuer；scope、client ID、access token 和 `expires_at` 关系闭合。拒绝 external、api_key、web_login、legacy scope、企业 issuer、多候选和未知关键模式。安全关键字段的变更必须重新评审；不影响既有语义的附加字段可以忽略。
 - 上述 metadata 未签名，官方源码也只把 auth mode/issuer 当 provenance/debug hint；它不是密码学 trust assertion。插件在信任官方 CLI 与当前用户凭据目录的前提下做本地失败关闭，真实 bearer 最终由固定 xAI Proxy 服务端验证。
 - access token 只在 Host 内存使用；缓存采用短生命周期并可显式清空。Host 有界读取完整 JSON 时原始 buffer/string 可能瞬时包含 refresh token；解析器不提取、不缓存、不使用、不返回、不记录、不写回该字段，且 JavaScript 内存不承诺可靠清零。
 - 解析 `expires_at` 并使用固定 skew 在发送前拒绝过期/将过期凭据。只有 issuer、client ID、scope 与 schema 全部匹配而时间失效时，才 single-flight 启动固定 `grok models`；OAuth refresh 状态机和文件写回仍由官方 CLI 完成。刷新后必须重新读取并完整校验，只重试一次。

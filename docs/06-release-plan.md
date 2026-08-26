@@ -128,7 +128,7 @@ patch 路径必须为不含 `..`、绝对路径、反斜线或 NUL 的相对 `.y
 
 ## 7. Git 与版本
 
-- `0.1.0` 历史开发分支：`yukiryou/v0.1.0`；当前下一版本分支：`yukiryou/v0.1.1`。
+- `0.1.0` 历史开发分支：`yukiryou/v0.1.0`；当前版本分支：`yukiryou/v0.1.2`。
 - `package.json`、CHANGELOG、release notes、Git tag 和 tarball 必须使用同一个精确候选版本。
 - 发布提交必须干净且可复现。
 - tag 使用 `v<major>.<minor>.<patch>`，只在发布提交确定后创建。
@@ -136,6 +136,10 @@ patch 路径必须为不含 `..`、绝对路径、反斜线或 NUL 的相对 `.y
 - `0.1.0` 首发时，发布基线 `yukiryou/main`、tag `v0.1.0` 和候选 manifest 记录的 source commit 均为 `dfa39d98d12fac929669f4961b0a511bf70cfeac`。发布后的 workflow 或文档修正不会改变这一不可变 tag、候选 tarball 或其 provenance。后续版本仍须让发布基线、tag、候选 manifest 和已验证 tarball 对应同一 release commit；publish job 只发布已核对 SHA-512 的唯一候选，禁止重新构建或重新 pack。
 
 `0.1.0` 发布后，后续版本从已发布基线 `yukiryou/main` 创建 `yukiryou/v<next-version>`。普通开发、文档、测试和发布准备都停留在版本分支；只有仓库所有者明确开始该版本发布时才合并回发布基线并创建不可变 tag。
+
+### 7.1 预发行版本政策
+
+`0.1.2-rc.1` 是一次历史预发行尝试。仓库所有者决定从稳定 `0.1.2` 起不再发行新的预发行版本；已发布 RC 保留为不可变历史记录，不覆盖、不删除，也不作为后续开发基线。正式版发现缺陷时直接创建下一递增稳定版本分支并按完整发布门禁修复。
 
 ## 8. 发布方式
 
@@ -145,9 +149,9 @@ patch 路径必须为不含 `..`、绝对路径、反斜线或 NUL 的相对 `.y
 
 CI 使用的官方 GitHub Actions 必须固定到已核对的完整 commit SHA；不得依赖可移动 major tag 作为发布门禁实现。
 
-长期发布工作流接受严格稳定版 tag `v<major>.<minor>.<patch>` 和该 GitHub Release tarball 的 base64 SHA-512。工作流必须：
+长期发布工作流只接受严格稳定 tag `v<major>.<minor>.<patch>` 和对应 GitHub Release tarball 的 base64 SHA-512。工作流必须：
 
-1. 从 tag 派生版本和唯一产物名，不接受 prerelease、build metadata、路径字符或自由格式文件名。
+1. 从 tag 派生版本和唯一产物名；不接受 prerelease、build metadata、路径字符、自由格式文件名或调用者指定 dist-tag。
 2. 只下载对应 GitHub Release 的 `dsh-grok-provider-<version>.tgz`。
 3. 在发布前核对输入 SHA-512，以及 tarball 内的 name、version 和 canonical repository。
 4. 使用 Node 24、固定 npm CLI 版本、GitHub-hosted Ubuntu runner、`environment: npm` 和 `id-token: write`。
@@ -185,7 +189,7 @@ scoped 包首次公开发布必须保留 `--access public`。
 npm 发布不会自动成为受管可安装项。`0.1.0` 当前发现状态：
 
 - GitHub 仓库已添加 DeepSeek Harness 官方推荐的 `dsh-plugin` 与 `dsh` Topics，可被 Topic 驱动来源发现。
-- YukiRyou curated catalog 已加入精确 `dsh-grok-provider@0.1.0`，只标记完成真实验收的 `darwin-arm64`。
+- YukiRyou curated catalog 已加入精确 `dsh-grok-provider@0.1.0`，只标记完成真实验收的 `darwin-arm64`。`0.1.1` 是文档与发布流程修正版，按仓库所有者决定不重复真机；catalog schema 又只允许精确版本 `installed` 语义，因此条目保持 `0.1.0`，不把制品校验或模块加载冒充受管 Harness 真机安装。
 - 公共 `awesome-dsh-plugin` curated 目录要求仓库创建满 1 天且至少 10 个提交；提交数已满足，需在年龄门槛满足后提交外部 PR。
 - Windows x64 仍需对 Registry 精确 `0.1.0` 完成首次 production inspector、安装、重启、浏览器登录、聊天、工具调用和重新认证；完成前保持“代码支持、真机未验证”。
 

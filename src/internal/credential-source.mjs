@@ -1,7 +1,7 @@
 const CLIENT_ID = "b1a00492-073a-47ea-816f-4c329264a828"
 const EXPIRY_SKEW_MS = 5 * 60 * 1000
 
-export const GROK_CLI_1_0_5_AUTH_CONTRACT = Object.freeze({
+export const GROK_PRODUCTION_OIDC_AUTH_CONTRACT = Object.freeze({
   authMode: "oidc",
   clientId: CLIENT_ID,
   issuer: "https://auth.x.ai",

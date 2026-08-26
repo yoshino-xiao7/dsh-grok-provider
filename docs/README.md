@@ -1,8 +1,8 @@
 # Grok Build Provider 文档索引
 
-- 状态：**`0.1.1` 发布线已冻结：修正发布事实，并启用长期 npm Trusted Publisher OIDC 流程**
-- 当前版本：`0.1.1`
-- 发布分支：`yukiryou/v0.1.1`
+- 状态：**稳定版 `0.1.2`：Windows Grok CLI 兼容性修正**
+- 当前稳定版本：`0.1.2`
+- 下一版本分支：发布后创建 `yukiryou/v0.1.3`
 - 兼容基线：DeepSeek Harness `0.1.1-rc.2`
 - 目标平台：macOS arm64、Windows x64
 
@@ -13,7 +13,7 @@
 首版采用单一认证路线：插件发起官方 Grok Build CLI 浏览器登录并复用由官方 CLI 持久化的会话。插件不注册独立 OAuth client，也不持久化第二份 token。
 
 1. 用户在 Harness 设置页点击“使用 Grok 登录”，或在 TUI 输入 `/grok login`。
-2. 插件 Host 通过 Harness `ctx.subprocess` 以固定 argv 启动经路径/版本约束的 Grok CLI 候选；该启动层不经过 shell。标准配置下由官方 CLI 完成系统浏览器、OAuth、loopback callback 和凭据写入。
+2. 插件 Host 通过 Harness `ctx.subprocess` 以固定 argv 启动经路径、能力与凭据契约约束的 Grok CLI 候选；该启动层不经过 shell。标准配置下由官方 CLI 完成系统浏览器、OAuth、loopback callback 和凭据写入。
 3. 插件只读官方凭据文件并接受绑定 schema；token 不进入 renderer、settings、RPC、本插件日志或 workspace。
 4. 模型目录只请求固定 `GET /v1/models`；推理按目录中经过验证的 `api_backend` 选择闭合 endpoint。当前真实模型都走固定 `POST /v1/responses`；拒绝重定向和自定义 endpoint。
 5. 模型目录从固定 `/v1/models` 动态发现账号当前可用的全部 Grok Build 模型；本机当前快照为 `grok-4.6` 与 `grok-4.5`。
@@ -38,16 +38,19 @@
 - [当前实现与发布状态](./09-implementation-status.md)
 - [逐版发布检查表](./10-release-checklist.md)
 - [v0.1.1 中英双语发行说明](./releases/v0.1.1.md)
+- [v0.1.2 中英双语发行说明](./releases/v0.1.2.md)
+- [v0.1.2-rc.1 中英双语预发行说明](./releases/v0.1.2-rc.1.md)
 - [ADR-0001：认证与传输路线](./adr/0001-auth-and-transport-route.md)
 - [ADR-0002：首版能力边界](./adr/0002-v0.1-scope.md)
 - [ADR-0003：已被取代的双认证设计](./adr/0003-dual-authentication.md)
 - [ADR-0004：动态全模型目录](./adr/0004-dynamic-model-catalog.md)
 - [ADR-0005：官方 CLI 单一认证路径](./adr/0005-official-cli-only-authentication.md)
 - [ADR-0006：账户额度与模型能力面板](./adr/0006-account-dashboard.md)
+- [ADR-0007：以能力与凭据契约判断 CLI 兼容性](./adr/0007-capability-based-cli-compatibility.md)
 
 ## 开发门禁
 
-`0.1.0` 首发后的 Registry 完整性、provenance、Trusted Publisher 与凭据撤销均已完成。首发 tarball 内 README 与部分状态文档的预发布措辞由 `0.1.1` 递增版本纠正。后续版本必须先完成[逐版发布检查表](./10-release-checklist.md)，再由仓库所有者明确授权发布。Windows x64 首次真机验证仍按约定作为首发后跟进，完成前标注“代码支持、真机未验证”。
+`0.1.2-rc.1` 是唯一一次预发行尝试。仓库所有者决定直接发布稳定 `0.1.2`，以后不再发行预发行版；正式版缺陷通过新的递增稳定版本修复。Windows 独立真机验收不阻断本次发布，但其未完成状态必须公开披露。后续版本仍须先完成[逐版发布检查表](./10-release-checklist.md)，再由仓库所有者明确授权发布。
 
 ## 官方依据
 

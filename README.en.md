@@ -4,7 +4,7 @@
 
 Use an already authenticated official Grok Build account from DeepSeek Harness, with dynamic model discovery, streaming reasoning, tool calls, and an account quota/model capability dashboard.
 
-> Unofficial community project; not affiliated with xAI or DeepSeek Harness. The current version is `0.1.1`. Windows x64 has code and CI support; its first Registry real-device validation remains a post-release follow-up.
+> Unofficial community project; not affiliated with xAI or DeepSeek Harness. The current stable version is `0.1.2`. The project no longer publishes prereleases; stable defects are fixed in a new incremented stable version.
 
 ## What it provides
 
@@ -25,7 +25,7 @@ Use an already authenticated official Grok Build account from DeepSeek Harness, 
 - DeepSeek Harness `0.1.1-rc.2`
 - Node.js `24.19.0` or newer
 - macOS arm64 or Windows x64
-- Official Grok Build CLI `1.0.5 (5115b46bc909)`
+- Official Grok Build CLI with `login --oauth` support and the default Grok home
 
 Install the CLI from the [official Grok Build documentation](https://docs.x.ai/build/overview), then verify:
 
@@ -41,7 +41,7 @@ The official CLI opens a browser on first use. The provider supports only the of
 Install the published exact version from npm:
 
 ```sh
-dsh plugin --profile web add dsh-grok-provider@0.1.1
+dsh plugin --profile web add dsh-grok-provider@0.1.2
 dsh web
 ```
 
@@ -97,8 +97,8 @@ Uninstalling the provider does not remove the official Grok CLI or directly modi
 
 ## Sources and discovery
 
-- Exact npm version: [dsh-grok-provider@0.1.1](https://www.npmjs.com/package/dsh-grok-provider/v/0.1.1)
-- GitHub release and integrity values: [v0.1.1](https://github.com/yoshino-xiao7/dsh-grok-provider/releases/tag/v0.1.1)
+- Exact npm version: [dsh-grok-provider@0.1.2](https://www.npmjs.com/package/dsh-grok-provider/v/0.1.2)
+- GitHub release and integrity values: [v0.1.2](https://github.com/yoshino-xiao7/dsh-grok-provider/releases/tag/v0.1.2)
 - GitHub community discovery: the repository carries the DeepSeek Harness-recommended `dsh-plugin` and `dsh` topics
 - YukiRyou managed source: [deepseek-yukiryou-plugin-catalog](https://github.com/yoshino-xiao7/deepseek-yukiryou-plugin-catalog), following the exact verified stable version and currently marking only verified macOS arm64
 
@@ -106,14 +106,14 @@ Directory inclusion is not an endorsement by xAI or DeepSeek Harness. The public
 
 ## Compatibility and scope
 
-| Item | `0.1.1` status |
+| Item | `0.1.2` status |
 | --- | --- |
 | DeepSeek Harness | Exact support for `0.1.1-rc.2` |
 | Node.js | `>=24.19.0` |
 | macOS arm64 | Real-network and isolated Harness acceptance completed |
-| Windows x64 | Code-supported; real-device validation after initial release |
+| Windows x64 | Code and Windows CI supported; no independent real-device acceptance completed for this release |
 | macOS x64 / Linux | Unsupported |
-| Grok CLI | Exact support for `1.0.5 (5115b46bc909)` |
+| Grok CLI | No full-version lock; official path, `login --oauth` capability, and production OIDC credential contract are enforced |
 | Models | Every account catalog model whose backend has a strict codec in this release |
 
 The initial release excludes image input, Web/X Search, arbitrary downloads, API-key mode, multiple accounts, enterprise OIDC, ACP, and Headless agent wrapping. See the complete [product requirements](docs/01-product-requirements.md).
@@ -154,7 +154,7 @@ Confirm the official CLI is in its default location and run `grok --version`. Th
 
 ### The page asks you to sign in again
 
-Use the settings button or run `grok login --oauth` in a terminal. If the official CLI has updated to an unverified version, the provider fails closed instead of bypassing version checks.
+Use the settings button or run `grok login --oauth` in a terminal. The provider does not lock the complete CLI version, but fails closed when the path, `--oauth` capability, or production OIDC credential contract does not match.
 
 ### A model is missing
 
@@ -166,7 +166,7 @@ A protobuf-omitted zero is restored only with a complete typed period. In every 
 
 ### Does Windows work?
 
-Windows x64 code and automated tests are present, but the first Registry real-device acceptance for `0.1.0` happens after release. Until then it remains “code-supported, real-device unverified.”
+Windows x64 code and CI coverage are present. The repository owner chose to publish `0.1.2` without making independent real-device acceptance a blocker. Any Windows defect found in the stable release will be fixed in a new incremented stable version.
 
 ## Development
 
@@ -195,7 +195,8 @@ Read the [contributing guide](CONTRIBUTING.md) before filing an issue or PR. Cha
 - [x] Publish `0.1.0` and verify Registry integrity/provenance
 - [x] Configure npm Trusted Publisher, revoke the initial token, and add `dsh-plugin` discovery plus the YukiRyou catalog entry
 - [x] Publish the `0.1.1` documentation and release-process correction
-- [ ] Complete the first Windows x64 real-device acceptance after release
+- [x] Publish the `0.1.2` Windows CLI compatibility correction
+- [ ] Complete independent Windows x64 acceptance and publish a later stable fix if needed
 - [ ] Evaluate additional content types and platforms only against verified Harness/xAI contracts
 
 The roadmap is not a compatibility promise; every new capability must pass the documented design and security gates.
