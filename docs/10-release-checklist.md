@@ -42,9 +42,11 @@
 - [x] 长期发布 workflow 改为 GitHub OIDC，不读取 npm Secret。
 - [x] macOS/Windows CI 已通过 OIDC workflow 改造分支。
 - [x] GitHub Private vulnerability reporting 已启用，`yukiryou/main` 已配置 PR、双平台 CI、防强推和防删除保护。
-- [ ] 完成所有发布事实文档和中英文 README 同步。
-- [ ] 冻结 `0.1.1` 版本、CHANGELOG 和双语 release notes。
-- [ ] 生成并验收唯一 `0.1.1` 候选 tarball。
+- [x] 完成所有发布事实文档、中英文 README 与 `SECURITY.md` 同步。
+- [x] `package.json`、lockfile 与制品契约测试已同步为 `0.1.1`，中英双语 release notes 已完成且不重复页面标题。
+- [x] 本地完整测试 57 项通过（55 pass、2 项 Windows-only 按预期跳过），`npm audit --omit=dev` 为 0 vulnerability，GitHub macOS/Windows CI 均通过。
+- [x] 从提交 `d35bda3402db5b16edd83d81420f1068006254a8` 生成预审 tarball；48 个文件、93,652 bytes，SHA-256 `bdaf7c32a22afd74e1c526e07c91f441942fedab3e0d34c01134fedda6e323b9`，SRI `sha512-ENpeVSsHDiByG6Cf03pl1j4eRHAsYQkrwU4sVAMct4D2aFXoZoFTivP0ZpwaM1tzD0NdXlPzlLdtlSd0F48wCw==`；同一文件在全新临时目录完成 peer 安装、manifest 回读与 Host 模块加载。
+- [ ] 获得发布授权后，把 README/状态页切换为最终公开 `0.1.1` 事实、写入 CHANGELOG 日期并生成最终唯一候选；预审 tarball 不进入 Release。
 - [ ] 完成发布前全套门禁并取得仓库所有者明确发布授权。
 
 English summary: every release must close documentation, security, tests, deterministic artifact, bilingual release notes, OIDC identity, integrity, and post-publish readback gates before publication. A green checklist never replaces explicit owner approval.
