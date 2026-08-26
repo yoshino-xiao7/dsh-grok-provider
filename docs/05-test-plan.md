@@ -42,16 +42,6 @@
 - 缺少/错误 `x-grok-client-version` 的 426；诚实的插件 identifier 必须成功，若只能冒充官方 `grok-shell` 才能调用则阻断发布。
 - 每个目录返回模型的 `api_backend` 都必须有对应 codec 与真机最小流；未知 backend 不能被静默隐藏来伪称“全部模型”。
 
-### 插件自管 OAuth device flow
-
-- 只针对 xAI 明确授权给本插件的 public client ID 做真实 smoke；授权前全部使用 fake issuer boundary，且阻断发布。
-- 固定 discovery/device/token/revoke/JWKS endpoint；验证任意重定向、非 HTTPS、错误 origin/path 与超限响应都失败。
-- 覆盖 RFC 8628 `authorization_pending`、`slow_down`、用户拒绝、device code 过期、绝对超时、取消、网络错误和重复完成。
-- renderer 只收到固定 verification URI、user code 与 expiry；device_code、access/refresh token、token body 和 identity canary 不进入 RPC/命令/日志。
-- `credentials.modifyRecord()` 覆盖两进程同时 refresh、refresh-token rotation、旧 generation 写回、进程中止与 record 外部变化。
-- 默认 local provider 的 POSIX 0700/0600 与 Windows 行为在真机验证；报告明确说明它不是加密存储，同 UID 读取不在边界内。
-- managed logout 成功时先在 `modifyRecord()` 锁内写入阻断刷新/读取的 revocation marker，再撤销并删除；撤销失败时恢复原 grant 供明确重试，恢复失败则保留只可重试撤销、不可用于推理的 marker。任何路径都不能误删 official-cli auth 文件。
-
 只保留字段名、事件名、类型、状态码和大小等脱敏观察。若工具调用无法无损映射，立即停止并重新评审 ADR-0001。
 
 ## 4. 单元测试
@@ -133,7 +123,7 @@
 - RPC 业务 DTO 不含 Harness carrier correlation；插件 `diagnosticId` 与 token/process/OAuth state 无关。
 - dependency throw、恶意 `toJSON`/序列化 throw 和 canary error message 都由 non-throwing handler 折叠为固定脱敏 `internal` RpcResult；不得逃逸成 HTTP 500。
 - RPC 递归扫描不含 token、path、URL、stdout/stderr。
-- `/grok` 只接受 `status|use <mode>|login [mode]|cancel|logout <mode>` 的闭合语法，额外参数返回 usage。
+- `/grok` 只接受 `status|login|cancel|logout` 的闭合语法，额外参数返回 usage。
 - `/grok` 不进入模型消息；`recordInput: false`。
 - `recordInput:false` 仍记录命令名、run/done 和返回 text；验证这些持久字段全部脱敏，并覆盖命令后的原始分隔空白。
 - TUI invocation signal 能取消 login。

@@ -24,18 +24,14 @@ import {
 import { createOfficialCliAuth } from "../internal/official-cli-auth.mjs"
 import { createOfficialAuthDriver } from "../internal/official-auth-driver.mjs"
 import { verifyOfficialCliExecutable } from "../internal/official-cli-verifier.mjs"
-import { installManagedCapability } from "../internal/managed-capability.mjs"
 import { installProviderRuntime } from "../internal/provider-runtime.mjs"
-import { MANAGED_OAUTH_CONTRACT } from "./managed-oauth-contract.mjs"
 
 export const name = "llm-grok"
 export const inject = ["llm"]
 
-export const Config = Schema.object({
-  authMode: Schema.union(["official-cli", "managed-device"]).default("official-cli"),
-})
+export const Config = Schema.object({})
 
-export function apply(ctx, config = { authMode: "official-cli" }) {
+export function apply(ctx) {
   const platform = process.platform
   if (platform !== "darwin" && platform !== "win32") {
     throw new TypeError("dsh-grok-provider-yukiryou supports macOS and Windows in version 0.1.0")
@@ -52,7 +48,6 @@ export function apply(ctx, config = { authMode: "official-cli" }) {
   })
   const runtime = installProviderRuntime({
     llm: ctx.llm,
-    initialMode: config.authMode,
     officialSource,
     createTransport: (credentialSource) => createGrokTransport({
       credentialSource,
@@ -80,35 +75,20 @@ export function apply(ctx, config = { authMode: "official-cli" }) {
       homeDir,
       verifyExecutable: verifyOfficialCliExecutable,
     })
-    const removeDriver = authController.installDriver("official-cli", createOfficialAuthDriver({
+    const removeDriver = authController.installDriver(createOfficialAuthDriver({
       officialAuth,
       credentialSource: officialSource,
     }))
     return async () => {
-      await authController.shutdown("official-cli")
+      await authController.shutdown()
       removeDriver()
     }
   })
 
-  if (MANAGED_OAUTH_CONTRACT !== null) {
-    ctx.inject(["credentials"], async (credentialsCtx) => {
-      const { credentialKey } = await import("@deepseek-ai/dsh-credentials")
-      return installManagedCapability({
-        controller: authController,
-        registry: runtime.auth,
-        credentials: credentialsCtx.credentials,
-        credentialKey: credentialKey("dsh-grok-provider-yukiryou", "grok-oauth"),
-        contract: MANAGED_OAUTH_CONTRACT,
-        now: () => new Date(),
-        fetch: globalThis.fetch,
-      })
-    })
-  }
-
   ctx.inject(["commands"], (commandsCtx) => commandsCtx.commands.register({
     name: "grok",
     description: "Manage Grok Build authentication",
-    input: { hint: "status|use <mode>|login [mode]|cancel|logout <mode>" },
+    input: { hint: "status|login|cancel|logout" },
     recordInput: false,
     handler: commandHandler,
   }))

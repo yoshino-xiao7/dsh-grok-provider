@@ -55,11 +55,9 @@ Host AuthCoordinator
 | 原始远端错误返回 UI | token、账号或内部信息泄漏 | 只返回插件稳定错误码和安全文案；Harness RPC correlation 留在 carrier 内部 | P0 |
 | 凭据轮换期间读到半写文件 | 认证失败或旧 token 重放 | 只接受完整 JSON；短退避重读；不写回；已发送请求不自动重放 | P1 |
 | CLI 更新改变协议或文件格式 | 静默错误 | 登录前后重查 realpath/identity/version；只允许发布时冻结的有限精确版本集合，未知更高/更低版本都失败；CLI 自身更新行为属于 vendor boundary | P1 |
-| 未授权复用官方/第三方 OAuth Client ID | 客户端冒充、封禁或条款违约 | 生产只接受 xAI 明确授权给本插件的 build-time public client ID；无授权即阻断发布 | P0 |
+| 未授权复用官方/第三方 OAuth Client ID | 客户端冒充、封禁或条款违约 | 包中不存在独立 OAuth client；只调用官方 CLI 的公开登录命令 | P0 |
 | 恶意 device-flow URI/code | 用户被引向钓鱼站或 token 被劫持 | discovery 与 device/token/revoke endpoint 全部固定；verification URI 只允许 `https://auth.x.ai` 精确路径；device_code 永不进入 renderer | P0 |
-| refresh-token rotation 并发覆盖 | 会话永久失效或旧 token 复活 | Harness `credentials.modifyRecord()` 跨进程排他读改写；generation 与 current-record 重查 | P0 |
-| 自管 grant 明文被同 UID/agent 读取 | access/refresh token 泄漏 | 只用 owner-scoped credential record；POSIX 0700/0600；明确披露同 UID 仍可读、Windows ACL 未由 rc.2 验证；未来迁移 keychain provider | P0 |
-| 认证模式/账号目录混用 | 把请求发到错误账号 | 每次 prepare 冻结 auth generation；catalog、lease、logout、401 都绑定 mode+generation；禁止 silent fallback | P0 |
+| 凭据 generation/账号目录混用 | 把请求发到错误账号 | 每次 prepare 冻结 auth generation；catalog、lease、logout、401 都绑定同一 generation；禁止 silent fallback | P0 |
 | npm 依赖安装脚本 | 供应链代码执行 | 目标零 runtime dependencies；全图禁止 lifecycle scripts | P0 |
 
 ## 4. 官方 CLI 进程边界
@@ -135,12 +133,12 @@ type PublicAuthStatus = {
 }
 ```
 
-official-cli DTO 不声称能可靠知道浏览器是否打开，也不包含 process ID、binary path、OAuth URL、stdout/stderr、token、auth 文件内容、email、user ID、team/org、subscription 或 fingerprint。managed-device DTO 只额外允许固定 xAI verification URI、一次性 user code 与过期时间；不允许 device_code。stdin 为 ignored，因此 official-cli 不支持手工粘贴 code fallback。
+认证 DTO 不声称能可靠知道浏览器是否打开，也不包含 process ID、binary path、OAuth URL、stdout/stderr、token、auth 文件内容、email、user ID、team/org、subscription 或 fingerprint。stdin 为 ignored，因此插件不支持手工粘贴 code fallback。
 
 ## 5. 凭据文件
 
 - 插件只读 Grok CLI 凭据，不创建第二份落盘副本。
-- official-cli 令牌不写入 settings、DSH credentials、workspace、临时文件或诊断包；managed-device token 只写入 Harness owner-scoped credential grant record，绝不写入其余位置。
+- 官方 CLI 令牌不写入 settings、DSH credentials、workspace、临时文件或诊断包；插件不创建第二份 token grant。
 - `1.0.5` 的真实 `auth.json` 同时包含 refresh token。Host 对文件的有界读取会短暂接触包含它的原始字节；实现不得缓存、使用、记录或写回 refresh token，解析后只保留闭合校验元数据与短期 access-token lease。该约束缩短暴露窗口但不构成进程级隔离。
 - 文件路径只由 OS home、官方 `GROK_HOME` 约定和 Host 环境解析；UI 不可选择路径。
 - 读取前后检查文件元数据，降低替换竞态；解析失败时不保留部分值。
@@ -215,7 +213,7 @@ type AuthRpc = {
 - `sessionId` 是随机的不透明 ID，不是 OAuth state 或 process ID。
 - renderer 不能获得 token、URL、文件路径或任意命令能力。
 
-TUI 通过 Harness 的 human-command registry 注册一个全局 `/grok`，只接受 `status|use <mode>|login [mode]|cancel|logout <mode>` 的闭合语法。命令直接在 Host 执行，不发送给模型；取消使用 invocation 自带的 `AbortSignal`。
+TUI 通过 Harness 的 human-command registry 注册一个全局 `/grok`，只接受 `status|login|cancel|logout` 的闭合语法。命令直接在 Host 执行，不发送给模型；取消使用 invocation 自带的 `AbortSignal`。
 
 ## 8. 搜索与图片
 

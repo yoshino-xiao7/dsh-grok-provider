@@ -15,13 +15,13 @@
 
 | 路线 | 认证所有者 | Harness 语义 | 跨平台 | 主要风险 | 决策 |
 |---|---|---:|---:|---|---|
-| A. 插件自管 device OAuth + 固定 Proxy | 插件 | 高 | 高 | Client ID 授权、令牌存储、刷新状态机 | **与 B 并列采用，授权前阻断发布** |
-| B. Harness 发起官方 CLI 登录 + 固定 Proxy | xAI CLI | 高 | 高 | 依赖官方 CLI；子进程生命周期；上游文件格式变化 | **与 A 并列采用** |
+| A. 插件自管 device OAuth + 固定 Proxy | 插件 | 高 | 高 | Client ID 授权、令牌存储、刷新状态机 | ADR-0005 拒绝进入 `0.1.0` |
+| B. Harness 发起官方 CLI 登录 + 固定 Proxy | xAI CLI | 高 | 高 | 依赖官方 CLI；子进程生命周期；上游文件格式变化 | **采用** |
 | C. `grok -p` Headless | xAI CLI | 低 | 高 | prompt 展平、每次进程开销、工具与会话语义不完整 | 拒绝 Provider 路线 |
 | D. `grok agent stdio` ACP | xAI CLI | 低 | 高 | agent 套 agent，权限、工具、会话边界重复 | 拒绝 Provider 路线 |
 | E. xAI Console API Key | 插件/用户 | 高 | 高 | 独立计费，未必提供 Grok Build 订阅模型 | 后续独立模式 |
 
-## 3. 推荐路线 A + B（显式双模式）
+## 3. 推荐路线 B（官方 CLI 单路径）
 
 ### 数据流
 
@@ -36,9 +36,6 @@ Harness Host
   │    └─ Harness chunk 流
   ├─ OfficialSessionCredentialSource
   │    └─ 只读 xAI 官方 auth.json
-  ├─ ManagedDeviceCredentialSource
-  │    ├─ 固定 auth.x.ai device/token/revoke endpoints
-  │    └─ Harness credentials grant record
   ├─ OfficialGrokLoginBridge
   │    └─ 仅 ctx.subprocess.spawn([<constrained grok>, login --oauth|logout])
   ├─ PinnedGrokTransport
@@ -140,9 +137,9 @@ Transport 独占 Authorization 注入，强制 `redirect: "error"`、HTTPS、固
 
 因此推荐路线的前提是接受“官方 Grok CLI + 它的有效配置”为本地信任边界。若产品要求端到端绝不运行 shell，当前上游没有可验证的 builtin-only/no-config 参数，本路线必须阻断，等待上游能力或改用获得 xAI 授权的自有 OAuth client。
 
-## 4. 自管 OAuth 的新增责任
+## 4. 已拒绝的自管 OAuth 责任
 
-自行 OAuth 会同时引入以下新责任，ADR-0003 已接受这些责任：
+自行 OAuth 会同时引入以下责任；ADR-0005 决定 `0.1.0` 不承担它们：
 
 - 取得明确授权的公共 OAuth Client ID，而不是复制官方 CLI 或第三方 Client ID。
 - RFC 8628 device code、固定 verification URI、polling、取消、过期和重放防御。
@@ -150,7 +147,7 @@ Transport 独占 Authorization 注入，强制 `redirect: "error"`、HTTPS、固
 - refresh token 轮换、并发 single-flight、注销和恢复。
 - 需要自行承担跨平台安全存储、刷新与账户切换，而 Harness 的子进程 seam 只能解决官方 CLI 生命周期，不能替代这些认证责任。
 
-`official-cli` 模式仍把这些责任留给官方 CLI；`managed-device` 模式产生独立持久凭据，且在 xAI 为本插件授权 public client ID 前不得进入生产真机或 npm 发布。
+当前单一路径把这些责任留给官方 CLI。ADR-0003 仅作为已被取代的历史设计保留，发布包不包含对应实现。
 
 ## 5. 为什么不用 Headless
 

@@ -19,7 +19,6 @@
   "@deepseek-ai/cordis": "4.0.1",
   "@deepseek-ai/dsh-llm": "0.1.1-rc.2",
   "@deepseek-ai/dsh-subprocess": "0.1.1-rc.2",
-  "@deepseek-ai/dsh-credentials": "0.1.1-rc.2",
   "@deepseek-ai/dsh-settings": "0.1.1-rc.2",
   "@deepseek-ai/dsh-commands": "0.1.1-rc.2",
   "@deepseek-ai/dsh-client-connection": "0.1.1-rc.2",
@@ -33,7 +32,7 @@
 初步分组：
 
 - required：`@deepseek-ai/cordis`、`@deepseek-ai/dsh-llm`、`@deepseek-ai/schemastery`。
-- profile-specific optional：subprocess、credentials、settings、commands、connection 和 client UI packages。目标桌面 Runtime 必须实际挂载 subprocess service 才能提供 official-cli 登录；必须挂载 credentials service 才能提供 managed-device 持久化与刷新。缺失某一 capability 时只禁用对应模式，不影响另一模式或已有有效凭据的 Provider 启动。
+- profile-specific optional：subprocess、commands、connection 和 client UI packages。目标桌面 Runtime 必须实际挂载 subprocess service 才能提供官方 CLI 登录；缺失时模型 Provider 仍可读取已有有效官方凭据，但登录/注销动作不可用。
 
 全部放入 `peerDependencies`，optional 项同时声明 `peerDependenciesMeta.<name>.optional: true`。可选 peer 不得被 Host 入口无条件静态 import；需要通过独立 export、条件加载或已证明的 Runtime external 方式隔离。Web、TUI、headless 三种缺失可选 service/peer 的测试必须通过。
 
@@ -138,7 +137,7 @@ finish
 ctx.commands.register({
   name: "grok",
   description: "Manage Grok Build authentication",
-  input: { hint: "status|use <mode>|login [mode]|cancel|logout <mode>" },
+  input: { hint: "status|login|cancel|logout" },
   recordInput: false,
   handler: async ({ rawInput, signal }) => {
     // parse closed grammar; call shared Host AuthCoordinator
@@ -150,7 +149,7 @@ ctx.commands.register({
 约束：
 
 - 命令由交互 UI 直接执行，绝不发送给模型。
-- 只接受闭合语法：`status`、`use official-cli|managed-device`、`login [official-cli|managed-device]`、`cancel`、`logout official-cli|managed-device`；额外参数返回 usage。
+- 只接受闭合语法：`status`、`login`、`cancel`、`logout`；额外参数返回 usage。
 - `recordInput: false` 只是不把 `rawInput` 复制进 `command/run.args`；命令名、run/done 生命周期与返回 text 仍会持久化，因此返回文本必须脱敏。
 - parser 必须保留并测试命令名后的原始分隔空白，再按闭合 grammar 决定成功或返回 `{ kind: "error", text: usage }`。
 - `signal` 取消 `login` 等待；不会把授权 URL、token 或原始 CLI 输出写入命令结果。
@@ -180,7 +179,7 @@ ctx.connection.rpc.handle(
 - `cancel`
 - `logout`
 
-所有方法的请求都携带闭合 `authMode`（无需 mode 的 `status` 返回当前 selection 与两个模式各自的脱敏状态）。managed-device 的公开 DTO 可包含固定 xAI `verificationUri`、一次性 `userCode` 与过期时间；绝不包含 `device_code`、access/refresh token、identity 或 token endpoint 原文。
+`status`、`login`、`logout` 只接受空对象；`cancel` 只接受当前公开状态中的 `sessionId`。不存在 `authMode`、模式选择、OAuth URL、device code、access/refresh token、identity 或 token endpoint 字段。
 
 业务状态不能冒充 rc.2 的 `RpcErrorCode`。成功分支承载闭合 outcome：
 

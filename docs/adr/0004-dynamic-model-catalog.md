@@ -18,7 +18,7 @@
 
 - Provider ID 保持 `grok`。
 - `LlmAdapter.listModels()` 通过固定 `GET https://cli-chat-proxy.grok.com/v1/models` 动态发现当前所选认证来源实际可用的全部模型。
-- 使用有界、严格 schema 的内存 TTL cache；认证 generation、logout、401 或 credential record 变化立即失效。不同认证模式和账号不能共享 catalog。
+- 使用有界、严格 schema 的内存 TTL cache；认证 generation、logout、401 或 credential record 变化立即失效。不同账号或 credential generation 不能共享 catalog。
 - 列表按上游默认模型优先，其余使用稳定排序；去重后返回 Harness `LlmModelInfo`。模型 ID、名称和显式能力来自经过验证的上游字段，不根据名字猜 context、最大输出或 reasoning effort。
 - `resolveModel()` 对明确选择但暂未出现在缓存目录中的 ID执行一次可取消刷新。Harness 的 catalog 是 discovery surface，不是路由白名单；仍必须让 Proxy 对账号权限做最终判定。
 - 上游模型新增时无需发布新 npm 版本；未知字段有界忽略，未知模型能力保持 absent，而不是伪造默认值。

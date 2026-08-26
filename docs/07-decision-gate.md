@@ -4,7 +4,7 @@
 
 仓库所有者已接受“官方 CLI 及其有效配置为信任边界，并按推荐路线开发”。后续实现仍须逐项通过本文的发布门禁；确认方案不等于授权跳过真机验证或发布审计。
 
-2026-08-25 后续决策又增加了插件自管 OAuth token 持久化与动态全模型目录；以 ADR-0003、ADR-0004 为准。原确认仍覆盖 official-cli 路径，但不消除自管 Client ID 授权阻断。
+2026-08-26 仓库所有者把认证要求收敛为“能跳转浏览器登录即可”；ADR-0005 取代 ADR-0003 的双认证设计。动态全模型目录仍以 ADR-0004 为准。
 
 ## 推荐决策
 
@@ -12,7 +12,7 @@
 
 采用：Web 设置页按钮和 TUI `/grok login` 从 Harness 发起登录。
 
-official-cli 方式：Host 通过 Harness `ctx.subprocess` 以固定 argv 启动经路径/版本约束的 `grok login --oauth`；插件这一启动层不经过 shell。managed-device 方式：插件按 ADR-0003 实现 device flow 并把 grant 存入 Harness credentials record；生产启用前必须取得 xAI 授权的 client ID。
+Host 通过 Harness `ctx.subprocess` 以固定 argv 启动经路径/版本约束的 `grok login --oauth`；插件这一启动层不经过 shell。官方 CLI 打开浏览器并持久化自己的 token，插件不实现第二套 OAuth client 或凭据库。
 
 必须同时接受：`--oauth` 只固定 loopback transport，官方 CLI 当前没有 builtin-only/no-config 开关。它仍可能按用户、system 或 MDM 的有效配置执行 external auth command（内部可用 `sh -c`/`cmd /C`）、devbox 或企业 OIDC。本项目把“官方 CLI + 它的有效配置”作为用户管理的信任边界，只承诺插件自身不启动 shell。`0.1.0` 只支持标准 xAI 浏览器路径：已知环境型 external/enterprise override 在 spawn 前拒绝；磁盘/MDM 配置不能可靠预判，官方 CLI 仍可能先执行它们；登录后只有与绑定版本生产 OIDC schema 相符的候选可进入插件 transport。本地未签名 metadata 不是密码学来源证明。
 
@@ -41,7 +41,7 @@ official-cli 方式：Host 通过 Harness `ctx.subprocess` 以固定 argv 启动
 - 官方 login 可能先清除旧 credential；取消或失败也可能使共享会话失效。logout 会影响所有共享同一 `GROK_HOME` 的应用，因此 UI 必须提示并对 logout 二次确认。
 - 官方 CLI 的 proxy、managed-config sync 与已启用遥测不受插件固定推理 transport 约束，需单独披露。
 - Harness rc.2 的 Web `loopback` RPC 只提供浏览器 Origin/Fetch-Metadata reachability fence，不认证本机进程。按钮与 logout 二次确认是防误操作 UX；同一 OS 用户下的本地进程属于信任边界，若不能接受则 `0.1.0` 只能取消 Web login/logout、保留 TUI。
-- official-cli 文件本身含 refresh token，Host 原始读取会短暂接触其字节但不得使用；managed-device 明确持有并轮换自己的 refresh token，且只存 Harness credential grant record。
+- 官方 CLI 文件本身含 refresh token，Host 原始读取会短暂接触其字节但不得使用、复制或写回。
 - 首版浏览器登录面向本机 macOS/Windows 桌面会话；远程 Web/headless 不在承诺内。
 - 首版功能刻意少于部分第三方插件，以消除搜索、生图和任意 URL 下载带来的风险。
 - CLI Chat Proxy 和凭据文件是可变化的上游契约；未知版本或结构必须失败关闭。

@@ -1,6 +1,6 @@
 # Grok Build Provider 文档索引
 
-- 状态：**方案已确认，TDD 开发中；新增自管 OAuth 带发布阻断项**
+- 状态：**方案已确认，`0.1.0` 收敛为官方 CLI 浏览器登录单路径**
 - 目标版本：`0.1.0`
 - 兼容基线：DeepSeek Harness `0.1.1-rc.2`
 - 目标平台：macOS arm64、Windows x64
@@ -9,16 +9,16 @@
 
 ## 推荐结论
 
-首版采用双认证路线：默认可由插件发起官方 Grok Build CLI 浏览器登录并复用官方会话；同时提供插件自管的 OAuth device flow、token 持久化与刷新。用户必须明确选择，不能静默回退或混用。
+首版采用单一认证路线：插件发起官方 Grok Build CLI 浏览器登录并复用由官方 CLI 持久化的会话。插件不注册独立 OAuth client，也不持久化第二份 token。
 
 1. 用户在 Harness 设置页点击“使用 Grok 登录”，或在 TUI 输入 `/grok login`。
 2. 插件 Host 通过 Harness `ctx.subprocess` 以固定 argv 启动经路径/版本约束的 Grok CLI 候选；该启动层不经过 shell。标准配置下由官方 CLI 完成系统浏览器、OAuth、loopback callback 和凭据写入。
-3. `official-cli` 模式只读官方凭据文件并接受绑定 schema；`managed-device` 模式把独立 grant 只写入 Harness credentials record。两者的 token 都不进入 renderer、settings、RPC、本插件日志或 workspace。
+3. 插件只读官方凭据文件并接受绑定 schema；token 不进入 renderer、settings、RPC、本插件日志或 workspace。
 4. 模型目录只请求固定 `GET /v1/models`；推理按目录中经过验证的 `api_backend` 选择闭合 endpoint。当前真实模型都走固定 `POST /v1/responses`；拒绝重定向和自定义 endpoint。
 5. 模型目录从固定 `/v1/models` 动态发现账号当前可用的全部 Grok Build 模型；本机当前快照为 `grok-4.6` 与 `grok-4.5`。
-6. 自管 OAuth 只使用 xAI 明确授权的本插件 public client ID，并通过 Harness credential grant record 持久化；当前缺少公开第三方 client 注册/授权依据，因此是真机自管登录与 npm 发布的阻断项。
+6. 包内不存在 OAuth client ID、client secret、device flow、refresh/revoke 或 Harness credential grant；浏览器登录与持久化完全由官方 CLI 负责。
 
-`official-cli` 路径与原推荐路线一致；`managed-device` 路径提供类似 `dsh-codex` 的 device-code 浏览器体验，但由本插件负责 polling、refresh rotation 和 Harness grant record。前者要求安装官方 CLI，后者要求 xAI 明确授权给本插件的 public client ID。
+该路径要求本机安装受支持版本的官方 CLI。仓库所有者在 2026-08-26 将“插件自管 OAuth”要求改为“能跳转浏览器登录即可”，详见 ADR-0005。
 
 安全边界需要说清楚：`--oauth` 只选择 loopback 浏览器 transport，不会强制官方 CLI 忽略其有效配置。官方 CLI 可能按用户/企业配置运行外部认证命令（其内部可使用 `sh -c` 或 `cmd /C`）或企业 OIDC。因此“无 shell”只适用于本插件到 CLI 的启动层，不是端到端保证。`0.1.0` 把官方 CLI 及其有效配置视为用户管理的可信组件，并在读取凭据后失败关闭：外部 provider、API key、企业 issuer、旧式或歧义记录都不允许进入固定 xAI Proxy。该本地 metadata 未签名，所以这是严格兼容性筛选，不是密码学来源证明。
 
@@ -37,12 +37,13 @@
 - [当前实现与发布阻断项](./09-implementation-status.md)
 - [ADR-0001：认证与传输路线](./adr/0001-auth-and-transport-route.md)
 - [ADR-0002：首版能力边界](./adr/0002-v0.1-scope.md)
-- [ADR-0003：双认证路径与自管 OAuth](./adr/0003-dual-authentication.md)
+- [ADR-0003：已被取代的双认证设计](./adr/0003-dual-authentication.md)
 - [ADR-0004：动态全模型目录](./adr/0004-dynamic-model-catalog.md)
+- [ADR-0005：官方 CLI 单一认证路径](./adr/0005-official-cli-only-authentication.md)
 
 ## 开发门禁
 
-原开发门已由仓库所有者确认。当前只建立私有、不可发布的协议测试；最终 package identity、xAI OAuth client 授权、两平台真机门禁和发布链全部满足前，不进行 npm 发布。
+原开发门已由仓库所有者确认。最终 package identity、两平台真机门禁和发布链全部满足前，不进行 npm 发布；独立 xAI OAuth client 授权已不再属于首版范围。
 
 ## 官方依据
 

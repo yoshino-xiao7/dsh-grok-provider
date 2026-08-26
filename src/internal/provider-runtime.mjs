@@ -2,7 +2,6 @@ import { createAuthRegistry } from "./auth-registry.mjs"
 
 export function installProviderRuntime({
   llm,
-  initialMode,
   officialSource,
   createTransport,
   createAdapter,
@@ -18,8 +17,8 @@ export function installProviderRuntime({
     throw new TypeError("Invalid Grok provider runtime dependencies")
   }
 
-  const auth = createAuthRegistry({ initialMode, createTransport })
-  const removeOfficial = auth.install("official-cli", officialSource)
+  const auth = createAuthRegistry({ createTransport })
+  const removeOfficial = auth.install(officialSource)
   const adapter = createAdapter({ getGeneration: () => auth.getGeneration() })
   const removeAdapter = llm.registerAdapter(["grok"], adapter)
   const removeDirectory = llm.registerConfigurableProviders([{

@@ -17,7 +17,7 @@
 
 - 在 Harness `0.1.1-rc.2` 中安装精确 npm 版本后出现 Grok Provider，并动态列出当前账号通过 Grok Build 可用的全部模型。
 - macOS 和 Windows 用户使用相同的插件包，不需要平台专属脚本。
-- 用户可明确选择 `official-cli` 浏览器登录或插件自管 `managed-device` OAuth；插件能识别登录中、已登录、取消、过期、刷新失败和未登录状态。
+- 用户可从 Harness 发起官方 CLI 浏览器登录；插件能识别登录中、成功、取消、失败、凭据过期和未登录状态。
 - 首版只接受与发布绑定 CLI 版本的 xAI 第一方 OIDC schema 相符的候选。CLI 有效配置若选择外部 auth provider、企业 OIDC、API key 或无法判定的凭据结构，插件必须显示“不受支持的认证配置”并拒绝由本插件把该 token 发给 xAI CLI Chat Proxy；这不把未签名 metadata 宣称成来源证明。
 - 支持多轮文本对话、reasoning 增量、流式文本、工具调用、usage 和明确 finish 原因。
 - Harness 中止请求时，网络流和解析器都能及时终止。
@@ -30,8 +30,8 @@
 
 首版明确禁止：
 
-- 复制第三方或 xAI 官方 CLI 的 OAuth Client ID 来冒充该客户端；自管模式只接受 xAI 明确授权给本插件的 public client ID。
-- 保存 client secret，或把自管 access/refresh token 写到 Harness credentials grant record 以外的文件、settings、环境、日志或 renderer。
+- 复制、提取或反编译第三方/xAI 官方 CLI 的 OAuth Client ID，或接受用户提供任意 client ID。
+- 保存 client secret，或把官方 access/refresh token 复制到 Harness credentials、settings、环境、日志、workspace 或 renderer。
 - 由插件直接启动 shell、PowerShell、`cmd /c start`、`open`、`xdg-open` 或任意 URL opener；本约束不伪装成对官方 CLI 内部行为的保证。
 - 通过 renderer/RPC 接收任意可执行路径、命令、参数、环境变量或 cwd；唯一允许的进程入口是 Host 内部验证后的官方 `grok`，参数只能来自闭合命令表。
 - 接受用户、模型、远端响应或 marketplace 配置提供的 `baseURL`。
@@ -50,14 +50,13 @@
 - Harness 定义的工具调用增量。
 - 流式 usage、finish、超时、取消与稳定错误码。
 - 只读官方 Grok CLI 会话凭据。
-- 插件自管 OAuth 2.0 device flow、refresh rotation、revoke 与 Harness credential grant record。
 - Host 侧官方 CLI 登录桥：`login`、`cancel`、`status`、`logout`。
 - Web 设置页：认证状态、“使用 Grok 登录”、取消、退出、安装说明和隐私说明。
-- TUI 闭合命令：`/grok status`、`use <mode>`、`login [mode]`、`cancel`、`logout <mode>`；Web 与 TUI 共用同一认证协调器。
+- TUI 闭合命令：`/grok status`、`login`、`cancel`、`logout`；Web 与 TUI 共用同一认证协调器。
 
 不包含：
 
-- 自管 authorization-code loopback callback、任意 URL opener 或 client secret；自管首版只做 RFC 8628 device flow。
+- 插件自管 OAuth、device flow、authorization-code callback、任意 URL opener、client ID 或 client secret。
 - xAI API Key 模式。
 - Grok ACP 或 `grok -p` headless 代理。
 - 厂商侧 Web Search、X Search、远程抓取。
@@ -65,7 +64,7 @@
 - 图片输入；后续版本只有在 Harness attachment 限额与协议兼容测试完成后再考虑。
 - 自定义 endpoint、企业 OIDC、自定义代理或多账号。
 - 自动安装或更新 Grok CLI。
-- official-cli 在远程 Web/headless 主机自动打开浏览器的承诺；managed-device 可在另一台浏览器完成 device code，但首版仍不承诺无人值守登录。
+- 在远程 Web/headless 主机自动打开浏览器或无人值守登录的承诺。
 - Linux 的发布承诺；实现应避免无谓的平台绑定，但首版只验收 macOS 与 Windows。
 
 ## 5. 用户流程
@@ -82,9 +81,9 @@
 
 ### 凭据过期
 
-1. `official-cli` 凭据过期或进入固定 skew 时，在发送前以 LLM `AUTH` 失败；`managed-device` 在 Harness credential record 的排他 mutation 中尝试一次 refresh rotation。
+1. 官方 CLI 凭据过期或进入固定 skew 时，在发送前以 LLM `AUTH` 失败；插件不自行刷新。
 2. 首个 401 使内存中的 lease 失效；已经发送的 POST 不自动重放。
-3. refresh 失败时设置页显示“重新登录”；下一次明确用户动作才启动所选模式的登录。
+3. 设置页显示“重新登录”；下一次明确用户动作才启动官方 CLI 浏览器登录。
 4. 插件不删除、不修改官方 `auth.json`。
 
 ### 退出
@@ -110,10 +109,10 @@ Web 的“退出”或 TUI `/grok logout` 先中止本插件所有在途 Grok �
 
 任一条件不满足都不得发布：
 
-- xAI 官方文档不再明确允许使用官方会话凭据调用 CLI Chat Proxy，或 xAI 未向自管模式提供合法 public client ID/书面许可。
+- xAI 官方文档或官方答复不允许第三方本地 adapter 使用官方会话凭据调用 CLI Chat Proxy。
 - 服务条款或官方答复不允许独立插件使用该路径。
 - 任一真实发现模型的基础流无法映射，或声明支持的工具调用无法无损映射到 Harness。
 - 凭据只能通过不安全的 renderer、RPC 或明文复制方式获得。
-- official-cli 凭据筛选无法阻止 schema 不符 token 进入固定 Proxy，或 managed-device 的轮换/持久化无法通过并发与泄漏测试。
+- 官方 CLI 凭据筛选无法阻止 schema 不符 token 进入固定 Proxy。
 - macOS 或 Windows 任一平台验收失败。
 - GitHub repository 或 provenance 发布链未确定，或冻结包名在发布前被他人占用。

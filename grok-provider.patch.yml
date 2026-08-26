@@ -1,5 +1,3 @@
 - insert:
     - id: llm-grok
       name: dsh-grok-provider-yukiryou
-      config:
-        authMode: official-cli

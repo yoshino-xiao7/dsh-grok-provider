@@ -89,10 +89,10 @@
 - `grok-4.6` 的 `max_output_tokens:16` 真机探测以 `response.incomplete` 和 `max_output_tokens` 原因结束；当前 codec 对截断 text 合成闭合 block，并映射为 Harness `max-tokens` finish。截断 tool arguments 仍失败关闭。
 - 当前实现因此覆盖本账号在该时点可见的全部模型；生产仍以动态目录为准，未来出现未知 backend 时失败关闭而不是猜测协议。
 
-该回归只完成 macOS 上的 `official-cli` credential 路径。它不替代 Harness 受管安装测试、managed-device 真登录、Windows x64 真机测试或发布门禁。
+该回归只完成 macOS 上的官方 CLI credential 路径。它不替代 Harness 受管安装测试、浏览器登录真机测试、Windows x64 真机测试或发布门禁。
 
-## 9. 自管 OAuth client 可获得性复核
+## 9. 已放弃的自管 OAuth 路线
 
 2026-08-26 重新读取 `https://auth.x.ai/.well-known/openid-configuration`：issuer 公开 Device Authorization、refresh、revoke、PKCE 和 `none` client authentication，但没有 `registration_endpoint`。同日官方 `https://docs.x.ai/sitemap.xml` 中也没有 OAuth 应用注册或第三方 public client 申请页面。
 
-这只能证明“协议能力存在、公开自助注册入口未发现”，不能推导任意 client ID 获得授权。因此 `managed-device` 的状态机、持久化、轮换和注销实现保留，生产 contract 继续为 `null`；取得 xAI 明确授权的独立 client ID 前不得复制官方 CLI client ID、不得让用户输入第三方 client ID，也不得发布 `0.1.0`。
+这只能证明“协议能力存在、公开自助注册入口未发现”，不能推导任意 client ID 获得授权。ADR-0005 因而删除自管状态机、持久化、轮换和注销实现；`0.1.0` 不再等待独立 client ID，也不得复制官方 CLI client ID 或让用户输入第三方 client ID。

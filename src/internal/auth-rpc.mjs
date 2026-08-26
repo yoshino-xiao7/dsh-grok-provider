@@ -1,12 +1,9 @@
 import { AuthDriverUnavailableError, AuthLoginBusyError } from "./auth-controller.mjs"
 
-const MODES = new Set(["official-cli", "managed-device"])
-
 export function createAuthRpcHandler({ controller }) {
   if (
     !controller ||
     typeof controller.status !== "function" ||
-    typeof controller.use !== "function" ||
     typeof controller.beginLogin !== "function" ||
     typeof controller.cancel !== "function" ||
     typeof controller.logout !== "function"
@@ -20,16 +17,9 @@ export function createAuthRpcHandler({ controller }) {
         const status = serializable(controller.status())
         return ok({ kind: "status", status })
       }
-      if (endpoint === "use") {
-        const mode = parseModePayload(payload)
-        if (mode === undefined) return badRequest()
-        controller.use(mode)
-        return ok({ kind: "status", status: serializable(controller.status()) })
-      }
       if (endpoint === "login") {
-        const mode = parseModePayload(payload)
-        if (mode === undefined) return badRequest()
-        const session = await controller.beginLogin(mode)
+        if (!hasExactKeys(payload, [])) return badRequest()
+        const session = await controller.beginLogin()
         const status = serializable(session.public)
         return ok({ kind: "login-started", status, sessionId: status.sessionId })
       }
@@ -37,14 +27,13 @@ export function createAuthRpcHandler({ controller }) {
         const cancellation = parseCancelPayload(payload)
         if (cancellation === undefined) return badRequest()
         return ok({
-          kind: controller.cancel(cancellation.authMode, cancellation.sessionId) ? "cancelled" : "not-running",
+          kind: controller.cancel(cancellation.sessionId) ? "cancelled" : "not-running",
           status: serializable(controller.status()),
         })
       }
       if (endpoint === "logout") {
-        const mode = parseModePayload(payload)
-        if (mode === undefined) return badRequest()
-        const outcome = await controller.logout(mode, { signal })
+        if (!hasExactKeys(payload, [])) return badRequest()
+        const outcome = await controller.logout({ signal })
         if (outcome.kind === "confirmation-required") {
           return ok({
             kind: "logout-confirmation-required",
@@ -69,18 +58,12 @@ export function createAuthRpcHandler({ controller }) {
 
 function parseCancelPayload(payload) {
   if (
-    !hasExactKeys(payload, ["authMode", "sessionId"]) ||
-    !MODES.has(payload.authMode) ||
+    !hasExactKeys(payload, ["sessionId"]) ||
     typeof payload.sessionId !== "string" ||
     payload.sessionId.length === 0 ||
     payload.sessionId.length > 128
   ) return undefined
   return payload
-}
-
-function parseModePayload(payload) {
-  if (!hasExactKeys(payload, ["authMode"]) || !MODES.has(payload.authMode)) return undefined
-  return payload.authMode
 }
 
 function hasExactKeys(value, expected) {

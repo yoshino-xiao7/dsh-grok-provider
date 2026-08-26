@@ -38,7 +38,7 @@ Harness 需要的是 LLM adapter，而不是第二套 agent runtime。
 - 不复制 OAuth Client ID，不承担 client secret、PKCE、loopback 和 refresh token 实现。
 - 不引入 `open`、直接 `node:child_process` 或平台 shell 依赖；进程树生命周期由 Harness subprocess seam 管理。
 - macOS 与 Windows 的登录差异由官方客户端处理。
-- official-cli 路径不产生第二份落盘凭据；managed-device 的独立 grant 由 ADR-0003 约束。
+- 官方 CLI 路径不产生第二份落盘凭据；ADR-0003 的独立 grant 设计已被 ADR-0005 取代。
 - 依赖图可以保持接近零 runtime dependencies。
 - 用户可像 `dsh-codex` 的 Web/TUI 流程一样，直接从 Harness 发起浏览器登录。
 
@@ -49,7 +49,7 @@ Harness 需要的是 LLM adapter，而不是第二套 agent runtime。
 - 官方 CLI 可能根据可信配置执行 external helper/企业 OIDC、同步 managed config 或发送其自身已启用的遥测；本项目不能承诺端到端无 shell或单一网络 origin。
 - 重新登录可能替换/清除共享 Grok credential，取消或失败也可能使旧会话失效；logout 影响共享同一 `GROK_HOME` 的其他应用。
 - 官方凭据过期时需要从 Harness 再次触发 `grok login --oauth`。
-- official-cli 浏览器登录要求 Host 与浏览器处于同一本机桌面会话；managed-device 的远端浏览器语义由 ADR-0003 约束。
+- 官方 CLI 浏览器登录要求 Host 与浏览器处于同一本机桌面会话；首版不支持远端浏览器/device-code 登录。
 - 插件依赖官方凭据文件格式和 CLI Chat Proxy 契约。
 - 官方文档的技术示例不等于永久服务条款授权；公开发布前仍需重新核对条款。
 - `0.1.0` 当前只承诺官方支持的 macOS arm64 与 Windows x64。
@@ -67,7 +67,7 @@ Harness 需要的是 LLM adapter，而不是第二套 agent runtime。
 
 ## 未采用方案
 
-- 插件自建 OAuth：本 ADR 当时拒绝；仓库所有者随后明确要求并由 ADR-0003 以 device flow 形式采纳。
+- 插件自建 OAuth：本 ADR 当时拒绝；ADR-0003 曾采纳，随后又由 ADR-0005 从 `0.1.0` 删除。
 - Headless：无法保真映射 Harness LLM/tool 语义。
 - ACP：引入第二套 agent、权限与会话生命周期。
 - API Key：单独计费语义，不等价于 Grok Build 订阅路线。

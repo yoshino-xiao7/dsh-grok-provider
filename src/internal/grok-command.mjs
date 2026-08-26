@@ -1,11 +1,8 @@
-const MODE = "(official-cli|managed-device)"
 const GRAMMAR = Object.freeze([
   { pattern: /^\s+status$/u, build: () => ({ verb: "status" }) },
-  { pattern: new RegExp(`^\\s+use\\s+${MODE}$`, "u"), build: (match) => ({ verb: "use", mode: match[1] }) },
   { pattern: /^\s+login$/u, build: () => ({ verb: "login" }) },
-  { pattern: new RegExp(`^\\s+login\\s+${MODE}$`, "u"), build: (match) => ({ verb: "login", mode: match[1] }) },
   { pattern: /^\s+cancel$/u, build: () => ({ verb: "cancel" }) },
-  { pattern: new RegExp(`^\\s+logout\\s+${MODE}$`, "u"), build: (match) => ({ verb: "logout", mode: match[1] }) },
+  { pattern: /^\s+logout$/u, build: () => ({ verb: "logout" }) },
 ])
 
 export function parseGrokCommandInput(rawInput) {

@@ -24,6 +24,8 @@ test("the exact 0.1.0 manifest exports only built runtime artifacts", async () =
     "CHANGELOG.md",
   ])
   assert.equal(manifest.dependencies, undefined)
+  assert.equal(manifest.peerDependencies["@deepseek-ai/dsh-credentials"], undefined)
+  assert.equal(manifest.devDependencies["@deepseek-ai/dsh-credentials"], undefined)
   assert.equal(manifest.scripts.prepack, "npm run build")
   assert.equal(manifest.scripts["pack:check"], "npm pack --dry-run --json")
 
@@ -32,4 +34,13 @@ test("the exact 0.1.0 manifest exports only built runtime artifacts", async () =
   assert.match(host, /export const name = "llm-grok"/u)
   assert.match(client, /id: "dsh-grok-provider-yukiryou"/u)
   assert.doesNotMatch(client, /node:fs|node:path|refreshToken|accessToken|auth\.json/u)
+  for (const filename of [
+    "managed-capability.mjs",
+    "managed-credential-source.mjs",
+    "managed-device-flow.mjs",
+    "managed-grant-store.mjs",
+    "managed-oauth-client.mjs",
+  ]) {
+    await assert.rejects(fs.access(path.join(root, "dist/internal", filename)))
+  }
 })

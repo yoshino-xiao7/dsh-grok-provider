@@ -19,7 +19,6 @@ test("provider runtime registers one Grok adapter and its configurable directory
   }
   const runtime = installProviderRuntime({
     llm,
-    initialMode: "official-cli",
     officialSource,
     createTransport: (source) => ({ source }),
     createAdapter: ({ getGeneration }) => {

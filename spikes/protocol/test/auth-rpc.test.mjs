@@ -6,10 +6,9 @@ import { createAuthRpcHandler } from "../../../src/internal/auth-rpc.mjs"
 
 test("the Web auth RPC accepts only closed payloads and never throws controller failures", async () => {
   const controller = {
-    status: () => ({ selectedMode: "official-cli", generation: 2, drivers: {}, sessions: {} }),
-    use: () => { throw new Error("fixture secret-like internal detail") },
-    beginLogin: async () => ({ public: { sessionId: "s1", mode: "official-cli", state: "running" } }),
-    cancel: (mode, sessionId) => mode === "official-cli" && sessionId === "s1",
+    status: () => ({ generation: 2, available: true, driver: true }),
+    beginLogin: async () => ({ public: { sessionId: "s1", state: "running" } }),
+    cancel: (sessionId) => sessionId === "s1",
     logout: async () => ({ kind: "confirmation-required", confirmationId: "c1", expiresAt: "2030-01-01T00:00:30.000Z" }),
   }
   const handler = createAuthRpcHandler({ controller })
@@ -19,19 +18,19 @@ test("the Web auth RPC accepts only closed payloads and never throws controller 
     ok: true,
     value: { kind: "status", status: controller.status() },
   })
-  assert.deepEqual(await handler("login", { authMode: "official-cli" }, signal), {
+  assert.deepEqual(await handler("login", {}, signal), {
     ok: true,
     value: {
       kind: "login-started",
-      status: { sessionId: "s1", mode: "official-cli", state: "running" },
+      status: { sessionId: "s1", state: "running" },
       sessionId: "s1",
     },
   })
-  assert.deepEqual(await handler("cancel", { authMode: "official-cli", sessionId: "s1" }, signal), {
+  assert.deepEqual(await handler("cancel", { sessionId: "s1" }, signal), {
     ok: true,
     value: { kind: "cancelled", status: controller.status() },
   })
-  assert.deepEqual(await handler("cancel", { authMode: "official-cli" }, signal), {
+  assert.deepEqual(await handler("cancel", {}, signal), {
     ok: false,
     error: { code: "bad-request", message: "Invalid Grok auth RPC request", details: { issues: [] } },
   })
@@ -41,21 +40,20 @@ test("the Web auth RPC accepts only closed payloads and never throws controller 
   })
   assert.deepEqual(await handler("use", { authMode: "managed-device" }, signal), {
     ok: false,
-    error: { code: "internal", message: "The Grok auth operation failed", details: {} },
+    error: { code: "bad-request", message: "Invalid Grok auth RPC request", details: { issues: [] } },
   })
 })
 
 test("the Web auth RPC reports login contention as a closed business outcome", async () => {
-  const status = { selectedMode: "official-cli", generation: 2, drivers: {}, sessions: {} }
+  const status = { generation: 2, available: true, driver: true }
   const handler = createAuthRpcHandler({ controller: {
     status: () => status,
-    use() {},
     async beginLogin() { throw new AuthLoginBusyError() },
     cancel: () => false,
     async logout() { return { kind: "failed" } },
   } })
 
-  assert.deepEqual(await handler("login", { authMode: "official-cli" }, new AbortController().signal), {
+  assert.deepEqual(await handler("login", {}, new AbortController().signal), {
     ok: true,
     value: { kind: "busy", status },
   })

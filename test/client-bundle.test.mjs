@@ -23,13 +23,12 @@ test("the browser bundle registers one localized loopback-only Grok settings sec
     "- insert:",
     "    - id: llm-grok",
     "      name: dsh-grok-provider-yukiryou",
-    "      config:",
-    "        authMode: official-cli",
     "",
   ].join("\n"))
 
   let definition
   const source = await fs.readFile(path.join(root, "dist/client/client.js"), "utf8")
+  assert.doesNotMatch(source, /managed-device|authMode|verificationUri|deviceCode/u)
   vm.runInNewContext(source, {
     window: { __ModuleLoader__: { load(value) { definition = value } } },
     document: {
