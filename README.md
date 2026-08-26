@@ -2,7 +2,7 @@
 
 Clean-room Grok Build provider for DeepSeek Harness. It dynamically discovers every model visible to the selected Grok Build account and maps the native Responses stream to Harness text, reasoning, encrypted reasoning replay, usage and tool calls.
 
-> Pre-release status: `0.1.0` is implemented but must not be published yet. xAI support/permission evidence, official CLI artifact integrity, Windows x64 true-device run, canonical GitHub provenance and dual-platform candidate verification remain release gates.
+> Pre-release status: `0.1.0` is implemented but must not be published yet. xAI support/permission evidence, official CLI artifact integrity, canonical GitHub provenance and the remaining macOS acceptance checks remain release gates. Windows x64 is code-supported but not yet verified on a real Windows device; its first true-device run is an explicit post-`0.1.0` follow-up.
 
 ## Compatibility
 

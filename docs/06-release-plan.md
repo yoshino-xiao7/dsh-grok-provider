@@ -101,9 +101,9 @@ patch 路径必须为不含 `..`、绝对路径、反斜线或 NUL 的相对 `.y
 5. 生成唯一候选 tarball并记录 SHA-512。
 6. 解包审查 identity、exports、peer、scripts、patch 和文件类型。
 7. 从该 tarball 在临时 Harness profile 安装并执行 Web/TUI smoke。
-8. 同一个 tarball 在 macOS 与 Windows 运行本地、同字节的 verifier-equivalent 检查与安装 smoke；生产受管 inspector 依赖已发布的 npm manifest/tarball，只能在发布后得到 `artifact-verified`。
+8. 同一个 tarball 在 macOS arm64 运行 verifier-equivalent 检查与安装 smoke；Windows x64 由 CI 完成自动化检查。首次 Windows 真机安装和 production inspector 在 `0.1.0` 发布后针对 Registry 精确版本执行。
 
-候选 tarball 只构建一次，并记录 npm SRI `sha512-<base64>`。macOS、Windows 和 publish job 都必须先验证同一 digest；测试 job 和 publish job不得重新构建或重新 `npm pack`。
+候选 tarball 只构建一次，并记录 npm SRI `sha512-<base64>`。预发布 macOS 验收、Windows CI 和 publish job 都必须先验证同一 digest；测试 job 和 publish job 不得重新构建或重新 `npm pack`。发布后的 Windows 首次真机验证必须下载 Registry 的精确 `0.1.0` 并核对同一 SRI。
 
 禁止为不同平台重新打两个内容不同但版本相同的 tarball。
 
@@ -154,13 +154,15 @@ npm 发布不会自动成为受管可安装项。发布后还需要：
 - DSHFind verified repository backlink；或
 - 加入 YukiRyou curated catalog 的精确 `0.1.0`。
 
-优先先通过公开 GitHub repository backlink 形成 DSHFind candidate，避免“尚无 candidate 因而无法受管安装、尚未受管安装因而不能进 curated”的循环。Registry 回读完成后，再在 macOS 与 Windows 的生产 inspector 上验证 `artifact-verified`、安装、重启、浏览器登录、聊天、工具调用和重新认证。
+优先先通过公开 GitHub repository backlink 形成 DSHFind candidate，避免“尚无 candidate 因而无法受管安装、尚未受管安装因而不能进 curated”的循环。Registry 回读完成后，在 Windows x64 的生产 inspector 上对精确 `0.1.0` 完成首次 `artifact-verified`、安装、重启、浏览器登录、聊天、工具调用和重新认证；完成前必须保留“代码支持、真机未验证”标识。
 
 curated 条目只在上述验证通过后添加。当前 catalog schema 只记录：
 
 - UTC `testedAt`。
 - Harness `0.1.1-rc.2`。
 - `darwin-arm64` 和 `win32-x64`。
+
+从 `0.1.1` 起，常规发版不再要求重复 macOS/Windows 真机 smoke。每次仍须通过两平台 CI、协议与安全测试、干净 profile 安装、确定性 tarball 和 Registry integrity/provenance 回读。涉及认证、官方 CLI、Harness subprocess seam 或平台安全策略的变更应安排定向真机复核，但默认不是发版阻断项。
 
 macOS x64 不在当前官方 Grok CLI 支持矩阵，不进入 `0.1.0` catalog 或发布承诺。npm SHA-512 作为 release evidence 保存；它不是当前 curated schema 字段，市场会从 Registry `dist.integrity` 自行验证 SHA-512。
 

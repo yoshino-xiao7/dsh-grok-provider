@@ -9,3 +9,4 @@
 - Single authentication path with no embedded OAuth client identity, client secret, or plugin-managed refresh token.
 - Single-flight renewal delegates expired official credentials to the verified Grok CLI `models` command; the plugin never executes an OAuth refresh grant itself.
 - Loopback-only Web settings and a closed `/grok` TUI command surface.
+- Windows x64 code path is included but remains real-device unverified until the documented post-release `0.1.0` validation.

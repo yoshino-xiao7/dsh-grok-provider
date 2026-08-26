@@ -89,7 +89,7 @@
 - `grok-4.6` 的 `max_output_tokens:16` 真机探测以 `response.incomplete` 和 `max_output_tokens` 原因结束；当前 codec 对截断 text 合成闭合 block，并映射为 Harness `max-tokens` finish。截断 tool arguments 仍失败关闭。
 - 当前实现因此覆盖本账号在该时点可见的全部模型；生产仍以动态目录为准，未来出现未知 backend 时失败关闭而不是猜测协议。
 
-该回归只完成 macOS 上的官方 CLI credential 路径。它不替代 Harness 受管安装测试、浏览器登录真机测试、Windows x64 真机测试或发布门禁。
+该回归只完成 macOS 上的官方 CLI credential 路径。它不替代 Harness 受管安装与浏览器登录验收，也不替代 `0.1.0` 发布后的 Windows x64 首次真机验证。
 
 ## 9. 已放弃的自管 OAuth 路线
 

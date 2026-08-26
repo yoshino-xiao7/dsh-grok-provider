@@ -24,7 +24,7 @@
 - 热更新设置或重新认证不会让同一调用混用两组路由或凭据。
 - 凭据不进入 renderer、RPC、settings、workspace、本插件日志、错误详情、诊断包或 npm tarball；官方 CLI 自身的日志、网络与遥测属于独立 vendor boundary。
 - 本插件拥有并注入 Bearer 的推理请求只到固定 xAI origin，任何 3xx 都失败；官方 CLI 登录网络是独立信任边界。
-- 发布物在 macOS 与 Windows 的受管安装、重启和真实聊天 smoke test 中通过。
+- 发布物在 macOS arm64 的受管安装、重启和真实聊天 smoke test 中通过；Windows x64 首次真机验证在 `0.1.0` 发布后执行，验证前必须明确标注为“代码支持、真机未验证”。
 
 ## 3. P0 安全负需求
 
@@ -101,7 +101,9 @@ Web 的“退出”或 TUI `/grok logout` 先中止本插件所有在途 Grok �
 
 - 受管市场安装结果为 `artifact-verified`。
 - macOS arm64 和 Windows x64 的自动测试通过。macOS x64 不在当前官方 CLI 支持矩阵，也不属于 `0.1.0` 承诺。
-- 至少一台真实 macOS 和一台真实 Windows 设备完成安装、登录、流式对话、工具调用、中止、重启与重新认证 smoke。
+- `0.1.0` 发布前至少一台真实 macOS arm64 设备完成安装、登录、流式对话、工具调用、中止、重启与重新认证 smoke。
+- `0.1.0` 发布后在一台真实 Windows x64 设备对 Registry 中的精确 `0.1.0` 执行首次安装、登录、流式对话、工具调用、中止、重启与重新认证 smoke；该项是发布后跟进，不回溯阻断已经完成的首次发布。
+- `0.1.1` 及后续版本不把重复真机 smoke 设为常规发版门禁；由 macOS/Windows CI、契约测试、干净安装和精确 tarball 校验承接。认证、官方 CLI、Harness subprocess 或平台安全边界变化时安排定向真机复核，但除非当次发布另行声明，不作为强制门禁。
 - canary secret 扫描确认日志、RPC、错误、临时文件和打包产物无泄漏。
 - 协议测试确认第二个测试 origin 永远收不到 Authorization。
 
@@ -114,5 +116,5 @@ Web 的“退出”或 TUI `/grok logout` 先中止本插件所有在途 Grok �
 - 任一真实发现模型的基础流无法映射，或声明支持的工具调用无法无损映射到 Harness。
 - 凭据只能通过不安全的 renderer、RPC 或明文复制方式获得。
 - 官方 CLI 凭据筛选无法阻止 schema 不符 token 进入固定 Proxy。
-- macOS 或 Windows 任一平台验收失败。
+- macOS arm64 发布前验收失败；或自动化 Windows x64 平台测试失败。
 - GitHub repository 或 provenance 发布链未确定，或冻结包名在发布前被他人占用。

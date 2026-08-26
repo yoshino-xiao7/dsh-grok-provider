@@ -6,7 +6,8 @@
 - CI 不使用真实 token、账号、prompt 或录制的敏感响应。
 - 所有本地模拟服务使用随机 loopback 端口，不访问真实第三方。
 - 真实账号 smoke 只在发布候选上人工执行，记录脱敏结果。
-- macOS 和 Windows 都通过才允许发布同一个 npm tarball。
+- `0.1.0` 发布前必须通过 macOS arm64 真机与 macOS/Windows 自动化矩阵；Windows x64 首次真机验证在发布后对 Registry 精确版本执行，验证前对外标注“代码支持、真机未验证”。
+- `0.1.1` 及后续版本不要求每次重复真机验证；自动化矩阵、契约测试、干净安装和 tarball 校验是常规发版门禁。
 
 ## 2. Gate 0：方案确认
 
@@ -154,7 +155,7 @@
 | 平台 | 自动测试 | 真实 smoke |
 |---|---:|---:|
 | macOS arm64 | 必须 | 必须 |
-| Windows x64 | 必须 | 必须 |
+| Windows x64 | 必须 | `0.1.0` 发布后首次验证；后续非强制 |
 
 macOS x64 不在当前官方 Grok CLI 支持矩阵，也不写入 `0.1.0` 发布承诺。只有 Gate 1 对某个精确官方版本取得 Intel macOS 发布证据后，才能作为非阻断实验记录；runner 可用本身不等于官方支持。
 
@@ -200,10 +201,12 @@ Web 与 TUI 分别验证：
 
 ## 9. 发布验收
 
-必须同时满足：
+`0.1.0` 发布前必须同时满足：
 
 - 所有 P0/P1 测试通过。
 - xAI 官方文档与服务条款复核通过。
-- 发布后 macOS arm64 与 Windows x64 的生产 inspector 都为 `artifact-verified`。
-- macOS arm64 与 Windows x64 真实浏览器登录、聊天与工具调用 smoke 通过。
+- macOS arm64 真实浏览器登录、聊天与工具调用 smoke 通过。
+- Windows x64 自动化平台测试通过，且 README、release notes 和 marketplace 元数据在首次真机验证前明确披露“代码支持、真机未验证”。
 - npm 回读的 SHA-512 与本地发布 tarball 一致。
+
+`0.1.0` 发布后必须完成一次 Windows x64 Registry 精确版本的 production inspector、浏览器登录、聊天与工具调用 smoke，并记录结果。`0.1.1` 及后续版本以 CI/契约/安装/制品校验为常规门禁；认证流程、官方 CLI 版本、Harness subprocess seam 或平台安全策略发生变化时建议定向真机验证，但默认不阻断发版。
