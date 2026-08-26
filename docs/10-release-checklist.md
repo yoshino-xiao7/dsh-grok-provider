@@ -71,5 +71,5 @@ English summary: every release must close documentation, security, tests, determ
 - [x] 仓库所有者决定以后不再发行预发行版；正式版缺陷使用新的递增稳定版本修复。
 - [x] 中英文 README、正式 Release 说明、安全状态和发布政策已同步，并公开披露 Windows 独立真机尚未完成。
 - [x] 稳定 manifest、稳定版专用 Trusted Publisher workflow、完整测试、审计与双平台 CI 通过；CI run `32980619235` 的 macOS 14 与 Windows 2022 job 均成功。
-- [ ] 版本分支经 PR 合并 `yukiryou/main`，从 release commit 冻结唯一稳定 tarball与不可变 `v0.1.2` tag。
-- [ ] GitHub Release、npm `latest`、Registry 逐字节回读、签名与 provenance 验证完成。
+- [x] 版本分支经 PR #4 合并 `yukiryou/main`；release commit `30ff6bdeb62f7904baf02c4a5f9ebd73e2edf442` 冻结唯一稳定 tarball与不可变 `v0.1.2` tag。制品为 51 个文件、99,894 bytes，SHA-256 `b224db9f52708b355baa914c0fa4a352e9f791c3e51a36c7309a3b89cbc2781a`，SRI `sha512-XhaOjOflDGsNUaAYnIw1aoJ/zHfPbYtubLKvTUu6aro3olaLWek6xdEe83DpAmwJT6xM3s0+y0QOnEh1kQtl9w==`。
+- [x] GitHub 正式 Release 与 Trusted Publisher run `32981172053` 完成；npm `latest=0.1.2`，Registry 重新下载文件逐字节一致，1 个 Registry 签名与 1 个 provenance attestation 验证通过。

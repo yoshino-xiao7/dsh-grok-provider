@@ -1,10 +1,10 @@
 # 当前实现与发布状态
 
-稳定 `0.1.2` 已获得直接发布授权。仓库所有者决定不再发行预发行版，正式版缺陷通过新的递增稳定版本修复。Windows x64 有代码与 CI 覆盖，但独立真机验收不再阻断 `0.1.2`，该限制在 README 与 Release 中公开披露。
+稳定 `0.1.2` 已通过 GitHub Release 与 npm `latest` 正式发布。仓库所有者决定不再发行预发行版，正式版缺陷通过新的递增稳定版本修复。Windows x64 有代码与 CI 覆盖，但独立真机验收不再阻断 `0.1.2`，该限制在 README 与 Release 中公开披露。
 
 状态日期：2026-08-26
 当前发布线：`dsh-grok-provider@0.1.2`
-下一版本分支：发布后创建 `yukiryou/v0.1.3`
+下一版本分支：`yukiryou/v0.1.3`
 
 ## 已实现
 
@@ -61,3 +61,12 @@ Windows x64 真机不再是 `0.1.0` 预发布阻断项。首次发布后必须�
 - Trusted Publisher OIDC workflow run `32936282879` 发布成功；npm `latest` 指向 `0.1.1`，provenance 绑定 canonical repository、`release.yml`、`yukiryou/main` 与上述 release commit。
 - Registry 重新下载文件与本地/GitHub Release 候选逐字节一致；9 个 Registry 签名与 1 个 provenance attestation 验证通过；npm 页面 README 已回读为 `0.1.1` 最终公开状态。
 - YukiRyou catalog 仍精确保留已完成受管 Harness 真机安装的 `0.1.0`。其 schema 不允许把仅完成完整性、provenance、Node 24 干净安装和模块加载的 `0.1.1` 标成 `installed`；遵循“不重复真机验证”决定，因此不做虚假升级。
+
+## `0.1.2` 发布结果
+
+- 受保护 PR #4 合并后的 release commit 为 `30ff6bdeb62f7904baf02c4a5f9ebd73e2edf442`，不可变 `v0.1.2` tag 精确指向该提交。
+- 正式 tarball 为 51 个文件、99,894 bytes；SHA-256 为 `b224db9f52708b355baa914c0fa4a352e9f791c3e51a36c7309a3b89cbc2781a`，npm SRI 为 `sha512-XhaOjOflDGsNUaAYnIw1aoJ/zHfPbYtubLKvTUu6aro3olaLWek6xdEe83DpAmwJT6xM3s0+y0QOnEh1kQtl9w==`。
+- Trusted Publisher OIDC workflow run `32981172053` 从正式 GitHub Release 下载并复验同一 tarball 后发布成功；workflow 只接受稳定 tag 并固定发布到 npm `latest`。
+- Registry 重新下载文件与 GitHub Release 制品逐字节一致；1 个 Registry 签名与 1 个 SLSA provenance attestation 验证通过。
+- npm `latest` 指向 `0.1.2`；`next` 仍指向不可变历史版本 `0.1.2-rc.1`，但长期 workflow 已无法创建或发布新的预发行版本。
+- 发布后已从 released `yukiryou/main` 创建下一稳定开发分支 `yukiryou/v0.1.3`。
