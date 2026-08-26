@@ -1,14 +1,14 @@
 import os from "node:os"
 import path from "node:path"
 
-import { GROK_CLI_1_0_5_AUTH_CONTRACT, createCredentialSource } from "../src/internal/credential-source.mjs"
+import { GROK_PRODUCTION_OIDC_AUTH_CONTRACT, createCredentialSource } from "../src/internal/credential-source.mjs"
 import { createGrokTransport } from "../src/internal/grok-transport.mjs"
 import { createOfficialCredentialLoader } from "../src/internal/official-credential-loader.mjs"
 import { parseResponsesSse } from "../src/internal/responses-sse.mjs"
 import { createResponsesEventDecoder } from "../src/internal/responses-codec.mjs"
 
 const source = createCredentialSource({
-  contract: GROK_CLI_1_0_5_AUTH_CONTRACT,
+  contract: GROK_PRODUCTION_OIDC_AUTH_CONTRACT,
   load: createOfficialCredentialLoader({
     authPath: path.join(os.homedir(), ".grok", "auth.json"),
     platform: "darwin",

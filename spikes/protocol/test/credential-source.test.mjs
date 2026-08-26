@@ -2,11 +2,11 @@ import assert from "node:assert/strict"
 import test from "node:test"
 
 import {
-  GROK_CLI_1_0_5_AUTH_CONTRACT,
+  GROK_PRODUCTION_OIDC_AUTH_CONTRACT,
   createCredentialSource,
 } from "../../../src/internal/credential-source.mjs"
 
-test("a unique Grok CLI 1.0.5 production OIDC record authorizes one operation", async () => {
+test("a unique Grok production OIDC record authorizes one operation", async () => {
   const fixture = JSON.stringify({
     "https://auth.x.ai::b1a00492-073a-47ea-816f-4c329264a828": {
       key: "fixture-access-token",
@@ -28,7 +28,7 @@ test("a unique Grok CLI 1.0.5 production OIDC record authorizes one operation", 
   })
 
   const source = createCredentialSource({
-    contract: GROK_CLI_1_0_5_AUTH_CONTRACT,
+    contract: GROK_PRODUCTION_OIDC_AUTH_CONTRACT,
     load: async () => fixture,
     now: () => new Date("2030-01-01T00:30:00.000Z"),
   })
@@ -58,7 +58,7 @@ test("a credential file larger than 64 KiB is rejected before authorization", as
   let operationCalled = false
 
   const source = createCredentialSource({
-    contract: GROK_CLI_1_0_5_AUTH_CONTRACT,
+    contract: GROK_PRODUCTION_OIDC_AUTH_CONTRACT,
     load: async () => fixture,
     now: () => new Date("2030-01-01T00:30:00.000Z"),
   })
@@ -89,7 +89,7 @@ test("an authorized operation failure is not misclassified as a credential failu
   transportFailure.name = "FixtureTransportError"
 
   const source = createCredentialSource({
-    contract: GROK_CLI_1_0_5_AUTH_CONTRACT,
+    contract: GROK_PRODUCTION_OIDC_AUTH_CONTRACT,
     load: async () => fixture,
     now: () => new Date("2030-01-01T00:30:00.000Z"),
   })
@@ -104,7 +104,7 @@ test("an authorized operation failure is not misclassified as a credential failu
 
 test("an official access token inside the five-minute expiry window is rejected", async () => {
   const source = createCredentialSource({
-    contract: GROK_CLI_1_0_5_AUTH_CONTRACT,
+    contract: GROK_PRODUCTION_OIDC_AUTH_CONTRACT,
     load: async () => JSON.stringify({
       "https://auth.x.ai::b1a00492-073a-47ea-816f-4c329264a828": {
         key: "fixture-access-token",
@@ -124,7 +124,7 @@ test("an expired official access token is refreshed by the CLI before one operat
   let refreshed = false
   let refreshCalls = 0
   const source = createCredentialSource({
-    contract: GROK_CLI_1_0_5_AUTH_CONTRACT,
+    contract: GROK_PRODUCTION_OIDC_AUTH_CONTRACT,
     load: async () => JSON.stringify({
       "https://auth.x.ai::b1a00492-073a-47ea-816f-4c329264a828": {
         key: refreshed ? "fresh-access-token" : "expired-access-token",
@@ -153,7 +153,7 @@ test("concurrent operations share one official CLI credential refresh", async ()
   let finishRefresh
   const refreshGate = new Promise((resolve) => { finishRefresh = resolve })
   const source = createCredentialSource({
-    contract: GROK_CLI_1_0_5_AUTH_CONTRACT,
+    contract: GROK_PRODUCTION_OIDC_AUTH_CONTRACT,
     load: async () => JSON.stringify({
       "https://auth.x.ai::b1a00492-073a-47ea-816f-4c329264a828": {
         key: refreshed ? "fresh-access-token" : "expired-access-token",
@@ -183,7 +183,7 @@ test("concurrent operations share one official CLI credential refresh", async ()
 test("a foreign credential contract never invokes the official CLI refresher", async () => {
   let refreshCalls = 0
   const source = createCredentialSource({
-    contract: GROK_CLI_1_0_5_AUTH_CONTRACT,
+    contract: GROK_PRODUCTION_OIDC_AUTH_CONTRACT,
     load: async () => JSON.stringify({
       "https://auth.x.ai::b1a00492-073a-47ea-816f-4c329264a828": {
         key: "foreign-access-token",
@@ -206,7 +206,7 @@ test("a failed official CLI refresh fails closed without retrying the operation"
   let refreshCalls = 0
   let operationCalls = 0
   const source = createCredentialSource({
-    contract: GROK_CLI_1_0_5_AUTH_CONTRACT,
+    contract: GROK_PRODUCTION_OIDC_AUTH_CONTRACT,
     load: async () => {
       loadCalls += 1
       return JSON.stringify({

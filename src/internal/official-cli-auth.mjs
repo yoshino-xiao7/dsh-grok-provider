@@ -1,6 +1,5 @@
 import path from "node:path"
 
-const EXPECTED_VERSION = "grok 1.0.5 (5115b46bc909)"
 const GRACE_MS = 5_000
 const DEFAULT_VERSION_TIMEOUT_MS = 10 * 1000
 const DEFAULT_LOGIN_TIMEOUT_MS = 5 * 60 * 1000
@@ -46,7 +45,7 @@ export function createOfficialCliAuth({
   const candidate = pathApi.join(grokHome, "bin", platform === "win32" ? "grok.exe" : "grok")
   const cliEnvironment = buildCliEnvironment(platform, homeDir)
 
-  const runAction = async (argvTail, callerSignal, timeoutMs) => {
+  const runAction = async (argvTail, callerSignal, timeoutMs, requiredCapability) => {
     let preparationDeadline = createDeadline(callerSignal, versionTimeoutMs)
     let actionDeadline
     let resolved
@@ -62,8 +61,21 @@ export function createOfficialCliAuth({
         signal: preparationDeadline.signal,
         env: cliEnvironment,
       })
-      if (version.stdout.trim() !== EXPECTED_VERSION || version.stderr.length !== 0) {
+      if (!isGrokVersionOutput(version.stdout) || version.stderr.length !== 0) {
         throw new OfficialCliAuthError()
+      }
+
+      if (requiredCapability) {
+        const help = await runCollected(subprocess, {
+          argv: [resolved, ...requiredCapability.helpArgv],
+          cwd: grokHome,
+          maxBytes: 16 * 1024,
+          signal: preparationDeadline.signal,
+          env: cliEnvironment,
+        })
+        if (help.stderr.length !== 0 || !hasCliOption(help.stdout, requiredCapability.option)) {
+          throw new OfficialCliAuthError()
+        }
       }
 
       preparationDeadline.dispose()
@@ -92,7 +104,10 @@ export function createOfficialCliAuth({
 
   return Object.freeze({
     login({ signal } = {}) {
-      return runAction(["login", "--oauth"], signal, loginTimeoutMs)
+      return runAction(["login", "--oauth"], signal, loginTimeoutMs, {
+        helpArgv: ["login", "--help"],
+        option: "--oauth",
+      })
     },
     logout({ signal } = {}) {
       return runAction(["logout"], signal, logoutTimeoutMs)
@@ -100,6 +115,20 @@ export function createOfficialCliAuth({
     refresh({ signal } = {}) {
       return runAction(["models"], signal, refreshTimeoutMs)
     },
+  })
+}
+
+function isGrokVersionOutput(output) {
+  return typeof output === "string" && /^grok [^\r\n]+$/u.test(output.trim())
+}
+
+function hasCliOption(output, expectedOption) {
+  if (typeof output !== "string" || typeof expectedOption !== "string") return false
+  return output.split(/\r?\n/u).some((line) => {
+    const trimmed = line.trimStart()
+    if (!trimmed.startsWith("-")) return false
+    const optionColumn = trimmed.split(/\s{2,}/u, 1)[0]
+    return optionColumn.split(/[\s,]+/u).includes(expectedOption)
   })
 }
 

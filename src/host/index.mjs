@@ -7,7 +7,7 @@ import Schema from "@deepseek-ai/schemastery"
 
 import {
   CredentialFileTooLargeError,
-  GROK_CLI_1_0_5_AUTH_CONTRACT,
+  GROK_PRODUCTION_OIDC_AUTH_CONTRACT,
   UnsupportedCredentialError,
   createCredentialSource,
 } from "../internal/credential-source.mjs"
@@ -35,13 +35,13 @@ export const Config = Schema.object({})
 export function apply(ctx) {
   const platform = process.platform
   if (platform !== "darwin" && platform !== "win32") {
-    throw new TypeError("dsh-grok-provider supports macOS and Windows in version 0.1.0")
+    throw new TypeError("dsh-grok-provider supports macOS and Windows")
   }
 
   const homeDir = os.homedir()
   let refreshOfficialCredential
   const officialSource = createCredentialSource({
-    contract: GROK_CLI_1_0_5_AUTH_CONTRACT,
+    contract: GROK_PRODUCTION_OIDC_AUTH_CONTRACT,
     load: createOfficialCredentialLoader({
       authPath: path.join(homeDir, ".grok", "auth.json"),
       platform,
