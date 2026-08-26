@@ -209,6 +209,7 @@ Web 与 TUI 分别验证：
 - 扫描 tarball：无 token、测试账号、本机绝对路径、日志、fixtures 中的真实响应和 `node_modules`。
 - root 与完整 runtime/optional dependency 图均无 `preinstall`、`install`、`postinstall`；普通构建/测试 scripts 不在该市场阻断集合中，但候选包不得依赖安装时构建。
 - 从真实 tarball 在全新 Harness profile 安装，不依赖仓库外文件。
+- GitHub macOS/Windows checkout 后发行文本统一为 LF；`grok-provider.patch.yml` 的逐字节契约不得因 `core.autocrlf` 改写。
 
 ## 9. 发布验收
 
