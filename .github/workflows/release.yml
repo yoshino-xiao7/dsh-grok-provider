@@ -54,10 +54,23 @@ jobs:
           test "$(tar -xOf "$artifact" package/package.json | jq -r .repository.url)" = \
             'git+https://github.com/yoshino-xiao7/dsh-grok-provider.git'
 
+      - name: Use supported Node.js
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+
       - name: Use supported npm CLI
-        run: npm install --global npm@11.5.1
+        run: |
+          set -euo pipefail
+          npm install --prefix "$RUNNER_TEMP/npm-cli" --no-save --ignore-scripts npm@11.5.1
+          node "$RUNNER_TEMP/npm-cli/node_modules/npm/bin/npm-cli.js" --version
 
       - name: Publish exact artifact with provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm publish release/dsh-grok-provider-0.1.0.tgz --access public --provenance
+        run: >-
+          node "$RUNNER_TEMP/npm-cli/node_modules/npm/bin/npm-cli.js"
+          publish release/dsh-grok-provider-0.1.0.tgz
+          --access public
+          --provenance
