@@ -4,7 +4,7 @@
 
 Use an already authenticated official Grok Build account from DeepSeek Harness, with dynamic model discovery, streaming reasoning, tool calls, and an account quota/model capability dashboard.
 
-> Unofficial community project; not affiliated with xAI or DeepSeek Harness. The current version is `0.1.1`. Windows x64 has code and CI support; its first Registry real-device validation remains a post-release follow-up.
+> Unofficial community project; not affiliated with xAI or DeepSeek Harness. The current published version is `0.1.1`. The `0.1.2` candidate fixes Windows login compatibility and will not be published before Windows real-device acceptance.
 
 ## What it provides
 
@@ -25,7 +25,7 @@ Use an already authenticated official Grok Build account from DeepSeek Harness, 
 - DeepSeek Harness `0.1.1-rc.2`
 - Node.js `24.19.0` or newer
 - macOS arm64 or Windows x64
-- Official Grok Build CLI `1.0.5 (5115b46bc909)`
+- Official Grok Build CLI with `login --oauth` support and the default Grok home
 
 Install the CLI from the [official Grok Build documentation](https://docs.x.ai/build/overview), then verify:
 
@@ -106,14 +106,14 @@ Directory inclusion is not an endorsement by xAI or DeepSeek Harness. The public
 
 ## Compatibility and scope
 
-| Item | `0.1.1` status |
+| Item | `0.1.2` candidate status |
 | --- | --- |
 | DeepSeek Harness | Exact support for `0.1.1-rc.2` |
 | Node.js | `>=24.19.0` |
 | macOS arm64 | Real-network and isolated Harness acceptance completed |
-| Windows x64 | Code-supported; real-device validation after initial release |
+| Windows x64 | Browser login, credential revalidation, and minimal-chat real-device acceptance in progress |
 | macOS x64 / Linux | Unsupported |
-| Grok CLI | Exact support for `1.0.5 (5115b46bc909)` |
+| Grok CLI | No full-version lock; official path, `login --oauth` capability, and production OIDC credential contract are enforced |
 | Models | Every account catalog model whose backend has a strict codec in this release |
 
 The initial release excludes image input, Web/X Search, arbitrary downloads, API-key mode, multiple accounts, enterprise OIDC, ACP, and Headless agent wrapping. See the complete [product requirements](docs/01-product-requirements.md).

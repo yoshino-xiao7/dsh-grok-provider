@@ -4,7 +4,7 @@
 
 让 DeepSeek Harness 使用你已登录的官方 Grok Build 账号：动态模型发现、流式推理、工具调用，以及账号额度与模型能力面板。
 
-> 非官方社区项目，与 xAI 或 DeepSeek Harness 官方无隶属关系。当前版本为 `0.1.1`；Windows x64 已完成代码与 CI 支持，首次 Registry 真机验证仍在发布后跟进中。
+> 非官方社区项目，与 xAI 或 DeepSeek Harness 官方无隶属关系。当前发布版本为 `0.1.1`；`0.1.2` 候选正在修复 Windows 登录兼容性，完成 Windows 真机验收前不会发布。
 
 ## 它解决什么问题
 
@@ -25,7 +25,7 @@
 - DeepSeek Harness `0.1.1-rc.2`
 - Node.js `24.19.0` 或更高版本
 - macOS arm64 或 Windows x64
-- 官方 Grok Build CLI `1.0.5 (5115b46bc909)`
+- 官方 Grok Build CLI（支持 `login --oauth`，并使用官方默认 Grok home）
 
 请从 [Grok Build 官方文档](https://docs.x.ai/build/overview) 安装 CLI，并先确认：
 
@@ -106,14 +106,14 @@ dsh web
 
 ## 兼容性与范围
 
-| 项目 | `0.1.1` 状态 |
+| 项目 | `0.1.2` 候选状态 |
 | --- | --- |
 | DeepSeek Harness | 精确支持 `0.1.1-rc.2` |
 | Node.js | `>=24.19.0` |
 | macOS arm64 | 已完成真实网络与隔离 Harness 验收 |
-| Windows x64 | 代码支持；首版发布后真机验证 |
+| Windows x64 | 正在进行浏览器登录、凭据复验与最小对话真机验收 |
 | macOS x64 / Linux | 不支持 |
-| Grok CLI | 精确支持 `1.0.5 (5115b46bc909)` |
+| Grok CLI | 不锁完整版本；严格校验官方路径、`login --oauth` 能力与生产 OIDC 凭据契约 |
 | 模型 | 当前账号目录中 backend 已被严格 codec 支持的全部模型 |
 
 首版不包含图片输入、Web/X Search、任意文件下载、API Key 模式、多账号、企业 OIDC、ACP 或 Headless agent 封装。完整范围见[产品需求](docs/01-product-requirements.md)。

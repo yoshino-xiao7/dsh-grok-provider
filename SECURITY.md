@@ -4,7 +4,7 @@
 
 ## 支持范围
 
-当前版本为 `0.1.1`。仅维护当前发布线中明确列出的 DeepSeek Harness、Node.js、操作系统和 Grok CLI 精确版本；未经验证的版本会失败关闭。macOS arm64 已完成真实验收；Windows x64 仍是代码与 CI 支持、首次 Registry 真机尚未完成。
+当前发布版本为 `0.1.1`，`0.1.2` 正在修复 Windows 登录兼容性。DeepSeek Harness、Node.js 与操作系统仍按发布线明确维护；Grok CLI 不再用完整版本字符串作为信任门禁，而是严格校验官方默认路径、命令能力、生产 OIDC 凭据契约和固定服务端协议。macOS arm64 已完成真实验收；`0.1.2` 发布前必须完成 Windows x64 候选真机验收。
 
 ## 私下报告漏洞
 

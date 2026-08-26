@@ -13,7 +13,7 @@
 首版采用单一认证路线：插件发起官方 Grok Build CLI 浏览器登录并复用由官方 CLI 持久化的会话。插件不注册独立 OAuth client，也不持久化第二份 token。
 
 1. 用户在 Harness 设置页点击“使用 Grok 登录”，或在 TUI 输入 `/grok login`。
-2. 插件 Host 通过 Harness `ctx.subprocess` 以固定 argv 启动经路径/版本约束的 Grok CLI 候选；该启动层不经过 shell。标准配置下由官方 CLI 完成系统浏览器、OAuth、loopback callback 和凭据写入。
+2. 插件 Host 通过 Harness `ctx.subprocess` 以固定 argv 启动经路径、能力与凭据契约约束的 Grok CLI 候选；该启动层不经过 shell。标准配置下由官方 CLI 完成系统浏览器、OAuth、loopback callback 和凭据写入。
 3. 插件只读官方凭据文件并接受绑定 schema；token 不进入 renderer、settings、RPC、本插件日志或 workspace。
 4. 模型目录只请求固定 `GET /v1/models`；推理按目录中经过验证的 `api_backend` 选择闭合 endpoint。当前真实模型都走固定 `POST /v1/responses`；拒绝重定向和自定义 endpoint。
 5. 模型目录从固定 `/v1/models` 动态发现账号当前可用的全部 Grok Build 模型；本机当前快照为 `grok-4.6` 与 `grok-4.5`。
@@ -44,6 +44,7 @@
 - [ADR-0004：动态全模型目录](./adr/0004-dynamic-model-catalog.md)
 - [ADR-0005：官方 CLI 单一认证路径](./adr/0005-official-cli-only-authentication.md)
 - [ADR-0006：账户额度与模型能力面板](./adr/0006-account-dashboard.md)
+- [ADR-0007：以能力与凭据契约判断 CLI 兼容性](./adr/0007-capability-based-cli-compatibility.md)
 
 ## 开发门禁
 

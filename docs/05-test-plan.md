@@ -7,7 +7,7 @@
 - 所有本地模拟服务使用随机 loopback 端口，不访问真实第三方。
 - 真实账号 smoke 只在发布候选上人工执行，记录脱敏结果。
 - `0.1.0` 发布前必须通过 macOS arm64 真机与 macOS/Windows 自动化矩阵；Windows x64 首次真机验证在发布后对 Registry 精确版本执行，验证前对外标注“代码支持、真机未验证”。
-- `0.1.1` 及后续版本不要求每次重复真机验证；自动化矩阵、契约测试、干净安装和 tarball 校验是常规发版门禁。
+- `0.1.1` 及后续版本不要求每次重复真机验证；自动化矩阵、契约测试、干净安装和 tarball 校验是常规发版门禁。认证流程、平台 subprocess seam 或安全契约发生变化的版本仍须做对应平台的定向真机验证。
 
 ## 2. Gate 0：方案确认
 
@@ -22,7 +22,7 @@
 - macOS 在标准 Grok 配置下从 Harness Host 启动 `grok login --oauth`，默认浏览器成功打开。
 - Windows 在标准 Grok 配置下从 Harness Host 启动 `grok.exe login --oauth`，默认浏览器成功打开。
 - 插件到 CLI 的 `ctx.subprocess` argv 不经 shell，不需要用户另开 Terminal/PowerShell；不声称官方 CLI 及其后代端到端无 shell。
-- 锁定并记录精确 Grok CLI 版本、官方 tag/commit 与可用的 `SOURCE_REV`；auth flow/schema/Proxy 依据使用该版本永久链接，不以 mutable `main` 作为发布证据。
+- 记录验收所用 Grok CLI 版本、官方 tag/commit 与可用的 `SOURCE_REV`；版本只用于复现和诊断。兼容性由可执行文件、命令能力、生产 OIDC 凭据契约与固定服务端 codec 共同决定，不以完整版本字符串作为 allowlist。
 - 标准配置成功后凭据由官方 CLI 管理；验证“已有会话→重新登录取消/失败”可能清除旧会话、成功后的 managed-config sync，以及 logout 会影响共享 `GROK_HOME` 的其他应用。
 - 取消、5 分钟超时、CLI 非零退出和 Harness 卸载都会终止并等待 Harness seam 可观察的受管进程树；单独记录官方 CLI 主动脱离的后代和系统浏览器。
 - stdout/stderr 不进入 UI、session log 或普通日志。
@@ -54,7 +54,9 @@
 - Windows reparse point、目录、设备文件和非 `.exe` 候选失败。
 - 相对或 UI/RPC 提供的 `GROK_HOME` 失败；只接受 Host 启动时冻结的绝对值。
 - workspace/PATH 中的假 `grok` 不会被选中。
-- `--version` 超时、超限、非零退出、畸形版本，以及不在发布冻结有限精确版本集合中的更低/更高版本都失败。
+- `--version` 超时、超限、非零退出、stderr 非空或非单行 `grok ...` 输出失败；合法的未知版本输出不得仅因版本号不同而失败。
+- 登录前 `login --help` 必须成功并包含独立 `--oauth` 选项；缺失、畸形、超时、超限或非零退出时不得启动 `login --oauth`。
+- 覆盖 macOS `grok 1.0.5 (5115b46bc909)` 与 Windows `grok 0.2.82 (6d0b07d2de) [stable]` 的真实输出形状，并断言两者都能在能力存在时进入固定登录 argv。
 - 登录期间 symlink/文件 identity/version 改变，或官方 CLI 自更新到未测试版本时失败关闭；不把 vendor updater 误记成插件下载安装。
 - 路径/owner/version 检查不得在 UI 中宣称已密码学证明 publisher；从非官方安装入口取得的候选不在支持范围。
 
@@ -221,4 +223,4 @@ Web 与 TUI 分别验证：
 - Windows x64 自动化平台测试通过，且 README、release notes 和 marketplace 元数据在首次真机验证前明确披露“代码支持、真机未验证”。
 - npm 回读的 SHA-512 与本地发布 tarball 一致。
 
-`0.1.0` 发布后必须完成一次 Windows x64 Registry 精确版本的 production inspector、浏览器登录、聊天与工具调用 smoke，并记录结果。`0.1.1` 及后续版本以 CI/契约/安装/制品校验为常规门禁；认证流程、官方 CLI 版本、Harness subprocess seam 或平台安全策略发生变化时建议定向真机验证，但默认不阻断发版。
+`0.1.0` 发布后必须完成一次 Windows x64 Registry 精确版本的 production inspector、浏览器登录、聊天与工具调用 smoke，并记录结果。`0.1.1` 及后续版本以 CI/契约/安装/制品校验为常规门禁；认证流程、Harness subprocess seam 或平台安全策略发生变化时必须定向真机验证。`0.1.2` 正在修复 Windows 登录门禁，须从候选包完成 Windows 浏览器登录、凭据复验、模型刷新和最小对话后才能获得发布授权。
