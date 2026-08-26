@@ -34,7 +34,7 @@ export const Config = Schema.object({})
 export function apply(ctx) {
   const platform = process.platform
   if (platform !== "darwin" && platform !== "win32") {
-    throw new TypeError("dsh-grok-provider-yukiryou supports macOS and Windows in version 0.1.0")
+    throw new TypeError("dsh-grok-provider supports macOS and Windows in version 0.1.0")
   }
 
   const homeDir = os.homedir()
@@ -53,7 +53,7 @@ export function apply(ctx) {
       credentialSource,
       fetch: globalThis.fetch,
       attributionHeaders,
-      clientIdentifier: "dsh-grok-provider-yukiryou",
+      clientIdentifier: "dsh-grok-provider",
       clientVersion: "1.0.5",
     }),
     createAdapter: ({ getGeneration }) => createGrokAdapter({

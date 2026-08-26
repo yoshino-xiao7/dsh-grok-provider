@@ -1,4 +1,4 @@
-# dsh-grok-provider-yukiryou
+# dsh-grok-provider
 
 Clean-room Grok Build provider for DeepSeek Harness. It dynamically discovers every model visible to the selected Grok Build account and maps the native Responses stream to Harness text, reasoning, encrypted reasoning replay, usage and tool calls.
 

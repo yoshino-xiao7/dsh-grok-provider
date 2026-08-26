@@ -28,7 +28,7 @@ Host 通过 Harness `ctx.subprocess` 以固定 argv 启动经路径/版本约束
 
 ### 4. 发布身份
 
-采用并冻结：`dsh-grok-provider-yukiryou@0.1.0`。不再等待未确认的 `@yukiryou` scope 权限；Host、credential owner、client bundle、patch 与 provenance 必须使用这一精确身份。
+采用并冻结：`dsh-grok-provider@0.1.0`。npm 页面通过发布账户、maintainers 与 provenance 关联维护者；Host、client bundle、patch 与 provenance 必须使用这一精确身份。
 
 ### 5. 发布门禁
 

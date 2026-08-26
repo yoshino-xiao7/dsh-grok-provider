@@ -1,7 +1,7 @@
 # 当前实现与发布阻断项
 
 状态日期：2026-08-26
-目标包：`dsh-grok-provider-yukiryou@0.1.0`
+目标包：`dsh-grok-provider@0.1.0`
 开发分支：`yukiryou/v0.1.0`
 
 ## 已实现

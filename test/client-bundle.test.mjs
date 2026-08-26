@@ -22,7 +22,7 @@ test("the browser bundle registers one localized loopback-only Grok settings sec
   assert.equal(await fs.readFile(path.join(root, "grok-provider.patch.yml"), "utf8"), [
     "- insert:",
     "    - id: llm-grok",
-    "      name: dsh-grok-provider-yukiryou",
+    "      name: dsh-grok-provider",
     "",
   ].join("\n"))
 
@@ -37,7 +37,7 @@ test("the browser bundle registers one localized loopback-only Grok settings sec
       querySelector: () => null,
     },
   })
-  assert.equal(definition.id, "dsh-grok-provider-yukiryou")
+  assert.equal(definition.id, "dsh-grok-provider")
 
   const React = {
     createElement() {},

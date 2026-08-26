@@ -5,7 +5,7 @@
 已冻结：
 
 ```text
-dsh-grok-provider-yukiryou@0.1.0
+dsh-grok-provider@0.1.0
 ```
 
 不采用 `dsh-llm-grok-yukiryou`，避免被理解为第三方包的修补或衍生版本。

@@ -90,7 +90,7 @@ test("model discovery owns a deadline and classifies an internal timeout as tran
       reject(new DOMException("Timed out", "AbortError"))
     }, { once: true })),
     attributionHeaders: () => ({ "user-agent": "fixture-harness" }),
-    clientIdentifier: "dsh-grok-provider-yukiryou",
+    clientIdentifier: "dsh-grok-provider",
     clientVersion: "1.0.5",
     modelTimeoutMs: 5,
   })

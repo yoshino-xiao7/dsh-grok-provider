@@ -7,7 +7,7 @@ const root = path.resolve(import.meta.dirname, "..")
 
 test("the exact 0.1.0 manifest exports only built runtime artifacts", async () => {
   const manifest = JSON.parse(await fs.readFile(path.join(root, "package.json"), "utf8"))
-  assert.equal(manifest.name, "dsh-grok-provider-yukiryou")
+  assert.equal(manifest.name, "dsh-grok-provider")
   assert.equal(manifest.version, "0.1.0")
   assert.deepEqual(manifest.exports["."], {
     types: "./types/index.d.ts",
@@ -32,7 +32,7 @@ test("the exact 0.1.0 manifest exports only built runtime artifacts", async () =
   const host = await fs.readFile(path.join(root, "dist/host/index.mjs"), "utf8")
   const client = await fs.readFile(path.join(root, "dist/client/client.js"), "utf8")
   assert.match(host, /export const name = "llm-grok"/u)
-  assert.match(client, /id: "dsh-grok-provider-yukiryou"/u)
+  assert.match(client, /id: "dsh-grok-provider"/u)
   assert.doesNotMatch(client, /node:fs|node:path|refreshToken|accessToken|auth\.json/u)
   for (const filename of [
     "managed-capability.mjs",

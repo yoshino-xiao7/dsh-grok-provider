@@ -95,13 +95,15 @@ test("official browser login owns a deadline and terminates a stalled process tr
     subprocess,
     platform: "darwin",
     homeDir: "/Users/fixture",
-    verifyExecutable: async () => {},
+    verifyExecutable: async () => {
+      await new Promise((resolve) => setTimeout(resolve, 75))
+    },
     loginTimeoutMs: 5,
   })
 
   await assert.rejects(Promise.race([
     auth.login(),
-    new Promise((_, reject) => setTimeout(() => reject(new Error("deadline missing")), 50)),
+    new Promise((_, reject) => setTimeout(() => reject(new Error("deadline missing")), 500)),
   ]), { name: "OfficialCliAuthError" })
   assert.equal(actionSignal.aborted, true)
 })

@@ -1,7 +1,7 @@
 /* global document, window */
 
 window.__ModuleLoader__.load({
-  id: "dsh-grok-provider-yukiryou",
+  id: "dsh-grok-provider",
   factory: (require) => {
     const module = { exports: {} }
     const React = require("react")
@@ -37,9 +37,9 @@ window.__ModuleLoader__.load({
       .dsh-grok-actions{display:flex;margin-top:13px;flex-wrap:wrap;gap:7px}.dsh-grok-button{height:34px;border:1px solid var(--dsw-alias-border-l2);border-radius:9px;padding:0 11px;color:var(--dsw-alias-label-secondary);background:var(--dsw-alias-bg-layer-1);cursor:pointer;font:inherit;font-size:11px}.dsh-grok-button:hover:not(:disabled){color:var(--dsw-alias-label-primary);background:var(--dsw-alias-interactive-bg-hover)}.dsh-grok-button:disabled{cursor:default;opacity:.45}.dsh-grok-primary{border-color:var(--dsw-static-deepseek-500,#4d6bfe);color:#fff;background:var(--dsw-static-deepseek-500,#4d6bfe)}
       .dsh-grok-error{margin:12px 0 0;color:var(--dsw-static-red-500,#e5484d);font-size:12px}
     `
-    if (!document.querySelector('style[data-plugin-css="dsh-grok-provider-yukiryou"]')) {
+    if (!document.querySelector('style[data-plugin-css="dsh-grok-provider"]')) {
       const style = document.createElement("style")
-      style.dataset.pluginCss = "dsh-grok-provider-yukiryou"
+      style.dataset.pluginCss = "dsh-grok-provider"
       style.textContent = css
       document.head.appendChild(style)
     }

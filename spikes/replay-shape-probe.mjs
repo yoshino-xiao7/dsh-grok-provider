@@ -21,7 +21,7 @@ const transport = createGrokTransport({
   credentialSource,
   fetch: globalThis.fetch,
   attributionHeaders: () => ({ "user-agent": "deepseek-harness/0.1.1-rc.2" }),
-  clientIdentifier: "dsh-grok-provider-yukiryou",
+  clientIdentifier: "dsh-grok-provider",
   clientVersion: "1.0.5",
 })
 

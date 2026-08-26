@@ -6,7 +6,7 @@
 
 冻结的 npm 身份：
 
-- 包名：`dsh-grok-provider-yukiryou`
+- 包名：`dsh-grok-provider`
 - 首个精确版本：`0.1.0`
 - Provider ID：`grok`
 - 当前真机模型快照：`grok-4.6`、`grok-4.5`；生产目录动态发现账号可用的全部模型
