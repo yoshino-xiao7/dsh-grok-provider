@@ -8,7 +8,7 @@ test("one login session exposes only public state, cancels, and invalidates auth
   const registry = createAuthRegistry({
     createTransport: (source) => ({ source }),
   })
-  registry.install({ id: "official" })
+  registry.install({ id: "official", async withAccessToken(operation) { return operation("fixture") } })
   let finish
   const controller = createAuthController({
     registry,
@@ -36,8 +36,8 @@ test("one login session exposes only public state, cancels, and invalidates auth
   assert.equal(controller.cancel("fixture-session-id"), true)
   finish()
   assert.deepEqual(await session.wait(), { kind: "cancelled" })
-  assert.equal(registry.status().generation, 2)
-  assert.deepEqual(controller.status().session, {
+  assert.equal((await registry.status()).generation, 2)
+  assert.deepEqual((await controller.status()).session, {
     state: "cancelled",
     sessionId: "fixture-session-id",
   })
@@ -66,14 +66,14 @@ test("capability shutdown cancels and waits for the active login before returnin
 
   assert.equal(await controller.shutdown(), true)
   assert.equal(completionSettled, true)
-  assert.equal(controller.status().session.state, "cancelled")
+  assert.equal((await controller.status()).session.state, "cancelled")
 })
 
 test("logout requires a second same-mode confirmation inside thirty seconds", async () => {
   const registry = createAuthRegistry({
     createTransport: (source) => ({ source }),
   })
-  registry.install({ id: "official" })
+  registry.install({ id: "official", async withAccessToken(operation) { return operation("fixture") } })
   let logoutCalls = 0
   const controller = createAuthController({
     registry,
@@ -93,7 +93,7 @@ test("logout requires a second same-mode confirmation inside thirty seconds", as
   assert.equal(logoutCalls, 0)
   assert.deepEqual(await controller.logout(), { kind: "succeeded" })
   assert.equal(logoutCalls, 1)
-  assert.equal(registry.status().generation, 2)
+  assert.equal((await registry.status()).generation, 2)
 })
 
 test("a confirmed official logout excludes a new browser login until it settles", async () => {

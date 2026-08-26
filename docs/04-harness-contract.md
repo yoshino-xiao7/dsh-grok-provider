@@ -238,7 +238,8 @@ bundle ID 必须由最终 `package.json.name` 在构建时注入，不能在包�
     "./client": {
       "types": "./dist/client/index.d.ts",
       "default": "./dist/client/client.js"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "dsh": {
     "bundle": {
@@ -256,6 +257,8 @@ bundle ID 必须由最终 `package.json.name` 在构建时注入，不能在包�
   }
 }
 ```
+
+rc.2 的 Host 端 client-module scanner 会执行 `require.resolve("<package>/package.json")` 读取 `dsh.client` 声明，因此 `./package.json` 是 Web bundle 可发现性的必要公开元数据入口；缺失时 Host 插件仍可挂载，但浏览器启动图不会包含该包。
 
 client bundle 导出 Cordis `inject` 与 `apply`，所需 services 至少为 `slots`、`locale`、`connection`。设置页通过 `ctx.slots.inject("settings.section", () => ctx.slots.register(...))` 注册。
 

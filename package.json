@@ -15,7 +15,8 @@
     },
     "./client": {
       "default": "./dist/client/client.js"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "dsh": {
     "bundle": {

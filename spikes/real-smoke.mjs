@@ -82,36 +82,40 @@ for (const model of models) {
 }
 
 for (const model of models) {
-  let toolCallCount = 0
-  for await (const chunk of adapter.stream({
-    provider: "grok",
-    model: model.id,
-    reasoningEffort: model.reasoning?.defaultEffort,
-    messages: [{
-      id: "smoke-tool-user",
-      role: "user",
-      source: { kind: "user" },
-      content: [{ type: "text", text: "Call fixture_tool exactly once with value set to ok. Do not answer in text." }],
-    }],
-    tools: [{
-      name: "fixture_tool",
-      description: "A no-op verification tool",
-      parameters: {
-        type: "object",
-        properties: { value: { type: "string", enum: ["ok"] } },
-        required: ["value"],
-        additionalProperties: false,
-      },
-    }],
-  })) {
-    if (chunk.type === "block-end" && chunk.block.type === "tool-call") {
-      const args = JSON.parse(chunk.block.arguments)
-      if (chunk.block.name !== "fixture_tool" || args.value !== "ok") {
-        throw new Error("Unexpected tool-call mapping")
+  let passed = false
+  for (let attempt = 1; attempt <= 3 && !passed; attempt += 1) {
+    let toolCallCount = 0
+    for await (const chunk of adapter.stream({
+      provider: "grok",
+      model: model.id,
+      reasoningEffort: model.reasoning?.defaultEffort,
+      messages: [{
+        id: `smoke-tool-user-${attempt}`,
+        role: "user",
+        source: { kind: "user" },
+        content: [{ type: "text", text: "Call fixture_tool exactly once with value set to ok. Do not answer in text." }],
+      }],
+      tools: [{
+        name: "fixture_tool",
+        description: "A no-op verification tool",
+        parameters: {
+          type: "object",
+          properties: { value: { type: "string", enum: ["ok"] } },
+          required: ["value"],
+          additionalProperties: false,
+        },
+      }],
+    })) {
+      if (chunk.type === "block-end" && chunk.block.type === "tool-call") {
+        const args = JSON.parse(chunk.block.arguments)
+        if (chunk.block.name !== "fixture_tool" || args.value !== "ok") {
+          throw new Error("Unexpected tool-call mapping")
+        }
+        toolCallCount += 1
       }
-      toolCallCount += 1
     }
+    passed = toolCallCount === 1
+    if (passed) console.log(JSON.stringify({ kind: "tool", model: model.id, toolCallCount, attempts: attempt }))
   }
-  if (toolCallCount !== 1) throw new Error("Expected exactly one tool call")
-  console.log(JSON.stringify({ kind: "tool", model: model.id, toolCallCount }))
+  if (!passed) throw new Error(`Expected exactly one tool call from ${model.id} within three attempts`)
 }

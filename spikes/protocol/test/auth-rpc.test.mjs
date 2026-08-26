@@ -16,7 +16,7 @@ test("the Web auth RPC accepts only closed payloads and never throws controller 
 
   assert.deepEqual(await handler("status", {}, signal), {
     ok: true,
-    value: { kind: "status", status: controller.status() },
+    value: { kind: "status", status: await controller.status() },
   })
   assert.deepEqual(await handler("login", {}, signal), {
     ok: true,
@@ -28,7 +28,7 @@ test("the Web auth RPC accepts only closed payloads and never throws controller 
   })
   assert.deepEqual(await handler("cancel", { sessionId: "s1" }, signal), {
     ok: true,
-    value: { kind: "cancelled", status: controller.status() },
+    value: { kind: "cancelled", status: await controller.status() },
   })
   assert.deepEqual(await handler("cancel", {}, signal), {
     ok: false,

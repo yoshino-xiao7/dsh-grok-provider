@@ -19,7 +19,7 @@ export function createAuthRegistry({ createTransport }) {
       const token = Object.freeze({})
       const transport = createTransport(source)
       if (!transport || typeof transport !== "object") throw new TypeError("Invalid Grok transport")
-      entry = { transport, token }
+      entry = { source, transport, token }
       generation += 1
       let disposed = false
       return () => {
@@ -41,8 +41,24 @@ export function createAuthRegistry({ createTransport }) {
       return Object.freeze({ id: generation, transport: entry.transport })
     },
 
-    status() {
-      return Object.freeze({ generation, available: entry !== undefined })
+    async status() {
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        const snapshot = entry
+        const snapshotGeneration = generation
+        let available = false
+        if (snapshot !== undefined && typeof snapshot.source.withAccessToken === "function") {
+          try {
+            await snapshot.source.withAccessToken(() => undefined)
+            available = true
+          } catch {
+            available = false
+          }
+        }
+        if (entry === snapshot && generation === snapshotGeneration) {
+          return Object.freeze({ generation: snapshotGeneration, available })
+        }
+      }
+      return Object.freeze({ generation, available: false })
     },
   })
 }

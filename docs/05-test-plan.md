@@ -80,6 +80,7 @@
 - access/refresh token canary 不出现在 `JSON.stringify(status)`、异常、日志、cache、诊断输出或 fingerprint；测试承认完整文件字节会瞬时进入 Host 内存。
 - 新鲜 access token 不启动 CLI；过期的同源官方 record 通过固定 `models` 命令刷新并只重试一次；并发请求 single-flight；外国 issuer/client/scope/schema 永不触发刷新；刷新失败或刷新后仍过期统一失败关闭。
 - email、user ID、team/org、subscription 与 fingerprint canary 不进入 `PublicAuthStatus`、RPC、命令返回或持久事件。
+- credential source 已挂载但文件缺失、无效或过期且续期失败时，Web/TUI 状态必须为 unavailable；不得把 source/transport 已注册误报为凭据 ready。状态校验与登录/退出 generation 竞态时失败关闭。
 - `expires_at` 边界、固定 clock skew、缺失/畸形 expiry 和本机时钟偏移。
 - mtime/identity 变化使缓存失效。
 - logout/401 与并发读取竞态不会恢复旧缓存。

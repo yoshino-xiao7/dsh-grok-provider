@@ -17,7 +17,7 @@ export function createGrokCommandHandler({ controller }) {
 
     try {
       if (command.verb === "status") {
-        const status = controller.status()
+        const status = await controller.status()
         return success(`Grok official CLI auth: ${renderStatus(status)}`)
       }
       if (command.verb === "login") {
@@ -28,7 +28,7 @@ export function createGrokCommandHandler({ controller }) {
           : error(`Grok official CLI login ${outcome.kind}`)
       }
       if (command.verb === "cancel") {
-        const sessionId = controller.status().session?.sessionId
+        const sessionId = (await controller.status()).session?.sessionId
         return typeof sessionId === "string" && controller.cancel(sessionId)
           ? success("Grok login cancellation requested")
           : error("No Grok login is running")

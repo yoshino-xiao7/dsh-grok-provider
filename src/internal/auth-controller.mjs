@@ -44,9 +44,9 @@ export function createAuthController({ registry, randomUUID, now = () => new Dat
   return Object.freeze({
     installDriver: install,
 
-    status() {
+    async status() {
       return Object.freeze({
-        ...registry.status(),
+        ...await registry.status(),
         driver: installed !== undefined,
         ...(state === undefined ? {} : { session: Object.freeze({ ...state }) }),
       })

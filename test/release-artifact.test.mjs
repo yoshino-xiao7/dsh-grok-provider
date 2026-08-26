@@ -1,11 +1,12 @@
 import assert from "node:assert/strict"
 import fs from "node:fs/promises"
+import { createRequire } from "node:module"
 import path from "node:path"
 import test from "node:test"
 
 const root = path.resolve(import.meta.dirname, "..")
 
-test("the exact 0.1.0 manifest exports only built runtime artifacts", async () => {
+test("the exact 0.1.0 manifest exports runtime artifacts and Web loader metadata", async () => {
   const manifest = JSON.parse(await fs.readFile(path.join(root, "package.json"), "utf8"))
   assert.equal(manifest.name, "dsh-grok-provider")
   assert.equal(manifest.version, "0.1.0")
@@ -14,6 +15,9 @@ test("the exact 0.1.0 manifest exports only built runtime artifacts", async () =
     default: "./dist/host/index.mjs",
   })
   assert.deepEqual(manifest.exports["./client"], { default: "./dist/client/client.js" })
+  assert.equal(manifest.exports["./package.json"], "./package.json")
+  const require = createRequire(path.join(root, "web-loader-fixture.cjs"))
+  assert.equal(require.resolve("dsh-grok-provider/package.json"), path.join(root, "package.json"))
   assert.deepEqual(manifest.files, [
     "dist",
     "docs",

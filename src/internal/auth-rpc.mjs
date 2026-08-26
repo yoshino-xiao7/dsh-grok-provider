@@ -14,7 +14,7 @@ export function createAuthRpcHandler({ controller }) {
     try {
       if (endpoint === "status") {
         if (!hasExactKeys(payload, [])) return badRequest()
-        const status = serializable(controller.status())
+        const status = serializable(await controller.status())
         return ok({ kind: "status", status })
       }
       if (endpoint === "login") {
@@ -28,7 +28,7 @@ export function createAuthRpcHandler({ controller }) {
         if (cancellation === undefined) return badRequest()
         return ok({
           kind: controller.cancel(cancellation.sessionId) ? "cancelled" : "not-running",
-          status: serializable(controller.status()),
+          status: serializable(await controller.status()),
         })
       }
       if (endpoint === "logout") {
@@ -41,15 +41,15 @@ export function createAuthRpcHandler({ controller }) {
             expiresAt: outcome.expiresAt,
           })
         }
-        return ok({ kind: `logout-${outcome.kind}`, status: serializable(controller.status()) })
+        return ok({ kind: `logout-${outcome.kind}`, status: serializable(await controller.status()) })
       }
       return badRequest()
     } catch (error) {
       if (error instanceof AuthLoginBusyError) {
-        return ok({ kind: "busy", status: serializable(controller.status()) })
+        return ok({ kind: "busy", status: serializable(await controller.status()) })
       }
       if (error instanceof AuthDriverUnavailableError) {
-        return ok({ kind: "unavailable", status: serializable(controller.status()) })
+        return ok({ kind: "unavailable", status: serializable(await controller.status()) })
       }
       return signal?.aborted ? cancelled() : internal()
     }
