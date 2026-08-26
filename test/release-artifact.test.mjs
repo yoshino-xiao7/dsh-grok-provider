@@ -44,6 +44,16 @@ test("the exact 0.1.0 manifest exports runtime artifacts and Web loader metadata
   assert.equal(manifest.scripts.prepack, "npm run build")
   assert.equal(manifest.scripts["pack:check"], "npm pack --dry-run --json")
 
+  const releaseWorkflow = await fs.readFile(
+    path.join(root, ".github/workflows/release.yml"),
+    "utf8",
+  )
+  assert.match(
+    releaseWorkflow,
+    /publish \.\/release\/dsh-grok-provider-0\.1\.0\.tgz/u,
+    "npm publish must receive an explicit local tarball path, not a GitHub shorthand",
+  )
+
   const chineseReadme = await fs.readFile(path.join(root, "README.md"), "utf8")
   const englishReadme = await fs.readFile(path.join(root, "README.en.md"), "utf8")
   assert.match(chineseReadme, /\[English\]\(README\.en\.md\)/u)

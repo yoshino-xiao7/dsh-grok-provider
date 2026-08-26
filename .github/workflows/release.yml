@@ -71,6 +71,6 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: >-
           node "$RUNNER_TEMP/npm-cli/node_modules/npm/bin/npm-cli.js"
-          publish release/dsh-grok-provider-0.1.0.tgz
+          publish ./release/dsh-grok-provider-0.1.0.tgz
           --access public
           --provenance
