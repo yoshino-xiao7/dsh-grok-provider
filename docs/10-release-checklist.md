@@ -59,6 +59,6 @@ English summary: every release must close documentation, security, tests, determ
 - [x] 使用版本分支 `yukiryou/v0.1.2`，不提前合并稳定基线。
 - [x] Windows `0.2.82` 回归、macOS/Windows CI、生产依赖审计与 dry-run 打包通过。
 - [x] 仓库所有者明确授权发布精确 `dsh-grok-provider@0.1.2-rc.1` 到 npm `next`；未授权稳定 `0.1.2`。
-- [ ] 冻结唯一预发行 tarball、GitHub prerelease、SHA-256/base64 SHA-512 与 provenance。
-- [ ] Registry 回读确认 `next=0.1.2-rc.1`、`latest=0.1.1`，并与 GitHub 候选逐字节一致。
+- [x] 从提交 `6e6201734cab1d8b7d4aa88535b3a3e7e02376ea` 冻结唯一预发行 tarball并附加到 GitHub prerelease：51 个文件、99,559 bytes，SHA-256 `b47d3de72ddb718159d0ede5d2a3e0e1c91b09900134bb48951d82cb93ac489e`，SRI `sha512-NpmuJYvsqnpaupChDfwumOZ69ikwXc8pg/CZqnbGJwpVFy/Y05/QT9q99pj33ON5u8sp1pm0uAzGmC1Db8Qg6Q==`。
+- [x] Trusted Publisher run `32956881639` 从不可变 `v0.1.2-rc.1` 标签发布成功；Registry 回读确认 `next=0.1.2-rc.1`、`latest=0.1.1`，重新下载文件逐字节一致，1 个 Registry 签名与 1 个 provenance attestation 验证通过。
 - [ ] Windows x64 从 npm 精确预发行版本完成浏览器登录、凭据复验、模型刷新与最小对话。

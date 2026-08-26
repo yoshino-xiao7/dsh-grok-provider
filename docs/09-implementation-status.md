@@ -1,5 +1,7 @@
 # 当前实现与发布状态
 
+`0.1.2-rc.1` 已通过 npm `next` 公开分发，用于 Windows x64 登录真机验收；稳定 `latest` 仍为 `0.1.1`。预发行制品、GitHub Release、Registry 回读、签名和 provenance 已验证一致，稳定 `0.1.2` 尚未获得发布授权。
+
 状态日期：2026-08-26
 当前发布线：`dsh-grok-provider@0.1.1`
 下一版本分支：`yukiryou/v0.1.2`
