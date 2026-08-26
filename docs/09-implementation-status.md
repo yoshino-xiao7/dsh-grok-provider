@@ -28,10 +28,9 @@
 
 以下任何一项未关闭都不得执行 `npm publish`：
 
-1. **官方 CLI 完整性**：官方 macOS `1.0.5` 下载物当前无法通过严格代码签名验证，也没有可验证 sidecar signature/checksum；需要 xAI 修复或提供可验证发布机制，或由仓库所有者明确接受该残余供应链风险。
-2. **许可/支持依据**：需要 xAI 对第三方本地 adapter 使用 Grok Build session credential 与 CLI Chat Proxy 的书面或公开支持依据，或由仓库所有者明确承担公开发布风险。
-3. **发布身份**：需要创建并冻结公开 GitHub canonical repository、配置 provenance workflow/Trusted Publisher、确认 npm 名称仍可用并登录发布身份。
-4. **精确候选与回读**：发布前由 macOS 验收、Windows CI 和 publish job 核验同一个 tarball SHA-512；发布后回读 Registry integrity、attestation 和精确版本安装。
+1. **已接受的上游残余风险**：官方 macOS `1.0.5` 下载物当前无法通过严格代码签名验证，也没有可验证 sidecar signature/checksum；xAI 也没有为第三方本地 adapter 使用 Grok Build session credential 与 CLI Chat Proxy 提供明确支持依据。仓库所有者已明确要求继续公开发布并承担该风险。
+2. **发布身份**：公开 canonical repository 已冻结为 `https://github.com/yoshino-xiao7/dsh-grok-provider`；仍需让 GitHub publish workflow 获得最小权限的首次 npm 发布凭据，发布后配置 Trusted Publisher 并撤销首次凭据。
+3. **精确候选与回读**：发布前由 macOS 验收、Windows CI 和 publish job 核验同一个 tarball SHA-512；发布后回读 Registry integrity、attestation 和精确版本安装。
 
 Windows x64 真机不再是 `0.1.0` 预发布阻断项。首次发布后必须从 Registry 安装精确 `0.1.0`，完成官方安装物 Authenticode/hash、浏览器登录、取消/超时/卸载、动态全部模型、聊天、reasoning replay、工具调用和 production inspector；完成前对 Windows 保持“代码支持、真机未验证”标识。`0.1.1` 及后续版本不要求重复真机验证，以两平台 CI、契约测试、干净安装和制品校验作为常规门禁。
 

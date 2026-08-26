@@ -51,10 +51,10 @@ Host 通过 Harness `ctx.subprocess` 以固定 argv 启动经路径/版本约束
 
 - 首个开发绑定版本已冻结为 `1.0.5`（build `5115b46bc909`），详见 `08-upstream-cli-1.0.5-evidence.md`。其 macOS 官方下载物当前无法通过严格代码签名验证，仍是发布阻断项。
 - npm 登录身份与冻结名称在发布时仍可用：发布前确认。
-- canonical GitHub repository URL：不阻碍协议 spike，但会阻断 `package.json.repository`、provenance workflow 和发布脚手架；创建这些文件前必须先创建公开远端并冻结 URL。
+- canonical GitHub repository URL：已冻结为 `https://github.com/yoshino-xiao7/dsh-grok-provider`，并用于 `package.json.repository`、provenance workflow 和发布脚手架。
 - xAI 服务条款/官方许可的最终发布复核。
 
-这些事项不需要现在通过猜测解决：repository 与 provenance 会阻断最终发布，CLI 契约和服务条款会阻断最终发布。
+仓库所有者已明确要求继续公开发布，并接受当前 CLI 契约/服务条款没有第三方 adapter 明确支持依据的残余风险。发布仍必须通过制品、CI、provenance 和 Registry 回读门禁。
 
 ## 确认语句
 

@@ -5,6 +5,14 @@
   "type": "module",
   "license": "MIT",
   "author": "YukiRyou",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yoshino-xiao7/dsh-grok-provider.git"
+  },
+  "homepage": "https://github.com/yoshino-xiao7/dsh-grok-provider#readme",
+  "bugs": {
+    "url": "https://github.com/yoshino-xiao7/dsh-grok-provider/issues"
+  },
   "engines": {
     "node": ">=24.19.0"
   },

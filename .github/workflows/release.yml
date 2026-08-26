@@ -1,0 +1,63 @@
+name: release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Immutable release tag containing the candidate commit
+        required: true
+        default: v0.1.0
+      expected_sha512:
+        description: Base64 SHA-512 of the exact GitHub Release tarball
+        required: true
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: npm
+    steps:
+      - name: Validate release input
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          test "$RELEASE_TAG" = "v0.1.0"
+
+      - name: Download immutable release artifact
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          gh release download "$RELEASE_TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --pattern 'dsh-grok-provider-0.1.0.tgz' \
+            --dir release
+
+      - name: Verify artifact digest and manifest
+        shell: bash
+        env:
+          EXPECTED_SHA512: ${{ inputs.expected_sha512 }}
+        run: |
+          set -euo pipefail
+          artifact='release/dsh-grok-provider-0.1.0.tgz'
+          actual="$(openssl dgst -sha512 -binary "$artifact" | openssl base64 -A)"
+          test "$actual" = "$EXPECTED_SHA512"
+          test "$(tar -xOf "$artifact" package/package.json | jq -r .name)" = 'dsh-grok-provider'
+          test "$(tar -xOf "$artifact" package/package.json | jq -r .version)" = '0.1.0'
+          test "$(tar -xOf "$artifact" package/package.json | jq -r .repository.url)" = \
+            'git+https://github.com/yoshino-xiao7/dsh-grok-provider.git'
+
+      - name: Use supported npm CLI
+        run: npm install --global npm@11.5.1
+
+      - name: Publish exact artifact with provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish release/dsh-grok-provider-0.1.0.tgz --access public --provenance

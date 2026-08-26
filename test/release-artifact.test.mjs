@@ -10,6 +10,12 @@ test("the exact 0.1.0 manifest exports runtime artifacts and Web loader metadata
   const manifest = JSON.parse(await fs.readFile(path.join(root, "package.json"), "utf8"))
   assert.equal(manifest.name, "dsh-grok-provider")
   assert.equal(manifest.version, "0.1.0")
+  assert.deepEqual(manifest.repository, {
+    type: "git",
+    url: "git+https://github.com/yoshino-xiao7/dsh-grok-provider.git",
+  })
+  assert.equal(manifest.homepage, "https://github.com/yoshino-xiao7/dsh-grok-provider#readme")
+  assert.equal(manifest.bugs.url, "https://github.com/yoshino-xiao7/dsh-grok-provider/issues")
   assert.deepEqual(manifest.exports["."], {
     types: "./types/index.d.ts",
     default: "./dist/host/index.mjs",
