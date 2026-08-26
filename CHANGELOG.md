@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.1 - Unreleased
+## 0.1.1 - 2026-08-26
 
 - Correct post-release status across the Simplified Chinese and English READMEs, security policy, and maintainer documentation.
 - Replace the one-off token-based publication path with a reusable npm Trusted Publisher OIDC workflow.

@@ -36,7 +36,7 @@
 
 仍需跟进但不回溯阻断 `0.1.0`：Windows x64 首次 Registry 真机验收；公共 curated 目录的仓库年龄门槛满足后提交收录。
 
-## `0.1.1` 当前候选
+## `0.1.1` 发布记录
 
 - [x] 使用独立版本分支 `yukiryou/v0.1.1`。
 - [x] 长期发布 workflow 改为 GitHub OIDC，不读取 npm Secret。
@@ -46,7 +46,8 @@
 - [x] `package.json`、lockfile 与制品契约测试已同步为 `0.1.1`，中英双语 release notes 已完成且不重复页面标题。
 - [x] 本地完整测试 57 项通过（55 pass、2 项 Windows-only 按预期跳过），`npm audit --omit=dev` 为 0 vulnerability，GitHub macOS/Windows CI 均通过。
 - [x] 从提交 `d35bda3402db5b16edd83d81420f1068006254a8` 生成预审 tarball；48 个文件、93,652 bytes，SHA-256 `bdaf7c32a22afd74e1c526e07c91f441942fedab3e0d34c01134fedda6e323b9`，SRI `sha512-ENpeVSsHDiByG6Cf03pl1j4eRHAsYQkrwU4sVAMct4D2aFXoZoFTivP0ZpwaM1tzD0NdXlPzlLdtlSd0F48wCw==`；同一文件在全新临时目录完成 peer 安装、manifest 回读与 Host 模块加载。
-- [ ] 获得发布授权后，把 README/状态页切换为最终公开 `0.1.1` 事实、写入 CHANGELOG 日期并生成最终唯一候选；预审 tarball 不进入 Release。
-- [ ] 完成发布前全套门禁并取得仓库所有者明确发布授权。
+- [x] 仓库所有者于 2026-08-26 明确授权发布精确 `dsh-grok-provider@0.1.1`；README/状态页已切换为最终公开事实，CHANGELOG 日期已冻结。
+- [ ] 从最终 release commit 生成并验收唯一发布 tarball；预审 tarball 不进入 Release。
+- [ ] 完成 GitHub Release、OIDC npm 发布和 Registry/provenance 回读。
 
 English summary: every release must close documentation, security, tests, deterministic artifact, bilingual release notes, OIDC identity, integrity, and post-publish readback gates before publication. A green checklist never replaces explicit owner approval.

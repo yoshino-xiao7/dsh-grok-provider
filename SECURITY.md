@@ -4,7 +4,7 @@
 
 ## 支持范围
 
-当前公开版本为 `0.1.0`，`0.1.1` 候选沿用相同运行时支持边界。仅维护当前发布线中明确列出的 DeepSeek Harness、Node.js、操作系统和 Grok CLI 精确版本；未经验证的版本会失败关闭。macOS arm64 已完成真实验收；Windows x64 仍是代码与 CI 支持、首次 Registry 真机尚未完成。
+当前版本为 `0.1.1`。仅维护当前发布线中明确列出的 DeepSeek Harness、Node.js、操作系统和 Grok CLI 精确版本；未经验证的版本会失败关闭。macOS arm64 已完成真实验收；Windows x64 仍是代码与 CI 支持、首次 Registry 真机尚未完成。
 
 ## 私下报告漏洞
 

@@ -1,8 +1,8 @@
 # Grok Build Provider 文档索引
 
-- 状态：**`0.1.0` 已发布并完成 Registry/provenance 回读；`0.1.1` 在版本分支准备发布事实修正与长期 OIDC 流程**
-- 已发布版本：`0.1.0`
-- 当前版本分支：`yukiryou/v0.1.1`
+- 状态：**`0.1.1` 发布线已冻结：修正发布事实，并启用长期 npm Trusted Publisher OIDC 流程**
+- 当前版本：`0.1.1`
+- 发布分支：`yukiryou/v0.1.1`
 - 兼容基线：DeepSeek Harness `0.1.1-rc.2`
 - 目标平台：macOS arm64、Windows x64
 
@@ -47,7 +47,7 @@
 
 ## 开发门禁
 
-`0.1.0` 已于 2026-08-26 发布，Registry 完整性、provenance、Trusted Publisher 与凭据撤销均已完成。首发后发现 tarball 内的 README 与部分状态文档仍有预发布措辞；该缺陷不能覆盖修复，将由递增版本纠正。后续版本必须先完成[逐版发布检查表](./10-release-checklist.md)，再由仓库所有者明确授权发布。Windows x64 首次真机验证仍按约定作为 `0.1.0` 发布后跟进，完成前标注“代码支持、真机未验证”。
+`0.1.0` 首发后的 Registry 完整性、provenance、Trusted Publisher 与凭据撤销均已完成。首发 tarball 内 README 与部分状态文档的预发布措辞由 `0.1.1` 递增版本纠正。后续版本必须先完成[逐版发布检查表](./10-release-checklist.md)，再由仓库所有者明确授权发布。Windows x64 首次真机验证仍按约定作为首发后跟进，完成前标注“代码支持、真机未验证”。
 
 ## 官方依据
 
