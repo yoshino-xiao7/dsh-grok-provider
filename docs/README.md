@@ -1,9 +1,8 @@
 # Grok Build Provider 文档索引
 
-- 状态：**稳定版 `0.1.1`；Windows 登录验收预发行版 `0.1.2-rc.1`**
-- 当前稳定版本：`0.1.1`
-- 当前预发行版本：`0.1.2-rc.1`（npm `next`）
-- 下一版本分支：`yukiryou/v0.1.2`
+- 状态：**稳定版 `0.1.2`：Windows Grok CLI 兼容性修正**
+- 当前稳定版本：`0.1.2`
+- 下一版本分支：发布后创建 `yukiryou/v0.1.3`
 - 兼容基线：DeepSeek Harness `0.1.1-rc.2`
 - 目标平台：macOS arm64、Windows x64
 
@@ -39,7 +38,7 @@
 - [当前实现与发布状态](./09-implementation-status.md)
 - [逐版发布检查表](./10-release-checklist.md)
 - [v0.1.1 中英双语发行说明](./releases/v0.1.1.md)
-- [v0.1.2 中英双语发行说明草案](./releases/v0.1.2.md)
+- [v0.1.2 中英双语发行说明](./releases/v0.1.2.md)
 - [v0.1.2-rc.1 中英双语预发行说明](./releases/v0.1.2-rc.1.md)
 - [ADR-0001：认证与传输路线](./adr/0001-auth-and-transport-route.md)
 - [ADR-0002：首版能力边界](./adr/0002-v0.1-scope.md)
@@ -51,7 +50,7 @@
 
 ## 开发门禁
 
-`0.1.0` 首发后的 Registry 完整性、provenance、Trusted Publisher 与凭据撤销均已完成。首发 tarball 内 README 与部分状态文档的预发布措辞由 `0.1.1` 递增版本纠正。`0.1.2-rc.1` 只通过 npm `next` 分发 Windows 验收候选，不改变 `latest`；验收完成后仍需单独授权稳定 `0.1.2`。后续版本必须先完成[逐版发布检查表](./10-release-checklist.md)，再由仓库所有者明确授权发布。
+`0.1.2-rc.1` 是唯一一次预发行尝试。仓库所有者决定直接发布稳定 `0.1.2`，以后不再发行预发行版；正式版缺陷通过新的递增稳定版本修复。Windows 独立真机验收不阻断本次发布，但其未完成状态必须公开披露。后续版本仍须先完成[逐版发布检查表](./10-release-checklist.md)，再由仓库所有者明确授权发布。
 
 ## 官方依据
 

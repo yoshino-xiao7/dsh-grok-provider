@@ -137,13 +137,9 @@ patch 路径必须为不含 `..`、绝对路径、反斜线或 NUL 的相对 `.y
 
 `0.1.0` 发布后，后续版本从已发布基线 `yukiryou/main` 创建 `yukiryou/v<next-version>`。普通开发、文档、测试和发布准备都停留在版本分支；只有仓库所有者明确开始该版本发布时才合并回发布基线并创建不可变 tag。
 
-### 7.1 预发行版本
+### 7.1 预发行版本政策
 
-- 认证或平台边界变更需要先公开分发真机候选时，使用精确 SemVer 预发行版本，例如 `0.1.2-rc.1`，并仅发布到 npm `next`。
-- 预发行 tag `v0.1.2-rc.1` 指向对应 `yukiryou/v0.1.2` 候选提交；预发行不合并稳定基线 `yukiryou/main`，也不移动 npm `latest`。
-- Trusted Publisher workflow 必须从 tag 形状闭合推导 dist-tag：`vX.Y.Z-rc.N` 只能使用 `next`，`vX.Y.Z` 只能使用 `latest`，workflow dispatch 不接受调用者自定义 dist-tag。
-- 预发行仍必须使用 GitHub prerelease 中唯一的精确 tarball，校验 SHA-512、manifest 和 provenance，并完成 Registry 逐字节回读。
-- 预发行真机验收通过不自动授权稳定版本；稳定版本需要更新最终事实、合并 `yukiryou/main`、生成新的唯一 tarball，并获得独立明确授权。
+`0.1.2-rc.1` 是一次历史预发行尝试。仓库所有者决定从稳定 `0.1.2` 起不再发行新的预发行版本；已发布 RC 保留为不可变历史记录，不覆盖、不删除，也不作为后续开发基线。正式版发现缺陷时直接创建下一递增稳定版本分支并按完整发布门禁修复。
 
 ## 8. 发布方式
 
@@ -153,15 +149,15 @@ patch 路径必须为不含 `..`、绝对路径、反斜线或 NUL 的相对 `.y
 
 CI 使用的官方 GitHub Actions 必须固定到已核对的完整 commit SHA；不得依赖可移动 major tag 作为发布门禁实现。
 
-长期发布工作流接受严格稳定 tag `v<major>.<minor>.<patch>`、严格预发行 tag `v<major>.<minor>.<patch>-rc.<number>` 和对应 GitHub Release tarball 的 base64 SHA-512。工作流必须：
+长期发布工作流只接受严格稳定 tag `v<major>.<minor>.<patch>` 和对应 GitHub Release tarball 的 base64 SHA-512。工作流必须：
 
-1. 从 tag 派生版本、唯一产物名和 dist-tag；只接受上述稳定/RC 形状，不接受 build metadata、路径字符、自由格式文件名或调用者指定 dist-tag。
+1. 从 tag 派生版本和唯一产物名；不接受 prerelease、build metadata、路径字符、自由格式文件名或调用者指定 dist-tag。
 2. 只下载对应 GitHub Release 的 `dsh-grok-provider-<version>.tgz`。
 3. 在发布前核对输入 SHA-512，以及 tarball 内的 name、version 和 canonical repository。
 4. 使用 Node 24、固定 npm CLI 版本、GitHub-hosted Ubuntu runner、`environment: npm` 和 `id-token: write`。
 5. 把 tarball 作为带 `./` 前缀的本地文件路径交给 `npm publish`，避免 npm package-spec 将其解释为 GitHub shorthand。
 6. 不设置 `NODE_AUTH_TOKEN`，不读取任何 npm secret；身份完全来自 Trusted Publisher OIDC。
-7. 保留 `--access public`、推导得到的 `--tag latest|next` 和 `--provenance`，即使 Trusted Publishing 会自动生成 provenance，也明确表达发布策略。
+7. 保留 `--access public`、`--tag latest` 和 `--provenance`，即使 Trusted Publishing 会自动生成 provenance，也明确表达发布策略。
 
 发布经过测试的同一个 tarball：
 

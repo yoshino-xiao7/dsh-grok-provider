@@ -2,7 +2,7 @@
 
 本文件是每个 npm 版本的强制发布门禁。准备者必须从版本分支逐项完成并保存证据；未全部关闭前不得合并发布基线、创建最终 tag、发布 GitHub Release 或执行 `npm publish`。发布还需要仓库所有者明确授权，检查表全绿本身不构成发布授权。
 
-预发行候选是例外流程：`vX.Y.Z-rc.N` 可保留在对应版本分支并发布到 npm `next`，不得合并稳定基线或移动 `latest`。它仍必须完成双语文档、唯一制品、完整性、provenance、Registry 回读和精确预发行版本授权。稳定 `vX.Y.Z` 继续执行下列完整合并门禁。
+`0.1.2-rc.1` 是历史上唯一一次预发行尝试。从稳定 `0.1.2` 起不再发行预发行版本；正式版缺陷通过新的递增稳定版本修复。下列稳定版完整合并门禁适用于所有后续发布。
 
 ## 每版发布前
 
@@ -62,3 +62,14 @@ English summary: every release must close documentation, security, tests, determ
 - [x] 从提交 `6e6201734cab1d8b7d4aa88535b3a3e7e02376ea` 冻结唯一预发行 tarball并附加到 GitHub prerelease：51 个文件、99,559 bytes，SHA-256 `b47d3de72ddb718159d0ede5d2a3e0e1c91b09900134bb48951d82cb93ac489e`，SRI `sha512-NpmuJYvsqnpaupChDfwumOZ69ikwXc8pg/CZqnbGJwpVFy/Y05/QT9q99pj33ON5u8sp1pm0uAzGmC1Db8Qg6Q==`。
 - [x] Trusted Publisher run `32956881639` 从不可变 `v0.1.2-rc.1` 标签发布成功；Registry 回读确认 `next=0.1.2-rc.1`、`latest=0.1.1`，重新下载文件逐字节一致，1 个 Registry 签名与 1 个 provenance attestation 验证通过。
 - [ ] Windows x64 从 npm 精确预发行版本完成浏览器登录、凭据复验、模型刷新与最小对话。
+
+仓库所有者随后终止预发行验收路线并授权直接发布稳定 `0.1.2`；上述未完成项保留为历史事实，不转写为已验收。
+
+## `0.1.2` 发布记录
+
+- [x] 仓库所有者明确授权直接发布精确稳定 `dsh-grok-provider@0.1.2`，Windows 独立真机验收不再作为阻断项。
+- [x] 仓库所有者决定以后不再发行预发行版；正式版缺陷使用新的递增稳定版本修复。
+- [x] 中英文 README、正式 Release 说明、安全状态和发布政策已同步，并公开披露 Windows 独立真机尚未完成。
+- [ ] 稳定 manifest、稳定版专用 Trusted Publisher workflow、完整测试、审计与双平台 CI 通过。
+- [ ] 版本分支经 PR 合并 `yukiryou/main`，从 release commit 冻结唯一稳定 tarball与不可变 `v0.1.2` tag。
+- [ ] GitHub Release、npm `latest`、Registry 逐字节回读、签名与 provenance 验证完成。
