@@ -4,7 +4,7 @@
 
 Use an already authenticated official Grok Build account from DeepSeek Harness, with dynamic model discovery, streaming reasoning, tool calls, and an account quota/model capability dashboard.
 
-> Unofficial community project; not affiliated with xAI or DeepSeek Harness. `0.1.0` is published on npm with Registry integrity and provenance read back. Windows x64 has code and CI support; its first Registry real-device validation remains a post-release follow-up.
+> Unofficial community project; not affiliated with xAI or DeepSeek Harness. The current public stable release is `0.1.0`; `0.1.1` is closing its release gates on the version branch. Windows x64 has code and CI support; its first Registry real-device validation remains a post-release follow-up.
 
 ## What it provides
 
@@ -97,8 +97,8 @@ Uninstalling the provider does not remove the official Grok CLI or directly modi
 
 ## Sources and discovery
 
-- Exact npm version: [dsh-grok-provider@0.1.0](https://www.npmjs.com/package/dsh-grok-provider/v/0.1.0)
-- GitHub release and integrity values: [v0.1.0](https://github.com/yoshino-xiao7/dsh-grok-provider/releases/tag/v0.1.0)
+- Current exact npm version: [dsh-grok-provider@0.1.0](https://www.npmjs.com/package/dsh-grok-provider/v/0.1.0)
+- Current GitHub release and integrity values: [v0.1.0](https://github.com/yoshino-xiao7/dsh-grok-provider/releases/tag/v0.1.0)
 - GitHub community discovery: the repository carries the DeepSeek Harness-recommended `dsh-plugin` and `dsh` topics
 - YukiRyou managed source: [deepseek-yukiryou-plugin-catalog](https://github.com/yoshino-xiao7/deepseek-yukiryou-plugin-catalog), pinned to `0.1.0` and currently marking only verified macOS arm64
 
@@ -106,7 +106,7 @@ Directory inclusion is not an endorsement by xAI or DeepSeek Harness. The public
 
 ## Compatibility and scope
 
-| Item | `0.1.0` status |
+| Item | `0.1.1` candidate status |
 | --- | --- |
 | DeepSeek Harness | Exact support for `0.1.1-rc.2` |
 | Node.js | `>=24.19.0` |
@@ -194,6 +194,7 @@ Read the [contributing guide](CONTRIBUTING.md) before filing an issue or PR. Cha
 - [x] Web/TUI account controls, quota dashboard, and model capability display
 - [x] Publish `0.1.0` and verify Registry integrity/provenance
 - [x] Configure npm Trusted Publisher, revoke the initial token, and add `dsh-plugin` discovery plus the YukiRyou catalog entry
+- [ ] Publish the `0.1.1` documentation and release-process correction
 - [ ] Complete the first Windows x64 real-device acceptance after release
 - [ ] Evaluate additional content types and platforms only against verified Harness/xAI contracts
 

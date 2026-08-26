@@ -4,7 +4,7 @@
 
 让 DeepSeek Harness 使用你已登录的官方 Grok Build 账号：动态模型发现、流式推理、工具调用，以及账号额度与模型能力面板。
 
-> 非官方社区项目，与 xAI 或 DeepSeek Harness 官方无隶属关系。`0.1.0` 已发布到 npm，并完成 Registry 完整性与 provenance 回读。Windows x64 已完成代码与 CI 支持，首次 Registry 真机验证仍在发布后跟进中。
+> 非官方社区项目，与 xAI 或 DeepSeek Harness 官方无隶属关系。当前公开稳定版为 `0.1.0`，`0.1.1` 正在版本分支完成发布门禁；Windows x64 已完成代码与 CI 支持，首次 Registry 真机验证仍在发布后跟进中。
 
 ## 它解决什么问题
 
@@ -97,8 +97,8 @@ dsh web
 
 ## 项目来源与发现
 
-- npm 精确版本：[dsh-grok-provider@0.1.0](https://www.npmjs.com/package/dsh-grok-provider/v/0.1.0)
-- GitHub 发行版与校验值：[v0.1.0](https://github.com/yoshino-xiao7/dsh-grok-provider/releases/tag/v0.1.0)
+- npm 当前公开精确版本：[dsh-grok-provider@0.1.0](https://www.npmjs.com/package/dsh-grok-provider/v/0.1.0)
+- GitHub 当前发行版与校验值：[v0.1.0](https://github.com/yoshino-xiao7/dsh-grok-provider/releases/tag/v0.1.0)
 - GitHub 社区发现：仓库已添加 DeepSeek Harness 官方推荐的 `dsh-plugin` 与 `dsh` Topics
 - YukiRyou 受管来源：[deepseek-yukiryou-plugin-catalog](https://github.com/yoshino-xiao7/deepseek-yukiryou-plugin-catalog)，精确锁定 `0.1.0`，当前只标记已验证的 macOS arm64
 
@@ -106,7 +106,7 @@ dsh web
 
 ## 兼容性与范围
 
-| 项目 | `0.1.0` 状态 |
+| 项目 | `0.1.1` 候选状态 |
 | --- | --- |
 | DeepSeek Harness | 精确支持 `0.1.1-rc.2` |
 | Node.js | `>=24.19.0` |
@@ -194,6 +194,7 @@ npm run pack:check
 - [x] Web/TUI 账户控制、额度面板与模型能力展示
 - [x] 发布 `0.1.0` 并完成 Registry/provenance 回读
 - [x] 配置 npm Trusted Publisher、撤销首发 Token，并加入 `dsh-plugin` Topic 与 YukiRyou catalog
+- [ ] 发布 `0.1.1` 文档与发布流程修正版
 - [ ] 发布后完成 Windows x64 首次真机验收
 - [ ] 根据已验证的 Harness/xAI 协议逐项评估更多内容类型和平台
 

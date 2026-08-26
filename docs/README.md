@@ -37,6 +37,7 @@
 - [Grok CLI 1.0.5 上游证据](./08-upstream-cli-1.0.5-evidence.md)
 - [当前实现与发布状态](./09-implementation-status.md)
 - [逐版发布检查表](./10-release-checklist.md)
+- [v0.1.1 中英双语发行说明](./releases/v0.1.1.md)
 - [ADR-0001：认证与传输路线](./adr/0001-auth-and-transport-route.md)
 - [ADR-0002：首版能力边界](./adr/0002-v0.1-scope.md)
 - [ADR-0003：已被取代的双认证设计](./adr/0003-dual-authentication.md)
