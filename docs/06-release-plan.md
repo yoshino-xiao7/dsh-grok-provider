@@ -1,4 +1,20 @@
-# npm `0.1.0` 发布计划
+# npm 发布计划与维护流程
+
+## 0. 当前状态
+
+`dsh-grok-provider@0.1.0` 已于 2026-08-26 从 GitHub Release 中唯一的候选 tarball 发布到 npm。Registry 回读的 SHA-512、重新下载文件的 SHA-256 和 GitHub Release 产物完全一致，并已生成 npm provenance attestation。
+
+首次发布使用的临时 GitHub Environment secret 已删除。npm 包现已绑定以下 Trusted Publisher：
+
+```text
+Provider: GitHub Actions
+Repository: yoshino-xiao7/dsh-grok-provider
+Workflow filename: release.yml
+Environment: npm
+Allowed action: npm publish
+```
+
+包的 publishing access 使用“Require two-factor authentication and disallow bypass 2fa tokens”。后续发布不得恢复 write token、`NPM_TOKEN`、仓库级 `.npmrc` 凭据或 `NODE_AUTH_TOKEN`；`release.yml` 必须通过 GitHub OIDC 获取单次、短时发布身份。
 
 ## 1. 精确发布身份
 
@@ -119,18 +135,30 @@ patch 路径必须为不含 `..`、绝对路径、反斜线或 NUL 的相对 `.y
 - 受当前全局分支命名策略约束，发布基线使用 `yukiryou/main`；不创建无前缀 `main`，也不直接在发布基线开发或发布未验收内容。
 - 首次仓库当前没有发布基线；验收完成后才创建/保护 `yukiryou/main`。该分支必须 fast-forward 到生成并测试候选 tarball 的同一 release commit，不得在 pack 后再 merge、squash、rebase 或修改文件；`yukiryou/main`、`v0.1.0` 和候选 manifest 记录的 source commit 必须是同一 Git OID。publish job 核对 `GITHUB_SHA` 与候选 SHA-512 后直接发布，禁止重新构建或重新 pack。
 
+`0.1.0` 发布后，后续版本从已发布基线 `yukiryou/main` 创建 `yukiryou/v<next-version>`。普通开发、文档、测试和发布准备都停留在版本分支；只有仓库所有者明确开始该版本发布时才合并回发布基线并创建不可变 tag。
+
 ## 8. 发布方式
 
 优先从公开 GitHub 仓库的 GitHub-hosted runner 使用 npm provenance 发布。
 
-首次包无法预先配置 staged publishing；需要一次最小权限的首次发布凭据，发布完成后立刻配置 npm Trusted Publisher 并撤销首次凭据。按 2026-08-25 的 npm 官方要求，Trusted Publishing 需要 npm ≥`11.5.1`、Node ≥`22.14.0`、GitHub-hosted runner 和 workflow `id-token: write`；正式发布前再次核对。本机 npm `10.9.7` 不作为发布环境。
+首次包无法预先配置 Trusted Publisher，因此 `0.1.0` 使用了一次最小权限的首次发布凭据。发布完成后已配置 npm Trusted Publisher、删除 GitHub Environment secret，并把传统 token 发布设置为最严格模式。按 2026-08-26 的 npm 官方要求，Trusted Publishing 需要 npm ≥`11.5.1`、Node ≥`22.14.0`、GitHub-hosted runner 和 workflow `id-token: write`；每次调整发布工具链前必须重新核对。
 
 CI 使用的官方 GitHub Actions 必须固定到已核对的完整 commit SHA；不得依赖可移动 major tag 作为发布门禁实现。
+
+长期发布工作流接受严格稳定版 tag `v<major>.<minor>.<patch>` 和该 GitHub Release tarball 的 base64 SHA-512。工作流必须：
+
+1. 从 tag 派生版本和唯一产物名，不接受 prerelease、build metadata、路径字符或自由格式文件名。
+2. 只下载对应 GitHub Release 的 `dsh-grok-provider-<version>.tgz`。
+3. 在发布前核对输入 SHA-512，以及 tarball 内的 name、version 和 canonical repository。
+4. 使用 Node 24、固定 npm CLI 版本、GitHub-hosted Ubuntu runner、`environment: npm` 和 `id-token: write`。
+5. 把 tarball 作为带 `./` 前缀的本地文件路径交给 `npm publish`，避免 npm package-spec 将其解释为 GitHub shorthand。
+6. 不设置 `NODE_AUTH_TOKEN`，不读取任何 npm secret；身份完全来自 Trusted Publisher OIDC。
+7. 保留 `--access public`、`--tag latest` 和 `--provenance`，即使 Trusted Publishing 会自动生成 provenance，也明确表达发布策略。
 
 发布经过测试的同一个 tarball：
 
 ```sh
-npm publish ./<exact-0.1.0-tarball>.tgz \
+npm publish ./<exact-version-tarball>.tgz \
   --access public \
   --tag latest \
   --provenance \

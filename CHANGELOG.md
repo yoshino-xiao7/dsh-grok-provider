@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0 - Unreleased
+## 0.1.0 - 2026-08-26
 
 - Clean-room Grok Build provider for DeepSeek Harness `0.1.1-rc.2`.
 - Dynamic discovery of every account-visible Responses model.
