@@ -25,6 +25,8 @@ test("the exact 0.1.0 manifest exports runtime artifacts and Web loader metadata
     "grok-provider.patch.yml",
     "README.md",
     "README.en.md",
+    "CONTRIBUTING.md",
+    "SECURITY.md",
     "LICENSE",
     "CHANGELOG.md",
   ])
@@ -38,7 +40,14 @@ test("the exact 0.1.0 manifest exports runtime artifacts and Web loader metadata
   const englishReadme = await fs.readFile(path.join(root, "README.en.md"), "utf8")
   assert.match(chineseReadme, /\[English\]\(README\.en\.md\)/u)
   assert.match(englishReadme, /\[简体中文\]\(README\.md\)/u)
-  assert.match(chineseReadme, /## 身份认证/u)
+  assert.match(chineseReadme, /## 快速开始/u)
+  assert.match(chineseReadme, /## 安全与隐私/u)
+  assert.match(englishReadme, /## Quick start/u)
+  assert.match(englishReadme, /## Security and privacy/u)
+  for (const filename of ["CONTRIBUTING.md", "SECURITY.md"]) {
+    assert.match(chineseReadme, new RegExp(`\\(${filename.replace(".", "\\.")}\\)`, "u"))
+    await fs.access(path.join(root, filename))
+  }
 
   const host = await fs.readFile(path.join(root, "dist/host/index.mjs"), "utf8")
   const client = await fs.readFile(path.join(root, "dist/client/client.js"), "utf8")

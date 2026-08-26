@@ -39,6 +39,8 @@
     "grok-provider.patch.yml",
     "README.md",
     "README.en.md",
+    "CONTRIBUTING.md",
+    "SECURITY.md",
     "LICENSE",
     "CHANGELOG.md"
   ],

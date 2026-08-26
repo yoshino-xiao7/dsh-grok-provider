@@ -2,28 +2,78 @@
 
 [简体中文](README.md) | [English](README.en.md)
 
-Clean-room Grok Build provider for DeepSeek Harness. It dynamically discovers every model visible to the selected Grok Build account and maps the native Responses stream to Harness text, reasoning, encrypted reasoning replay, usage and tool calls.
+Use an already authenticated official Grok Build account from DeepSeek Harness, with dynamic model discovery, streaming reasoning, tool calls, and an account quota/model capability dashboard.
 
-> Pre-release status: `0.1.0` is implemented but must not be published yet. xAI support/permission evidence, official CLI artifact integrity, canonical GitHub provenance and the remaining macOS acceptance checks remain release gates. Windows x64 is code-supported but not yet verified on a real Windows device; its first true-device run is an explicit post-`0.1.0` follow-up.
+> Unofficial community project; not affiliated with xAI or DeepSeek Harness. `0.1.0` has not been published to npm, so the registry installation command below is not available yet. Windows x64 is code-supported, with its first real-device validation scheduled after the initial release.
 
-## Compatibility
+## What it provides
+
+| Capability | Current implementation |
+| --- | --- |
+| Sign-in | Invokes official `grok login --oauth`; the plugin does not implement an OAuth grant |
+| Credentials | Reuses official CLI session state without creating a second token store |
+| Models | Discovers every model visible to the account at runtime; no static model allowlist |
+| Conversations | Streaming Responses text, reasoning, encrypted reasoning replay, usage, and finish reasons |
+| Tools | Returns function calls to the Harness permission layer; the provider never executes tools |
+| Account dashboard | Login status, weekly/monthly quota, reset time, dynamic model capabilities and reasoning efforts |
+| Surfaces | Bilingual Web settings and a closed `/grok` TUI command set |
+
+## Quick start
+
+### 1. Prerequisites
 
 - DeepSeek Harness `0.1.1-rc.2`
 - Node.js `24.19.0` or newer
-- macOS arm64 and Windows x64
-- Official Grok CLI `1.0.5 (5115b46bc909)` at its default `~/.grok` / `%USERPROFILE%\\.grok` location
+- macOS arm64 or Windows x64
+- Official Grok Build CLI `1.0.5 (5115b46bc909)`
 
-macOS x64, Linux, images, Web/X Search, arbitrary downloads, API-key billing, ACP and Headless agent wrapping are outside `0.1.0`.
+Install the CLI from the [official Grok Build documentation](https://docs.x.ai/build/overview), then verify:
 
-## Authentication
+```sh
+grok --version
+grok models
+```
 
-The Host invokes only the verified default executable with fixed `--version`, `login --oauth`, `models` or `logout` argv through Harness subprocess management. The official CLI opens the browser and owns `auth.json`; when an otherwise valid access token expires, the plugin may run one bounded `grok models` process so the CLI can refresh its own file, then rereads and revalidates it. The plugin never extracts the refresh token, implements a refresh grant or rewrites the file. The package contains no independent OAuth client identity or token store.
+The official CLI opens a browser on first use. The provider supports only the official default `~/.grok` directory (`%USERPROFILE%\.grok` on Windows).
+
+### 2. Install the provider
+
+After `0.1.0` is released, install the exact version:
+
+```sh
+dsh plugin --profile web add dsh-grok-provider@0.1.0
+dsh web
+```
+
+Pre-release acceptance installs only a verified local tarball:
+
+```sh
+dsh plugin --profile web add ./dsh-grok-provider-0.1.0.tgz
+dsh web
+```
+
+### 3. Sign in and select a model
+
+Open **Settings → Grok Build**:
+
+1. Select “Sign in with Grok.”
+2. Complete authorization in the page opened by the official Grok CLI.
+3. Return to Harness and refresh the account dashboard.
+4. Select any account-visible Grok model from the model picker.
+
+The provider does not take over the login page or ask you to paste an access or refresh token.
 
 ## User surfaces
 
-The bundle contributes a bilingual, responsive `Grok Build` settings page on a loopback Harness Web surface. It supports status, official CLI browser login, cancellation and double-confirmed logout, plus a live account dashboard with billing-period reset time and dynamic model capability cards. It restores an omitted protobuf zero percentage only when a complete typed current period makes that meaning unambiguous; other missing values remain unknown. Tokens and identity never reach the renderer.
+The Web settings page shows:
 
-The TUI exposes the closed command grammar:
+- login state and sign-in, cancel, and logout actions;
+- used/remaining quota and the real billing-period reset time;
+- account-visible models, context windows, reasoning efforts, streaming and tool capabilities.
+
+When protobuf-backed billing includes a complete weekly/monthly period but omits a zero-valued percentage, the page restores “0% used / 100% remaining.” Other incomplete responses remain unknown.
+
+TUI commands:
 
 ```text
 /grok status
@@ -32,24 +82,88 @@ The TUI exposes the closed command grammar:
 /grok logout
 ```
 
-The command is not sent to the model and its persisted result text is redacted-safe.
+These commands never enter model context. Logout requires confirmation because it invokes official `grok logout` and affects other clients sharing the same Grok home.
 
-## Model support
+## Update and uninstall
 
-The provider calls the authenticated Grok Build `/v1/models` catalog at runtime; model IDs are not hardcoded. Every catalog entry must declare a backend for which this release has a strict codec. The current account-visible `grok-4.6` and `grok-4.5` Responses models have both passed macOS arm64 true-network tests for first-turn streaming, encrypted-reasoning second-turn replay and a non-executed fixture function call.
+Update after release:
 
-If a future account exposes an unverified backend, discovery fails closed instead of hiding that model and falsely claiming complete support.
+```sh
+dsh plugin --profile web update dsh-grok-provider
+dsh web
+```
 
-## Security boundary
+Uninstall:
 
-- Model, inference and billing endpoints are compile-time fixed HTTPS origins and reject redirects.
-- Renderer/RPC inputs cannot provide commands, executable paths, environment variables, credential paths or base URLs.
-- Official login uses a scrubbed environment, bounded output and plugin-owned deadlines; cancellation and capability teardown wait for the spawned process tree.
-- The official CLI and its valid user/system/MDM configuration remain a trusted local component. The plugin's no-shell guarantee covers its own spawn boundary, not opaque behavior inside the official CLI.
-- Official `auth.json` contains a refresh token and identity metadata in its raw bytes. The Host necessarily reads those bounded bytes transiently, ignores the refresh token, and uses `user_id` only as the official fixed billing request requires; neither is logged, persisted by the plugin or returned to the renderer.
-- The plugin does not create a second credential record; login persistence remains entirely owned by the official CLI.
+```sh
+dsh plugin --profile web remove dsh-grok-provider
+dsh web
+```
 
-Full architecture, threat model, tests, evidence and unresolved release blockers live in [`docs/`](docs/README.md).
+Uninstalling the provider does not remove the official Grok CLI or directly modify/delete `auth.json`.
+
+## Compatibility and scope
+
+| Item | `0.1.0` status |
+| --- | --- |
+| DeepSeek Harness | Exact support for `0.1.1-rc.2` |
+| Node.js | `>=24.19.0` |
+| macOS arm64 | Real-network and isolated Harness acceptance completed |
+| Windows x64 | Code-supported; real-device validation after initial release |
+| macOS x64 / Linux | Unsupported |
+| Grok CLI | Exact support for `1.0.5 (5115b46bc909)` |
+| Models | Every account catalog model whose backend has a strict codec in this release |
+
+The initial release excludes image input, Web/X Search, arbitrary downloads, API-key mode, multiple accounts, enterprise OIDC, ACP, and Headless agent wrapping. See the complete [product requirements](docs/01-product-requirements.md).
+
+## How it works
+
+```text
+Harness UI / TUI
+       │ closed actions and redacted DTOs only
+       ▼
+dsh-grok-provider Host
+       ├── Official Grok CLI: login / models / logout
+       ├── Pinned Models/Billing endpoints: catalog and quota
+       └── Pinned Responses endpoint: streamed inference
+                    │
+                    ▼
+              xAI Grok Build
+```
+
+Model IDs come from the runtime catalog rather than a hardcoded list. If an account exposes a new backend that cannot be mapped safely, discovery fails closed instead of hiding the model and claiming complete support.
+
+## Security and privacy
+
+- Model, catalog, and billing requests allow only compile-time pinned HTTPS origins/paths and reject redirects.
+- Renderer and RPC code never receive tokens, `user_id`, credential paths, arbitrary URLs, or raw upstream responses.
+- The provider does not implement a refresh grant. Near expiry it may invoke one bounded official `grok models`, then reread and revalidate the official credential file.
+- Login subprocesses use fixed argv, a scrubbed environment, output limits, deadlines, cancellation, and no shell.
+- Prompts and tool results are sent to the xAI Grok Build service; the provider itself does not log them.
+
+See the full [threat model](docs/03-security-threat-model.md). For vulnerabilities, read the [security policy](SECURITY.md) and never post tokens, `auth.json`, personal data, or full diagnostic logs in a public issue.
+
+## Troubleshooting
+
+### “Grok CLI not found”
+
+Confirm the official CLI is in its default location and run `grok --version`. The provider will not load an executable from PATH, the workspace, or a UI-selected arbitrary path.
+
+### The page asks you to sign in again
+
+Use the settings button or run `grok login --oauth` in a terminal. If the official CLI has updated to an unverified version, the provider fails closed instead of bypassing version checks.
+
+### A model is missing
+
+Run `grok models` and verify that the same account can see it. The provider returns every valid catalog record; an unknown backend fails discovery rather than being silently filtered.
+
+### Why is quota percentage unknown?
+
+A protobuf-omitted zero is restored only with a complete typed period. In every other case the upstream response lacks enough information, so the provider preserves “unknown.” OAuth token expiry is never shown as a quota reset.
+
+### Does Windows work?
+
+Windows x64 code and automated tests are present, but the first Registry real-device acceptance for `0.1.0` happens after release. Until then it remains “code-supported, real-device unverified.”
 
 ## Development
 
@@ -59,4 +173,28 @@ npm test
 npm run pack:check
 ```
 
-Tests and builds target Node `24.19.0`. The package has zero ordinary runtime dependencies; Harness services are exact peer dependencies. `npm run build` creates disposable `dist/` artifacts, and the npm tarball excludes source, tests, spikes and local evidence.
+The package has zero ordinary runtime dependencies; Harness services are exact peer dependencies. `npm run build` creates disposable `dist/` artifacts. The npm tarball excludes `src/`, tests, spikes, and local evidence.
+
+Project map:
+
+- [`docs/README.md`](docs/README.md): design-document index and current decisions;
+- [`docs/04-harness-contract.md`](docs/04-harness-contract.md): Harness integration contract;
+- [`docs/05-test-plan.md`](docs/05-test-plan.md): platform, security, and release gates;
+- [`docs/09-implementation-status.md`](docs/09-implementation-status.md): implementation and acceptance status;
+- [`CHANGELOG.md`](CHANGELOG.md): version history.
+
+Read the [contributing guide](CONTRIBUTING.md) before filing an issue or PR. Changes to authentication, transport, credential formats, or release boundaries must update the relevant ADR/threat model before implementation and tests.
+
+## Roadmap
+
+- [x] Official CLI browser login, dynamic model catalog, and Responses streaming
+- [x] Web/TUI account controls, quota dashboard, and model capability display
+- [ ] Publish `0.1.0` and verify Registry integrity/provenance
+- [ ] Complete the first Windows x64 real-device acceptance after release
+- [ ] Evaluate additional content types and platforms only against verified Harness/xAI contracts
+
+The roadmap is not a compatibility promise; every new capability must pass the documented design and security gates.
+
+## License
+
+[MIT](LICENSE)
