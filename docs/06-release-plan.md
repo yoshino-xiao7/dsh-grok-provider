@@ -125,6 +125,8 @@ patch 路径必须为不含 `..`、绝对路径、反斜线或 NUL 的相对 `.y
 
 首次包无法预先配置 staged publishing；需要一次最小权限的首次发布凭据，发布完成后立刻配置 npm Trusted Publisher 并撤销首次凭据。按 2026-08-25 的 npm 官方要求，Trusted Publishing 需要 npm ≥`11.5.1`、Node ≥`22.14.0`、GitHub-hosted runner 和 workflow `id-token: write`；正式发布前再次核对。本机 npm `10.9.7` 不作为发布环境。
 
+CI 使用的官方 GitHub Actions 必须固定到已核对的完整 commit SHA；不得依赖可移动 major tag 作为发布门禁实现。
+
 发布经过测试的同一个 tarball：
 
 ```sh
