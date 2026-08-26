@@ -6,7 +6,6 @@ on:
       tag:
         description: Immutable release tag containing the candidate commit
         required: true
-        default: v0.1.0
       expected_sha512:
         description: Base64 SHA-512 of the exact GitHub Release tarball
         required: true
@@ -26,7 +25,13 @@ jobs:
           RELEASE_TAG: ${{ inputs.tag }}
         run: |
           set -euo pipefail
-          test "$RELEASE_TAG" = "v0.1.0"
+          if [[ ! "$RELEASE_TAG" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+            echo "release tag must be a stable v<major>.<minor>.<patch> tag" >&2
+            exit 1
+          fi
+          release_version="${RELEASE_TAG#v}"
+          echo "RELEASE_VERSION=$release_version" >> "$GITHUB_ENV"
+          echo "ARTIFACT_NAME=dsh-grok-provider-$release_version.tgz" >> "$GITHUB_ENV"
 
       - name: Download immutable release artifact
         shell: bash
@@ -37,7 +42,7 @@ jobs:
           set -euo pipefail
           gh release download "$RELEASE_TAG" \
             --repo "$GITHUB_REPOSITORY" \
-            --pattern 'dsh-grok-provider-0.1.0.tgz' \
+            --pattern "$ARTIFACT_NAME" \
             --dir release
 
       - name: Verify artifact digest and manifest
@@ -46,11 +51,11 @@ jobs:
           EXPECTED_SHA512: ${{ inputs.expected_sha512 }}
         run: |
           set -euo pipefail
-          artifact='release/dsh-grok-provider-0.1.0.tgz'
+          artifact="./release/$ARTIFACT_NAME"
           actual="$(openssl dgst -sha512 -binary "$artifact" | openssl base64 -A)"
           test "$actual" = "$EXPECTED_SHA512"
           test "$(tar -xOf "$artifact" package/package.json | jq -r .name)" = 'dsh-grok-provider'
-          test "$(tar -xOf "$artifact" package/package.json | jq -r .version)" = '0.1.0'
+          test "$(tar -xOf "$artifact" package/package.json | jq -r .version)" = "$RELEASE_VERSION"
           test "$(tar -xOf "$artifact" package/package.json | jq -r .repository.url)" = \
             'git+https://github.com/yoshino-xiao7/dsh-grok-provider.git'
 
@@ -67,10 +72,9 @@ jobs:
           node "$RUNNER_TEMP/npm-cli/node_modules/npm/bin/npm-cli.js" --version
 
       - name: Publish exact artifact with provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: >-
           node "$RUNNER_TEMP/npm-cli/node_modules/npm/bin/npm-cli.js"
-          publish ./release/dsh-grok-provider-0.1.0.tgz
+          publish "./release/$ARTIFACT_NAME"
           --access public
+          --tag latest
           --provenance

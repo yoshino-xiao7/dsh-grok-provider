@@ -4,7 +4,7 @@
 
 Use an already authenticated official Grok Build account from DeepSeek Harness, with dynamic model discovery, streaming reasoning, tool calls, and an account quota/model capability dashboard.
 
-> Unofficial community project; not affiliated with xAI or DeepSeek Harness. `0.1.0` has not been published to npm, so the registry installation command below is not available yet. Windows x64 is code-supported, with its first real-device validation scheduled after the initial release.
+> Unofficial community project; not affiliated with xAI or DeepSeek Harness. The current version is `0.1.1`. Windows x64 has code and CI support; its first Registry real-device validation remains a post-release follow-up.
 
 ## What it provides
 
@@ -38,17 +38,10 @@ The official CLI opens a browser on first use. The provider supports only the of
 
 ### 2. Install the provider
 
-After `0.1.0` is released, install the exact version:
+Install the published exact version from npm:
 
 ```sh
-dsh plugin --profile web add dsh-grok-provider@0.1.0
-dsh web
-```
-
-Pre-release acceptance installs only a verified local tarball:
-
-```sh
-dsh plugin --profile web add ./dsh-grok-provider-0.1.0.tgz
+dsh plugin --profile web add dsh-grok-provider@0.1.1
 dsh web
 ```
 
@@ -86,7 +79,7 @@ These commands never enter model context. Logout requires confirmation because i
 
 ## Update and uninstall
 
-Update after release:
+Update an installed version:
 
 ```sh
 dsh plugin --profile web update dsh-grok-provider
@@ -102,9 +95,18 @@ dsh web
 
 Uninstalling the provider does not remove the official Grok CLI or directly modify/delete `auth.json`.
 
+## Sources and discovery
+
+- Exact npm version: [dsh-grok-provider@0.1.1](https://www.npmjs.com/package/dsh-grok-provider/v/0.1.1)
+- GitHub release and integrity values: [v0.1.1](https://github.com/yoshino-xiao7/dsh-grok-provider/releases/tag/v0.1.1)
+- GitHub community discovery: the repository carries the DeepSeek Harness-recommended `dsh-plugin` and `dsh` topics
+- YukiRyou managed source: [deepseek-yukiryou-plugin-catalog](https://github.com/yoshino-xiao7/deepseek-yukiryou-plugin-catalog), following the exact verified stable version and currently marking only verified macOS arm64
+
+Directory inclusion is not an endorsement by xAI or DeepSeek Harness. The public curated directory still requires its repository-age gate and independent maintainer review.
+
 ## Compatibility and scope
 
-| Item | `0.1.0` status |
+| Item | `0.1.1` status |
 | --- | --- |
 | DeepSeek Harness | Exact support for `0.1.1-rc.2` |
 | Node.js | `>=24.19.0` |
@@ -137,6 +139,7 @@ Model IDs come from the runtime catalog rather than a hardcoded list. If an acco
 
 - Model, catalog, and billing requests allow only compile-time pinned HTTPS origins/paths and reject redirects.
 - Renderer and RPC code never receive tokens, `user_id`, credential paths, arbitrary URLs, or raw upstream responses.
+- The Host must perform a bounded read of the official `auth.json`, whose raw file may contain a refresh token. The parser does not use, cache, or persist that refresh token; it retains only validation metadata and a short-lived access-token lease.
 - The provider does not implement a refresh grant. Near expiry it may invoke one bounded official `grok models`, then reread and revalidate the official credential file.
 - Login subprocesses use fixed argv, a scrubbed environment, output limits, deadlines, cancellation, and no shell.
 - Prompts and tool results are sent to the xAI Grok Build service; the provider itself does not log them.
@@ -189,7 +192,9 @@ Read the [contributing guide](CONTRIBUTING.md) before filing an issue or PR. Cha
 
 - [x] Official CLI browser login, dynamic model catalog, and Responses streaming
 - [x] Web/TUI account controls, quota dashboard, and model capability display
-- [ ] Publish `0.1.0` and verify Registry integrity/provenance
+- [x] Publish `0.1.0` and verify Registry integrity/provenance
+- [x] Configure npm Trusted Publisher, revoke the initial token, and add `dsh-plugin` discovery plus the YukiRyou catalog entry
+- [x] Publish the `0.1.1` documentation and release-process correction
 - [ ] Complete the first Windows x64 real-device acceptance after release
 - [ ] Evaluate additional content types and platforms only against verified Harness/xAI contracts
 

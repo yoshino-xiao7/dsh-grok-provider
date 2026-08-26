@@ -1,8 +1,8 @@
-# 当前实现与发布阻断项
+# 当前实现与发布状态
 
 状态日期：2026-08-26
-目标包：`dsh-grok-provider@0.1.0`
-开发分支：`yukiryou/v0.1.0`
+当前发布线：`dsh-grok-provider@0.1.1`
+发布分支：`yukiryou/v0.1.1`
 
 ## 已实现
 
@@ -24,14 +24,29 @@
 - `max_output_tokens` 真机返回 `response.incomplete/max_output_tokens`，已映射为 Harness `max-tokens`。
 - macOS 隔离 Harness Web profile 已从当前 `dsh-grok-provider@0.1.0` tarball 安装并验证：设置页真实显示登录状态、`grok-4.6`/`grok-4.5` 上下文与推理档位、流式/tool capability、每周周期和重置时间；手动刷新通过。当前真实账号的 CLI Proxy JSON 省略百分比，而同周期官方移动端显示 `0% 已使用`；解析器现按完整类型化周期恢复为 `0% 已使用 / 100% 剩余`。
 
-## 发布阻断项
+## `0.1.0` 发布结果
 
-以下任何一项未关闭都不得执行 `npm publish`：
+- GitHub Release 与 npm `0.1.0` 已发布；Registry 重新下载文件与候选 tarball 的 SHA-256/SHA-512 完全一致。
+- npm provenance attestation 已生成并回读；canonical repository、name、version 与 SRI 一致。
+- npm Trusted Publisher 已绑定 GitHub Actions `release.yml` 与 Environment `npm`，只允许 `npm publish`。
+- GitHub `NPM_TOKEN` secret 与 npm 首发 Token 已撤销；包已设置为要求 2FA 并禁止 bypass 2FA token。
+- GitHub Release 说明为中文在前、英文在后，且已移除正文重复版本标题。
+- 仓库已添加 `dsh-plugin` 与 `dsh` Topics；YukiRyou catalog 已收录精确 `0.1.0` 的 macOS arm64 验证条目。
 
-1. **已接受的上游残余风险**：官方 macOS `1.0.5` 下载物当前无法通过严格代码签名验证，也没有可验证 sidecar signature/checksum；xAI 也没有为第三方本地 adapter 使用 Grok Build session credential 与 CLI Chat Proxy 提供明确支持依据。仓库所有者已明确要求继续公开发布并承担该风险。
-2. **发布身份**：公开 canonical repository 已冻结为 `https://github.com/yoshino-xiao7/dsh-grok-provider`；仍需让 GitHub publish workflow 获得最小权限的首次 npm 发布凭据，发布后配置 Trusted Publisher 并撤销首次凭据。
-3. **精确候选与回读**：发布前由 macOS 验收、Windows CI 和 publish job 核验同一个 tarball SHA-512；发布后回读 Registry integrity、attestation 和精确版本安装。
+## 已知首发流程缺陷
+
+`0.1.0` tarball 内的中英文 README、`SECURITY.md` 与部分状态文档仍保留预发布措辞。npm 同一版本不可覆盖，因此 npm 页面只能通过后续递增版本纠正。该问题已进入[逐版发布检查表](./10-release-checklist.md)，以后属于发布前阻断项。
+
+## `0.1.1` 发布门禁
+
+`0.1.1` 按以下门禁冻结；最终制品与回读证据以 GitHub Release 和 npm provenance 为准：
+
+1. 中英文 README、`SECURITY.md`、文档首页、实现状态、发布计划和 CHANGELOG 同步完成。
+2. `package.json`、CHANGELOG、双语 release notes、tag 与唯一候选 tarball 全部冻结为 `0.1.1`。
+3. 完整测试、两平台 CI、打包清单、隔离安装与候选 SHA-512 门禁通过。
+4. OIDC Trusted Publisher 配置保持有效，workflow 不读取任何 npm Secret。
+5. 仓库所有者在看到最终候选摘要与全部证据后明确授权发布。
 
 Windows x64 真机不再是 `0.1.0` 预发布阻断项。首次发布后必须从 Registry 安装精确 `0.1.0`，完成官方安装物 Authenticode/hash、浏览器登录、取消/超时/卸载、动态全部模型、聊天、reasoning replay、工具调用和 production inspector；完成前对 Windows 保持“代码支持、真机未验证”标识。`0.1.1` 及后续版本不要求重复真机验证，以两平台 CI、契约测试、干净安装和制品校验作为常规门禁。
 
-当前结论是“核心实现可继续审计与集成”，不是“已具备发布条件”。
+仓库所有者已于 2026-08-26 明确授权发布精确 `dsh-grok-provider@0.1.1`。该版本只修正发布事实与长期发布流程，不改变运行时协议或能力边界。

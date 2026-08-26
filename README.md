@@ -4,7 +4,7 @@
 
 让 DeepSeek Harness 使用你已登录的官方 Grok Build 账号：动态模型发现、流式推理、工具调用，以及账号额度与模型能力面板。
 
-> 非官方社区项目，与 xAI 或 DeepSeek Harness 官方无隶属关系。`0.1.0` 尚未发布到 npm；请勿把下面的 Registry 安装命令理解为已经可用。Windows x64 已完成代码支持，首次真机验证安排在首版发布后。
+> 非官方社区项目，与 xAI 或 DeepSeek Harness 官方无隶属关系。当前版本为 `0.1.1`；Windows x64 已完成代码与 CI 支持，首次 Registry 真机验证仍在发布后跟进中。
 
 ## 它解决什么问题
 
@@ -38,17 +38,10 @@ grok models
 
 ### 2. 安装 Provider
 
-`0.1.0` 正式发布后，安装精确版本：
+从 npm 安装已发布的精确版本：
 
 ```sh
-dsh plugin --profile web add dsh-grok-provider@0.1.0
-dsh web
-```
-
-发布前验收只安装经过校验的本地 tarball：
-
-```sh
-dsh plugin --profile web add ./dsh-grok-provider-0.1.0.tgz
+dsh plugin --profile web add dsh-grok-provider@0.1.1
 dsh web
 ```
 
@@ -86,7 +79,7 @@ TUI 命令：
 
 ## 更新与卸载
 
-正式发布后更新：
+更新已安装版本：
 
 ```sh
 dsh plugin --profile web update dsh-grok-provider
@@ -102,9 +95,18 @@ dsh web
 
 卸载插件不会删除官方 Grok CLI，也不会直接修改或删除 `auth.json`。
 
+## 项目来源与发现
+
+- npm 精确版本：[dsh-grok-provider@0.1.1](https://www.npmjs.com/package/dsh-grok-provider/v/0.1.1)
+- GitHub 发行版与校验值：[v0.1.1](https://github.com/yoshino-xiao7/dsh-grok-provider/releases/tag/v0.1.1)
+- GitHub 社区发现：仓库已添加 DeepSeek Harness 官方推荐的 `dsh-plugin` 与 `dsh` Topics
+- YukiRyou 受管来源：[deepseek-yukiryou-plugin-catalog](https://github.com/yoshino-xiao7/deepseek-yukiryou-plugin-catalog)，跟随已验证的精确稳定版本，当前只标记已验证的 macOS arm64
+
+出现在目录中不代表 xAI 或 DeepSeek Harness 官方背书。公共 curated 目录仍需满足其仓库年龄门槛并通过独立维护者评审。
+
 ## 兼容性与范围
 
-| 项目 | `0.1.0` 状态 |
+| 项目 | `0.1.1` 状态 |
 | --- | --- |
 | DeepSeek Harness | 精确支持 `0.1.1-rc.2` |
 | Node.js | `>=24.19.0` |
@@ -137,6 +139,7 @@ dsh-grok-provider Host
 
 - 模型、目录和计费请求只允许编译时固定的 HTTPS origin/path，并拒绝重定向。
 - Renderer 和 RPC 不接收 token、`user_id`、凭据路径、任意 URL 或原始上游响应。
+- Host 必须有界读取官方 `auth.json`，其原始文件可能包含 refresh token；解析器不使用、不缓存、不持久化 refresh token，只保留闭合校验所需元数据与短期 access-token lease。
 - 插件不实现 refresh grant；凭据临近过期时，只能有界调用一次官方 `grok models`，再重新读取并验证官方文件。
 - 登录子进程使用固定 argv、过滤后的环境、输出上限、deadline 与取消处理，不通过 shell 启动。
 - 提示词和工具结果会发送给 xAI Grok Build 服务；插件本身不把它们写入日志。
@@ -189,7 +192,9 @@ npm run pack:check
 
 - [x] 官方 CLI 浏览器登录、动态模型目录和 Responses 流
 - [x] Web/TUI 账户控制、额度面板与模型能力展示
-- [ ] 发布 `0.1.0` 并完成 Registry/provenance 回读
+- [x] 发布 `0.1.0` 并完成 Registry/provenance 回读
+- [x] 配置 npm Trusted Publisher、撤销首发 Token，并加入 `dsh-plugin` Topic 与 YukiRyou catalog
+- [x] 发布 `0.1.1` 文档与发布流程修正版
 - [ ] 发布后完成 Windows x64 首次真机验收
 - [ ] 根据已验证的 Harness/xAI 协议逐项评估更多内容类型和平台
 

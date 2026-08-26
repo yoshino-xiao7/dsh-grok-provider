@@ -1,6 +1,13 @@
 # Changelog
 
-## 0.1.0 - Unreleased
+## 0.1.1 - 2026-08-26
+
+- Correct post-release status across the Simplified Chinese and English READMEs, security policy, and maintainer documentation.
+- Replace the one-off token-based publication path with a reusable npm Trusted Publisher OIDC workflow.
+- Record GitHub `dsh-plugin` discovery and the exact `0.1.0` YukiRyou catalog entry for macOS arm64.
+- Add a mandatory release checklist so documentation, bilingual release notes, credentials, artifacts, and Registry readback are complete before publication.
+
+## 0.1.0 - 2026-08-26
 
 - Clean-room Grok Build provider for DeepSeek Harness `0.1.1-rc.2`.
 - Dynamic discovery of every account-visible Responses model.

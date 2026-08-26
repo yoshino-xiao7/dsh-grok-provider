@@ -28,6 +28,8 @@ npm test
 npm run pack:check
 ```
 
+发布维护者还必须逐项完成 [`docs/10-release-checklist.md`](docs/10-release-checklist.md)。检查表全绿不代表可以自行发布；合并发布基线、创建 tag、GitHub Release 或 npm 版本前仍需仓库所有者明确授权。
+
 ## Pull Request 检查表
 
 - [ ] 变更解决一个清晰的问题，没有无关重构或格式化噪音；

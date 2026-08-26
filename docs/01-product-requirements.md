@@ -11,7 +11,7 @@
 - Provider ID：`grok`
 - 当前真机模型快照：`grok-4.6`、`grok-4.5`；生产目录动态发现账号可用的全部模型
 
-项目选择无需 scope 所有权的唯一名称，避免把脚手架和 credential owner 绑定到尚未确认的 `@yukiryou` scope。该名称在 2026-08-25 查询时未公开发布；发布前仍必须重新检查占用状态。
+项目选择无需 scope 所有权的唯一名称，避免把脚手架和 credential owner 绑定到 `@yukiryou` scope。`dsh-grok-provider@0.1.0` 已于 2026-08-26 由 npm 账户 `yukiryou` 首发；后续候选仍须在发布前核对包维护权与 Trusted Publisher 绑定。
 
 ## 2. P0 用户目标
 
@@ -115,7 +115,9 @@ Web 的“退出”或 TUI `/grok logout` 先中止本插件所有在途 Grok �
 - canary secret 扫描确认日志、RPC、错误、临时文件和打包产物无泄漏。
 - 协议测试确认第二个测试 origin 永远收不到 Authorization。
 
-## 8. 发布阻断项
+## 8. `0.1.0` 历史发布阻断项
+
+以下内容记录 `0.1.0` 发布前采用的门禁定义。`0.1.0` 已完成发布；后续版本以 [发布检查清单](10-release-checklist.md) 为强制门禁，并在对应版本分支记录当次风险接受与验证证据。
 
 任一条件不满足都不得发布：
 
