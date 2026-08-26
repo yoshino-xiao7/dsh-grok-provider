@@ -26,7 +26,7 @@ dsh-grok-provider@0.1.0
 
 不采用 `dsh-llm-grok-yukiryou`，避免被理解为第三方包的修补或衍生版本。
 
-2026-08-25 的只读 Registry 查询显示该名称未公开发布；本机 `npm whoami` 返回 `ENEEDAUTH`。真正发布前必须重新检查名称和登录身份，任何 token 都不能出现在聊天或日志中。
+`0.1.0` 已由 npm 账户 `yukiryou` 发布，canonical source repository 为 `yoshino-xiao7/dsh-grok-provider`。发布账户与 GitHub owner 不要求同名；Registry repository 回链、GitHub provenance 和 Trusted Publisher claims 必须保持一致。任何 token 都不能出现在仓库、聊天或日志中。
 
 ## 2. 为什么是 `0.1.0`
 
@@ -98,7 +98,7 @@ patch 路径必须为不含 `..`、绝对路径、反斜线或 NUL 的相对 `.y
 
 ## 5. 受管市场约束
 
-- 根包为精确稳定版本 `0.1.0`，name/version 与目录一致。
+- 根包必须是与候选 tag 一致的精确稳定版本，name/version 与目录一致。
 - 不得 deprecated。
 - root 与完整 `dependencies`/`optionalDependencies` 图无 `preinstall`、`install`、`postinstall`。
 - 每个依赖节点来自 `https://registry.npmjs.org` 并有 SHA-512 integrity。
@@ -128,12 +128,12 @@ patch 路径必须为不含 `..`、绝对路径、反斜线或 NUL 的相对 `.y
 
 ## 7. Git 与版本
 
-- 开发分支：`yukiryou/v0.1.0`。
-- `package.json`、CHANGELOG、release notes、Git tag 和 tarball 必须都是 `0.1.0`。
+- `0.1.0` 历史开发分支：`yukiryou/v0.1.0`；当前下一版本分支：`yukiryou/v0.1.1`。
+- `package.json`、CHANGELOG、release notes、Git tag 和 tarball 必须使用同一个精确候选版本。
 - 发布提交必须干净且可复现。
-- tag：`v0.1.0`，只在发布提交确定后创建。
+- tag 使用 `v<major>.<minor>.<patch>`，只在发布提交确定后创建。
 - 受当前全局分支命名策略约束，发布基线使用 `yukiryou/main`；不创建无前缀 `main`，也不直接在发布基线开发或发布未验收内容。
-- 首次仓库当前没有发布基线；验收完成后才创建/保护 `yukiryou/main`。该分支必须 fast-forward 到生成并测试候选 tarball 的同一 release commit，不得在 pack 后再 merge、squash、rebase 或修改文件；`yukiryou/main`、`v0.1.0` 和候选 manifest 记录的 source commit 必须是同一 Git OID。publish job 核对 `GITHUB_SHA` 与候选 SHA-512 后直接发布，禁止重新构建或重新 pack。
+- `0.1.0` 首发时，发布基线 `yukiryou/main`、tag `v0.1.0` 和候选 manifest 记录的 source commit 均为 `dfa39d98d12fac929669f4961b0a511bf70cfeac`。发布后的 workflow 或文档修正不会改变这一不可变 tag、候选 tarball 或其 provenance。后续版本仍须让发布基线、tag、候选 manifest 和已验证 tarball 对应同一 release commit；publish job 只发布已核对 SHA-512 的唯一候选，禁止重新构建或重新 pack。
 
 `0.1.0` 发布后，后续版本从已发布基线 `yukiryou/main` 创建 `yukiryou/v<next-version>`。普通开发、文档、测试和发布准备都停留在版本分支；只有仓库所有者明确开始该版本发布时才合并回发布基线并创建不可变 tag。
 
@@ -169,27 +169,27 @@ scoped 包首次公开发布必须保留 `--access public`。
 
 ## 9. 发布后回读
 
-回读 `<name>@0.1.0` 并核对：
+回读 `<name>@<exact-version>` 并核对：
 
 - name、version、repository。
 - `dist.tarball`、`dist.integrity`、unpacked size、file count。
 - scripts、dependencies、optionalDependencies、peerDependencies。
 - peerDependenciesMeta 与 publishConfig 的 Registry 回读表现。
 - engines、os、cpu 和 `dsh.bundle.patch`。
-- `dist-tags.latest === "0.1.0"`。
+- `dist-tags.latest` 等于刚发布的精确版本。
 
-从 Registry 重新下载，计算 SRI 并与 `dist.integrity` 及候选 digest 比较；在临时项目安装精确版本、生成 lockfile 后执行 `npm audit signatures`；核对 provenance attestation 的 GitHub repository 与 release commit，不使用 `latest` 安装。
+从 Registry 重新下载，计算 SRI 并与 `dist.integrity` 及候选 digest 比较；在临时项目安装精确版本、生成 lockfile 后执行 `npm audit signatures`；核对 provenance attestation 的 GitHub repository 与 release commit，不使用 `latest` 安装代替证据。
 
 ## 10. Marketplace
 
-npm 发布不会自动成为受管可安装项。发布后还需要：
+npm 发布不会自动成为受管可安装项。`0.1.0` 当前发现状态：
 
-- DSHFind verified repository backlink；或
-- 加入 YukiRyou curated catalog 的精确 `0.1.0`。
+- GitHub 仓库已添加 DeepSeek Harness 官方推荐的 `dsh-plugin` 与 `dsh` Topics，可被 Topic 驱动来源发现。
+- YukiRyou curated catalog 已加入精确 `dsh-grok-provider@0.1.0`，只标记完成真实验收的 `darwin-arm64`。
+- 公共 `awesome-dsh-plugin` curated 目录要求仓库创建满 1 天且至少 10 个提交；提交数已满足，需在年龄门槛满足后提交外部 PR。
+- Windows x64 仍需对 Registry 精确 `0.1.0` 完成首次 production inspector、安装、重启、浏览器登录、聊天、工具调用和重新认证；完成前保持“代码支持、真机未验证”。
 
-优先先通过公开 GitHub repository backlink 形成 DSHFind candidate，避免“尚无 candidate 因而无法受管安装、尚未受管安装因而不能进 curated”的循环。Registry 回读完成后，在 Windows x64 的生产 inspector 上对精确 `0.1.0` 完成首次 `artifact-verified`、安装、重启、浏览器登录、聊天、工具调用和重新认证；完成前必须保留“代码支持、真机未验证”标识。
-
-curated 条目只在上述验证通过后添加。当前 catalog schema 只记录：
+catalog 条目只能记录实际验证完成的平台。当前 schema 记录：
 
 - UTC `testedAt`。
 - Harness `0.1.1-rc.2`。

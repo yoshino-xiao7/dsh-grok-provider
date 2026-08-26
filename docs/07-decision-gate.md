@@ -47,14 +47,14 @@ Host 通过 Harness `ctx.subprocess` 以固定 argv 启动经路径/版本约束
 - CLI Chat Proxy 和凭据文件是可变化的上游契约；未知版本或结构必须失败关闭。
 - macOS x64 不在当前官方 CLI 支持矩阵；`0.1.0` 发布承诺为 macOS arm64 与 Windows x64。
 
-## 尚未解决但不阻碍方案确认的事项
+## 已接受的残余风险与发布后状态
 
-- 首个开发绑定版本已冻结为 `1.0.5`（build `5115b46bc909`），详见 `08-upstream-cli-1.0.5-evidence.md`。其 macOS 官方下载物当前无法通过严格代码签名验证，仍是发布阻断项。
-- npm 登录身份与冻结名称在发布时仍可用：发布前确认。
+- 首个开发绑定版本已冻结为 `1.0.5`（build `5115b46bc909`），详见 `08-upstream-cli-1.0.5-evidence.md`。其 macOS 官方下载物无法通过严格代码签名验证；仓库所有者已明确接受这一残余风险并授权 `0.1.0` 首发，这不代表签名问题已经解决。
+- npm 身份已确认，`dsh-grok-provider@0.1.0` 已发布；后续版本使用已配置的 npm Trusted Publisher。
 - canonical GitHub repository URL：已冻结为 `https://github.com/yoshino-xiao7/dsh-grok-provider`，并用于 `package.json.repository`、provenance workflow 和发布脚手架。
-- xAI 服务条款/官方许可的最终发布复核。
+- xAI 服务条款/官方许可没有第三方 adapter 的明确支持依据；仓库所有者已在 `0.1.0` 发布前复核并接受该残余风险。
 
-仓库所有者已明确要求继续公开发布，并接受当前 CLI 契约/服务条款没有第三方 adapter 明确支持依据的残余风险。发布仍必须通过制品、CI、provenance 和 Registry 回读门禁。
+仓库所有者已明确要求继续公开发布，并接受当前 CLI 契约/服务条款没有第三方 adapter 明确支持依据的残余风险。`0.1.0` 已完成发布；后续版本仍必须通过制品、CI、provenance 和 Registry 回读门禁。
 
 ## 确认语句
 

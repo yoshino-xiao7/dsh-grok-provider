@@ -1,6 +1,6 @@
 # Grok CLI 1.0.5 上游契约证据
 
-状态：**开发绑定，尚未通过发布门禁**
+状态：**已作为 `0.1.0` 发布绑定证据；残余风险由仓库所有者明确接受**
 核验日期：2026-08-25（Asia/Shanghai）
 
 ## 1. 精确版本
@@ -16,7 +16,7 @@
 - 两者 SHA-256 都是 `3dfa7f04fbb5427a8fbead286591543aaecb478b3a0ab222c4329eca1a3b2f86`。
 - 官方路径未发现 `.sha256`、`.sha256sum` 或 `.sig` sidecar；本地记录的哈希只能用于复现实验，不能证明发布者身份。
 - Mach-O 嵌入指定要求含 Team ID `5Y6N3AJ54S`，但重新下载且尚未执行的 CDN/GCS 副本以及本机安装副本均未通过 `codesign --verify --strict`，错误为 `invalid signature (code or signature have been modified)`。
-- 因此当前不得把 macOS 签名描述为“已验证”，也不得把插件的路径、owner、版本检查包装成 publisher verification。该异常是发布阻断项；开发可继续，但 `0.1.0` 发布前必须由 xAI 修复或提供可验证的官方完整性机制，并重新记录证据。
+- 因此不得把 macOS 签名描述为“已验证”，也不得把插件的路径、owner、版本检查包装成 publisher verification。仓库所有者在了解该限制后明确授权 `0.1.0` 继续发布；它是已接受的上游供应链残余风险，不是已经解决或获得密码学证明的问题。
 
 ## 3. 登录命令
 

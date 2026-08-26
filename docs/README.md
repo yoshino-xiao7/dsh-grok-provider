@@ -1,7 +1,8 @@
 # Grok Build Provider 文档索引
 
-- 状态：**方案已确认，`0.1.0` 收敛为官方 CLI 浏览器登录单路径**
-- 目标版本：`0.1.0`
+- 状态：**`0.1.0` 已发布并完成 Registry/provenance 回读；`0.1.1` 在版本分支准备发布事实修正与长期 OIDC 流程**
+- 已发布版本：`0.1.0`
+- 当前版本分支：`yukiryou/v0.1.1`
 - 兼容基线：DeepSeek Harness `0.1.1-rc.2`
 - 目标平台：macOS arm64、Windows x64
 
@@ -31,10 +32,11 @@
 - [安全与威胁模型](./03-security-threat-model.md)
 - [Harness rc.2 接口契约](./04-harness-contract.md)
 - [兼容性与测试计划](./05-test-plan.md)
-- [npm `0.1.0` 发布计划](./06-release-plan.md)
+- [npm 发布计划与维护流程](./06-release-plan.md)
 - [开发前决策门](./07-decision-gate.md)
 - [Grok CLI 1.0.5 上游证据](./08-upstream-cli-1.0.5-evidence.md)
-- [当前实现与发布阻断项](./09-implementation-status.md)
+- [当前实现与发布状态](./09-implementation-status.md)
+- [逐版发布检查表](./10-release-checklist.md)
 - [ADR-0001：认证与传输路线](./adr/0001-auth-and-transport-route.md)
 - [ADR-0002：首版能力边界](./adr/0002-v0.1-scope.md)
 - [ADR-0003：已被取代的双认证设计](./adr/0003-dual-authentication.md)
@@ -44,7 +46,7 @@
 
 ## 开发门禁
 
-原开发门已由仓库所有者确认。最终 package identity、macOS 真机门禁和发布链全部满足前，不进行 npm 发布；Windows x64 首次真机验证安排在 `0.1.0` 发布后，完成前标注“代码支持、真机未验证”。`0.1.1` 及后续版本以自动化矩阵、契约、干净安装和制品校验替代重复真机门禁。独立 xAI OAuth client 授权已不再属于首版范围。
+`0.1.0` 已于 2026-08-26 发布，Registry 完整性、provenance、Trusted Publisher 与凭据撤销均已完成。首发后发现 tarball 内的 README 与部分状态文档仍有预发布措辞；该缺陷不能覆盖修复，将由递增版本纠正。后续版本必须先完成[逐版发布检查表](./10-release-checklist.md)，再由仓库所有者明确授权发布。Windows x64 首次真机验证仍按约定作为 `0.1.0` 发布后跟进，完成前标注“代码支持、真机未验证”。
 
 ## 官方依据
 
