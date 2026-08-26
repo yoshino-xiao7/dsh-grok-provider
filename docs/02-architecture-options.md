@@ -70,7 +70,7 @@ xAI 官方 Grok Build CLI
 - 只接受唯一、无歧义、与发布绑定 CLI 版本的 xAI 生产 OIDC schema 相符的记录：`auth_mode`、issuer、client ID、scope、expiry 与 token 都必须通过闭合关系；external、API key、web-login、企业 issuer、legacy scope 和多记录全部拒绝。
 - 这些字段是官方 CLI 写入的本地未签名 metadata，只能作为失败关闭的兼容性筛选，不能作为 token 第一方来源的密码学证明。
 - token 仅在 Host 内存短暂缓存，按文件元数据变化和 401 失效。
-- 永不写入、刷新、迁移或删除官方凭据。
+- 永不直接写入、执行 OAuth refresh grant、迁移或删除官方凭据；过期时可启动固定的官方 `grok models` 命令，由 CLI 在自己的信任边界内刷新并写回，插件随后重新校验 snapshot。
 
 #### `OfficialGrokLoginBridge`
 

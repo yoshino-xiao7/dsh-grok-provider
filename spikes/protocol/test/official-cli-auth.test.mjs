@@ -107,3 +107,36 @@ test("official browser login owns a deadline and terminates a stalled process tr
   ]), { name: "OfficialCliAuthError" })
   assert.equal(actionSignal.aborted, true)
 })
+
+test("official credential refresh uses the verified CLI models command", async () => {
+  const spawned = []
+  const outputs = ["grok 1.0.5 (5115b46bc909)\n", "Available models:\n  * grok-4.6\n"]
+  const subprocess = {
+    async resolveExecutable() { return "/Users/fixture/.grok/downloads/grok-macos-aarch64" },
+    spawn(spec) {
+      const index = spawned.length
+      spawned.push(spec)
+      return {
+        done: Promise.resolve({ exitCode: 0, signal: null }),
+        collected: {
+          stdout: { readFrom: () => ({ text: outputs[index], lossy: false }) },
+          stderr: { readFrom: () => ({ text: "", lossy: false }) },
+        },
+        async waitForExit() { return true },
+        terminate() {},
+      }
+    },
+  }
+  const auth = createOfficialCliAuth({
+    subprocess,
+    platform: "darwin",
+    homeDir: "/Users/fixture",
+    verifyExecutable: async () => {},
+  })
+
+  assert.deepEqual(await auth.refresh(), { kind: "succeeded" })
+  assert.deepEqual(spawned.map((spec) => spec.argv), [
+    ["/Users/fixture/.grok/downloads/grok-macos-aarch64", "--version"],
+    ["/Users/fixture/.grok/downloads/grok-macos-aarch64", "models"],
+  ])
+})

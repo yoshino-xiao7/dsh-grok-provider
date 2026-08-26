@@ -38,6 +38,7 @@ export function apply(ctx) {
   }
 
   const homeDir = os.homedir()
+  let refreshOfficialCredential
   const officialSource = createCredentialSource({
     contract: GROK_CLI_1_0_5_AUTH_CONTRACT,
     load: createOfficialCredentialLoader({
@@ -45,6 +46,10 @@ export function apply(ctx) {
       platform,
     }),
     now: () => new Date(),
+    refresh: async () => {
+      if (refreshOfficialCredential === undefined) throw new UnsupportedCredentialError()
+      await refreshOfficialCredential()
+    },
   })
   const runtime = installProviderRuntime({
     llm: ctx.llm,
@@ -75,12 +80,18 @@ export function apply(ctx) {
       homeDir,
       verifyExecutable: verifyOfficialCliExecutable,
     })
+    const refresh = async () => {
+      const outcome = await officialAuth.refresh()
+      if (outcome.kind !== "succeeded") throw new UnsupportedCredentialError()
+    }
+    refreshOfficialCredential = refresh
     const removeDriver = authController.installDriver(createOfficialAuthDriver({
       officialAuth,
       credentialSource: officialSource,
     }))
     return async () => {
       await authController.shutdown()
+      if (refreshOfficialCredential === refresh) refreshOfficialCredential = undefined
       removeDriver()
     }
   })

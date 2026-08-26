@@ -16,7 +16,7 @@
 3. 插件只读官方凭据文件并接受绑定 schema；token 不进入 renderer、settings、RPC、本插件日志或 workspace。
 4. 模型目录只请求固定 `GET /v1/models`；推理按目录中经过验证的 `api_backend` 选择闭合 endpoint。当前真实模型都走固定 `POST /v1/responses`；拒绝重定向和自定义 endpoint。
 5. 模型目录从固定 `/v1/models` 动态发现账号当前可用的全部 Grok Build 模型；本机当前快照为 `grok-4.6` 与 `grok-4.5`。
-6. 包内不存在 OAuth client ID、client secret、device flow、refresh/revoke 或 Harness credential grant；浏览器登录与持久化完全由官方 CLI 负责。
+6. 包内不存在 OAuth client ID、client secret、device flow、插件实现的 refresh/revoke 或 Harness credential grant；浏览器登录、refresh grant 与持久化完全由官方 CLI 负责。
 
 该路径要求本机安装受支持版本的官方 CLI。仓库所有者在 2026-08-26 将“插件自管 OAuth”要求改为“能跳转浏览器登录即可”，详见 ADR-0005。
 

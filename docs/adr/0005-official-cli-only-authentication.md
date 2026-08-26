@@ -17,15 +17,15 @@
 - Web 设置页只有一张官方 CLI 登录卡；不显示模式选择或 device-code UI。
 - TUI 语法只有 `/grok status|login|cancel|logout`。
 - RPC 只有 `status`、`login`、`cancel`、`logout`；请求中不存在 `authMode`。
-- Host 不注入 Harness credentials capability，不包含 OAuth client ID、client secret、device flow、refresh、revoke 或独立 grant store。
-- 官方 CLI 通过系统浏览器完成授权并持久化 `auth.json`。插件只做有界、只读、版本/schema/权限约束的 credential snapshot，并且不使用或写回其中的 refresh token。
+- Host 不注入 Harness credentials capability，不包含 OAuth client ID、client secret、device flow、插件实现的 refresh/revoke 或独立 grant store。
+- 官方 CLI 通过系统浏览器完成授权并持久化 `auth.json`。插件只做有界、只读、版本/schema/权限约束的 credential snapshot，并且不提取、使用或写回其中的 refresh token。完全匹配的 access token 过期时，插件可 single-flight 启动固定、30 秒有界的 `grok models`，由官方 CLI 完成 refresh grant 和文件写回；随后只重读、重新校验并重试一次。
 - 模型发现与推理仍使用固定 Grok Build HTTPS endpoints，并动态暴露账号目录中的全部受支持模型。
 
 ## 后果
 
 - xAI 独立 OAuth Client ID 不再是 `0.1.0` 发布阻断项。
 - 用户必须安装并信任受支持版本的官方 Grok CLI；登录与注销会影响共享同一 Grok home 的其他客户端。
-- 插件不能承诺在没有官方 CLI 的环境中登录，也不拥有 token 刷新或迁移能力。
+- 插件不能承诺在没有官方 CLI 的环境中登录或续期，也不拥有 OAuth refresh token 协议或凭据迁移能力。
 - 如果未来取得 xAI 明确授权的独立 public client，需要新的 ADR、独立安全评审和新的版本；不得在 `0.1.x` 中以隐藏配置恢复已删除路径。
 
 ## 非方案

@@ -47,7 +47,7 @@
 - 使用有界、一次性读取；不缓存原始文本或完整对象；
 - 解析后立即只保留闭合校验所需元数据和 access token lease，显式忽略 refresh token 与全部身份字段；
 - 不把原始文本/异常、字段值或 token 放入日志、错误、设置、测试快照或诊断包；
-- 插件不执行 refresh grant、不写回 `auth.json`；失效后要求官方 CLI 重新认证/刷新；
+- 插件不执行 refresh grant、不写回 `auth.json`；失效后可启动固定、受控的 `grok models`，由官方 CLI 使用其 refresh token 并原子更新文件，插件只重读和重新校验；
 - 这只是缩短暴露窗口，不是进程级秘密隔离。发布说明必须披露 Host 会短暂读取含 refresh token 的文件内容。
 
 若后续官方 CLI 提供只返回短期 access token 的受支持 broker 接口，应优先迁移并新增 ADR；在此之前这是已接受路线新增的 P0 审计面。

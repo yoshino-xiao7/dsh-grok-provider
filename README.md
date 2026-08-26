@@ -15,7 +15,7 @@ macOS x64, Linux, images, Web/X Search, arbitrary downloads, API-key billing, AC
 
 ## Authentication
 
-The Host invokes only the verified default executable with fixed `--version`, `login --oauth` or `logout` argv through Harness subprocess management. The official CLI opens the browser and owns `auth.json`; the plugin reads a bounded credential snapshot but never refreshes or rewrites that file. The package contains no independent OAuth client identity or token store.
+The Host invokes only the verified default executable with fixed `--version`, `login --oauth`, `models` or `logout` argv through Harness subprocess management. The official CLI opens the browser and owns `auth.json`; when an otherwise valid access token expires, the plugin may run one bounded `grok models` process so the CLI can refresh its own file, then rereads and revalidates it. The plugin never extracts the refresh token, implements a refresh grant or rewrites the file. The package contains no independent OAuth client identity or token store.
 
 ## User surfaces
 

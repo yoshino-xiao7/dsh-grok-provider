@@ -81,7 +81,7 @@
 
 ### 凭据过期
 
-1. 官方 CLI 凭据过期或进入固定 skew 时，在发送前以 LLM `AUTH` 失败；插件不自行刷新。
+1. 官方 CLI 凭据过期或进入固定 skew 时，插件只对完全匹配的官方 OIDC record 启动一次 single-flight、30 秒有界的 `grok models`，由 CLI 自行刷新其凭据；随后重新读取并校验。刷新失败、CLI capability 缺失或 record 仍无效时以 LLM `AUTH` 失败，不循环、不降级。
 2. 首个 401 使内存中的 lease 失效；已经发送的 POST 不自动重放。
 3. 设置页显示“重新登录”；下一次明确用户动作才启动官方 CLI 浏览器登录。
 4. 插件不删除、不修改官方 `auth.json`。

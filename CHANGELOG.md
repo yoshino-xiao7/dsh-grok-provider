@@ -7,4 +7,5 @@
 - Streaming text, reasoning, encrypted reasoning replay, tools, usage, and finish reasons.
 - Official Grok CLI browser OAuth on macOS arm64 and Windows x64; the CLI owns token persistence.
 - Single authentication path with no embedded OAuth client identity, client secret, or plugin-managed refresh token.
+- Single-flight renewal delegates expired official credentials to the verified Grok CLI `models` command; the plugin never executes an OAuth refresh grant itself.
 - Loopback-only Web settings and a closed `/grok` TUI command surface.

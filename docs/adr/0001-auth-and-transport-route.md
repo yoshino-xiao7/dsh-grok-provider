@@ -23,7 +23,7 @@ Harness 需要的是 LLM adapter，而不是第二套 agent runtime。
 `0.1.0` 采用以下组合：
 
 - Web 设置页和 TUI 可以发起登录；Host 只通过 Harness `ctx.subprocess`，以固定 argv 启动经路径/版本约束的 `grok login --oauth`。插件启动层不经过 shell。
-- 标准配置下，系统浏览器、OAuth、loopback callback 和官方凭据写入全部由 xAI 官方 Grok Build CLI 完成；首版不实现静默 token refresh，失效时重新触发官方登录。
+- 标准配置下，系统浏览器、OAuth、loopback callback、refresh grant 和官方凭据写入全部由 xAI 官方 Grok Build CLI 完成；首版在匹配的 access token 失效时只委托固定 `grok models` 命令静默续期，插件本身不实现 OAuth refresh。
 - 官方 CLI 及其有效 user/system/MDM 配置是明确的 vendor trust boundary。`--oauth` 只固定 loopback transport，不保证绕过 external auth provider、devbox 或企业 OIDC，也不保证 CLI 内部不用 `sh -c`/`cmd /C`。
 - 插件只读 Grok 会话凭据，不实现 OAuth，不持久化第二份 token；只接受与绑定 CLI 版本的 xAI 生产 OIDC schema 相符的唯一候选。该 metadata 未签名，筛选用于失败关闭，不是密码学来源证明。
 - 目录仅访问固定 `GET /v1/models`；推理按验证过的 catalog `api_backend` 访问闭合 endpoint。当前真实模型走固定 `POST /v1/responses`，不再假设单一 Chat Completions 方言。

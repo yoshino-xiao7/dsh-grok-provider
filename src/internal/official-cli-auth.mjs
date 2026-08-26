@@ -5,6 +5,7 @@ const GRACE_MS = 5_000
 const DEFAULT_VERSION_TIMEOUT_MS = 10 * 1000
 const DEFAULT_LOGIN_TIMEOUT_MS = 5 * 60 * 1000
 const DEFAULT_LOGOUT_TIMEOUT_MS = 2 * 60 * 1000
+const DEFAULT_REFRESH_TIMEOUT_MS = 30 * 1000
 const MAX_TIMER_DELAY_MS = 2_147_483_647
 
 export class OfficialCliAuthError extends Error {
@@ -22,6 +23,7 @@ export function createOfficialCliAuth({
   versionTimeoutMs = DEFAULT_VERSION_TIMEOUT_MS,
   loginTimeoutMs = DEFAULT_LOGIN_TIMEOUT_MS,
   logoutTimeoutMs = DEFAULT_LOGOUT_TIMEOUT_MS,
+  refreshTimeoutMs = DEFAULT_REFRESH_TIMEOUT_MS,
 }) {
   if (
     !subprocess ||
@@ -33,7 +35,8 @@ export function createOfficialCliAuth({
     typeof verifyExecutable !== "function" ||
     !isTimeout(versionTimeoutMs) ||
     !isTimeout(loginTimeoutMs) ||
-    !isTimeout(logoutTimeoutMs)
+    !isTimeout(logoutTimeoutMs) ||
+    !isTimeout(refreshTimeoutMs)
   ) {
     throw new TypeError("Invalid official Grok CLI auth dependencies")
   }
@@ -93,6 +96,9 @@ export function createOfficialCliAuth({
     },
     logout({ signal } = {}) {
       return runAction(["logout"], signal, logoutTimeoutMs)
+    },
+    refresh({ signal } = {}) {
+      return runAction(["models"], signal, refreshTimeoutMs)
     },
   })
 }

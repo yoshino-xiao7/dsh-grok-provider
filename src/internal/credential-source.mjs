@@ -22,9 +22,26 @@ export class CredentialFileTooLargeError extends Error {
   }
 }
 
-export function createCredentialSource({ contract, load, now }) {
-  if (!contract || typeof load !== "function" || typeof now !== "function") {
+class CredentialRefreshRequiredError extends Error {}
+
+export function createCredentialSource({ contract, load, now, refresh }) {
+  if (
+    !contract ||
+    typeof load !== "function" ||
+    typeof now !== "function" ||
+    (refresh !== undefined && typeof refresh !== "function")
+  ) {
     throw new TypeError("Invalid credential source dependencies")
+  }
+  let activeRefresh
+
+  const refreshOnce = async () => {
+    if (activeRefresh === undefined) {
+      activeRefresh = Promise.resolve().then(refresh).finally(() => {
+        activeRefresh = undefined
+      })
+    }
+    return activeRefresh
   }
 
   return Object.freeze({
@@ -37,46 +54,70 @@ export function createCredentialSource({ contract, load, now }) {
       let rawText
       let parsed
       let accessToken
+      let refreshAttempted = false
 
       try {
-        try {
-          raw = await load()
-          if (utf8ByteLength(raw) > 64 * 1024) {
-            throw new CredentialFileTooLargeError()
-          }
-          rawText = decodeUtf8(raw)
-          parsed = JSON.parse(rawText)
+        while (accessToken === undefined) {
+          try {
+            raw = await load()
+            if (utf8ByteLength(raw) > 64 * 1024) {
+              throw new CredentialFileTooLargeError()
+            }
+            rawText = decodeUtf8(raw)
+            parsed = JSON.parse(rawText)
 
-          if (!isPlainObject(parsed)) throw new UnsupportedCredentialError()
+            if (!isPlainObject(parsed)) throw new UnsupportedCredentialError()
 
-          const entries = Object.entries(parsed)
-          if (entries.length !== 1 || entries[0][0] !== contract.scope) {
+            const entries = Object.entries(parsed)
+            if (entries.length !== 1 || entries[0][0] !== contract.scope) {
+              throw new UnsupportedCredentialError()
+            }
+
+            const record = entries[0][1]
+            if (
+              !isPlainObject(record) ||
+              record.auth_mode !== contract.authMode ||
+              record.oidc_issuer !== contract.issuer ||
+              record.oidc_client_id !== contract.clientId ||
+              typeof record.key !== "string" ||
+              record.key.length === 0 ||
+              !isDateTime(record.expires_at)
+            ) {
+              throw new UnsupportedCredentialError()
+            }
+            const currentTime = now()
+            if (!(currentTime instanceof Date) || !Number.isFinite(currentTime.getTime())) {
+              throw new TypeError("Invalid credential source clock")
+            }
+            if (!isFutureDateTime(record.expires_at, currentTime)) throw new CredentialRefreshRequiredError()
+
+            accessToken = record.key
+          } catch (error) {
+            if (
+              error instanceof CredentialRefreshRequiredError &&
+              refresh !== undefined &&
+              !refreshAttempted
+            ) {
+              refreshAttempted = true
+              try {
+                await refreshOnce()
+              } catch {
+                throw new UnsupportedCredentialError()
+              }
+              raw = undefined
+              rawText = undefined
+              parsed = undefined
+              continue
+            }
+            if (
+              error instanceof UnsupportedCredentialError ||
+              error instanceof CredentialFileTooLargeError ||
+              error instanceof TypeError
+            ) {
+              throw error
+            }
             throw new UnsupportedCredentialError()
           }
-
-          const record = entries[0][1]
-          if (
-            !isPlainObject(record) ||
-            record.auth_mode !== contract.authMode ||
-            record.oidc_issuer !== contract.issuer ||
-            record.oidc_client_id !== contract.clientId ||
-            typeof record.key !== "string" ||
-            record.key.length === 0 ||
-            !isFutureDateTime(record.expires_at, now())
-          ) {
-            throw new UnsupportedCredentialError()
-          }
-
-          accessToken = record.key
-        } catch (error) {
-          if (
-            error instanceof UnsupportedCredentialError ||
-            error instanceof CredentialFileTooLargeError ||
-            error instanceof TypeError
-          ) {
-            throw error
-          }
-          throw new UnsupportedCredentialError()
         }
 
         return await operation(accessToken)
@@ -108,7 +149,11 @@ function isPlainObject(value) {
 }
 
 function isFutureDateTime(value, now) {
-  if (typeof value !== "string" || !(now instanceof Date)) return false
+  if (typeof value !== "string") return false
   const expiresAt = Date.parse(value)
   return Number.isFinite(expiresAt) && expiresAt - now.getTime() > EXPIRY_SKEW_MS
+}
+
+function isDateTime(value) {
+  return typeof value === "string" && Number.isFinite(Date.parse(value))
 }

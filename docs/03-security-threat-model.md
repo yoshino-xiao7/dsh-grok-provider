@@ -145,7 +145,7 @@ type PublicAuthStatus = {
 - 生产 OIDC schema 候选筛选必须版本化：顶层对象有界且只有一个候选；map key 等于规范化 issuer 与 client ID 组合；`auth_mode === "oidc"`；issuer 精确等于该固定 CLI 版本的 xAI 生产 issuer；scope、client ID、access token 和 `expires_at` 关系闭合。拒绝 external、api_key、web_login、legacy scope、企业 issuer、多候选和未知关键模式。最终字段和值必须在协议 spike 绑定到精确 CLI tag/commit，不能长期依赖 mutable `main`。
 - 上述 metadata 未签名，官方源码也只把 auth mode/issuer 当 provenance/debug hint；它不是密码学 trust assertion。插件在信任官方 CLI 与当前用户凭据目录的前提下做本地失败关闭，真实 bearer 最终由固定 xAI Proxy 服务端验证。
 - access token 只在 Host 内存使用；缓存采用短生命周期并可显式清空。Host 有界读取完整 JSON 时原始 buffer/string 可能瞬时包含 refresh token；解析器不提取、不缓存、不使用、不返回、不记录、不写回该字段，且 JavaScript 内存不承诺可靠清零。
-- 解析 `expires_at` 并使用固定 skew 在发送前拒绝过期/将过期凭据。插件不运行 CLI refresh 状态机。
+- 解析 `expires_at` 并使用固定 skew 在发送前拒绝过期/将过期凭据。只有 issuer、client ID、scope 与 schema 全部匹配而时间失效时，才 single-flight 启动固定 `grok models`；OAuth refresh 状态机和文件写回仍由官方 CLI 完成。刷新后必须重新读取并完整校验，只重试一次。
 - 401 立即使 lease 失效并返回 LLM `AUTH`，不自动重放已发出的 POST；下一次明确用户动作才重新读取文件或发起登录。
 - `/grok logout` 或 Web 退出通过官方 `grok logout` 完成，插件不直接 unlink 文件。
 - logout 先推进 auth generation 并中止所有插件推理；完成后清缓存。旧 generation 的完成回调不得重新填入凭据。

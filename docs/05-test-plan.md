@@ -77,6 +77,7 @@
 - 未知非关键字段只能有界忽略；精确 schema 与生产 issuer 绑定到发布支持的 CLI 版本。
 - symlink/reparse、目录、替换竞态和读取中断。
 - access/refresh token canary 不出现在 `JSON.stringify(status)`、异常、日志、cache、诊断输出或 fingerprint；测试承认完整文件字节会瞬时进入 Host 内存。
+- 新鲜 access token 不启动 CLI；过期的同源官方 record 通过固定 `models` 命令刷新并只重试一次；并发请求 single-flight；外国 issuer/client/scope/schema 永不触发刷新；刷新失败或刷新后仍过期统一失败关闭。
 - email、user ID、team/org、subscription 与 fingerprint canary 不进入 `PublicAuthStatus`、RPC、命令返回或持久事件。
 - `expires_at` 边界、固定 clock skew、缺失/畸形 expiry 和本机时钟偏移。
 - mtime/identity 变化使缓存失效。
