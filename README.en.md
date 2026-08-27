@@ -4,7 +4,7 @@
 
 Use an already authenticated official Grok Build account from DeepSeek Harness, with dynamic model discovery, streaming reasoning, tool calls, and an account quota/model capability dashboard.
 
-> Unofficial community project; not affiliated with xAI or DeepSeek Harness. The current stable version is `0.1.2`. The project no longer publishes prereleases; stable defects are fixed in a new incremented stable version.
+> Unofficial community project; not affiliated with xAI or DeepSeek Harness. The current stable version is `0.1.3`. The project no longer publishes prereleases; stable defects are fixed in a new incremented stable version.
 
 ## What it provides
 
@@ -41,7 +41,7 @@ The official CLI opens a browser on first use. The provider supports only the of
 Install the published exact version from npm:
 
 ```sh
-dsh plugin --profile web add dsh-grok-provider@0.1.2
+dsh plugin --profile web add dsh-grok-provider@0.1.3
 dsh web
 ```
 
@@ -65,6 +65,20 @@ The Web settings page shows:
 - account-visible models, context windows, reasoning efforts, streaming and tool capabilities.
 
 When protobuf-backed billing includes a complete weekly/monthly period but omits a zero-valued percentage, the page restores “0% used / 100% remaining.” Other incomplete responses remain unknown.
+
+## Plugin preview
+
+### Account quota and model capabilities
+
+![Grok Build account quota, reset time, and dynamic model capabilities](.github/assets/plugin-preview/account-dashboard.png)
+
+### Harness model picker
+
+![Selecting Grok 4.6 or Grok 4.5 in the DeepSeek Harness model picker](.github/assets/plugin-preview/model-picker.png)
+
+### Grok conversation context
+
+![Context statistics and tool calls for a Grok 4.6 conversation](.github/assets/plugin-preview/grok-context.png)
 
 TUI commands:
 
@@ -97,8 +111,8 @@ Uninstalling the provider does not remove the official Grok CLI or directly modi
 
 ## Sources and discovery
 
-- Exact npm version: [dsh-grok-provider@0.1.2](https://www.npmjs.com/package/dsh-grok-provider/v/0.1.2)
-- GitHub release and integrity values: [v0.1.2](https://github.com/yoshino-xiao7/dsh-grok-provider/releases/tag/v0.1.2)
+- Exact npm version: [dsh-grok-provider@0.1.3](https://www.npmjs.com/package/dsh-grok-provider/v/0.1.3)
+- GitHub release and integrity values: [v0.1.3](https://github.com/yoshino-xiao7/dsh-grok-provider/releases/tag/v0.1.3)
 - GitHub community discovery: the repository carries the DeepSeek Harness-recommended `dsh-plugin` and `dsh` topics
 - YukiRyou managed source: [deepseek-yukiryou-plugin-catalog](https://github.com/yoshino-xiao7/deepseek-yukiryou-plugin-catalog), following the exact verified stable version and currently marking only verified macOS arm64
 
@@ -106,7 +120,7 @@ Directory inclusion is not an endorsement by xAI or DeepSeek Harness. The public
 
 ## Compatibility and scope
 
-| Item | `0.1.2` status |
+| Item | `0.1.3` status |
 | --- | --- |
 | DeepSeek Harness | Exact support for `0.1.1-rc.2` |
 | Node.js | `>=24.19.0` |
@@ -164,9 +178,13 @@ Run `grok models` and verify that the same account can see it. The provider retu
 
 A protobuf-omitted zero is restored only with a complete typed period. In every other case the upstream response lacks enough information, so the provider preserves “unknown.” OAuth token expiry is never shown as a quota reset.
 
+### An existing conversation fails immediately after switching from another model to Grok
+
+Versions through `0.1.2` could not convert some third-party tool-call histories containing special characters, notably `|` in Ark call IDs. Update to `0.1.3`; it preserves call/result correlation while safely mapping incompatible historical IDs before sending the request to Grok.
+
 ### Does Windows work?
 
-Windows x64 code and CI coverage are present. The repository owner chose to publish `0.1.2` without making independent real-device acceptance a blocker. Any Windows defect found in the stable release will be fixed in a new incremented stable version.
+Windows x64 code and CI coverage are present. Ordinary later stable fixes do not repeat real-device acceptance; changes to authentication, the Harness subprocess seam, or platform security policy still require targeted validation.
 
 ## Development
 
@@ -196,6 +214,7 @@ Read the [contributing guide](CONTRIBUTING.md) before filing an issue or PR. Cha
 - [x] Configure npm Trusted Publisher, revoke the initial token, and add `dsh-plugin` discovery plus the YukiRyou catalog entry
 - [x] Publish the `0.1.1` documentation and release-process correction
 - [x] Publish the `0.1.2` Windows CLI compatibility correction
+- [x] Publish the `0.1.3` cross-provider tool-history compatibility correction
 - [ ] Complete independent Windows x64 acceptance and publish a later stable fix if needed
 - [ ] Evaluate additional content types and platforms only against verified Harness/xAI contracts
 
