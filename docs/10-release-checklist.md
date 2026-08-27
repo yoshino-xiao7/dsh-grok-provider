@@ -82,8 +82,8 @@ English summary: every release must close documentation, security, tests, determ
 - [x] `package.json`、lockfile、CHANGELOG、中英文 README、文档状态和中英双语 Release Notes 已同步为精确稳定 `0.1.3` 候选。
 - [x] 本地 Node 24 完整测试通过：62 项、60 pass、0 fail、2 项 Windows-only 按预期跳过。
 - [x] `npm audit --omit=dev` 为 0 vulnerability；`npm run pack:check` 通过，dry-run 清单为 52 个文件且不包含 `src`、测试或本机证据。
-- [ ] macOS/Windows CI 通过，版本分支经 PR 合并 `yukiryou/main`。
-- [ ] 从最终 release commit 冻结唯一 `dsh-grok-provider-0.1.3.tgz`，记录文件数、大小、SHA-256 和 base64 SHA-512，并完成隔离安装。
-- [ ] GitHub 正式 Release 使用本文档的中英双语正文且不重复页面标题。
+- [x] macOS/Windows CI run `33041492669` 通过；版本分支经 PR #5 合并 `yukiryou/main`。
+- [x] 从最终 release commit `cc531e0f02fab962ee704fbfd36f9099d5ecfeb2` 冻结唯一 `dsh-grok-provider-0.1.3.tgz`：52 个文件、103,305 bytes、SHA-256 `08b00745cbe97599818dce9f9c800ad651fdb781b76d00d34022d24b7e017029`、SRI `sha512-EkBhfoFU0PjQePqxTGvTnYE2bpTeFSN71zJGpt+PrkERJCapMpm1A4QkV98e1NmCe9DW6aa8pmkFHOifbSDvYw==`；隔离安装后 manifest、Host 名称与 `apply` 导出加载通过。
+- [x] GitHub 正式 Release 使用中英双语正文且不重复页面标题，只附加上述唯一 tarball；`v0.1.3` 精确指向 release commit。
 - [x] 仓库所有者于 2026-08-27 明确授权发布精确 `dsh-grok-provider@0.1.3`。
-- [ ] Trusted Publisher 发布、npm `latest`、Registry 逐字节回读、签名与 provenance 验证完成。
+- [x] Trusted Publisher run `33041791394` 发布成功；npm `latest=0.1.3`，Registry 重新下载文件逐字节一致，1 个 Registry 签名与 SLSA provenance attestation 回读通过。

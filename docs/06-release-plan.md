@@ -128,7 +128,7 @@ patch 路径必须为不含 `..`、绝对路径、反斜线或 NUL 的相对 `.y
 
 ## 7. Git 与版本
 
-- `0.1.0` 历史开发分支：`yukiryou/v0.1.0`；当前版本分支：`yukiryou/v0.1.3`。
+- `0.1.0` 历史开发分支：`yukiryou/v0.1.0`；当前版本分支：`yukiryou/v0.1.4`。
 - `package.json`、CHANGELOG、release notes、Git tag 和 tarball 必须使用同一个精确候选版本。
 - 发布提交必须干净且可复现。
 - tag 使用 `v<major>.<minor>.<patch>`，只在发布提交确定后创建。
