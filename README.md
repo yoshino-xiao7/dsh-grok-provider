@@ -116,7 +116,7 @@ dsh web
 - GitHub 社区发现：仓库已添加 DeepSeek Harness 官方推荐的 `dsh-plugin` 与 `dsh` Topics
 - YukiRyou 受管来源：[deepseek-yukiryou-plugin-catalog](https://github.com/yoshino-xiao7/deepseek-yukiryou-plugin-catalog)，跟随已验证的精确稳定版本，当前只标记已验证的 macOS arm64
 
-出现在目录中不代表 xAI 或 DeepSeek Harness 官方背书。公共 curated 目录仍需满足其仓库年龄门槛并通过独立维护者评审。
+出现在目录中不代表 xAI 或 DeepSeek Harness 官方背书。项目已向公共 `awesome-dsh-plugin` curated 目录提交[收录 PR #3415](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin/pull/3415)，自动门禁已通过，仍需独立维护者评审后才能正式收录。
 
 ## 兼容性与范围
 

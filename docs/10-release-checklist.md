@@ -87,3 +87,4 @@ English summary: every release must close documentation, security, tests, determ
 - [x] GitHub 正式 Release 使用中英双语正文且不重复页面标题，只附加上述唯一 tarball；`v0.1.3` 精确指向 release commit。
 - [x] 仓库所有者于 2026-08-27 明确授权发布精确 `dsh-grok-provider@0.1.3`。
 - [x] Trusted Publisher run `33041791394` 发布成功；npm `latest=0.1.3`，Registry 重新下载文件逐字节一致，1 个 Registry 签名与 SLSA provenance attestation 回读通过。
+- [x] 发布后补充根目录 `screenshots.json`，将三张仓库托管预览图提供给兼容市场；公共 `awesome-dsh-plugin` 收录 PR #3415 自动门禁通过，最终是否收录由其维护者独立评审。
