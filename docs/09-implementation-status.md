@@ -81,3 +81,4 @@ Windows x64 真机不再是 `0.1.0` 预发布阻断项。首次发布后必须�
 - 唯一正式 tarball 为 52 个文件、103,305 bytes，SHA-256 `08b00745cbe97599818dce9f9c800ad651fdb781b76d00d34022d24b7e017029`，SRI `sha512-EkBhfoFU0PjQePqxTGvTnYE2bpTeFSN71zJGpt+PrkERJCapMpm1A4QkV98e1NmCe9DW6aa8pmkFHOifbSDvYw==`；隔离安装与 Host 加载通过。
 - GitHub Release `v0.1.3` 与 Trusted Publisher run `33041791394` 发布完成；npm `latest=0.1.3`，Registry tarball 与 Release 制品逐字节一致，签名与 SLSA provenance attestation 均已回读。
 - 三张社区市场预览图保存在 `.github/assets/plugin-preview/` 并由中英文 README 引用；npm tarball 明确排除这些展示资源。
+- 根目录 `screenshots.json` 固定三张预览图顺序；公共 `awesome-dsh-plugin` 收录 PR #3415 的 README 生成、locale parity、awesome-lint 与 build 自动门禁通过，等待独立维护者评审。

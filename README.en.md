@@ -116,7 +116,7 @@ Uninstalling the provider does not remove the official Grok CLI or directly modi
 - GitHub community discovery: the repository carries the DeepSeek Harness-recommended `dsh-plugin` and `dsh` topics
 - YukiRyou managed source: [deepseek-yukiryou-plugin-catalog](https://github.com/yoshino-xiao7/deepseek-yukiryou-plugin-catalog), following the exact verified stable version and currently marking only verified macOS arm64
 
-Directory inclusion is not an endorsement by xAI or DeepSeek Harness. The public curated directory still requires its repository-age gate and independent maintainer review.
+Directory inclusion is not an endorsement by xAI or DeepSeek Harness. The project has submitted [listing PR #3415](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin/pull/3415) to the public `awesome-dsh-plugin` curated directory; its automated gates pass, while independent maintainer review is still pending.
 
 ## Compatibility and scope
 
