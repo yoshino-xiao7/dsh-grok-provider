@@ -1,4 +1,7 @@
+import { createHash } from "node:crypto"
+
 const ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/
+const MAX_CALL_ID_BYTES = 1024
 const MAX_TEXT_LENGTH = 8 * 1024 * 1024
 const MAX_REQUEST_BYTES = 16 * 1024 * 1024
 const MAX_MESSAGES = 10_000
@@ -103,10 +106,10 @@ function encodeOrdinaryMessage(message, input, targetModel) {
     }
     if (block.type === "tool-call" && message.role === "assistant") {
       flushText()
-      if (!isId(block.id) || !isId(block.name) || !isJsonObject(block.arguments)) fail()
+      if (!isId(block.name) || !isJsonObject(block.arguments)) fail()
       input.push({
         type: "function_call",
-        call_id: block.id,
+        call_id: encodeCallId(block.id),
         name: block.name,
         arguments: block.arguments,
       })
@@ -151,7 +154,6 @@ function encodeToolResultMessage(message, input) {
   ) fail()
   const result = message.content[0]
   if (
-    !isId(message.source.callId) ||
     result.toolCallId !== message.source.callId ||
     !Array.isArray(result.content)
   ) fail()
@@ -162,7 +164,18 @@ function encodeToolResultMessage(message, input) {
     output += parseText(block.text)
     if (output.length > MAX_TEXT_LENGTH) fail()
   }
-  input.push({ type: "function_call_output", call_id: result.toolCallId, output })
+  input.push({ type: "function_call_output", call_id: encodeCallId(result.toolCallId), output })
+}
+
+function encodeCallId(value) {
+  if (isId(value)) return value
+  if (
+    typeof value !== "string" ||
+    value.length === 0 ||
+    Buffer.byteLength(value, "utf8") > MAX_CALL_ID_BYTES
+  ) fail()
+  const digest = createHash("sha256").update(value, "utf8").digest("base64url")
+  return `dsh_call_${digest}`
 }
 
 function encodeTools(tools) {

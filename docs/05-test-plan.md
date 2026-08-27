@@ -223,4 +223,4 @@ Web 与 TUI 分别验证：
 - Windows x64 自动化平台测试通过，且 README、release notes 和 marketplace 元数据在首次真机验证前明确披露“代码支持、真机未验证”。
 - npm 回读的 SHA-512 与本地发布 tarball 一致。
 
-`0.1.0` 发布后必须完成一次 Windows x64 Registry 精确版本的 production inspector、浏览器登录、聊天与工具调用 smoke，并记录结果。`0.1.1` 及后续版本以 CI/契约/安装/制品校验为常规门禁；认证流程、Harness subprocess seam 或平台安全策略发生变化时必须定向真机验证。`0.1.2` 正在修复 Windows 登录门禁，须从候选包完成 Windows 浏览器登录、凭据复验、模型刷新和最小对话后才能获得发布授权。
+`0.1.0` 发布后原计划完成一次 Windows x64 Registry 精确版本真机验收；仓库所有者随后明确决定该验收不再阻断稳定发布，且普通后续版本不重复要求真机验证。`0.1.1` 及后续版本以 CI、契约测试、隔离安装和制品校验为常规门禁；只有认证流程、Harness subprocess seam 或平台安全策略发生变化时才必须定向真机验证。`0.1.3` 只修改平台无关的历史消息请求转换，并以真实脱敏 Ark 调用 ID 回归和 macOS/Windows CI 为平台门禁。

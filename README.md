@@ -4,7 +4,7 @@
 
 让 DeepSeek Harness 使用你已登录的官方 Grok Build 账号：动态模型发现、流式推理、工具调用，以及账号额度与模型能力面板。
 
-> 非官方社区项目，与 xAI 或 DeepSeek Harness 官方无隶属关系。当前稳定版本为 `0.1.2`。项目不再发行预发行版；正式版缺陷通过新的递增稳定版本修复。
+> 非官方社区项目，与 xAI 或 DeepSeek Harness 官方无隶属关系。当前稳定版本为 `0.1.3`。项目不再发行预发行版；正式版缺陷通过新的递增稳定版本修复。
 
 ## 它解决什么问题
 
@@ -41,7 +41,7 @@ grok models
 从 npm 安装已发布的精确版本：
 
 ```sh
-dsh plugin --profile web add dsh-grok-provider@0.1.2
+dsh plugin --profile web add dsh-grok-provider@0.1.3
 dsh web
 ```
 
@@ -97,8 +97,8 @@ dsh web
 
 ## 项目来源与发现
 
-- npm 精确版本：[dsh-grok-provider@0.1.2](https://www.npmjs.com/package/dsh-grok-provider/v/0.1.2)
-- GitHub 发行版与校验值：[v0.1.2](https://github.com/yoshino-xiao7/dsh-grok-provider/releases/tag/v0.1.2)
+- npm 精确版本：[dsh-grok-provider@0.1.3](https://www.npmjs.com/package/dsh-grok-provider/v/0.1.3)
+- GitHub 发行版与校验值：[v0.1.3](https://github.com/yoshino-xiao7/dsh-grok-provider/releases/tag/v0.1.3)
 - GitHub 社区发现：仓库已添加 DeepSeek Harness 官方推荐的 `dsh-plugin` 与 `dsh` Topics
 - YukiRyou 受管来源：[deepseek-yukiryou-plugin-catalog](https://github.com/yoshino-xiao7/deepseek-yukiryou-plugin-catalog)，跟随已验证的精确稳定版本，当前只标记已验证的 macOS arm64
 
@@ -106,7 +106,7 @@ dsh web
 
 ## 兼容性与范围
 
-| 项目 | `0.1.2` 状态 |
+| 项目 | `0.1.3` 状态 |
 | --- | --- |
 | DeepSeek Harness | 精确支持 `0.1.1-rc.2` |
 | Node.js | `>=24.19.0` |
@@ -164,9 +164,13 @@ dsh-grok-provider Host
 
 完整类型化周期下缺失的 protobuf 零值会恢复为 0%；其他情况下，上游没有提供足够信息，插件会保留未知。OAuth token 过期时间绝不会冒充额度刷新时间。
 
+### 从其他模型切换到 Grok 后立即提示响应无效
+
+`0.1.2` 及更早版本不能转换部分包含特殊字符的第三方工具调用历史，典型情况是 Ark 调用 ID 中的 `|`。请更新到 `0.1.3`；新版本会保持工具调用与结果的关联，并在发送给 Grok 前安全映射不兼容的历史 ID。
+
 ### Windows 能用吗
 
-代码和 Windows CI 覆盖 Windows x64；仓库所有者决定直接发布 `0.1.2`，未把独立真机验收作为阻断项。如果正式版出现 Windows 问题，将通过新的递增稳定版本修复。
+代码和 Windows CI 覆盖 Windows x64。普通后续稳定修复不重复要求真机验收；认证流程、Harness subprocess seam 或平台安全策略发生变化时仍会定向验证。
 
 ## 开发
 
@@ -196,6 +200,7 @@ npm run pack:check
 - [x] 配置 npm Trusted Publisher、撤销首发 Token，并加入 `dsh-plugin` Topic 与 YukiRyou catalog
 - [x] 发布 `0.1.1` 文档与发布流程修正版
 - [x] 发布 `0.1.2` Windows CLI 兼容性修正版
+- [x] 准备 `0.1.3` 跨 Provider 工具调用历史兼容性修正版
 - [ ] 完成 Windows x64 独立真机验收并按需发布后续稳定修复版
 - [ ] 根据已验证的 Harness/xAI 协议逐项评估更多内容类型和平台
 

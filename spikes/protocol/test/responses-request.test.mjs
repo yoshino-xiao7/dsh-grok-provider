@@ -1,7 +1,10 @@
 import assert from "node:assert/strict"
 import test from "node:test"
 
-import { encodeResponsesRequest } from "../../../src/internal/responses-request.mjs"
+import {
+  UnsupportedResponsesRequestError,
+  encodeResponsesRequest,
+} from "../../../src/internal/responses-request.mjs"
 
 test("a Harness text and tool conversation maps losslessly to a stateless Responses request", () => {
   const request = encodeResponsesRequest({
@@ -85,6 +88,57 @@ test("a Harness text and tool conversation maps losslessly to a stateless Respon
     stream: true,
     store: false,
   })
+})
+
+test("foreign tool call IDs are mapped consistently when Grok cannot accept their characters", () => {
+  const arkCallId = "toolu_ark1_fixture|fc_fixture"
+  const request = encodeResponsesRequest({
+    provider: "grok",
+    model: "grok-4.6",
+    messages: [
+      {
+        id: "msg_assistant",
+        role: "assistant",
+        source: { kind: "model", provider: "ark-code-latest", model: "ark-code-latest" },
+        content: [{ type: "tool-call", id: arkCallId, name: "bash", arguments: "{}" }],
+      },
+      {
+        id: "msg_tool",
+        role: "user",
+        source: { kind: "tool", callId: arkCallId },
+        content: [{
+          type: "tool-result",
+          toolCallId: arkCallId,
+          content: [{ type: "text", text: "ok" }],
+          isError: false,
+        }],
+      },
+    ],
+  })
+
+  assert.equal(request.input[0].type, "function_call")
+  assert.match(request.input[0].call_id, /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/u)
+  assert.notEqual(request.input[0].call_id, arkCallId)
+  assert.deepEqual(request.input[1], {
+    type: "function_call_output",
+    call_id: request.input[0].call_id,
+    output: "ok",
+  })
+})
+
+test("foreign tool call ID mapping remains bounded and rejects empty or oversized identifiers", () => {
+  for (const callId of ["", "x".repeat(1025)]) {
+    assert.throws(() => encodeResponsesRequest({
+      provider: "grok",
+      model: "grok-4.6",
+      messages: [{
+        id: "msg_assistant",
+        role: "assistant",
+        source: { kind: "model", provider: "foreign", model: "foreign" },
+        content: [{ type: "tool-call", id: callId, name: "fixture", arguments: "{}" }],
+      }],
+    }), UnsupportedResponsesRequestError)
+  }
 })
 
 test("a same-provider replay envelope restores encrypted reasoning in block order", () => {

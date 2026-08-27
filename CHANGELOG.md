@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.3 - 2026-08-27
+
+- Fix existing Harness conversations failing immediately after switching from Ark to Grok when an earlier tool-call ID contains Ark's `|` delimiter.
+- Preserve Grok-compatible call IDs and deterministically map bounded incompatible historical IDs to safe request-local correlation IDs.
+- Keep each mapped function call and function result correlated without forwarding the incompatible foreign identifier to xAI.
+- Add regression coverage using the exact redacted Ark call-ID shape captured from the affected conversation.
+
 ## 0.1.2 - 2026-08-26
 
 - Fix Windows browser sign-in for official Grok Build CLI `0.2.82`, which `0.1.1` rejected before invoking `login --oauth`.

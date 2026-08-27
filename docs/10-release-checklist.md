@@ -73,3 +73,17 @@ English summary: every release must close documentation, security, tests, determ
 - [x] 稳定 manifest、稳定版专用 Trusted Publisher workflow、完整测试、审计与双平台 CI 通过；CI run `32980619235` 的 macOS 14 与 Windows 2022 job 均成功。
 - [x] 版本分支经 PR #4 合并 `yukiryou/main`；release commit `30ff6bdeb62f7904baf02c4a5f9ebd73e2edf442` 冻结唯一稳定 tarball与不可变 `v0.1.2` tag。制品为 51 个文件、99,894 bytes，SHA-256 `b224db9f52708b355baa914c0fa4a352e9f791c3e51a36c7309a3b89cbc2781a`，SRI `sha512-XhaOjOflDGsNUaAYnIw1aoJ/zHfPbYtubLKvTUu6aro3olaLWek6xdEe83DpAmwJT6xM3s0+y0QOnEh1kQtl9w==`。
 - [x] GitHub 正式 Release 与 Trusted Publisher run `32981172053` 完成；npm `latest=0.1.2`，Registry 重新下载文件逐字节一致，1 个 Registry 签名与 1 个 provenance attestation 验证通过。
+
+## `0.1.3` 发布准备
+
+- [x] 使用稳定版本分支 `yukiryou/v0.1.3`，未直接修改发布基线。
+- [x] 使用真实脱敏 Ark `toolu_ark1_…|fc_…` 调用 ID 建立先红后绿的确定性回归测试。
+- [x] 修复只触及历史工具调用 ID 的请求转换；未改动 OAuth、CLI、凭据、额度、模型目录、endpoint 或平台安全边界。
+- [x] `package.json`、lockfile、CHANGELOG、中英文 README、文档状态和中英双语 Release Notes 已同步为精确稳定 `0.1.3` 候选。
+- [x] 本地 Node 24 完整测试通过：62 项、60 pass、0 fail、2 项 Windows-only 按预期跳过。
+- [x] `npm audit --omit=dev` 为 0 vulnerability；`npm run pack:check` 通过，dry-run 清单为 52 个文件且不包含 `src`、测试或本机证据。
+- [ ] macOS/Windows CI 通过，版本分支经 PR 合并 `yukiryou/main`。
+- [ ] 从最终 release commit 冻结唯一 `dsh-grok-provider-0.1.3.tgz`，记录文件数、大小、SHA-256 和 base64 SHA-512，并完成隔离安装。
+- [ ] GitHub 正式 Release 使用本文档的中英双语正文且不重复页面标题。
+- [ ] 仓库所有者明确授权发布精确 `dsh-grok-provider@0.1.3`。
+- [ ] Trusted Publisher 发布、npm `latest`、Registry 逐字节回读、签名与 provenance 验证完成。
