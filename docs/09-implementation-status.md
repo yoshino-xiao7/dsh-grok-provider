@@ -4,7 +4,7 @@
 
 状态日期：2026-08-27
 当前发布线：`dsh-grok-provider@0.1.3`
-发布分支：`yukiryou/v0.1.3`
+下一版本分支：`yukiryou/v0.1.4`
 
 ## 已实现
 
@@ -77,4 +77,7 @@ Windows x64 真机不再是 `0.1.0` 预发布阻断项。首次发布后必须�
 - 根因已经从真实会话持久化事件中定位：旧 Ark 工具调用 ID 的 `|` 被 Grok 请求转换器当作整个响应无效处理，且失败发生在网络请求前。
 - 最小差分复现确认只把 `|` 改为兼容字符即可通过，排除 OAuth、额度、模型目录和 xAI 上游响应。
 - 请求转换器现在保留兼容 ID，对最长 1024 bytes 的不兼容历史 ID 使用 SHA-256/base64url 确定性映射；空值和超限输入继续失败关闭。
-- 本地 Node 24 完整测试、0 vulnerability 生产依赖审计与 52 文件 dry-run 打包清单已通过；仓库所有者已授权发布精确 `0.1.3`。最终 CI、唯一 tarball、隔离安装、GitHub Release、npm 与 Registry 回读结果记录在逐版发布检查表。
+- 本地 Node 24 完整测试、0 vulnerability 生产依赖审计与 52 文件 dry-run 打包清单通过；macOS/Windows CI run `33041492669` 全绿，PR #5 合并后的 release commit 为 `cc531e0f02fab962ee704fbfd36f9099d5ecfeb2`。
+- 唯一正式 tarball 为 52 个文件、103,305 bytes，SHA-256 `08b00745cbe97599818dce9f9c800ad651fdb781b76d00d34022d24b7e017029`，SRI `sha512-EkBhfoFU0PjQePqxTGvTnYE2bpTeFSN71zJGpt+PrkERJCapMpm1A4QkV98e1NmCe9DW6aa8pmkFHOifbSDvYw==`；隔离安装与 Host 加载通过。
+- GitHub Release `v0.1.3` 与 Trusted Publisher run `33041791394` 发布完成；npm `latest=0.1.3`，Registry tarball 与 Release 制品逐字节一致，签名与 SLSA provenance attestation 均已回读。
+- 三张社区市场预览图保存在 `.github/assets/plugin-preview/` 并由中英文 README 引用；npm tarball 明确排除这些展示资源。
