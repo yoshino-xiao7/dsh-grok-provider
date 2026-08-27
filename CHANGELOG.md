@@ -6,6 +6,7 @@
 - Preserve Grok-compatible call IDs and deterministically map bounded incompatible historical IDs to safe request-local correlation IDs.
 - Keep each mapped function call and function result correlated without forwarding the incompatible foreign identifier to xAI.
 - Add regression coverage using the exact redacted Ark call-ID shape captured from the affected conversation.
+- Add three repository-hosted preview images for community marketplace listings without including them in the npm runtime artifact.
 
 ## 0.1.2 - 2026-08-26
 

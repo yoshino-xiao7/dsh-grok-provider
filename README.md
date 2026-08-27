@@ -66,6 +66,20 @@ Web 设置页展示：
 
 当 protobuf-backed billing 返回完整的 weekly/monthly 周期但省略零值百分比时，页面会恢复为“已使用 0% / 剩余 100%”；其他不完整响应保持未知，不伪造额度。
 
+## 插件预览
+
+### 账户额度与模型能力
+
+![Grok Build 账户额度、重置时间和动态模型能力](.github/assets/plugin-preview/account-dashboard.png)
+
+### Harness 模型选择器
+
+![在 DeepSeek Harness 模型选择器中选择 Grok 4.6 或 Grok 4.5](.github/assets/plugin-preview/model-picker.png)
+
+### Grok 对话上下文
+
+![Grok 4.6 对话的上下文统计与工具调用](.github/assets/plugin-preview/grok-context.png)
+
 TUI 命令：
 
 ```text
@@ -200,7 +214,7 @@ npm run pack:check
 - [x] 配置 npm Trusted Publisher、撤销首发 Token，并加入 `dsh-plugin` Topic 与 YukiRyou catalog
 - [x] 发布 `0.1.1` 文档与发布流程修正版
 - [x] 发布 `0.1.2` Windows CLI 兼容性修正版
-- [x] 准备 `0.1.3` 跨 Provider 工具调用历史兼容性修正版
+- [x] 发布 `0.1.3` 跨 Provider 工具调用历史兼容性修正版
 - [ ] 完成 Windows x64 独立真机验收并按需发布后续稳定修复版
 - [ ] 根据已验证的 Harness/xAI 协议逐项评估更多内容类型和平台
 

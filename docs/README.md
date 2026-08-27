@@ -1,8 +1,8 @@
 # Grok Build Provider 文档索引
 
-- 状态：**稳定版 `0.1.3` 候选：跨 Provider 工具调用历史兼容性修正**
-- 当前候选版本：`0.1.3`
-- 版本分支：`yukiryou/v0.1.3`
+- 状态：**稳定版 `0.1.3`：跨 Provider 工具调用历史兼容性修正**
+- 当前稳定版本：`0.1.3`
+- 发布分支：`yukiryou/v0.1.3`
 - 兼容基线：DeepSeek Harness `0.1.1-rc.2`
 - 目标平台：macOS arm64、Windows x64
 

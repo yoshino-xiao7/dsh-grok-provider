@@ -66,6 +66,20 @@ The Web settings page shows:
 
 When protobuf-backed billing includes a complete weekly/monthly period but omits a zero-valued percentage, the page restores “0% used / 100% remaining.” Other incomplete responses remain unknown.
 
+## Plugin preview
+
+### Account quota and model capabilities
+
+![Grok Build account quota, reset time, and dynamic model capabilities](.github/assets/plugin-preview/account-dashboard.png)
+
+### Harness model picker
+
+![Selecting Grok 4.6 or Grok 4.5 in the DeepSeek Harness model picker](.github/assets/plugin-preview/model-picker.png)
+
+### Grok conversation context
+
+![Context statistics and tool calls for a Grok 4.6 conversation](.github/assets/plugin-preview/grok-context.png)
+
 TUI commands:
 
 ```text
@@ -200,7 +214,7 @@ Read the [contributing guide](CONTRIBUTING.md) before filing an issue or PR. Cha
 - [x] Configure npm Trusted Publisher, revoke the initial token, and add `dsh-plugin` discovery plus the YukiRyou catalog entry
 - [x] Publish the `0.1.1` documentation and release-process correction
 - [x] Publish the `0.1.2` Windows CLI compatibility correction
-- [x] Prepare the `0.1.3` cross-provider tool-history compatibility correction
+- [x] Publish the `0.1.3` cross-provider tool-history compatibility correction
 - [ ] Complete independent Windows x64 acceptance and publish a later stable fix if needed
 - [ ] Evaluate additional content types and platforms only against verified Harness/xAI contracts
 

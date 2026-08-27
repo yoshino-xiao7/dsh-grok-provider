@@ -85,5 +85,5 @@ English summary: every release must close documentation, security, tests, determ
 - [ ] macOS/Windows CI 通过，版本分支经 PR 合并 `yukiryou/main`。
 - [ ] 从最终 release commit 冻结唯一 `dsh-grok-provider-0.1.3.tgz`，记录文件数、大小、SHA-256 和 base64 SHA-512，并完成隔离安装。
 - [ ] GitHub 正式 Release 使用本文档的中英双语正文且不重复页面标题。
-- [ ] 仓库所有者明确授权发布精确 `dsh-grok-provider@0.1.3`。
+- [x] 仓库所有者于 2026-08-27 明确授权发布精确 `dsh-grok-provider@0.1.3`。
 - [ ] Trusted Publisher 发布、npm `latest`、Registry 逐字节回读、签名与 provenance 验证完成。
