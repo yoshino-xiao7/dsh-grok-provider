@@ -7,7 +7,7 @@
 - 所有本地模拟服务使用随机 loopback 端口，不访问真实第三方。
 - 真实账号 smoke 只在发布候选上人工执行，记录脱敏结果。
 - `0.1.0` 发布前必须通过 macOS arm64 真机与 macOS/Windows 自动化矩阵；Windows x64 首次真机验证在发布后对 Registry 精确版本执行，验证前对外标注“代码支持、真机未验证”。
-- `0.1.1` 及后续版本不要求每次重复真机验证；自动化矩阵、契约测试、干净安装和 tarball 校验是常规发版门禁。认证流程、平台 subprocess seam 或安全契约发生变化的版本仍须做对应平台的定向真机验证。
+- `0.1.1` 及后续版本不要求每次重复真机验证；自动化矩阵、契约测试、干净安装和 tarball 校验是常规发版门禁。认证流程、平台 subprocess seam 或安全契约发生变化的版本原则上仍须做对应平台的定向真机验证；若仓库所有者对精确版本明确批准发布后验证，发布前必须公开标注未验证范围、保留自动化门禁，并在失败时使用新的递增稳定版修复。`0.1.6` 采用该已记录特例。
 
 ## 2. Gate 0：方案确认
 
@@ -63,7 +63,7 @@
 
 ### Login bridge
 
-- 完整 argv 只能是 `[constrainedExecutable, "login", "--oauth"]`、`[constrainedExecutable, "logout"]` 或 `[constrainedExecutable, "--version"]`。
+- 完整 argv 只能是 `[constrainedExecutable, "--version"]`、`[constrainedExecutable, "login", "--help"]`、`[constrainedExecutable, "login", "--oauth"]`、`[constrainedExecutable, "logout"]` 或 `[constrainedExecutable, "models"]`。
 - 断言只调用 `ctx.subprocess`，从不 import/call `node:child_process`；验证受控 cwd、环境 tombstone、stdin ignored 和 raw bounded pipes。
 - `XAI_API_KEY`、Grok auth/OIDC/endpoint/log override、`BROWSER`、动态加载器、Node/SSL key log、npm/DSH/API secret 都不继承；PATH/PATHEXT/COMSPEC 使用固定系统值，proxy/CA 和必要 OS 变量按冻结策略保留。workspace/PATH canary 不会被登录链执行。环境清理不能被测试误表述成覆盖 system/MDM 配置。
 - 第二个并发 login 在 RPC 成功分支返回 `{ kind: "busy" }`，不伪造 RpcErrorCode。
@@ -72,7 +72,7 @@
 - stdout/stderr 超过 64 KiB 时终止。
 - 退出 0 但 auth 文件缺失/无效仍失败。
 - canary secret 出现在 fake CLI 输出时，不出现在 RPC、命令结果、错误和日志。
-- Windows 真实 Gate 1 验证无额外 console 闪窗；若出现则发布阻断，不能用 rc.2 契约中不存在的 `windowsHide` 伪造单测。
+- Windows 真实 Gate 1 验证无额外 console 闪窗；通常若出现则发布阻断，不能用 rc.2 契约中不存在的 `windowsHide` 伪造单测。对仓库所有者已明确批准发布后验证的精确 `0.1.6`，该项按披露状态后置；若发布后出现闪窗或未打开浏览器，必须使用新的递增稳定版修复。
 
 ### Credential source
 

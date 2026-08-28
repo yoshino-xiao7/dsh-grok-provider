@@ -79,10 +79,11 @@ macOS 官方默认路径可能是 symlink；验证时允许 symlink，但 `realp
 
 | 用户动作 | 可执行参数 | 说明 |
 |---|---|---|
-| 检查版本 | `--version` | 独立 10 秒 deadline、16 KiB 输出上限 |
-| 探测浏览器登录 | `login --help` | 独立 10 秒 deadline；只确认独立 `--oauth` 选项，不执行登录 |
-| 浏览器登录 | `login --oauth` | 标准配置下官方 CLI 打开浏览器并处理 callback |
-| 退出 | `logout` | 官方 CLI 删除自己的凭据 |
+| 检查版本 | `--version` | 独立 10 秒 deadline、4 KiB 输出上限 |
+| 探测浏览器登录 | `login --help` | 独立 10 秒 deadline、16 KiB 输出上限；只确认独立 `--oauth` 选项，不执行登录 |
+| 浏览器登录 | `login --oauth` | 5 分钟 deadline、64 KiB 输出上限；标准配置下官方 CLI 打开浏览器并处理 callback |
+| 退出 | `logout` | 2 分钟 deadline、64 KiB 输出上限；官方 CLI 删除自己的凭据 |
+| 刷新临期凭据 | `models` | 30 秒 deadline、64 KiB 输出上限；只委托官方 CLI 更新文件，Provider 不实现 refresh grant |
 
 `cancel` 不是一个 CLI 参数，只会中止当前 Host 拥有的登录子进程。
 
