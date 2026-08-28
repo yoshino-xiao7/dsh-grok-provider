@@ -1,6 +1,6 @@
 {
   "name": "dsh-grok-provider",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Clean-room Grok Build provider for DeepSeek Harness with official CLI browser authentication",
   "type": "module",
   "license": "MIT",
@@ -54,7 +54,8 @@
   ],
   "scripts": {
     "build": "node scripts/build.mjs",
-    "test": "npm run build && node --test spikes/protocol/test/*.test.mjs test/*.test.mjs",
+    "test": "npm run build && npm run test:smoke-syntax && node --test spikes/protocol/test/*.test.mjs test/*.test.mjs",
+    "test:smoke-syntax": "node --check spikes/image-input-smoke.mjs && node --check spikes/harness-attachment-smoke.mjs",
     "prepack": "npm run build",
     "pack:check": "npm pack --dry-run --json"
   },

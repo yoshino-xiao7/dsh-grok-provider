@@ -124,8 +124,14 @@
 - `prepareCall` 后热更新，旧调用使用旧 generation，新调用使用新 generation。
 - 直接 `stream()` 在返回 iterable 前冻结 generation。
 - 每个请求都有 Harness attribution headers。
-- 任何 image block 在 HTTP 前以 `UNSUPPORTED_CONTENT` 拒绝。
-- Provider 只发 tool-call chunks，不执行工具/写文件；未声明工具名、恶意路径参数、伪造 server search/image/tool 事件不能绕过 Harness 权限层。
+- `0.1.0`–`0.1.3` text-only modality 把图片投影为稳定文本；`0.1.4` 未验证模型继续该行为，精确图片模型不得被 `LlmRuntime` 静默投影。
+- 无图 compiler 不查询 attachment store，完整 wire JSON 与 `0.1.3` encoder 一致；user 图片及一层 tool-result 图片保持 `text/image/text` 顺序。
+- attachment fake 覆盖同一 AbortSignal、请求内相同 attachment ID 只读一次、相同 ID 元数据冲突、缺 store、`ATTACHMENT_PROJECTION_UNSUPPORTED`、存储故障及 I/O 完成前 Responses POST 调用数为 0。
+- jpeg/png 正确 MIME/魔数与 jpeg/png 交叉伪造；webp/gif；`bytes === data.byteLength`；`uchar`/sRGB/hasAlpha；4 MiB、16,777,216 pixels、8192 最大边的边界值。
+- 图片数 8/9、派生图总字节 8 MiB、含图路径全请求 content blocks 20,000、完整 JSON 16 MiB；跨普通消息/一层 tool-result 均按全局 oldest-first 淘汰，淘汰项不读取 attachment。另锁定 20,001 个纯文本 block 仍走 `0.1.3` fast path。
+- 更深 tool-result、assistant/system 图片与未知 block 在 attachment I/O 或 Responses POST 前失败；源图片 policy 错误为 `UNSUPPORTED_CONTENT`，store 返回损坏投影、图片淘汰后仍超限及通用 stop/schema/request 错误保持 `INVALID_RESPONSE`。
+- 本地 fake/codec 测试与 CLI Chat Proxy 脱敏图片 spike 是两类独立证据；精确 `grok-4.6` 必须分别通过普通 user 与一层 tool-result 的红/蓝语义门禁，请求图片固定为 `detail:"high"`。`grok-4.5` 的受控红图语义不可靠，必须失败关闭为 text-only；真实 Harness attachment smoke 还必须独立复验仅 `grok-4.6` 保留图片、`grok-4.5`/未知模型 text-only 且网络请求为 0。
+- Provider 只发 tool-call chunks，不执行工具/写文件；未声明工具名、恶意路径参数、伪造 server search/image/tool 事件不能绕过 Harness 权限层。后续搜索/生图版本仍不得把厂商 server-tool 事件映射为 Harness `tool-call`。
 
 ### Web RPC 与 TUI
 
@@ -169,7 +175,7 @@
 
 macOS x64 不在当前官方 Grok CLI 支持矩阵，也不写入 `0.1.0` 发布承诺。只有 Gate 1 对某个精确官方版本取得 Intel macOS 发布证据后，才能作为非阻断实验记录；runner 可用本身不等于官方支持。
 
-所有平台使用 Harness 内置 Node 24，并对 `0.1.1-rc.2` 公开类型执行 typecheck。
+所有平台使用 Harness 内置 Node 24。仓库当前是原生 ESM JavaScript，不配置独立 lint/typecheck 命令；`npm test` 负责确定性构建、脚本语法、unit/integration/platform 与发行制品契约，`0.1.1-rc.2` 的真实 Harness 加载负责验证实际 peer/runtime 接口。若后续修改公开 `.d.ts` 契约，必须在发布前增加独立 TypeScript consumer typecheck。
 
 Windows 特有用例：
 
@@ -205,7 +211,7 @@ Web 与 TUI 分别验证：
 
 ## 8. 打包与供应链
 
-- lint、typecheck、unit、integration、platform tests 全部通过。
+- 确定性构建、脚本语法、unit、integration、platform 与发行制品契约测试全部通过；当前不存在的独立 lint/typecheck 命令不虚构为门禁，新增相应工具后必须接入 CI。
 - `npm pack --dry-run --json` 文件白名单符合预期。
 - 解包 tarball 后测试 root、`./client`、patch 和 exports。
 - 扫描 tarball：无 token、测试账号、本机绝对路径、日志、fixtures 中的真实响应和 `node_modules`。

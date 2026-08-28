@@ -1,8 +1,10 @@
 # Grok Build Provider 文档索引
 
-- 状态：**稳定版 `0.1.3`：跨 Provider 工具调用历史兼容性修正**
-- 当前稳定版本：`0.1.3`
-- 下一版本分支：`yukiryou/v0.1.4`
+- 状态：**稳定版 `0.1.4` 候选：`grok-4.6` Proxy 图片语义门禁与 Harness 最终复验均已通过**
+- 当前 npm 稳定版本：`0.1.3`
+- 当前候选版本：`0.1.4`
+- 版本分支：`yukiryou/v0.1.4`
+- 候选状态：固定 CLI Chat Proxy 的 `grok-4.6` 图片语义门禁、真实 Harness attachment 最终 capability 复验、最终 Node 24 测试、生产依赖审计与 dry-run 打包检查均已通过，`grok-4.5` 已失败关闭为 text-only；macOS/Windows CI、最终制品核验和精确发布授权仍待完成
 - 兼容基线：DeepSeek Harness `0.1.1-rc.2`
 - 目标平台：macOS arm64、Windows x64
 
@@ -37,9 +39,12 @@
 - [Grok CLI 1.0.5 上游证据](./08-upstream-cli-1.0.5-evidence.md)
 - [当前实现与发布状态](./09-implementation-status.md)
 - [逐版发布检查表](./10-release-checklist.md)
+- [能力路线图](./11-capability-roadmap.md)：`0.1.4` 图片输入及后续独立内容切片
+- [`0.1.4` 图片输入上游证据](./12-upstream-image-input-evidence.md)
 - [v0.1.1 中英双语发行说明](./releases/v0.1.1.md)
 - [v0.1.2 中英双语发行说明](./releases/v0.1.2.md)
 - [v0.1.3 中英双语发行说明](./releases/v0.1.3.md)
+- [v0.1.4 中英双语发行说明](./releases/v0.1.4.md)
 - [v0.1.2-rc.1 中英双语预发行说明](./releases/v0.1.2-rc.1.md)
 - [ADR-0001：认证与传输路线](./adr/0001-auth-and-transport-route.md)
 - [ADR-0002：首版能力边界](./adr/0002-v0.1-scope.md)
@@ -48,10 +53,11 @@
 - [ADR-0005：官方 CLI 单一认证路径](./adr/0005-official-cli-only-authentication.md)
 - [ADR-0006：账户额度与模型能力面板](./adr/0006-account-dashboard.md)
 - [ADR-0007：以能力与凭据契约判断 CLI 兼容性](./adr/0007-capability-based-cli-compatibility.md)
+- [ADR-0008：图片输入使用异步请求编译器](./adr/0008-image-input-request-compiler.md)
 
 ## 开发门禁
 
-`0.1.2-rc.1` 是唯一一次预发行尝试。仓库所有者决定从稳定 `0.1.2` 起不再发行预发行版；正式版缺陷通过新的递增稳定版本修复。`0.1.3` 不改动认证、CLI subprocess 或平台安全边界，因此按政策以自动化回归、双平台 CI、制品与隔离安装为门禁，不重复要求跨平台真机验收。每个版本仍须先完成[逐版发布检查表](./10-release-checklist.md)，再由仓库所有者明确授权发布。
+`0.1.2-rc.1` 是唯一一次预发行尝试。仓库所有者决定从稳定 `0.1.2` 起不再发行预发行版；正式版缺陷通过新的递增稳定版本修复。`0.1.4` 改变内容输入边界：仅精确 `grok-4.6` 开启图片，普通 user 与一层 tool-result 的红/蓝合成图共四次脱敏 Proxy 请求均通过；`grok-4.5` 的红图语义结果不可靠，因此失败关闭并与其他模型保持 text-only。Harness `0.1.1-rc.2` attachment-local/LlmRuntime 已按最终 capability 复验通过。完整测试、审计、打包、双平台 CI、唯一制品和仓库所有者精确发布授权仍按[逐版发布检查表](./10-release-checklist.md)执行。
 
 ## 官方依据
 
@@ -64,4 +70,4 @@
 - [RFC 9700：OAuth 2.0 Security Best Current Practice](https://www.rfc-editor.org/rfc/rfc9700)
 - DeepSeek Harness `0.1.1-rc.2` 内置公开类型：`@deepseek-ai/dsh-llm`、`@deepseek-ai/dsh-subprocess`、`@deepseek-ai/dsh-settings`、`@deepseek-ai/dsh-client-connection`
 
-外部文档核对日期：2026-08-26。正式发布前必须重新核对上游接口与服务条款。
+外部基础认证文档最近核对日期：2026-08-26；图片协议、精确模型页与固定 Proxy 图片 wire 最近核对/验证日期：2026-08-28。正式发布前仍必须重新核对上游接口与服务条款。

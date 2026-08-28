@@ -16,9 +16,9 @@
 
 ## 变更流程
 
-1. 阅读 [`docs/README.md`](docs/README.md) 和与改动相关的 ADR。
-2. 先写或更新测试，保持变更范围单一。
-3. 认证、凭据、固定 endpoint、模型协议或发布边界变化时，先更新 ADR、威胁模型和测试计划。
+1. 阅读 [`docs/README.md`](docs/README.md)、[能力路线图](docs/11-capability-roadmap.md) 和与改动相关的 ADR。
+2. 先写或更新测试，保持变更范围单一。内容类型必须落在当前版本切片内，不得把搜索或生图并进图片输入版本。
+3. 认证、凭据、固定 endpoint、模型协议或发布边界变化时，先更新 ADR、威胁模型和测试计划。公开协议可以驱动隔离原型，但新内容类型在对外声明、合并发布基线或制作候选包前必须完成固定 CLI Chat Proxy 的脱敏 spike。
 4. 同步维护 `README.md` 与 `README.en.md` 的用户可见信息。
 5. 运行验证：
 
@@ -42,6 +42,7 @@ npm run pack:check
 
 ## 设计原则
 
+- 内容类型按 [`docs/11-capability-roadmap.md`](docs/11-capability-roadmap.md) 分版本引入，不把未排期能力混进当前切片。
 - 模型能力来自动态目录，不通过隐藏未知模型制造“全部支持”的假象。
 - Renderer、RPC 与错误信息不接触凭据或身份数据。
 - 只允许固定官方网络目标，拒绝用户配置任意 base URL 和认证重定向。
@@ -50,4 +51,4 @@ npm run pack:check
 
 ---
 
-English summary: include exact versions, a minimal reproduction, and redacted diagnostics in bug reports. Never post credentials or personal data. Keep PRs focused, add tests first, update design/security documents for boundary changes, keep both READMEs synchronized, and run `npm test` plus `npm run pack:check` before submission.
+English summary: include exact versions, a minimal reproduction, and redacted diagnostics in bug reports. Never post credentials or personal data. Keep PRs focused, add tests first, follow the capability roadmap so content-type slices stay on their assigned versions, update design/security documents for boundary changes, keep both READMEs synchronized, and run `npm test` plus `npm run pack:check` before submission.

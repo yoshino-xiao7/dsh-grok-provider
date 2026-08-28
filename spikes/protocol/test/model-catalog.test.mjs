@@ -72,3 +72,30 @@ test("every valid model in a Grok catalog response is mapped with its declared c
   assert.equal(catalog[1].resolvedModelInfo.context.contextWindow, 128_000)
   assert.equal(catalog[1].resolvedModelInfo.reasoning.defaultEffort, "medium")
 })
+
+test("only the exact verified Grok model advertises image input", () => {
+  const model = (id) => ({
+    id,
+    name: id,
+    context_window: 500_000,
+    api_backend: "responses",
+    supports_reasoning_effort: false,
+  })
+  const catalog = parseModelCatalogResponse(JSON.stringify({
+    object: "list",
+    data: [model("grok-4.6"), model("grok-4.5"), model("grok-future")],
+  }), { provider: "grok" })
+
+  assert.deepEqual(catalog[0].resolvedModelInfo.inputModalities, ["text", "image"])
+  assert.deepEqual(catalog[1].resolvedModelInfo.inputModalities, ["text"])
+  assert.deepEqual(catalog[2].resolvedModelInfo.inputModalities, ["text"])
+  assert.deepEqual(catalog[0].imageInput, {
+    readPolicy: { maxBytes: 4 * 1024 * 1024, maxPixels: 16 * 1024 * 1024 },
+    maxDimension: 8192,
+    maxImages: 8,
+    maxTotalBytes: 8 * 1024 * 1024,
+    mediaTypes: ["image/jpeg", "image/png"],
+  })
+  assert.equal(catalog[1].imageInput, undefined)
+  assert.equal(catalog[2].imageInput, undefined)
+})

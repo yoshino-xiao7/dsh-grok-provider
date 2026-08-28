@@ -24,7 +24,7 @@ Host 通过 Harness `ctx.subprocess` 以固定 argv 启动经路径/版本约束
 
 采用：动态发现账号可用的全部 Grok Build 模型，并支持文本、reasoning、流式输出、usage 和 Harness 工具调用；能力只能依据真实协议声明/验证。
 
-延期：Web/X Search、图片输入、图片生成、任意下载、API Key、多账号、企业 OIDC、ACP、Headless 和 Linux 发布承诺。
+延期：Web/X Search、图片输入、图片生成、任意下载、API Key、多账号、企业 OIDC、ACP、Headless 和 Linux 发布承诺。仓库所有者已于 2026-08-28 接受这些内容类型的后续分版本序列，见 [能力路线图](./11-capability-roadmap.md)；该接受不改变 `0.1.0` 已发布范围。
 
 ### 4. 发布身份
 
@@ -55,6 +55,10 @@ Host 通过 Harness `ctx.subprocess` 以固定 argv 启动经路径/版本约束
 - xAI 服务条款/官方许可没有第三方 adapter 的明确支持依据；仓库所有者已在 `0.1.0` 发布前复核并接受该残余风险。
 
 仓库所有者已明确要求继续公开发布，并接受当前 CLI 契约/服务条款没有第三方 adapter 明确支持依据的残余风险。`0.1.0` 已完成发布；后续版本仍必须通过制品、CI、provenance 和 Registry 回读门禁。
+
+## `0.1.4` 图片能力决定（2026-08-28）
+
+`0.1.4` 只为精确 `grok-4.6` 开启普通 user 与一层 tool-result 的 JPEG/PNG 图片输入，请求固定使用 `detail:"high"`。该模型的红/蓝两种合成图在两个位置共 4 次固定 Proxy 请求均通过 HTTP 200、SSE completed 与规范化整段颜色语义断言。`grok-4.5` 的受控红图响应语义不可靠，因此即使 HTTP/SSE 形状成功也失败关闭为 text-only；所有其他模型同样保持 text-only。此决定不追溯改变 `0.1.0` 的历史范围，且不替代最终 Harness capability 复验、全量测试、审计、打包、CI、制品与精确发布授权。
 
 ## 确认语句
 

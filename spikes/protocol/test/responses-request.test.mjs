@@ -3,6 +3,7 @@ import test from "node:test"
 
 import {
   UnsupportedResponsesRequestError,
+  createResponsesRequestEncoder,
   encodeResponsesRequest,
 } from "../../../src/internal/responses-request.mjs"
 
@@ -88,6 +89,70 @@ test("a Harness text and tool conversation maps losslessly to a stateless Respon
     stream: true,
     store: false,
   })
+})
+
+test("the complete text wire remains byte-identical to the 0.1.3 encoder", () => {
+  const request = encodeResponsesRequest({
+    provider: "grok",
+    model: "grok-4.6",
+    stop: [],
+    system: "Be concise.",
+    messages: [
+      {
+        id: "user-1",
+        role: "user",
+        source: { kind: "user" },
+        content: [{ type: "text", text: "Hi" }],
+      },
+      {
+        id: "assistant-1",
+        role: "assistant",
+        source: {
+          kind: "model",
+          provider: "grok",
+          model: "grok-4.6",
+          replayState: {
+            response: { version: 1 },
+            blocks: [
+              { type: "reasoning", id: "rs_1", encryptedContent: "sealed" },
+              null,
+              null,
+            ],
+          },
+        },
+        content: [
+          { type: "reasoning", text: "Brief." },
+          { type: "text", text: "Calling." },
+          { type: "tool-call", id: "call_1", name: "lookup", arguments: '{"q":"x"}' },
+        ],
+      },
+      {
+        id: "tool-1",
+        role: "user",
+        source: { kind: "tool", callId: "call_1" },
+        content: [{
+          type: "tool-result",
+          toolCallId: "call_1",
+          content: [{ type: "text", text: "Done" }],
+          isError: false,
+        }],
+      },
+    ],
+    tools: [{
+      name: "lookup",
+      description: "Look up",
+      parameters: {
+        type: "object",
+        properties: { q: { type: "string" } },
+        required: ["q"],
+      },
+    }],
+    reasoningEffort: "high",
+    temperature: 0.2,
+    maxTokens: 512,
+  })
+
+  assert.equal(JSON.stringify(request), String.raw`{"model":"grok-4.6","input":[{"role":"user","content":"Hi"},{"type":"reasoning","id":"rs_1","encrypted_content":"sealed","summary":[{"type":"summary_text","text":"Brief."}]},{"role":"assistant","content":"Calling."},{"type":"function_call","call_id":"call_1","name":"lookup","arguments":"{\"q\":\"x\"}"},{"type":"function_call_output","call_id":"call_1","output":"Done"}],"instructions":"Be concise.","tools":[{"type":"function","name":"lookup","description":"Look up","parameters":{"type":"object","properties":{"q":{"type":"string"}},"required":["q"]}}],"reasoning":{"effort":"high"},"temperature":0.2,"max_output_tokens":512,"include":["reasoning.encrypted_content"],"stream":true,"store":false}`)
 })
 
 test("foreign tool call IDs are mapped consistently when Grok cannot accept their characters", () => {
@@ -214,4 +279,154 @@ test("foreign or misaligned replay metadata is never sent upstream", () => {
     })
     assert.deepEqual(request.input, [{ role: "assistant", content: "Visible answer." }])
   }
+})
+
+test("misaligned replay blocks are ignored before key enumeration", () => {
+  let ownKeyReads = 0
+  const blocks = new Proxy(new Array(20_001), {
+    ownKeys(array) {
+      ownKeyReads += 1
+      return Reflect.ownKeys(array)
+    },
+  })
+
+  const request = encodeResponsesRequest({
+    provider: "grok",
+    model: "grok-4.6",
+    messages: [{
+      role: "assistant",
+      source: {
+        kind: "model",
+        provider: "grok",
+        model: "grok-4.6",
+        replayState: {
+          response: { version: 1 },
+          blocks,
+        },
+      },
+      content: [
+        { type: "reasoning", text: "Private summary." },
+        { type: "text", text: "Visible answer." },
+      ],
+    }],
+  })
+
+  assert.deepEqual(request.input, [{ role: "assistant", content: "Visible answer." }])
+  assert.equal(ownKeyReads, 0)
+})
+
+test("a prepared encoder keeps validated static state private and immutable", () => {
+  const options = {
+    provider: "grok",
+    model: "grok-4.6",
+    system: "Original system",
+    reasoningEffort: "low",
+    tools: [{
+      name: "fixture",
+      description: "Fixture tool",
+      parameters: { type: "object", properties: {} },
+    }],
+    messages: [{
+      id: "user-envelope",
+      role: "user",
+      source: { kind: "user" },
+      content: [{ type: "text", text: "Hello" }],
+    }],
+  }
+  const encode = createResponsesRequestEncoder(options)
+  options.model = "forged-model"
+  options.system = "Forged system"
+
+  const request = encode({
+    messages: [{
+      id: "user-transient",
+      role: "user",
+      source: { kind: "user" },
+      content: [{ type: "text", text: "Transient" }],
+    }],
+  })
+
+  assert.equal(Object.isFrozen(encode), true)
+  assert.equal(request.model, "grok-4.6")
+  assert.equal(request.instructions, "Original system")
+  assert.deepEqual(request.input, [{ role: "user", content: "Transient" }])
+  assert.throws(() => { request.reasoning.effort = "xhigh" }, TypeError)
+  assert.throws(() => { request.tools[0].name = "forged" }, TypeError)
+  assert.throws(() => { request.tools[0].parameters.properties.injected = {} }, TypeError)
+
+  const repeated = encode()
+  assert.equal(repeated.reasoning.effort, "low")
+  assert.equal(repeated.tools[0].name, "fixture")
+  assert.deepEqual(repeated.tools[0].parameters, { type: "object", properties: {} })
+})
+
+test("caller-owned tools array methods cannot inject provider server tools", () => {
+  const tools = []
+  let mapCalls = 0
+  tools.map = () => {
+    mapCalls += 1
+    return [{ type: "web_search" }]
+  }
+
+  assert.throws(() => encodeResponsesRequest({
+    provider: "grok",
+    model: "grok-4.6",
+    messages: [{
+      id: "user-tools-array",
+      role: "user",
+      source: { kind: "user" },
+      content: [{ type: "text", text: "Hello" }],
+    }],
+    tools,
+  }), UnsupportedResponsesRequestError)
+  assert.equal(mapCalls, 0)
+})
+
+test("accessor-backed message fields cannot split validation from the text wire", () => {
+  let roleReads = 0
+  const message = {
+    source: { kind: "user" },
+    content: [{ type: "text", text: "Hello" }],
+  }
+  Object.defineProperty(message, "role", {
+    enumerable: true,
+    get() {
+      roleReads += 1
+      return roleReads === 1 ? "user" : "developer"
+    },
+  })
+
+  assert.throws(() => encodeResponsesRequest({
+    provider: "grok",
+    model: "grok-4.6",
+    messages: [message],
+  }), UnsupportedResponsesRequestError)
+  assert.equal(roleReads, 0)
+})
+
+test("accessor-backed tool fields cannot change after validation", () => {
+  let nameReads = 0
+  const tool = {
+    description: "Fixture tool",
+    parameters: { type: "object", properties: {} },
+  }
+  Object.defineProperty(tool, "name", {
+    enumerable: true,
+    get() {
+      nameReads += 1
+      return nameReads === 1 ? "fixture" : "invalid name"
+    },
+  })
+
+  assert.throws(() => encodeResponsesRequest({
+    provider: "grok",
+    model: "grok-4.6",
+    messages: [{
+      role: "user",
+      source: { kind: "user" },
+      content: [{ type: "text", text: "Hello" }],
+    }],
+    tools: [tool],
+  }), UnsupportedResponsesRequestError)
+  assert.equal(nameReads, 0)
 })

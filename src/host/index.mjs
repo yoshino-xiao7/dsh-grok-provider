@@ -2,26 +2,22 @@ import os from "node:os"
 import path from "node:path"
 import { randomUUID } from "node:crypto"
 
-import { LlmError, attributionHeaders } from "@deepseek-ai/dsh-llm"
+import { attributionHeaders } from "@deepseek-ai/dsh-llm"
 import Schema from "@deepseek-ai/schemastery"
 
 import {
-  CredentialFileTooLargeError,
   GROK_PRODUCTION_OIDC_AUTH_CONTRACT,
   UnsupportedCredentialError,
   createCredentialSource,
 } from "../internal/credential-source.mjs"
-import { AuthModeUnavailableError } from "../internal/auth-registry.mjs"
 import { createAccountDashboard } from "../internal/account-dashboard.mjs"
 import { createAuthController } from "../internal/auth-controller.mjs"
 import { createAuthRpcHandler } from "../internal/auth-rpc.mjs"
 import { createGrokAdapter } from "../internal/grok-adapter.mjs"
 import { createGrokCommandHandler } from "../internal/grok-command-handler.mjs"
-import { GrokTransportError, createGrokTransport } from "../internal/grok-transport.mjs"
-import {
-  OfficialCredentialFileError,
-  createOfficialCredentialLoader,
-} from "../internal/official-credential-loader.mjs"
+import { createGrokTransport } from "../internal/grok-transport.mjs"
+import { mapLlmError } from "../internal/llm-error.mjs"
+import { createOfficialCredentialLoader } from "../internal/official-credential-loader.mjs"
 import { createOfficialCliAuth } from "../internal/official-cli-auth.mjs"
 import { createOfficialAuthDriver } from "../internal/official-auth-driver.mjs"
 import { verifyOfficialCliExecutable } from "../internal/official-cli-verifier.mjs"
@@ -64,6 +60,7 @@ export function apply(ctx) {
     }),
     createAdapter: ({ getGeneration }) => createGrokAdapter({
       getGeneration,
+      getAttachmentStore: () => ctx.get("attachments"),
       mapError: mapLlmError,
     }),
   })
@@ -116,32 +113,4 @@ export function apply(ctx) {
   ))
 
   ctx.effect(() => () => runtime.dispose(), "llm-grok runtime")
-}
-
-function mapLlmError(error) {
-  if (error instanceof LlmError) return error
-  if (error?.name === "AbortError") {
-    return new LlmError("The Grok Build request was cancelled", "ABORTED", { cause: error })
-  }
-  if (
-    error instanceof AuthModeUnavailableError ||
-    error instanceof UnsupportedCredentialError ||
-    error instanceof CredentialFileTooLargeError ||
-    error instanceof OfficialCredentialFileError ||
-    (error instanceof GrokTransportError && (error.status === 401 || error.status === 403))
-  ) {
-    return new LlmError("Grok authentication is required", "AUTH", {
-      cause: error,
-      ...(error.status === undefined ? {} : { status: error.status }),
-    })
-  }
-  if (error instanceof GrokTransportError) {
-    return new LlmError("The Grok Build request failed", error.status === 429 ? "RATE_LIMIT" : "PROVIDER_ERROR", {
-      cause: error,
-      ...(error.status === undefined ? {} : { status: error.status }),
-    })
-  }
-  return new LlmError("The Grok provider rejected an invalid or unsupported response", "INVALID_RESPONSE", {
-    cause: error,
-  })
 }
