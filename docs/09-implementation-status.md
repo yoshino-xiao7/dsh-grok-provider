@@ -1,11 +1,11 @@
 # 当前实现与发布状态
 
-稳定 `0.1.3` 修复 Ark 等其他 Provider 的历史工具调用 ID 含有 Grok 不接受字符时，本地请求转换立即失败的问题。`0.1.4` 候选在不改动认证、凭据、额度、endpoint 或平台 subprocess 边界的前提下，只为精确 `grok-4.6` 增加有界图片输入；`grok-4.5` 与所有其他模型保持 text-only。
+稳定 `0.1.4` 在不改动认证、凭据、额度、endpoint 或平台 subprocess 边界的前提下，只为精确 `grok-4.6` 增加有界图片输入；`grok-4.5` 与所有其他模型保持 text-only。`0.1.5` 是维护候选，只补强发布绑定、账户面板能力展示和 Provider Runtime 安装事务。
 
 状态日期：2026-08-28
-当前 npm 发布线：`dsh-grok-provider@0.1.3`
-当前候选：`dsh-grok-provider@0.1.4`
-版本分支：`yukiryou/v0.1.4`
+当前 npm 发布线：`dsh-grok-provider@0.1.4`
+当前候选：`dsh-grok-provider@0.1.5`
+版本分支：`yukiryou/v0.1.5`
 内容类型路线：已冻结于 [能力路线图](./11-capability-roadmap.md)；`0.1.4` 只做图片输入，`prompt_cache_key` 已拆出。
 
 ## 已实现
@@ -89,12 +89,21 @@ Windows x64 真机不再是 `0.1.0` 预发布阻断项。首次发布后必须�
 - 三张社区市场预览图保存在 `.github/assets/plugin-preview/` 并由中英文 README 引用；npm tarball 明确排除这些展示资源。
 - 根目录 `screenshots.json` 固定三张预览图顺序；公共 `awesome-dsh-plugin` 收录 PR #3415 的 README 生成、locale parity、awesome-lint 与 build 自动门禁通过，随后已由独立维护者合并并进入 `model` 分类。该列表不记录精确 npm 版本或平台验证字段。
 
-## `0.1.4` 候选准备状态
+## `0.1.4` 发布结果
 
-- 仓库所有者已于 2026-08-28 接受按独立切片推进内容类型；`0.1.4` 只做图片输入，搜索与生图顺延且版本号可因修复版变化。
+- 仓库所有者已于 2026-08-28 接受按独立切片推进内容类型；`0.1.4` 只做图片输入，搜索与生图顺延。
 - 任意 URL 下载与 API Key 模式保持永久非目标。
 - [ADR-0008](./adr/0008-image-input-request-compiler.md)、异步 request compiler、可选 attachment seam、精确模型 route 与离线自动化测试已完成开发。
 - 最终源码与发行文档同步后已用 Node 24 完成 119 项全量测试（117 pass、0 fail、2 项 Windows-only skip）；`npm audit --omit=dev` 为 0 漏洞，dry-run 包含 58 个文件。
 - 公开 xAI 图片协议与精确 `grok-4.6` 的 user/tool-result 红蓝语义 Proxy 门禁已经验证；`grok-4.5` 因语义不可靠失败关闭。最终 Harness attachment modality 复验见[证据页](./12-upstream-image-input-evidence.md)。
 - 本轮未引入 `prompt_cache_key`、搜索、生图、新 SSE 事件、URL 下载、认证或 endpoint 变化。
-- 代码 PR [#8](https://github.com/yoshino-xiao7/dsh-grok-provider/pull/8) 已合并，CI run [33149124946](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33149124946) 的 macOS/Windows job 均通过；最终 release commit 的唯一 tarball、同一制品隔离安装与精确 `0.1.4` 发布授权仍待完成，当前不得创建最终 tag 或执行 `npm publish`。
+- 代码 PR [#8](https://github.com/yoshino-xiao7/dsh-grok-provider/pull/8) 与发布证据 PR #9 已合并；CI run [33149124946](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33149124946) 的 macOS/Windows job 均通过。
+- 最终 release commit 为 `59776af8e954aa6e14463c659a22c6c3d5798bb5`；不可变 `v0.1.4` tag 精确指向该提交。唯一正式 tarball 为 58 个文件、130,958 bytes，SHA-256 `7a1733c1ab391150430d3f302ff5cb3d04f5153c339ecbdbfba128191d02ad3e`，npm SRI `sha512-IkEFEdBnt/EpE9y8mCAyE6i+023Z2229J6gsR2y1cNZ+md9rwpxiqb5IsDMZO84ewh65wMM/ajCQ6F4UT2bDGg==`。
+- GitHub Release [v0.1.4](https://github.com/yoshino-xiao7/dsh-grok-provider/releases/tag/v0.1.4) 与 Trusted Publisher run [33151195684](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33151195684) 完成；npm `latest=0.1.4`，Registry tarball、Release asset 与本地制品逐字节一致，Registry 签名与 SLSA provenance attestation 验证通过。
+
+## `0.1.5` 开发状态
+
+- 从上述精确 `0.1.4` release commit 创建独立分支 `yukiryou/v0.1.5`，不直接修改发布基线。
+- 维护范围冻结为：发布 workflow 的 tag/ref/commit 与唯一 Release asset 绑定、Node `24.19.0` 固定；账户面板从模型 `inputModalities` 展示图片能力；Provider Runtime 部分安装失败时逆序回滚。
+- 不改变认证、凭据、CLI subprocess、endpoint、Responses wire、图片编译资源策略或平台支持矩阵；Web/X Search 与图片生成继续顺延。
+- `package.json`、lockfile、CHANGELOG、中英文 README、安全策略和双语 Release Notes 已进入 `0.1.5` 候选状态；精确 Node `24.19.0` 全量测试通过（133 项、131 pass、0 fail、2 项 Windows-only skip），生产依赖审计为 0 漏洞，dry-run 打包为 59 个文件。双平台 CI、唯一制品与精确发布授权仍按发布检查表执行。

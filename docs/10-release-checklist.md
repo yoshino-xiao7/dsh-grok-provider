@@ -103,7 +103,20 @@ English summary: every release must close documentation, security, tests, determ
 - [x] 新候选的 macOS/Windows CI run [33149124946](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33149124946) 全绿；两个 job 均完成 `npm ci --ignore-scripts`、全量测试、生产依赖审计与 `pack:check`。
 - [x] 同步 `package.json`、lockfile、制品契约测试、中英文 README 安装版本、正式 CHANGELOG 日期和 `docs/releases/v0.1.4.md`；未发布事实使用“当前源码版本/发布后可用”表述，未预写 npm 或 GitHub Release 已存在。
 - [x] 版本分支经 [PR #8](https://github.com/yoshino-xiao7/dsh-grok-provider/pull/8) 合并 `yukiryou/main`；代码合并提交为 `39fbaf1ab3f77b3f0af0727e87b8a64534efbb8d`。
-- [ ] 从最终 release commit 冻结唯一 `dsh-grok-provider-0.1.4.tgz`，记录文件数、bytes、SHA-256、base64 SHA-512，并从同一制品完成隔离安装/加载 smoke。
-- [ ] GitHub 正式 Release 使用中文在前、英文在后且不重复页面标题，只附加唯一已验收 tarball；`v0.1.4` 精确指向 release commit。
-- [ ] 仓库所有者明确授权发布精确 `dsh-grok-provider@0.1.4`；开发请求与绿色自动化均不构成发布授权。
-- [ ] Trusted Publisher 发布、npm `latest=0.1.4`、Registry 逐字节回读、签名与 SLSA provenance attestation 验证完成。
+- [x] 从最终 release commit `59776af8e954aa6e14463c659a22c6c3d5798bb5` 冻结唯一 `dsh-grok-provider-0.1.4.tgz`，并从同一制品完成隔离安装/加载 smoke：58 个文件、130,958 bytes、SHA-256 `7a1733c1ab391150430d3f302ff5cb3d04f5153c339ecbdbfba128191d02ad3e`、SRI `sha512-IkEFEdBnt/EpE9y8mCAyE6i+023Z2229J6gsR2y1cNZ+md9rwpxiqb5IsDMZO84ewh65wMM/ajCQ6F4UT2bDGg==`。
+- [x] GitHub 正式 Release [v0.1.4](https://github.com/yoshino-xiao7/dsh-grok-provider/releases/tag/v0.1.4) 使用中文在前、英文在后且不重复页面标题，只附加唯一已验收 tarball；`v0.1.4` 精确指向 release commit。
+- [x] 仓库所有者于 2026-08-28 明确授权发布精确 `dsh-grok-provider@0.1.4`。
+- [x] Trusted Publisher run [33151195684](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33151195684) 发布完成；npm `latest=0.1.4`，Registry tarball 与本地/Release 制品逐字节一致，签名与 SLSA provenance attestation 验证通过。
+
+## `0.1.5` 开发与发布门禁
+
+- [x] 从精确 `0.1.4` release commit `59776af8e954aa6e14463c659a22c6c3d5798bb5` 创建独立分支 `yukiryou/v0.1.5`。
+- [x] 发布 workflow 强绑定稳定 tag ref、剥离后的 tag commit 与 `github.sha`，并要求非草稿、非预发行且仅含唯一精确 tarball 的 GitHub Release；发布 Node 固定为 `24.19.0`。
+- [x] 账户面板从严格模型 `inputModalities` 投影 text/image capability，客户端只为图片模型显示中英文图片输入标签；畸形目录失败关闭。
+- [x] Provider Runtime 部分安装失败时按相反顺序回滚已注册资源；成功卸载保持幂等并尽力执行全部清理。
+- [x] 同步 `package.json`、lockfile、CHANGELOG、中英文 README、`SECURITY.md`、状态文档和 `docs/releases/v0.1.5.md`；不把维护候选写成已发布事实。
+- [x] 本地精确 Node `24.19.0` 全量测试通过：133 项、131 pass、0 fail、2 项 Windows-only skip；`npm audit --omit=dev` 为 0 漏洞，`npm run pack:check` 为 59 个文件，`git diff --check` 通过。
+- [ ] macOS/Windows CI、版本分支 PR 与发布基线合并完成。
+- [ ] 从最终 release commit 冻结唯一候选 tarball并完成隔离安装、digest 与清单核验。
+- [ ] 仓库所有者在最终制品证据后明确授权发布精确 `dsh-grok-provider@0.1.5`。
+- [ ] GitHub Release、不可变 tag、Trusted Publisher、Registry 逐字节回读、签名与 SLSA provenance attestation 完成。

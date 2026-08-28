@@ -1,9 +1,9 @@
 # 能力路线图
 
-- 状态：**已接受；`0.1.4` 的 `grok-4.6` Proxy 图片语义门禁与 Harness 最终复验均已通过（2026-08-28）**
-- 当前 npm 稳定版：`0.1.3`
-- 当前候选：`0.1.4`
-- 当前版本分支：`yukiryou/v0.1.4`
+- 状态：**`0.1.4` 图片输入切片已发布；`0.1.5` 维护候选已完成本地门禁，待双平台 CI、最终制品与发布授权（2026-08-28）**
+- 当前 npm 稳定版：`0.1.4`
+- 当前候选：`0.1.5`
+- 当前版本分支：`yukiryou/v0.1.5`
 
 本文是 `0.1.3` 之后内容类型迭代的单一事实来源。`0.1.0`–`0.1.3` 的历史范围仍以 [ADR-0002](./adr/0002-v0.1-scope.md) 和[产品需求](./01-product-requirements.md)为准。
 
@@ -24,6 +24,7 @@
 | 版本 | 能力 | 发布前置条件 | ADR |
 | --- | --- | --- | --- |
 | `0.1.4` | 图片输入 | Proxy 接受本版本的 data URL wire shape；Harness attachment 投影与限额可执行 | [ADR-0008](./adr/0008-image-input-request-compiler.md) |
+| `0.1.5` | 发布链路、能力展示与安装事务维护；不新增模型能力 | 精确 tag/commit/Release 制品绑定、回滚与 UI 投影测试 | 复用现有接口与发布契约 |
 | 后续版本 | 默认关闭的 Web Search / X Search | Proxy 接受 server tools；已记录可放行事件 | ADR-0009 |
 | 再后续版本 | 默认关闭的图片生成 | Proxy 返回可有界提交到 Harness attachment 的内联结果 | ADR-0010 |
 
@@ -49,7 +50,7 @@ const request = await requestCompiler.compile(options, preparedRoute)
 
 ### 模型能力
 
-- `0.1.4` 候选只对公开 xAI 模型页声明 text+image、当前 Proxy 目录已观察到且红蓝语义门禁通过的精确 ID `grok-4.6` 生成图片 route。
+- `0.1.4` 发布版只对公开 xAI 模型页声明 text+image、当前 Proxy 目录已观察到且红蓝语义门禁通过的精确 ID `grok-4.6` 生成图片 route；`0.1.5` 不扩大该集合。
 - 新出现的模型即使也是 Responses backend，也只声明文本，直到完成同等级证据更新。
 - `grok-4.5` 即使公开模型页声明图片，也因固定 Proxy 红图语义不可靠保持 text-only；HTTP 200/SSE 完成不能替代语义门禁。`grok-4.6` 的普通 user 与一层 tool-result 红蓝证据见[上游证据](./12-upstream-image-input-evidence.md)。
 
@@ -83,7 +84,7 @@ const request = await requestCompiler.compile(options, preparedRoute)
 - 公网/内网图片 URL、signed URL、file ID、路径读取、citation 跟随或 markdown 图片下载。
 - assistant 图片输出、workspace 文件写入、第二个网络 origin、API Key 或 endpoint 配置。
 
-### 当前候选状态与发布门禁
+### `0.1.4` 发布结果
 
 - [x] request compiler / attachment seam / per-model route 接口冻结。
 - [x] 用户图片、一层 tool-result、Abort、缺服务、旧图淘汰和纯文本回归测试。
@@ -94,9 +95,10 @@ const request = await requestCompiler.compile(options, preparedRoute)
 - [x] 开发树 Node 24 本地全量测试、preflight `npm run pack:check` 与真机脚本加入后的聚焦测试。
 - [x] 最终版本/发行文档同步后的 Node 24 全量测试（119 项、117 pass、0 fail、2 项 Windows-only skip）、生产依赖审计（0 漏洞）与 `npm run pack:check`（58 个文件）。
 - [x] 代码 PR [#8](https://github.com/yoshino-xiao7/dsh-grok-provider/pull/8) 已合并，macOS/Windows CI run [33149124946](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33149124946) 全绿。
-- [ ] 最终 release commit 的唯一候选 tarball、隔离安装、digest 与精确发布授权。
+- [x] 最终 release commit `59776af8e954aa6e14463c659a22c6c3d5798bb5` 的唯一 tarball、隔离安装、digest 与精确发布授权。
+- [x] GitHub Release `v0.1.4` 与 Trusted Publisher run `33151195684` 发布完成；npm `latest=0.1.4`，Registry、Release 与本地制品逐字节一致，签名和 SLSA provenance 均已回读。
 
-`grok-4.6` Proxy 语义门禁、Harness 最终 modality 复验、本地自动化与双平台 PR/CI 门禁已关闭，`grok-4.5` 已失败关闭；最终制品与仓库所有者精确发布授权未完成前，不得创建最终 tag、GitHub Release 或执行 `npm publish`。
+`grok-4.6` Proxy 语义门禁、Harness 最终 modality 复验、本地自动化、双平台 PR/CI、唯一制品与发布回读均已关闭，`grok-4.5` 保持失败关闭。`0.1.5` 仅维护发布供应链、账户面板能力投影与 Provider Runtime 安装事务，不提前实现下一内容切片。
 
 ## 4. 后续：默认关闭的 Web/X Search
 
@@ -120,4 +122,4 @@ const request = await requestCompiler.compile(options, preparedRoute)
 - ACP、`grok -p` Headless、Linux / macOS x64 发布承诺。
 - 厂商 `code_execution`；Harness 已有本地工具权限层。
 
-English summary: `0.1.4` is an unpublished image-input-only candidate for exact `grok-4.6`. Red/blue user and one-level tool-result Proxy checks all passed a normalized whole-response color assertion with `detail:"high"`. A controlled `grok-4.5` red-image result was semantically unreliable, so `grok-4.5` and all other models remain text-only. Final Harness modality revalidation, Node 24 tests, production audit, and dry-run packaging passed; CI, final-release-commit artifact verification, and exact publication authorization are still pending.
+English summary: `0.1.4` is published with image input only for exact `grok-4.6`. Red/blue user and one-level tool-result Proxy checks passed the normalized whole-response color assertion with `detail:"high"`; `grok-4.5` and all other models remain text-only. The exact release artifact, Registry bytes, signatures, and SLSA provenance were verified. `0.1.5` is a maintenance candidate for release-chain binding, dashboard capability projection, and transactional Provider Runtime installation; it does not add search or image generation.

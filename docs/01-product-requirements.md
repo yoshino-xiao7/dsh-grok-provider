@@ -69,7 +69,7 @@
 - Grok ACP 或 `grok -p` headless 代理。
 - 厂商侧 Web Search、X Search、远程抓取。
 - 图片生成、图片 URL 下载或文件落盘。
-- 图片输入（`0.1.0`–`0.1.3`）；`0.1.4` 候选按[能力路线图](./11-capability-roadmap.md)与 [ADR-0008](./adr/0008-image-input-request-compiler.md)只为精确 `grok-4.6` 独立引入，`grok-4.5` 与所有其他模型继续 text-only。
+- 图片输入（`0.1.0`–`0.1.3`）；已发布 `0.1.4` 按[能力路线图](./11-capability-roadmap.md)与 [ADR-0008](./adr/0008-image-input-request-compiler.md)只为精确 `grok-4.6` 独立引入，`grok-4.5` 与所有其他模型继续 text-only；维护版 `0.1.5` 不扩大该集合。
 - 自定义 endpoint、企业 OIDC、自定义代理或多账号。
 - 自动安装或更新 Grok CLI。
 - 在远程 Web/headless 主机自动打开浏览器或无人值守登录的承诺。
@@ -134,6 +134,7 @@ Web 的“退出”或 TUI `/grok logout` 先中止本插件所有在途 Grok �
 `0.1.0`–`0.1.3` 的“不包含”列表继续描述这些稳定版的发布事实。仓库所有者已于 2026-08-28 接受后续内容类型序列，完整切片、安全门禁与永久非目标见[能力路线图](./11-capability-roadmap.md)：
 
 - `0.1.4`：仅图片输入。
+- `0.1.5`：发布链路、账户面板能力标签和 Provider Runtime 安装事务维护；不新增模型能力。
 - 后续独立切片：默认关闭的 Web Search / X Search。
 - 再后续独立切片：默认关闭的图片生成（内联结果 → Harness attachment）。
 

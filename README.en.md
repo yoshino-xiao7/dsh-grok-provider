@@ -4,7 +4,7 @@
 
 Use an already authenticated official Grok Build account from DeepSeek Harness, with dynamic model discovery, streaming reasoning, tool calls, and an account quota/model capability dashboard.
 
-> Unofficial community project; not affiliated with xAI or DeepSeek Harness. The current source version is `0.1.4`; the published stable version is whatever the npm Registry currently assigns to `latest`. The project no longer publishes prereleases; stable defects are fixed in a new incremented stable version.
+> Unofficial community project; not affiliated with xAI or DeepSeek Harness. The current source version is `0.1.5`; the published stable version is whatever the npm Registry currently assigns to `latest`. The project no longer publishes prereleases; stable defects are fixed in a new incremented stable version.
 
 ## What it provides
 
@@ -39,10 +39,10 @@ The official CLI opens a browser on first use. The provider supports only the of
 
 ### 2. Install the provider
 
-After `0.1.4` is published, install that exact version from npm:
+After `0.1.5` is published, install that exact version from npm:
 
 ```sh
-dsh plugin --profile web add dsh-grok-provider@0.1.4
+dsh plugin --profile web add dsh-grok-provider@0.1.5
 dsh web
 ```
 
@@ -63,7 +63,7 @@ The Web settings page shows:
 
 - login state and sign-in, cancel, and logout actions;
 - used/remaining quota and the real billing-period reset time;
-- account-visible models, context windows, reasoning efforts, streaming and tool capabilities.
+- account-visible models, context windows, reasoning efforts, and image-input, streaming, and tool capabilities.
 
 When protobuf-backed billing includes a complete weekly/monthly period but omits a zero-valued percentage, the page restores “0% used / 100% remaining.” Other incomplete responses remain unknown.
 
@@ -112,8 +112,8 @@ Uninstalling the provider does not remove the official Grok CLI or directly modi
 
 ## Sources and discovery
 
-- npm `0.1.4` page (available after publication): [dsh-grok-provider@0.1.4](https://www.npmjs.com/package/dsh-grok-provider/v/0.1.4)
-- GitHub `0.1.4` release and integrity values (available after publication): [v0.1.4](https://github.com/yoshino-xiao7/dsh-grok-provider/releases/tag/v0.1.4)
+- npm `0.1.5` page (available after publication): [dsh-grok-provider@0.1.5](https://www.npmjs.com/package/dsh-grok-provider/v/0.1.5)
+- GitHub `0.1.5` release and integrity values (available after publication): [v0.1.5](https://github.com/yoshino-xiao7/dsh-grok-provider/releases/tag/v0.1.5)
 - GitHub community discovery: the repository carries the DeepSeek Harness-recommended `dsh-plugin` and `dsh` topics
 - YukiRyou managed source: [deepseek-yukiryou-plugin-catalog](https://github.com/yoshino-xiao7/deepseek-yukiryou-plugin-catalog), still pinned to the real-device-accepted `dsh-grok-provider@0.1.0` and marking only `darwin-arm64`
 
@@ -121,17 +121,17 @@ Directory inclusion is not an endorsement by xAI or DeepSeek Harness. [Listing P
 
 ## Compatibility and scope
 
-| Item | `0.1.4` status |
+| Item | `0.1.5` status |
 | --- | --- |
 | DeepSeek Harness | Exact support for `0.1.1-rc.2` |
 | Node.js | `>=24.19.0` |
 | macOS arm64 | Real-network and isolated Harness acceptance completed |
-| Windows x64 | Code and Windows CI supported; no independent real-device acceptance completed for this release |
+| Windows x64 | Code and Windows CI supported; the current `0.1.5` candidate adds no independent real-device acceptance |
 | macOS x64 / Linux | Unsupported |
 | Grok CLI | No full-version lock; official path, `login --oauth` capability, and production OIDC credential contract are enforced |
 | Models | Every account catalog model whose backend has a strict codec in this release |
 
-`0.1.4` enables image input only for exact `grok-4.6`; `grok-4.5` and every other dynamically discovered model remain text-only. Images must be verified JPEG/PNG projections from the Harness attachment service. Ordinary user content and images nested one level inside a tool result are supported, with `detail:"high"` fixed to the official xAI Responses image example; URLs, filesystem paths, file IDs, and caller-supplied data URLs are rejected.
+`0.1.5` preserves the `0.1.4` image boundary: image input is enabled only for exact `grok-4.6`, while `grok-4.5` and every other dynamically discovered model remain text-only. The account dashboard projects capability badges from that same catalog, so only image-capable models show “Image input.” Images must be verified JPEG/PNG projections from the Harness attachment service. Ordinary user content and images nested one level inside a tool result are supported, with `detail:"high"` fixed to the official xAI Responses image example; URLs, filesystem paths, file IDs, and caller-supplied data URLs are rejected.
 
 Each projected image is limited to 4 MiB, 16,777,216 pixels, and 8192px per side. A request retains at most eight images and 8 MiB of projected image bytes. When a limit is exceeded, the globally oldest images are offloaded to Harness text placeholders; the final JSON remains capped at 16 MiB. Web/X Search, image generation, arbitrary downloads, API-key mode, multiple accounts, enterprise OIDC, ACP, and Headless agent wrapping remain out of scope; see the [capability roadmap](docs/11-capability-roadmap.md).
 
@@ -219,7 +219,8 @@ Read the [contributing guide](CONTRIBUTING.md) before filing an issue or PR. Cha
 - [x] Publish the `0.1.1` documentation and release-process correction
 - [x] Publish the `0.1.2` Windows CLI compatibility correction
 - [x] Publish the `0.1.3` cross-provider tool-history compatibility correction
-- [x] `0.1.4`: image input only for exact `grok-4.6`; red/blue user and tool-result Proxy gates plus final Harness attachment revalidation pass, while `grok-4.5` fails closed as text-only
+- [x] Publish `0.1.4`: image input only for exact `grok-4.6`; red/blue user/tool-result Proxy gates and final Harness attachment revalidation passed, while `grok-4.5` fails closed as text-only
+- [ ] Publish `0.1.5`: maintenance for release binding, dashboard capability badges, and transactional Provider Runtime installation (development and local gates are complete)
 - [ ] Later independent slice: opt-in, default-off Web Search / X Search
 - [ ] A subsequent slice: opt-in image generation (inline results only, committed through Harness attachments)
 - [ ] Complete independent Windows x64 acceptance and publish a later stable fix if needed

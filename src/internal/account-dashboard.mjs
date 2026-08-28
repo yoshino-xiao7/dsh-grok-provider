@@ -40,8 +40,34 @@ function projectModel(model) {
     ...(typeof model.description === "string" ? { description: model.description } : {}),
     contextWindow: model.context.contextWindow,
     ...(model.reasoning === undefined ? {} : { reasoning: projectReasoning(model.reasoning) }),
-    capabilities: Object.freeze({ textInput: true, streaming: true, functionTools: true }),
+    capabilities: projectCapabilities(model.inputModalities),
   })
+}
+
+function projectCapabilities(inputModalities) {
+  if (
+    !Array.isArray(inputModalities) ||
+    Object.getPrototypeOf(inputModalities) !== Array.prototype
+  ) throw new TypeError("Invalid Grok dashboard input modalities")
+  const length = inputModalities.length
+  if (
+    length === 0 ||
+    length > 2 ||
+    Reflect.ownKeys(inputModalities).length !== length + 1
+  ) throw new TypeError("Invalid Grok dashboard input modalities")
+
+  let textInput = false
+  let imageInput = false
+  for (let index = 0; index < length; index += 1) {
+    const descriptor = Object.getOwnPropertyDescriptor(inputModalities, String(index))
+    if (descriptor === undefined || !("value" in descriptor)) {
+      throw new TypeError("Invalid Grok dashboard input modalities")
+    }
+    if (descriptor.value === "text" && !textInput) textInput = true
+    else if (descriptor.value === "image" && !imageInput) imageInput = true
+    else throw new TypeError("Invalid Grok dashboard input modalities")
+  }
+  return Object.freeze({ textInput, imageInput, streaming: true, functionTools: true })
 }
 
 function projectReasoning(reasoning) {

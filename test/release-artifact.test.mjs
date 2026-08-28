@@ -6,12 +6,15 @@ import test from "node:test"
 
 const root = path.resolve(import.meta.dirname, "..")
 
-test("the exact 0.1.4 manifest exports runtime artifacts and Web loader metadata", async () => {
+test("the exact 0.1.5 manifest exports runtime artifacts and Web loader metadata", async () => {
   const attributes = await fs.readFile(path.join(root, ".gitattributes"), "utf8")
   assert.match(attributes, /^\*\.yml text eol=lf$/mu)
   const manifest = JSON.parse(await fs.readFile(path.join(root, "package.json"), "utf8"))
   assert.equal(manifest.name, "dsh-grok-provider")
-  assert.equal(manifest.version, "0.1.4")
+  assert.equal(manifest.version, "0.1.5")
+  const lockfile = JSON.parse(await fs.readFile(path.join(root, "package-lock.json"), "utf8"))
+  assert.equal(lockfile.version, manifest.version)
+  assert.equal(lockfile.packages[""].version, manifest.version)
   assert.deepEqual(manifest.repository, {
     type: "git",
     url: "git+https://github.com/yoshino-xiao7/dsh-grok-provider.git",
@@ -63,8 +66,32 @@ test("the exact 0.1.4 manifest exports runtime artifacts and Web loader metadata
   assert.doesNotMatch(releaseWorkflow, /NODE_AUTH_TOKEN|NPM_TOKEN|secrets\./u)
   assert.doesNotMatch(releaseWorkflow, /npm_dist_tag|NPM_DIST_TAG|-rc\./u)
   assert.match(releaseWorkflow, /--tag latest/u)
-  assert.match(releaseWorkflow, /test "\$is_prerelease" = false/u)
   assert.doesNotMatch(releaseWorkflow, /inputs\.dist[_-]tag/u)
+  assert.match(releaseWorkflow, /RELEASE_TAG: \$\{\{ inputs\.tag \}\}/u)
+  assert.match(releaseWorkflow, /CONTEXT_REF: \$\{\{ github\.ref \}\}/u)
+  assert.match(releaseWorkflow, /CONTEXT_REF_NAME: \$\{\{ github\.ref_name \}\}/u)
+  assert.match(releaseWorkflow, /CONTEXT_REF_TYPE: \$\{\{ github\.ref_type \}\}/u)
+  assert.match(releaseWorkflow, /CONTEXT_SHA: \$\{\{ github\.sha \}\}/u)
+  assert.match(releaseWorkflow, /test "\$CONTEXT_REF_TYPE" = tag/u)
+  assert.match(releaseWorkflow, /test "\$CONTEXT_REF" = "refs\/tags\/\$RELEASE_TAG"/u)
+  assert.match(releaseWorkflow, /test "\$CONTEXT_REF_NAME" = "\$RELEASE_TAG"/u)
+  assert.match(releaseWorkflow, /git\/ref\/tags\/\$RELEASE_TAG/u)
+  assert.match(releaseWorkflow, /test "\$peeled_type" = commit/u)
+  assert.match(releaseWorkflow, /test "\$peeled_sha" = "\$CONTEXT_SHA"/u)
+  assert.match(
+    releaseWorkflow,
+    /--json tagName,isDraft,isPrerelease,assets/u,
+  )
+  assert.match(releaseWorkflow, /test "\$\(jq -r \.tagName .*" = "\$RELEASE_TAG"/u)
+  assert.match(releaseWorkflow, /test "\$\(jq -r \.isDraft .*" = false/u)
+  assert.match(releaseWorkflow, /test "\$\(jq -r \.isPrerelease .*" = false/u)
+  assert.match(releaseWorkflow, /test "\$\(jq -r '\.assets \| length'.*" = 1/u)
+  assert.match(
+    releaseWorkflow,
+    /test "\$\(jq -r '\.assets\[0\]\.name'.*" = "\$ARTIFACT_NAME"/u,
+  )
+  assert.match(releaseWorkflow, /test "\$\{#downloaded\[@\]\}" -eq 1/u)
+  assert.match(releaseWorkflow, /^\s*node-version: 24\.19\.0$/mu)
 
   const chineseReadme = await fs.readFile(path.join(root, "README.md"), "utf8")
   const englishReadme = await fs.readFile(path.join(root, "README.en.md"), "utf8")
@@ -72,8 +99,22 @@ test("the exact 0.1.4 manifest exports runtime artifacts and Web loader metadata
   assert.match(englishReadme, /\[简体中文\]\(README\.md\)/u)
   assert.match(chineseReadme, /## 快速开始/u)
   assert.match(chineseReadme, /## 安全与隐私/u)
+  assert.match(chineseReadme, /当前源码版本为 `0\.1\.5`/u)
+  assert.match(chineseReadme, /dsh-grok-provider@0\.1\.5/u)
   assert.match(englishReadme, /## Quick start/u)
   assert.match(englishReadme, /## Security and privacy/u)
+  assert.match(englishReadme, /current source version is `0\.1\.5`/u)
+  assert.match(englishReadme, /dsh-grok-provider@0\.1\.5/u)
+  const securityPolicy = await fs.readFile(path.join(root, "SECURITY.md"), "utf8")
+  assert.match(securityPolicy, /源码版本 `0\.1\.5`/u)
+  assert.match(securityPolicy, /Version `0\.1\.5`/u)
+  const releaseNotes = await fs.readFile(
+    path.join(root, "docs/releases/v0.1.5.md"),
+    "utf8",
+  )
+  assert.equal(releaseNotes.startsWith("## 中文\n"), true)
+  assert.match(releaseNotes, /\n## English\n/u)
+  assert.doesNotMatch(releaseNotes, /^# .*0\.1\.5/mu)
   for (const filename of ["CONTRIBUTING.md", "SECURITY.md"]) {
     assert.match(chineseReadme, new RegExp(`\\(${filename.replace(".", "\\.")}\\)`, "u"))
     await fs.access(path.join(root, filename))

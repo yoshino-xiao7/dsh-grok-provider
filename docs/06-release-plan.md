@@ -2,7 +2,7 @@
 
 ## 0. 当前状态
 
-当前 npm `latest` 为 `dsh-grok-provider@0.1.3`。`0.1.4` 稳定候选位于 `yukiryou/v0.1.4`：仅精确 `grok-4.6` 开启图片，其普通 user 与一层 tool-result 红/蓝语义 Proxy 门禁及 Harness `0.1.1-rc.2` 最终 modality 复验均已通过；`grok-4.5` 因红图语义不可靠失败关闭并保持 text-only。最终源码与文档同步后的 Node 24 全量测试、生产依赖审计和 dry-run 打包检查已通过；macOS/Windows CI、最终 release commit 的唯一制品、PR 合并和仓库所有者对精确 `0.1.4` 的发布授权仍未完成。
+当前 npm `latest` 为 `dsh-grok-provider@0.1.4`；其 release commit 为 `59776af8e954aa6e14463c659a22c6c3d5798bb5`，Registry、GitHub Release 与本地验收制品逐字节一致，签名与 SLSA provenance 已回读。`0.1.5` 维护候选位于 `yukiryou/v0.1.5`，只补强发布身份绑定、账户面板能力标签和 Provider Runtime 安装事务，不新增搜索、生图、认证或 endpoint 能力。
 
 首个 `dsh-grok-provider@0.1.0` 于 2026-08-26 从 GitHub Release 中唯一的候选 tarball 发布到 npm；Registry 回读的 SHA-512、重新下载文件的 SHA-256 和 GitHub Release 产物完全一致，并生成 npm provenance attestation。后续稳定版沿用由该流程建立的不可变制品与回读原则。
 
@@ -130,7 +130,7 @@ patch 路径必须为不含 `..`、绝对路径、反斜线或 NUL 的相对 `.y
 
 ## 7. Git 与版本
 
-- `0.1.0` 历史开发分支：`yukiryou/v0.1.0`；当前版本分支：`yukiryou/v0.1.4`。
+- `0.1.0` 历史开发分支：`yukiryou/v0.1.0`；当前版本分支：`yukiryou/v0.1.5`。
 - `package.json`、CHANGELOG、release notes、Git tag 和 tarball 必须使用同一个精确候选版本。
 - 发布提交必须干净且可复现。
 - tag 使用 `v<major>.<minor>.<patch>`，只在发布提交确定后创建。
@@ -154,12 +154,13 @@ CI 使用的官方 GitHub Actions 必须固定到已核对的完整 commit SHA�
 长期发布工作流只接受严格稳定 tag `v<major>.<minor>.<patch>` 和对应 GitHub Release tarball 的 base64 SHA-512。工作流必须：
 
 1. 从 tag 派生版本和唯一产物名；不接受 prerelease、build metadata、路径字符、自由格式文件名或调用者指定 dist-tag。
-2. 只下载对应 GitHub Release 的 `dsh-grok-provider-<version>.tgz`。
-3. 在发布前核对输入 SHA-512，以及 tarball 内的 name、version 和 canonical repository。
-4. 使用 Node 24、固定 npm CLI 版本、GitHub-hosted Ubuntu runner、`environment: npm` 和 `id-token: write`。
-5. 把 tarball 作为带 `./` 前缀的本地文件路径交给 `npm publish`，避免 npm package-spec 将其解释为 GitHub shorthand。
-6. 不设置 `NODE_AUTH_TOKEN`，不读取任何 npm secret；身份完全来自 Trusted Publisher OIDC。
-7. 保留 `--access public`、`--tag latest` 和 `--provenance`，即使 Trusted Publishing 会自动生成 provenance，也明确表达发布策略。
+2. 强制 workflow 从输入 tag 的 ref 运行，并递归剥离 annotated/lightweight tag，确认最终 commit 精确等于 `github.sha`。
+3. 要求对应 GitHub Release 的 tag 精确一致且非草稿、非预发行，只允许唯一 `dsh-grok-provider-<version>.tgz` 附件；下载后再次确认本地只有该文件。
+4. 在发布前核对输入 SHA-512，以及 tarball 内的 name、version 和 canonical repository。
+5. 使用精确 Node `24.19.0`、固定 npm CLI 版本、GitHub-hosted Ubuntu runner、`environment: npm` 和 `id-token: write`。
+6. 把 tarball 作为带 `./` 前缀的本地文件路径交给 `npm publish`，避免 npm package-spec 将其解释为 GitHub shorthand。
+7. 不设置 `NODE_AUTH_TOKEN`，不读取任何 npm secret；身份完全来自 Trusted Publisher OIDC。
+8. 保留 `--access public`、`--tag latest` 和 `--provenance`，即使 Trusted Publishing 会自动生成 provenance，也明确表达发布策略。
 
 发布经过测试的同一个 tarball：
 
@@ -191,8 +192,8 @@ scoped 包首次公开发布必须保留 `--access public`。
 npm 发布不会自动成为受管可安装项。当前发现状态：
 
 - GitHub 仓库已添加 DeepSeek Harness 官方推荐的 `dsh-plugin` 与 `dsh` Topics，可被 Topic 驱动来源发现。
-- YukiRyou curated catalog 当前仍是精确 `dsh-grok-provider@0.1.0`、verification `installed`、仅 `darwin-arm64`。`0.1.4` 的协议/attachment 候选门禁不等于从 catalog 安装精确发布包，因此不得据此把条目改为 `0.1.4` 或增加平台。
-- 公共 `awesome-dsh-plugin` 的收录 PR #3415 已合并，项目已进入 `model` 分类。该列表不记录精确 npm 版本或平台验证字段，因此收录只代表发现入口，不证明 `0.1.4` 制品、安装或平台验收。
+- YukiRyou curated catalog 当前仍是精确 `dsh-grok-provider@0.1.0`、verification `installed`、仅 `darwin-arm64`。`0.1.4` 已发布及其完整性/provenance 回读不等于从 catalog 安装该精确版本，因此不得据此升级条目或增加平台。
+- 公共 `awesome-dsh-plugin` 的收录 PR #3415 已合并，项目已进入 `model` 分类。该列表不记录精确 npm 版本或平台验证字段，因此收录只代表发现入口，不证明任一后续制品的受管安装或平台验收。
 - Windows x64 仍需对 Registry 精确 `0.1.0` 完成首次 production inspector、安装、重启、浏览器登录、聊天、工具调用和重新认证；完成前保持“代码支持、真机未验证”。
 
 catalog 条目只能记录实际验证完成的精确版本和平台。当前条目记录：

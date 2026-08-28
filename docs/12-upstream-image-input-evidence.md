@@ -1,6 +1,6 @@
 # `0.1.4` 图片输入上游证据
 
-- 状态：**公开协议、`grok-4.6` CLI Chat Proxy 图片语义门禁与 Harness 最终 capability 复验均已通过；`grok-4.5` 已失败关闭，发行自动化待完成**
+- 状态：**公开协议、`grok-4.6` CLI Chat Proxy 图片语义门禁、Harness 最终 capability 复验及 `0.1.4` 发布回读均已完成；`grok-4.5` 已失败关闭**
 - 核对日期：2026-08-28（Asia/Shanghai）
 
 本文只记录脱敏、可公开的能力事实和验证边界。不得写入 token、身份字段、真实用户图片、prompt 或模型输出。
@@ -80,13 +80,15 @@ Node 24 协议测试使用内存 attachment store 和合成 jpeg/png 字节，�
 - [x] 同一目录中的 `grok-4.5` 与未知 `grok-future` 都投影为确定性 text-only 占位，不因 Responses backend 自动获得图片能力。
 - [x] 共编译 4 个请求，网络请求数为 0；临时 attachment 目录在 finally 中删除。
 
-## 6. 剩余发行门禁
+## 6. `0.1.4` 发行结果
 
-`grok-4.6` 的图片 wire、普通 user 与一层 tool-result 红蓝语义门禁已经完成，`grok-4.5` 已失败关闭；`0.1.4` 仍是未发布候选。以下事项仍未完成，不能从上述结果推导为已发布或已授权：
+`grok-4.6` 的图片 wire、普通 user 与一层 tool-result 红蓝语义门禁已经完成，`grok-4.5` 已失败关闭。以下独立发布门禁也已关闭：
 
 - [x] 按第 5 节最终模型集合完成 Harness attachment/LlmRuntime 复验。
 - [x] 最终版本与发行文档同步后的 Node 24 全量测试（119 项、117 pass、0 fail、2 项 Windows-only skip）、`npm audit --omit=dev`（0 漏洞）与 `npm run pack:check`（58 个文件）。
 - [x] 代码 PR [#8](https://github.com/yoshino-xiao7/dsh-grok-provider/pull/8) 已合并，macOS/Windows CI run [33149124946](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33149124946) 全绿。
-- [ ] 最终 release commit、唯一候选 tarball、隔离安装与制品 digest。
-- [ ] tag、GitHub Release、Trusted Publisher、Registry 回读和 provenance。
-- [ ] 仓库所有者明确授权发布精确 `dsh-grok-provider@0.1.4`。
+- [x] 最终 release commit `59776af8e954aa6e14463c659a22c6c3d5798bb5`、唯一 58 文件/130,958-byte tarball、隔离安装与制品 digest。
+- [x] 不可变 `v0.1.4` tag、GitHub Release、Trusted Publisher run `33151195684`、Registry 逐字节回读、签名和 SLSA provenance。
+- [x] 仓库所有者明确授权并完成精确 `dsh-grok-provider@0.1.4` 发布；npm `latest=0.1.4`。
+
+这些发布事实不扩大图片能力集合。维护版 `0.1.5` 继续沿用相同的 `grok-4.6` image / 其他模型 text-only policy。

@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.5 - 2026-08-28
+
+- Bind Trusted Publisher runs to the exact stable tag ref and peeled commit, require one non-draft/non-prerelease GitHub Release asset with the exact package filename, and pin the publishing runtime to Node.js `24.19.0`.
+- Project model input modalities into the account dashboard so exact `grok-4.6` visibly advertises image input while text-only models do not.
+- Make provider installation transactional: partial authentication and adapter registrations are rolled back when a later installation step fails, while successful disposal remains idempotent and best-effort.
+- Correct release-state and streaming-deadline documentation without changing authentication, endpoints, image compilation, or Responses wire behavior.
+- Keep Web/X Search, image generation, URL downloads, API-key mode, and new SSE event handling outside this maintenance release.
+
 ## 0.1.4 - 2026-08-28
 
 - Add an asynchronous Responses request compiler for bounded jpeg/png image input from the optional Harness attachment store.

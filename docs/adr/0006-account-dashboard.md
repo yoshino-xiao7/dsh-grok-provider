@@ -2,7 +2,7 @@
 
 - 状态：Accepted
 - 日期：2026-08-26
-- 适用版本：`0.1.0`
+- 适用版本：`0.1.0`；`0.1.5` 补充逐模型 input-modality 展示契约
 
 ## 背景
 
@@ -34,7 +34,7 @@ xAI 官方 Grok Build 源码公开了两条可复用的 CLI Proxy 能力：
 
 新增闭合 RPC action `dashboard`，只接受空对象。成功 DTO 仅包含：
 
-- `models[]`：`id`、`name`、可选 `description`、`contextWindow`、reasoning efforts/default；
+- `models[]`：`id`、`name`、可选 `description`、`contextWindow`、reasoning efforts/default，以及闭合的 `capabilities.{textInput,imageInput,streaming,functionTools}`；
 - `quota`：闭合状态与可选 `usedPercent`、`remainingPercent`、`periodKind`、`periodStart`、`resetsAt`；
 - `fetchedAt`。
 
@@ -53,13 +53,15 @@ xAI 官方 Grok Build 源码公开了两条可复用的 CLI Proxy 能力：
 
 ### 4. 模型能力语义
 
-模型必须来自本次动态 catalog；不维护静态模型白名单。首版展示已验证的 capability：
+模型必须来自本次动态 catalog；dashboard 不维护第二份模型白名单。展示已验证的 capability：
 
-- 文本输入；
+- 文本/图片输入，严格从同一 `LlmResolvedModelInfo.inputModalities` 投影；`0.1.5` 只有精确 `grok-4.6` 显示图片输入；
 - 上下文窗口；
 - reasoning efforts 与默认 effort；
 - Responses 流式输出；
 - function tools（Provider transport 已覆盖）。
+
+缺失、空、未知、重复或 accessor-backed `inputModalities` 使 models 分支整体失败关闭，不从模型 ID、名称或 Responses backend 在 renderer 中猜测能力。`streaming` 与 `functionTools` 来自当前 Provider 的固定接口能力，不读取任意上游字段。
 
 模型列表是能力展示，不在 `0.1.0` 增加隐藏/禁用模型设置。所有账号可见模型继续出现在 Harness 模型选择器中，避免 UI 过滤与“支持所有模型”的产品要求冲突。
 
@@ -80,5 +82,5 @@ xAI 官方 Grok Build 源码公开了两条可复用的 CLI Proxy 能力：
 - parser fixture 覆盖新 credits、完整类型化周期的 protobuf 零值恢复、不完整/未知周期、旧 monthly、字段缺失、越界百分比、超大/错误 JSON。
 - transport 测试断言固定 URL、method、redirect、headers、deadline 与响应上限。
 - RPC 测试断言闭合 payload、64 KiB 序列化边界和原始错误折叠。
-- client bundle 测试断言无 token/path/identity 字段，并渲染 dashboard 关键文案。
+- client bundle 测试断言无 token/path/identity 字段，并实际渲染 text-only 与 image-capable 两张模型卡，确保只有后者显示中英文图片输入标签。
 - macOS 使用本机已授权 Grok Build 做脱敏真值 smoke；Windows 首版发布后真机验证，发布前保持“代码支持、真机未验证”。
