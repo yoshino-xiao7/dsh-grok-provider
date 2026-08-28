@@ -2,7 +2,9 @@
 
 ## 0. 当前状态
 
-`dsh-grok-provider@0.1.0` 已于 2026-08-26 从 GitHub Release 中唯一的候选 tarball 发布到 npm。Registry 回读的 SHA-512、重新下载文件的 SHA-256 和 GitHub Release 产物完全一致，并已生成 npm provenance attestation。
+当前 npm `latest` 为 `dsh-grok-provider@0.1.3`。`0.1.4` 稳定候选位于 `yukiryou/v0.1.4`：仅精确 `grok-4.6` 开启图片，其普通 user 与一层 tool-result 红/蓝语义 Proxy 门禁及 Harness `0.1.1-rc.2` 最终 modality 复验均已通过；`grok-4.5` 因红图语义不可靠失败关闭并保持 text-only。最终源码与文档同步后的 Node 24 全量测试、生产依赖审计和 dry-run 打包检查已通过；macOS/Windows CI、最终 release commit 的唯一制品、PR 合并和仓库所有者对精确 `0.1.4` 的发布授权仍未完成。
+
+首个 `dsh-grok-provider@0.1.0` 于 2026-08-26 从 GitHub Release 中唯一的候选 tarball 发布到 npm；Registry 回读的 SHA-512、重新下载文件的 SHA-256 和 GitHub Release 产物完全一致，并生成 npm provenance attestation。后续稳定版沿用由该流程建立的不可变制品与回读原则。
 
 首次发布使用的临时 GitHub Environment secret 已删除。npm 包现已绑定以下 Trusted Publisher：
 
@@ -114,7 +116,7 @@ patch 路径必须为不含 `..`、绝对路径、反斜线或 NUL 的相对 `.y
 从干净 checkout：
 
 1. 安装锁定的开发依赖。
-2. lint、typecheck、unit、integration 和平台测试。
+2. 运行仓库实际声明的确定性构建、脚本语法、unit、integration、平台与发行制品契约测试；当前原生 ESM JavaScript 仓库不虚构独立 lint/typecheck 命令，未来新增后必须同步接入 CI。
 3. 构建 Host ESM/CJS 产物、类型声明和 lazy-CJS client。
 4. `npm pack --dry-run --json` 审查清单。
 5. 生成唯一候选 tarball并记录 SHA-512。
@@ -135,7 +137,7 @@ patch 路径必须为不含 `..`、绝对路径、反斜线或 NUL 的相对 `.y
 - 受当前全局分支命名策略约束，发布基线使用 `yukiryou/main`；不创建无前缀 `main`，也不直接在发布基线开发或发布未验收内容。
 - `0.1.0` 首发时，发布基线 `yukiryou/main`、tag `v0.1.0` 和候选 manifest 记录的 source commit 均为 `dfa39d98d12fac929669f4961b0a511bf70cfeac`。发布后的 workflow 或文档修正不会改变这一不可变 tag、候选 tarball 或其 provenance。后续版本仍须让发布基线、tag、候选 manifest 和已验证 tarball 对应同一 release commit；publish job 只发布已核对 SHA-512 的唯一候选，禁止重新构建或重新 pack。
 
-`0.1.0` 发布后，后续版本从已发布基线 `yukiryou/main` 创建 `yukiryou/v<next-version>`。普通开发、文档、测试和发布准备都停留在版本分支；只有仓库所有者明确开始该版本发布时才合并回发布基线并创建不可变 tag。
+`0.1.0` 发布后，后续版本从已发布基线 `yukiryou/main` 创建 `yukiryou/v<next-version>`。普通开发、文档、测试和发布准备都停留在版本分支；只有仓库所有者明确开始该版本发布时才合并回发布基线并创建不可变 tag。内容类型按 [能力路线图](./11-capability-roadmap.md) 绑定到指定稳定版本；插入缺陷修复版时不得混入未完成的内容切片。
 
 ### 7.1 预发行版本政策
 
@@ -186,20 +188,21 @@ scoped 包首次公开发布必须保留 `--access public`。
 
 ## 10. Marketplace
 
-npm 发布不会自动成为受管可安装项。`0.1.0` 当前发现状态：
+npm 发布不会自动成为受管可安装项。当前发现状态：
 
 - GitHub 仓库已添加 DeepSeek Harness 官方推荐的 `dsh-plugin` 与 `dsh` Topics，可被 Topic 驱动来源发现。
-- YukiRyou curated catalog 已加入精确 `dsh-grok-provider@0.1.0`，只标记完成真实验收的 `darwin-arm64`。`0.1.1` 是文档与发布流程修正版，按仓库所有者决定不重复真机；catalog schema 又只允许精确版本 `installed` 语义，因此条目保持 `0.1.0`，不把制品校验或模块加载冒充受管 Harness 真机安装。
-- 公共 `awesome-dsh-plugin` curated 目录要求仓库创建满 1 天且至少 10 个提交；提交数已满足，需在年龄门槛满足后提交外部 PR。
+- YukiRyou curated catalog 当前仍是精确 `dsh-grok-provider@0.1.0`、verification `installed`、仅 `darwin-arm64`。`0.1.4` 的协议/attachment 候选门禁不等于从 catalog 安装精确发布包，因此不得据此把条目改为 `0.1.4` 或增加平台。
+- 公共 `awesome-dsh-plugin` 的收录 PR #3415 已合并，项目已进入 `model` 分类。该列表不记录精确 npm 版本或平台验证字段，因此收录只代表发现入口，不证明 `0.1.4` 制品、安装或平台验收。
 - Windows x64 仍需对 Registry 精确 `0.1.0` 完成首次 production inspector、安装、重启、浏览器登录、聊天、工具调用和重新认证；完成前保持“代码支持、真机未验证”。
 
-catalog 条目只能记录实际验证完成的平台。当前 schema 记录：
+catalog 条目只能记录实际验证完成的精确版本和平台。当前条目记录：
 
 - UTC `testedAt`。
 - Harness `0.1.1-rc.2`。
-- `darwin-arm64` 和 `win32-x64`。
+- verification `installed`。
+- 仅 `darwin-arm64`。
 
-从 `0.1.1` 起，常规发版不再要求重复 macOS/Windows 真机 smoke。每次仍须通过两平台 CI、协议与安全测试、干净 profile 安装、确定性 tarball 和 Registry integrity/provenance 回读。涉及认证、官方 CLI、Harness subprocess seam 或平台安全策略的变更应安排定向真机复核，但默认不是发版阻断项。
+从 `0.1.1` 起，常规发版不再要求重复 macOS/Windows 真机 smoke。每次仍须通过两平台 CI、协议与安全测试、干净 profile 安装、确定性 tarball 和 Registry integrity/provenance 回读。涉及认证、官方 CLI、Harness subprocess seam、内容输入或平台安全策略的变更应安排定向真机复核；`0.1.4` 因新增图片输入，已完成精确 `grok-4.6` 的 Proxy 红蓝语义门禁和收窄后的 Harness modality 复验，但不能替代最终制品安装与双平台 CI。
 
 macOS x64 不在当前官方 Grok CLI 支持矩阵，不进入 `0.1.0` catalog 或发布承诺。npm SHA-512 作为 release evidence 保存；它不是当前 curated schema 字段，市场会从 Registry `dist.integrity` 自行验证 SHA-512。
 

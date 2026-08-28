@@ -1,6 +1,6 @@
 import { parseModelCatalogResponse } from "./model-catalog.mjs"
 import { createResponsesEventDecoder } from "./responses-codec.mjs"
-import { encodeResponsesRequest } from "./responses-request.mjs"
+import { createResponsesRequestCompiler } from "./responses-request-compiler.mjs"
 import { parseResponsesSse } from "./responses-sse.mjs"
 
 export class GrokAdapterError extends Error {
@@ -10,11 +10,16 @@ export class GrokAdapterError extends Error {
   }
 }
 
-export function createGrokAdapter({ getGeneration, mapError = (error) => error }) {
+export function createGrokAdapter({
+  getGeneration,
+  getAttachmentStore = () => undefined,
+  mapError = (error) => error,
+}) {
   if (typeof getGeneration !== "function") {
     throw new TypeError("A Grok adapter generation source is required")
   }
   if (typeof mapError !== "function") throw new TypeError("Invalid Grok adapter error mapper")
+  const requestCompiler = createResponsesRequestCompiler({ getAttachmentStore })
 
   const captureGeneration = () => {
     const generation = getGeneration()
@@ -29,17 +34,13 @@ export function createGrokAdapter({ getGeneration, mapError = (error) => error }
     return generation
   }
 
-  const resolveWithGeneration = async (generation, provider, model, signal) => {
-    try {
-      requireProvider(provider)
-      if (typeof model !== "string" || model.length === 0) throw new GrokAdapterError()
-      const entries = await discover(generation, provider, signal)
-      const match = entries.find((entry) => entry.resolvedModelInfo.id === model)
-      if (match === undefined) throw new GrokAdapterError()
-      return match.resolvedModelInfo
-    } catch (error) {
-      throw mapError(error)
-    }
+  const resolveRouteWithGeneration = async (generation, provider, model, signal) => {
+    requireProvider(provider)
+    if (typeof model !== "string" || model.length === 0) throw new GrokAdapterError()
+    const entries = await discover(generation, provider, signal)
+    const match = entries.find((entry) => entry.resolvedModelInfo.id === model)
+    if (match === undefined) throw new GrokAdapterError()
+    return match
   }
 
   return Object.freeze({
@@ -64,30 +65,43 @@ export function createGrokAdapter({ getGeneration, mapError = (error) => error }
     },
 
     async resolveModel(provider, model, signal) {
-      return resolveWithGeneration(captureGeneration(), provider, model, signal)
+      try {
+        const route = await resolveRouteWithGeneration(captureGeneration(), provider, model, signal)
+        return route.resolvedModelInfo
+      } catch (error) {
+        throw mapError(error, signal)
+      }
     },
 
     async prepareCall(provider, model, signal) {
-      const generation = captureGeneration()
-      const resolvedModel = await resolveWithGeneration(generation, provider, model, signal)
-      return Object.freeze({
-        model: resolvedModel,
-        stream(options) {
-          try {
-            validatePreparedOptions(options, resolvedModel)
-            return streamWithGeneration(generation, options, mapError)
-          } catch (error) {
-            throw mapError(error)
-          }
-        },
-      })
+      try {
+        const generation = captureGeneration()
+        const route = await resolveRouteWithGeneration(generation, provider, model, signal)
+        return Object.freeze({
+          model: route.resolvedModelInfo,
+          stream(options) {
+            let requestPlan
+            try {
+              requestPlan = requestCompiler.prepare(options)
+              validatePreparedRequestPlan(requestPlan, route.resolvedModelInfo)
+              return streamWithGeneration(generation, route, requestPlan, mapError)
+            } catch (error) {
+              throw mapError(error, requestPlan?.signal ?? readOwnDataSignal(options))
+            }
+          },
+        })
+      } catch (error) {
+        throw mapError(error, signal)
+      }
     },
 
     stream(options) {
+      let requestPlan
       try {
-        return streamWithGeneration(captureGeneration(), options, mapError)
+        requestPlan = requestCompiler.prepare(options)
+        return streamWithGeneration(captureGeneration(), undefined, requestPlan, mapError)
       } catch (error) {
-        throw mapError(error)
+        throw mapError(error, requestPlan?.signal ?? readOwnDataSignal(options))
       }
     },
   })
@@ -98,34 +112,63 @@ async function discover(generation, provider, signal) {
   return parseModelCatalogResponse(raw, { provider }).map((entry) => Object.freeze({
     backend: entry.backend,
     resolvedModelInfo: freezeModel(entry.resolvedModelInfo),
+    ...(entry.imageInput === undefined ? {} : { imageInput: entry.imageInput }),
   }))
 }
 
-async function* streamWithGeneration(generation, options, mapError) {
+async function* streamWithGeneration(generation, preparedRoute, requestPlan, mapError) {
   try {
-    requireProvider(options?.provider)
-    const request = encodeResponsesRequest(options)
+    requireProvider(requestPlan.provider)
+    const route = preparedRoute ?? await resolveRoute(generation, requestPlan)
+    const request = await requestPlan.compile(route)
     const decoder = createResponsesEventDecoder()
     for await (const event of parseResponsesSse(
-      generation.transport.streamResponses(request, { signal: options.signal }),
+      generation.transport.streamResponses(request, { signal: requestPlan.signal }),
     )) {
       for (const chunk of decoder.push(event)) yield chunk
     }
     decoder.finish()
   } catch (error) {
-    throw mapError(error)
+    throw mapError(error, requestPlan.signal)
   }
 }
 
-function validatePreparedOptions(options, resolvedModel) {
-  if (!isPlainObject(options) || options.provider !== "grok" || options.model !== resolvedModel.id) {
+async function resolveRoute(generation, options) {
+  if (typeof options?.model !== "string" || options.model.length === 0) {
     throw new GrokAdapterError()
   }
-  if (options.reasoningEffort !== undefined) {
+  const entries = await discover(generation, options.provider, options.signal)
+  const route = entries.find((entry) => entry.resolvedModelInfo.id === options.model)
+  if (route === undefined) throw new GrokAdapterError()
+  return route
+}
+
+function validatePreparedRequestPlan(requestPlan, resolvedModel) {
+  if (
+    !isPlainObject(requestPlan) ||
+    requestPlan.provider !== "grok" ||
+    requestPlan.model !== resolvedModel.id
+  ) {
+    throw new GrokAdapterError()
+  }
+  if (requestPlan.reasoningEffort !== undefined) {
     const efforts = resolvedModel.reasoning?.efforts
-    if (!Array.isArray(efforts) || !efforts.some((effort) => effort.id === options.reasoningEffort)) {
+    if (
+      !Array.isArray(efforts) ||
+      !efforts.some((effort) => effort.id === requestPlan.reasoningEffort)
+    ) {
       throw new GrokAdapterError()
     }
+  }
+}
+
+function readOwnDataSignal(options) {
+  try {
+    if (!isPlainObject(options)) return undefined
+    const descriptor = Object.getOwnPropertyDescriptor(options, "signal")
+    return descriptor !== undefined && "value" in descriptor ? descriptor.value : undefined
+  } catch {
+    return undefined
   }
 }
 

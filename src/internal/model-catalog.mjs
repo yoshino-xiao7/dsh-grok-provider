@@ -2,6 +2,17 @@ const MODEL_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/
 const MAX_CATALOG_BYTES = 256 * 1024
 const MAX_MODELS = 256
 const MAX_REASONING_EFFORTS = 16
+const IMAGE_INPUT_MODEL_IDS = new Set(["grok-4.6"])
+const IMAGE_INPUT_PROFILE = Object.freeze({
+  readPolicy: Object.freeze({
+    maxBytes: 4 * 1024 * 1024,
+    maxPixels: 16 * 1024 * 1024,
+  }),
+  maxDimension: 8192,
+  maxImages: 8,
+  maxTotalBytes: 8 * 1024 * 1024,
+  mediaTypes: Object.freeze(["image/jpeg", "image/png"]),
+})
 
 export class InvalidModelCatalogError extends Error {
   constructor() {
@@ -59,12 +70,13 @@ function parseModel(model, provider) {
     throw new InvalidModelCatalogError()
   }
 
+  const imageInput = IMAGE_INPUT_MODEL_IDS.has(model.id) ? IMAGE_INPUT_PROFILE : undefined
   const resolvedModelInfo = {
     provider,
     id: model.id,
     name: model.name,
     ...(model.description === undefined ? {} : { description: model.description }),
-    inputModalities: ["text"],
+    inputModalities: imageInput === undefined ? ["text"] : ["text", "image"],
     context: { contextWindow: model.context_window },
     ...parseReasoning(model),
   }
@@ -72,6 +84,7 @@ function parseModel(model, provider) {
   return {
     backend: model.api_backend,
     resolvedModelInfo,
+    ...(imageInput === undefined ? {} : { imageInput }),
   }
 }
 

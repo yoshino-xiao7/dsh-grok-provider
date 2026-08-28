@@ -4,7 +4,7 @@
 
 ## 支持范围
 
-当前稳定版本为 `0.1.3`。DeepSeek Harness、Node.js 与操作系统按发布线明确维护；Grok CLI 不使用完整版本字符串作为信任门禁，而是严格校验官方默认路径、命令能力、生产 OIDC 凭据契约和固定服务端协议。macOS arm64 已完成真实验收；Windows x64 有代码与 CI 覆盖。`0.1.3` 只修复有界历史调用 ID 的请求内安全映射，不改动认证、凭据或平台执行边界。项目不再发行预发行版，安全或兼容性缺陷使用新的递增稳定版本修复。
+本安全策略对应源码版本 `0.1.4`；当前已发布稳定版本以 npm Registry 的 `latest` 标签为准。DeepSeek Harness、Node.js 与操作系统按发布线明确维护；Grok CLI 不使用完整版本字符串作为信任门禁，而是严格校验官方默认路径、命令能力、生产 OIDC 凭据契约和固定服务端协议。macOS arm64 已完成真实验收；Windows x64 有代码与 CI 覆盖。`0.1.4` 只为精确 `grok-4.6` 增加有界图片输入；`grok-4.5` 与所有其他模型保持 text-only，不改动认证、凭据、CLI subprocess 或 endpoint 边界。图片只能来自 Harness attachment service 的已验证 JPEG/PNG 投影，以 `detail:"high"` 发送，并受单图字节、像素、边长、数量、总字节与最终 JSON 上限约束；URL、路径、file ID 和调用方预制 data URL 都会被拒绝。项目不再发行预发行版，安全或兼容性缺陷使用新的递增稳定版本修复。
 
 ## 私下报告漏洞
 
@@ -17,7 +17,7 @@
 - 已脱敏的请求/响应形状或错误码；
 - 建议修复方向（如有）。
 
-绝对不要发送真实 `auth.json`、access/refresh token、`user_id`、Cookie、邮箱、姓名、完整提示词、工具参数或包含这些数据的诊断包。若秘密已暴露，请先通过官方 Grok CLI 注销/重新登录并按相应服务流程撤销凭据。
+绝对不要发送真实 `auth.json`、access/refresh token、`user_id`、Cookie、邮箱、姓名、完整提示词、工具参数、原图/投影图片字节或包含这些数据的诊断包。若秘密已暴露，请先通过官方 Grok CLI 注销/重新登录并按相应服务流程撤销凭据。
 
 ## 不属于漏洞的情况
 
@@ -32,4 +32,4 @@
 
 ---
 
-English summary: GitHub Private vulnerability reporting is enabled and is the preferred reporting channel. If it is unavailable, open only a detail-free contact issue. Never publish or send real credentials, identity data, prompts, tool arguments, cookies, or unreviewed diagnostic archives. Include exact versions, platform, minimal reproduction conditions, impact, and redacted evidence.
+English summary: GitHub Private vulnerability reporting is enabled and is the preferred reporting channel. Version `0.1.4` enables bounded JPEG/PNG attachment projections with `detail:"high"` only for exact `grok-4.6`; `grok-4.5` and all other models remain text-only. It accepts no URL, path, file ID, or caller-supplied data URL and does not change authentication or endpoints. If private reporting is unavailable, open only a detail-free contact issue. Never publish or send real credentials, identity data, prompts, tool arguments, cookies, source/projected image bytes, or unreviewed diagnostic archives. Include exact versions, platform, minimal reproduction conditions, impact, and redacted evidence.

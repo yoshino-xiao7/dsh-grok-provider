@@ -4,7 +4,7 @@
 
 Use an already authenticated official Grok Build account from DeepSeek Harness, with dynamic model discovery, streaming reasoning, tool calls, and an account quota/model capability dashboard.
 
-> Unofficial community project; not affiliated with xAI or DeepSeek Harness. The current stable version is `0.1.3`. The project no longer publishes prereleases; stable defects are fixed in a new incremented stable version.
+> Unofficial community project; not affiliated with xAI or DeepSeek Harness. The current source version is `0.1.4`; the published stable version is whatever the npm Registry currently assigns to `latest`. The project no longer publishes prereleases; stable defects are fixed in a new incremented stable version.
 
 ## What it provides
 
@@ -14,6 +14,7 @@ Use an already authenticated official Grok Build account from DeepSeek Harness, 
 | Credentials | Reuses official CLI session state without creating a second token store |
 | Models | Discovers every model visible to the account at runtime; no static model allowlist |
 | Conversations | Streaming Responses text, reasoning, encrypted reasoning replay, usage, and finish reasons |
+| Images | Only exact `grok-4.6` accepts bounded JPEG/PNG images from Harness attachments; `grok-4.5` and all other models remain text-only |
 | Tools | Returns function calls to the Harness permission layer; the provider never executes tools |
 | Account dashboard | Login status, weekly/monthly quota, reset time, dynamic model capabilities and reasoning efforts |
 | Surfaces | Bilingual Web settings and a closed `/grok` TUI command set |
@@ -38,10 +39,10 @@ The official CLI opens a browser on first use. The provider supports only the of
 
 ### 2. Install the provider
 
-Install the published exact version from npm:
+After `0.1.4` is published, install that exact version from npm:
 
 ```sh
-dsh plugin --profile web add dsh-grok-provider@0.1.3
+dsh plugin --profile web add dsh-grok-provider@0.1.4
 dsh web
 ```
 
@@ -111,16 +112,16 @@ Uninstalling the provider does not remove the official Grok CLI or directly modi
 
 ## Sources and discovery
 
-- Exact npm version: [dsh-grok-provider@0.1.3](https://www.npmjs.com/package/dsh-grok-provider/v/0.1.3)
-- GitHub release and integrity values: [v0.1.3](https://github.com/yoshino-xiao7/dsh-grok-provider/releases/tag/v0.1.3)
+- npm `0.1.4` page (available after publication): [dsh-grok-provider@0.1.4](https://www.npmjs.com/package/dsh-grok-provider/v/0.1.4)
+- GitHub `0.1.4` release and integrity values (available after publication): [v0.1.4](https://github.com/yoshino-xiao7/dsh-grok-provider/releases/tag/v0.1.4)
 - GitHub community discovery: the repository carries the DeepSeek Harness-recommended `dsh-plugin` and `dsh` topics
-- YukiRyou managed source: [deepseek-yukiryou-plugin-catalog](https://github.com/yoshino-xiao7/deepseek-yukiryou-plugin-catalog), following the exact verified stable version and currently marking only verified macOS arm64
+- YukiRyou managed source: [deepseek-yukiryou-plugin-catalog](https://github.com/yoshino-xiao7/deepseek-yukiryou-plugin-catalog), still pinned to the real-device-accepted `dsh-grok-provider@0.1.0` and marking only `darwin-arm64`
 
-Directory inclusion is not an endorsement by xAI or DeepSeek Harness. The project has submitted [listing PR #3415](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin/pull/3415) to the public `awesome-dsh-plugin` curated directory; its automated gates pass, while independent maintainer review is still pending.
+Directory inclusion is not an endorsement by xAI or DeepSeek Harness. [Listing PR #3415](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin/pull/3415) has added the project to the public `awesome-dsh-plugin` `model` category. That directory is repository-level discovery and carries no exact npm-version or platform-acceptance claim.
 
 ## Compatibility and scope
 
-| Item | `0.1.3` status |
+| Item | `0.1.4` status |
 | --- | --- |
 | DeepSeek Harness | Exact support for `0.1.1-rc.2` |
 | Node.js | `>=24.19.0` |
@@ -130,7 +131,9 @@ Directory inclusion is not an endorsement by xAI or DeepSeek Harness. The projec
 | Grok CLI | No full-version lock; official path, `login --oauth` capability, and production OIDC credential contract are enforced |
 | Models | Every account catalog model whose backend has a strict codec in this release |
 
-The initial release excludes image input, Web/X Search, arbitrary downloads, API-key mode, multiple accounts, enterprise OIDC, ACP, and Headless agent wrapping. See the complete [product requirements](docs/01-product-requirements.md).
+`0.1.4` enables image input only for exact `grok-4.6`; `grok-4.5` and every other dynamically discovered model remain text-only. Images must be verified JPEG/PNG projections from the Harness attachment service. Ordinary user content and images nested one level inside a tool result are supported, with `detail:"high"` fixed to the official xAI Responses image example; URLs, filesystem paths, file IDs, and caller-supplied data URLs are rejected.
+
+Each projected image is limited to 4 MiB, 16,777,216 pixels, and 8192px per side. A request retains at most eight images and 8 MiB of projected image bytes. When a limit is exceeded, the globally oldest images are offloaded to Harness text placeholders; the final JSON remains capped at 16 MiB. Web/X Search, image generation, arbitrary downloads, API-key mode, multiple accounts, enterprise OIDC, ACP, and Headless agent wrapping remain out of scope; see the [capability roadmap](docs/11-capability-roadmap.md).
 
 ## How it works
 
@@ -147,7 +150,7 @@ dsh-grok-provider Host
               xAI Grok Build
 ```
 
-Model IDs come from the runtime catalog rather than a hardcoded list. If an account exposes a new backend that cannot be mapped safely, discovery fails closed instead of hiding the model and claiming complete support.
+Model IDs come from the runtime catalog rather than a hardcoded list. Image modality is enabled only for exact model IDs backed by separate protocol and live evidence. If an account exposes a new backend that cannot be mapped safely, discovery fails closed instead of hiding the model and claiming complete support.
 
 ## Security and privacy
 
@@ -156,7 +159,7 @@ Model IDs come from the runtime catalog rather than a hardcoded list. If an acco
 - The Host must perform a bounded read of the official `auth.json`, whose raw file may contain a refresh token. The parser does not use, cache, or persist that refresh token; it retains only validation metadata and a short-lived access-token lease.
 - The provider does not implement a refresh grant. Near expiry it may invoke one bounded official `grok models`, then reread and revalidate the official credential file.
 - Login subprocesses use fixed argv, a scrubbed environment, output limits, deadlines, cancellation, and no shell.
-- Prompts and tool results are sent to the xAI Grok Build service; the provider itself does not log them.
+- Prompts, tool results, and image projections selected for a request are sent to the xAI Grok Build service; the provider itself does not log that content, source images, or projected bytes.
 
 See the full [threat model](docs/03-security-threat-model.md). For vulnerabilities, read the [security policy](SECURITY.md) and never post tokens, `auth.json`, personal data, or full diagnostic logs in a public issue.
 
@@ -180,7 +183,7 @@ A protobuf-omitted zero is restored only with a complete typed period. In every 
 
 ### An existing conversation fails immediately after switching from another model to Grok
 
-Versions through `0.1.2` could not convert some third-party tool-call histories containing special characters, notably `|` in Ark call IDs. Update to `0.1.3`; it preserves call/result correlation while safely mapping incompatible historical IDs before sending the request to Grok.
+Versions through `0.1.2` could not convert some third-party tool-call histories containing special characters, notably `|` in Ark call IDs. Update to `0.1.3` or later; it preserves call/result correlation while safely mapping incompatible historical IDs before sending the request to Grok.
 
 ### Does Windows work?
 
@@ -202,6 +205,7 @@ Project map:
 - [`docs/04-harness-contract.md`](docs/04-harness-contract.md): Harness integration contract;
 - [`docs/05-test-plan.md`](docs/05-test-plan.md): platform, security, and release gates;
 - [`docs/09-implementation-status.md`](docs/09-implementation-status.md): implementation and acceptance status;
+- [`docs/11-capability-roadmap.md`](docs/11-capability-roadmap.md): content-type sequence from `0.1.4`;
 - [`CHANGELOG.md`](CHANGELOG.md): version history.
 
 Read the [contributing guide](CONTRIBUTING.md) before filing an issue or PR. Changes to authentication, transport, credential formats, or release boundaries must update the relevant ADR/threat model before implementation and tests.
@@ -215,10 +219,12 @@ Read the [contributing guide](CONTRIBUTING.md) before filing an issue or PR. Cha
 - [x] Publish the `0.1.1` documentation and release-process correction
 - [x] Publish the `0.1.2` Windows CLI compatibility correction
 - [x] Publish the `0.1.3` cross-provider tool-history compatibility correction
+- [x] `0.1.4`: image input only for exact `grok-4.6`; red/blue user and tool-result Proxy gates plus final Harness attachment revalidation pass, while `grok-4.5` fails closed as text-only
+- [ ] Later independent slice: opt-in, default-off Web Search / X Search
+- [ ] A subsequent slice: opt-in image generation (inline results only, committed through Harness attachments)
 - [ ] Complete independent Windows x64 acceptance and publish a later stable fix if needed
-- [ ] Evaluate additional content types and platforms only against verified Harness/xAI contracts
 
-The roadmap is not a compatibility promise; every new capability must pass the documented design and security gates.
+Slice details, gates, and permanent non-goals are in the [capability roadmap](docs/11-capability-roadmap.md). The roadmap is not a compatibility promise; each capability needs its own ADR and security gates. `prompt_cache_key` is not bundled with image input. Arbitrary URL downloads and API-key mode stay out of scope.
 
 ## License
 

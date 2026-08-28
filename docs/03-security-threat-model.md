@@ -50,7 +50,7 @@ Host AuthCoordinator
 | 恶意/损坏 auth.json | 内存耗尽、解析攻击、任意文件读取 | 路径不来自 UI；64 KiB；普通文件；拒绝 symlink/reparse；严格 schema | P0 |
 | external/企业/歧义凭据误送固定 xAI Proxy | token 泄漏或账号混淆 | 唯一候选；闭合 auth mode/issuer/scope/client/expiry 关系；schema 不符失败关闭；承认 metadata 未签名 | P0 |
 | token 被发往自定义或重定向 origin | 账号接管 | endpoint ID；固定 HTTPS origin/path；`redirect: "error"` | P0 |
-| Authorization 被继承到远端 URL | 账号接管 | `0.1.0` 无图片下载和任意 URL 请求；transport 不接受 URL | P0 |
+| Authorization 被继承到远端 URL | 账号接管 | 所有版本永久禁止任意图片 URL 下载；transport 不接受调用方 URL | P0 |
 | SSE/压缩响应无限增长 | 内存、CPU、磁盘 DoS | 字节、行、事件、总时长和 idle timeout 双重上限 | P0 |
 | 原始远端错误返回 UI | token、账号或内部信息泄漏 | 只返回插件稳定错误码和安全文案；Harness RPC correlation 留在 carrier 内部 | P0 |
 | billing 响应或 credential metadata 越界进入 renderer | 身份、订阅或凭据泄漏 | Host 严格抽取百分比、周期与模型 capability；拒绝/忽略 identity、balance、history、headers、URL 和原始响应 | P0 |
@@ -174,26 +174,19 @@ POST https://cli-chat-proxy.grok.com/v1/responses
 - token、headers、完整 URL query、prompt 和原始远端 body 都不进日志。
 - 本限制不覆盖官方 CLI 子进程的 OAuth、企业 IdP、managed-config、代理或遥测网络；这些由官方 CLI 及其有效配置负责并在隐私说明中单独披露。
 
-请求在 `JSON.stringify` 前也必须受限：消息数、单条/总 UTF-8 字节、工具数量、单个/总 schema 字节、schema 深度与 tool-result 大小均有闭合上限。响应必须验证允许的 `Content-Type`。Provider 只产生 Harness tool-call chunks，不自行执行工具或写文件；未在本次请求声明的工具名、厂商 server-tool/search/image 事件全部拒绝。
+请求必须先通过闭合结构检查，并在最终 `JSON.stringify` 后检查 UTF-8 字节；响应必须验证允许的 `Content-Type`。Provider 只产生 Harness tool-call chunks，不自行执行工具或写文件；未在本次请求声明的工具名、厂商 server-tool/search/image 事件全部拒绝。
 
-初始上限：
+当前源码上限（变更时必须同时修改测试和本文）：
 
-- auth.json：64 KiB。
-- 消息：最多 512 条；单条 2 MiB；序列化前累计 UTF-8 8 MiB。
-- 工具：最多 128 个；单个 schema 256 KiB；全部 schema 2 MiB；结构深度 64。
-- 单个 tool result：2 MiB。
-- 普通 JSON/错误 body：64 KiB。
-- SSE 单行：256 KiB。
-- SSE 单事件：1 MiB。
-- SSE event：最多 100,000；comment/heartbeat 合计最多 100,000。
-- 单次流累计协议字节：32 MiB。
-- block 与 tool call：分别最多 4,096；单个 tool arguments 1 MiB、累计 8 MiB。
-- 响应 JSON/schema 结构深度：64。
-- 首字节超时：30 秒。
-- idle timeout：120 秒。
-- 绝对时长：30 分钟。
+- `auth.json`：64 KiB。
+- model catalog 与 billing/error JSON：各 256 KiB。
+- Responses 请求：最多 10,000 条消息、128 个 function tools；每个 tool schema 的 JSON 最多 1 MiB；完整请求 JSON UTF-8 最多 16 MiB。
+- 文本或纯文本 tool-result 的单个累计段最多 8,388,608 个 JavaScript code units；function arguments 最多 2 MiB UTF-8。最终 16 MiB JSON 是独立硬门禁。
+- SSE：单事件/未切分 buffer 最多 2 MiB、解析事件最多 100,000、单次流实际读取字节最多 128 MiB。comment/heartbeat 不单独计数，但仍受流字节上限。
+- response block text 与 encrypted reasoning 各最多 8 MiB UTF-8；tool arguments 最多 2 MiB UTF-8。block 数量由事件数与总流字节间接约束，没有另行宣称 4,096 上限。
+- models deadline 30 秒、billing deadline 15 秒、Responses 请求整体 deadline 10 分钟；当前没有独立首字节或 idle deadline。
 
-同时检查声明长度和实际解压后流字节，覆盖 chunked、伪造 Content-Length、gzip/brotli 炸弹与无限事件。
+transport 对实际读取/发送字节做上限检查并拒绝重定向。当前实现没有基于声明 `Content-Length` 的独立门禁，也没有通用 schema 深度限制；不得在文档中把它们写成已实现防护。若后续风险评审要求这些边界，必须先补源码与回归测试。
 
 ## 7. RPC 与命令
 
@@ -220,14 +213,25 @@ TUI 通过 Harness 的 human-command registry 注册一个全局 `/grok`，只�
 
 ## 8. 搜索与图片
 
-`0.1.0` 不注册 Web/X Search、图片生成、图片输入或下载工具。因此：
+`0.1.0`–`0.1.3` 对 Harness 声明 text-only；Harness 会把图片历史投影为确定性文本占位。若 raw image block 仍到达旧 Adapter，则必须在 Responses POST 前拒绝。它们也不注册 Web/X Search、图片生成或下载工具。因此：
 
 - 请求体中不存在厂商侧搜索工具。
 - 不存在远端图片 URL 下载逻辑。
 - 不存在模型可控文件路径写入。
 - 不存在把 Bearer token 带到第二个 origin 的功能路径。
 
-未来新增时必须另写 ADR 和威胁模型。
+`0.1.4` 候选按 [ADR-0008](./adr/0008-image-input-request-compiler.md) 只增加图片输入：
+
+- 仅精确 `grok-4.6` route 声明 image；`grok-4.5` 与未知模型继续 text-only。
+- 只从可选 Harness attachment store 调用 `readImageRequest`，不解析 URL、路径、file ID 或调用方 data URL。
+- 只接受投影后的 jpeg/png，并复核 attachment ID、字节数、MIME 魔数、`uchar`/sRGB、宽高、像素与资源 policy。
+- 单图最多 4 MiB、图片合计保留最多 8 MiB、最多 8 张、最多 16,777,216 pixels、宽高各最多 8192；完整请求 JSON 仍最多 16 MiB。
+- 含图编译路径整个请求最多 20,000 个 content block，只支持消息中的一层 tool-result；更深结构在读取 attachment 前拒绝。纯文本路径不新增这一上限，保持 `0.1.3` 接受域。
+- 先按张数淘汰最旧图片，再读取最多 8 个投影；因此最坏情况下 attachment 层可能短暂返回最多 32 MiB 派生字节，8 MiB 是最终保留/发送预算而非峰值内存承诺。
+- 最终 JSON 超限继续逐张淘汰最旧图片；缺服务、projection unsupported、源图片位置/引用/MIME 不支持在 Responses POST 前以 `UNSUPPORTED_CONTENT` 拒绝。store 返回损坏或不自洽的投影、超过含图编译 block 预算、更深 tool-result，以及图片全部淘汰后剩余非图片请求仍不合法，都保持通用 `INVALID_RESPONSE`。
+- AbortSignal 在查询服务前检查并传给所有投影读取；编译失败时 Responses POST 调用必须为 0，但模型目录 GET 可能已发生。
+
+公开 xAI 文档、离线测试与真机验证继续作为三类独立证据。[上游证据页](./12-upstream-image-input-evidence.md)记录的固定 Proxy 门禁已对 `grok-4.6` 的普通 user 与一层 tool-result 分别发送红/蓝合成图：4 次均为 HTTP 200、`text/event-stream`、completed，规范化整段回复只含正确颜色词和可选句末标点。`grok-4.5` 的受控红图结果语义不可靠，因此即使公开模型页声明图片能力也不进入本插件图片集合。图片固定使用 `detail:"high"`。Harness `0.1.1-rc.2` attachment-local/LlmRuntime 必须复验 `grok-4.6` image、`grok-4.5`/未知模型 text-only 后才能关闭候选门禁。任意 URL 下载与把 Authorization 带到第二个 origin 在所有后续版本仍永久禁止；Web/X Search、图片生成和 `prompt_cache_key` 不属于 `0.1.4`。
 
 ## 9. 残余风险
 

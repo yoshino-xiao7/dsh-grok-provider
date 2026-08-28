@@ -36,7 +36,7 @@
 
 流程缺陷：首发 tarball 内的 README、`SECURITY.md` 和部分状态文档仍保留预发布措辞。npm 同一 name/version 不可覆盖，因此 `0.1.0` 页面中的 README 只能由后续递增版本纠正。此后“文档状态与候选版本一致”是发布前硬门禁，不再作为发布后补项。
 
-仍需跟进但不回溯阻断 `0.1.0`：Windows x64 首次 Registry 真机验收；公共 curated 目录的仓库年龄门槛满足后提交收录。
+仍需跟进但不回溯阻断 `0.1.0`：Windows x64 首次 Registry 真机验收。公共 curated 目录的后续事项已由 `awesome-dsh-plugin` PR #3415 完成并进入 `model` 分类；该目录不表达精确 npm 版本或平台验收。
 
 ## `0.1.1` 发布记录
 
@@ -87,4 +87,23 @@ English summary: every release must close documentation, security, tests, determ
 - [x] GitHub 正式 Release 使用中英双语正文且不重复页面标题，只附加上述唯一 tarball；`v0.1.3` 精确指向 release commit。
 - [x] 仓库所有者于 2026-08-27 明确授权发布精确 `dsh-grok-provider@0.1.3`。
 - [x] Trusted Publisher run `33041791394` 发布成功；npm `latest=0.1.3`，Registry 重新下载文件逐字节一致，1 个 Registry 签名与 SLSA provenance attestation 回读通过。
-- [x] 发布后补充根目录 `screenshots.json`，将三张仓库托管预览图提供给兼容市场；公共 `awesome-dsh-plugin` 收录 PR #3415 自动门禁通过，最终是否收录由其维护者独立评审。
+- [x] 发布后补充根目录 `screenshots.json`，将三张仓库托管预览图提供给兼容市场；公共 `awesome-dsh-plugin` 收录 PR #3415 自动门禁通过，随后已由维护者合并并进入 `model` 分类。该目录不记录精确 npm 版本或平台验证字段。
+
+## `0.1.4` 开发与发布门禁
+
+- [x] 使用独立分支 `yukiryou/v0.1.4`；在图片真机协议门禁关闭前未合并发布基线或制作最终制品。
+- [x] 以 ADR-0008 冻结异步 request compiler、可选 attachment seam、精确模型 route、jpeg/png data URL、oldest-first 淘汰及资源边界。
+- [x] 离线实现和聚焦测试覆盖纯文本兼容、一层 tool-result、attachment 去重、图片数量/总字节/最终 JSON 淘汰、格式与投影元数据、取消、错误分类和真实 `LlmRuntime` modality 投影。
+- [x] 固定 CLI Chat Proxy 的精确 `grok-4.6` 普通 user 图片门禁通过：红/蓝两次均为 HTTP 200、`text/event-stream`、completed，规范化整段回复只含正确颜色词与可选句末标点。
+- [x] `grok-4.6` 的 `function_call_output.output` text/image/text 门禁通过：红/蓝两次同样满足 HTTP/SSE/completed 与整段颜色语义断言。4 次请求固定 `detail:"high"`，只记录脱敏计数，不保存 token、图片、prompt、回复正文或身份数据。
+- [x] `grok-4.5` 的受控红图结果语义不可靠；最终决定仅 `grok-4.6` 声明 image，`grok-4.5` 与其他模型全部 text-only，失败关闭而不依据 HTTP 200/SSE 形状广告能力。
+- [x] 按最终模型集合复验 Harness `0.1.1-rc.2` 真实 attachment-local/LlmRuntime：内容寻址与 299-byte PNG projection、普通 user 与一层 tool-result `text/image/text` 有序 wire、仅 `grok-4.6` 保留 `input_image`、`grok-4.5`/`grok-future` text-only、共编译 4 个请求且网络请求为 0。
+- [x] 开发树 Node 24 完整测试通过：93 项、91 pass、0 fail、2 项 Windows-only skip；preflight `npm run pack:check` 与加入真机脚本后的聚焦测试通过，未跟踪的重复文档未进入 dry-run 清单。
+- [x] 最终版本与发行文档同步后重新运行 Node 24 全量测试（119 项、117 pass、0 fail、2 项 Windows-only skip）、`npm audit --omit=dev`（0 漏洞）和 `npm run pack:check`（58 个文件）。
+- [ ] 新候选的 macOS/Windows CI 全绿，并记录对应 run；既有 `0.1.3` CI 不替代本项。
+- [x] 同步 `package.json`、lockfile、制品契约测试、中英文 README 安装版本、正式 CHANGELOG 日期和 `docs/releases/v0.1.4.md`；未发布事实使用“当前源码版本/发布后可用”表述，未预写 npm 或 GitHub Release 已存在。
+- [ ] 版本分支经 PR 合并 `yukiryou/main`；不得预写 PR、run、release commit 或 tag。
+- [ ] 从最终 release commit 冻结唯一 `dsh-grok-provider-0.1.4.tgz`，记录文件数、bytes、SHA-256、base64 SHA-512，并从同一制品完成隔离安装/加载 smoke。
+- [ ] GitHub 正式 Release 使用中文在前、英文在后且不重复页面标题，只附加唯一已验收 tarball；`v0.1.4` 精确指向 release commit。
+- [ ] 仓库所有者明确授权发布精确 `dsh-grok-provider@0.1.4`；开发请求与绿色自动化均不构成发布授权。
+- [ ] Trusted Publisher 发布、npm `latest=0.1.4`、Registry 逐字节回读、签名与 SLSA provenance attestation 验证完成。

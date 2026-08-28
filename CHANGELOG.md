@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.1.4 - 2026-08-28
+
+- Add an asynchronous Responses request compiler for bounded jpeg/png image input from the optional Harness attachment store.
+- Preserve the exact `0.1.3` text request path when no image is present; compile ordered user and tool-result image content only before transport starts.
+- Advertise image input only for exact `grok-4.6`; `grok-4.5` and all other models remain text-only.
+- Enforce per-image bytes, pixels, dimensions, image count, aggregate derived bytes, a 20,000-block image-compilation budget, one-level tool-result nesting, MIME magic, cancellation, and a final 16 MiB JSON limit with deterministic oldest-first offloading.
+- Keep `prompt_cache_key`, Web/X Search, image generation, URL downloads, new SSE events, authentication, and endpoint changes out of this release.
+- Verify exact `grok-4.6` against the fixed CLI Chat Proxy with red and blue fixtures in both user-image and tool-result-image positions; all four streams returned HTTP 200 SSE completion and passed the normalized whole-response color assertion.
+- Fail closed on `grok-4.5` image input after its controlled red-fixture Proxy response proved semantically unreliable; keep `grok-4.5` and every other model text-only.
+- Fix image requests to `detail:"high"` following the official xAI Responses image example; retain real Harness `0.1.1-rc.2` attachment-local/LlmRuntime isolation as a final candidate revalidation gate.
+
 ## 0.1.3 - 2026-08-27
 
 - Fix existing Harness conversations failing immediately after switching from Ark to Grok when an earlier tool-call ID contains Ark's `|` delimiter.

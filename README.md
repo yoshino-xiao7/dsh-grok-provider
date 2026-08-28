@@ -4,7 +4,7 @@
 
 让 DeepSeek Harness 使用你已登录的官方 Grok Build 账号：动态模型发现、流式推理、工具调用，以及账号额度与模型能力面板。
 
-> 非官方社区项目，与 xAI 或 DeepSeek Harness 官方无隶属关系。当前稳定版本为 `0.1.3`。项目不再发行预发行版；正式版缺陷通过新的递增稳定版本修复。
+> 非官方社区项目，与 xAI 或 DeepSeek Harness 官方无隶属关系。当前源码版本为 `0.1.4`；npm 已发布稳定版本以 Registry 的 `latest` 标签为准。项目不再发行预发行版；正式版缺陷通过新的递增稳定版本修复。
 
 ## 它解决什么问题
 
@@ -14,6 +14,7 @@
 | 凭据 | 复用官方 CLI 的登录状态；插件不创建第二份 token 存储 |
 | 模型 | 运行时读取账号可见的全部 Grok Build 模型，不维护静态模型白名单 |
 | 对话 | Responses 流式文本、reasoning、加密 reasoning replay、usage 与 finish reason |
+| 图片 | 仅精确 `grok-4.6` 接收 Harness attachment 中有界的 JPEG/PNG 图片；`grok-4.5` 与其他模型保持 text-only |
 | 工具 | 将 function call 交回 Harness 权限层；Provider 本身不执行工具 |
 | 账户面板 | 登录状态、每周/月额度、重置时间、动态模型能力与 reasoning 档位 |
 | 界面 | Web 设置页中英文切换；TUI 提供闭合的 `/grok` 命令 |
@@ -38,10 +39,10 @@ grok models
 
 ### 2. 安装 Provider
 
-从 npm 安装已发布的精确版本：
+`0.1.4` 发布后，从 npm 安装该精确版本：
 
 ```sh
-dsh plugin --profile web add dsh-grok-provider@0.1.3
+dsh plugin --profile web add dsh-grok-provider@0.1.4
 dsh web
 ```
 
@@ -111,16 +112,16 @@ dsh web
 
 ## 项目来源与发现
 
-- npm 精确版本：[dsh-grok-provider@0.1.3](https://www.npmjs.com/package/dsh-grok-provider/v/0.1.3)
-- GitHub 发行版与校验值：[v0.1.3](https://github.com/yoshino-xiao7/dsh-grok-provider/releases/tag/v0.1.3)
+- npm `0.1.4` 页面（发布后可用）：[dsh-grok-provider@0.1.4](https://www.npmjs.com/package/dsh-grok-provider/v/0.1.4)
+- GitHub `0.1.4` 发行版与校验值（发布后可用）：[v0.1.4](https://github.com/yoshino-xiao7/dsh-grok-provider/releases/tag/v0.1.4)
 - GitHub 社区发现：仓库已添加 DeepSeek Harness 官方推荐的 `dsh-plugin` 与 `dsh` Topics
-- YukiRyou 受管来源：[deepseek-yukiryou-plugin-catalog](https://github.com/yoshino-xiao7/deepseek-yukiryou-plugin-catalog)，跟随已验证的精确稳定版本，当前只标记已验证的 macOS arm64
+- YukiRyou 受管来源：[deepseek-yukiryou-plugin-catalog](https://github.com/yoshino-xiao7/deepseek-yukiryou-plugin-catalog)，当前仍锁定已完成真机验收的 `dsh-grok-provider@0.1.0`，且只标记 `darwin-arm64`
 
-出现在目录中不代表 xAI 或 DeepSeek Harness 官方背书。项目已向公共 `awesome-dsh-plugin` curated 目录提交[收录 PR #3415](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin/pull/3415)，自动门禁已通过，仍需独立维护者评审后才能正式收录。
+出现在目录中不代表 xAI 或 DeepSeek Harness 官方背书。项目已通过[收录 PR #3415](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin/pull/3415) 进入公共 `awesome-dsh-plugin` 的 `model` 分类；该目录是仓库级发现入口，不承载精确 npm 版本或平台验收声明。
 
 ## 兼容性与范围
 
-| 项目 | `0.1.3` 状态 |
+| 项目 | `0.1.4` 状态 |
 | --- | --- |
 | DeepSeek Harness | 精确支持 `0.1.1-rc.2` |
 | Node.js | `>=24.19.0` |
@@ -130,7 +131,9 @@ dsh web
 | Grok CLI | 不锁完整版本；严格校验官方路径、`login --oauth` 能力与生产 OIDC 凭据契约 |
 | 模型 | 当前账号目录中 backend 已被严格 codec 支持的全部模型 |
 
-首版不包含图片输入、Web/X Search、任意文件下载、API Key 模式、多账号、企业 OIDC、ACP 或 Headless agent 封装。完整范围见[产品需求](docs/01-product-requirements.md)。
+`0.1.4` 只为精确的 `grok-4.6` 开启图片输入；`grok-4.5` 与其他动态发现的模型继续按 text-only 处理。图片只能来自 Harness attachment service 的已验证 JPEG/PNG 投影，支持普通用户内容和一层工具结果中的图片，并按 xAI 官方 Responses 图片示例固定使用 `detail:"high"`；不接受 URL、文件路径、file ID 或调用方预制的 data URL。
+
+每张投影图片最多 4 MiB、16,777,216 像素且任一边不超过 8192px；每次请求最多保留 8 张、投影字节合计最多 8 MiB。超限时按全局最旧优先移除图片并保留 Harness 的文本占位，最终 JSON 仍受 16 MiB 上限约束。Web/X Search、图片生成、任意文件下载、API Key 模式、多账号、企业 OIDC、ACP 与 Headless agent 封装仍不在本版本范围内；后续切片见[能力路线图](docs/11-capability-roadmap.md)。
 
 ## 工作原理
 
@@ -147,7 +150,7 @@ dsh-grok-provider Host
               xAI Grok Build
 ```
 
-模型 ID 来自运行时目录，不是硬编码列表。如果账号出现当前版本无法安全映射的新 backend，发现过程会失败关闭，而不是隐藏模型后宣称“全部支持”。
+模型 ID 来自运行时目录，不是硬编码列表；图片 modality 则只对有独立协议与真机证据的精确模型 ID 开启。如果账号出现当前版本无法安全映射的新 backend，发现过程会失败关闭，而不是隐藏模型后宣称“全部支持”。
 
 ## 安全与隐私
 
@@ -156,7 +159,7 @@ dsh-grok-provider Host
 - Host 必须有界读取官方 `auth.json`，其原始文件可能包含 refresh token；解析器不使用、不缓存、不持久化 refresh token，只保留闭合校验所需元数据与短期 access-token lease。
 - 插件不实现 refresh grant；凭据临近过期时，只能有界调用一次官方 `grok models`，再重新读取并验证官方文件。
 - 登录子进程使用固定 argv、过滤后的环境、输出上限、deadline 与取消处理，不通过 shell 启动。
-- 提示词和工具结果会发送给 xAI Grok Build 服务；插件本身不把它们写入日志。
+- 提示词、工具结果以及用户选择发送的图片投影会发往 xAI Grok Build 服务；插件本身不记录这些内容、原图或投影字节。
 
 完整边界见[威胁模型](docs/03-security-threat-model.md)。发现安全问题时，请阅读[安全策略](SECURITY.md)，不要在公开 Issue 中提交 token、`auth.json`、个人信息或完整诊断日志。
 
@@ -180,7 +183,7 @@ dsh-grok-provider Host
 
 ### 从其他模型切换到 Grok 后立即提示响应无效
 
-`0.1.2` 及更早版本不能转换部分包含特殊字符的第三方工具调用历史，典型情况是 Ark 调用 ID 中的 `|`。请更新到 `0.1.3`；新版本会保持工具调用与结果的关联，并在发送给 Grok 前安全映射不兼容的历史 ID。
+`0.1.2` 及更早版本不能转换部分包含特殊字符的第三方工具调用历史，典型情况是 Ark 调用 ID 中的 `|`。请更新到 `0.1.3` 或更高版本；新版本会保持工具调用与结果的关联，并在发送给 Grok 前安全映射不兼容的历史 ID。
 
 ### Windows 能用吗
 
@@ -202,6 +205,7 @@ npm run pack:check
 - [`docs/04-harness-contract.md`](docs/04-harness-contract.md)：Harness 集成契约；
 - [`docs/05-test-plan.md`](docs/05-test-plan.md)：平台、安全与发行门禁；
 - [`docs/09-implementation-status.md`](docs/09-implementation-status.md)：实现与验收状态；
+- [`docs/11-capability-roadmap.md`](docs/11-capability-roadmap.md)：`0.1.4` 起的内容类型路线；
 - [`CHANGELOG.md`](CHANGELOG.md)：版本变化。
 
 提交 Issue 或 PR 前请阅读[贡献指南](CONTRIBUTING.md)。认证、传输、凭据格式或发布边界的变化必须先更新对应 ADR/威胁模型，再开发和测试。
@@ -215,10 +219,12 @@ npm run pack:check
 - [x] 发布 `0.1.1` 文档与发布流程修正版
 - [x] 发布 `0.1.2` Windows CLI 兼容性修正版
 - [x] 发布 `0.1.3` 跨 Provider 工具调用历史兼容性修正版
+- [x] `0.1.4`：仅精确 `grok-4.6` 图片输入；user/tool-result 红蓝语义 Proxy 门禁与最终 Harness attachment 复验均已通过，`grok-4.5` 已按失败关闭保持 text-only
+- [ ] 后续独立切片：默认关闭、用户分别开启的 Web Search / X Search
+- [ ] 再后续独立切片：默认关闭的图片生成（只收内联结果，提交 Harness attachment）
 - [ ] 完成 Windows x64 独立真机验收并按需发布后续稳定修复版
-- [ ] 根据已验证的 Harness/xAI 协议逐项评估更多内容类型和平台
 
-路线图不是兼容性承诺；新增能力必须通过文档决策与安全门禁。
+完整切片、门禁与永久非目标见[能力路线图](docs/11-capability-roadmap.md)。路线图不是兼容性承诺；新增能力必须通过独立 ADR 与安全门禁。`prompt_cache_key` 不与图片输入捆绑；不引入任意 URL 下载或 API Key 模式。
 
 ## 许可证
 

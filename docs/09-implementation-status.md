@@ -1,10 +1,12 @@
 # 当前实现与发布状态
 
-稳定 `0.1.3` 修复 Ark 等其他 Provider 的历史工具调用 ID 含有 Grok 不接受字符时，本地请求转换立即失败的问题。该修复不改动认证、凭据、额度、模型目录、endpoint 或平台 subprocess 边界。
+稳定 `0.1.3` 修复 Ark 等其他 Provider 的历史工具调用 ID 含有 Grok 不接受字符时，本地请求转换立即失败的问题。`0.1.4` 候选在不改动认证、凭据、额度、endpoint 或平台 subprocess 边界的前提下，只为精确 `grok-4.6` 增加有界图片输入；`grok-4.5` 与所有其他模型保持 text-only。
 
-状态日期：2026-08-27
-当前发布线：`dsh-grok-provider@0.1.3`
-下一版本分支：`yukiryou/v0.1.4`
+状态日期：2026-08-28
+当前 npm 发布线：`dsh-grok-provider@0.1.3`
+当前候选：`dsh-grok-provider@0.1.4`
+版本分支：`yukiryou/v0.1.4`
+内容类型路线：已冻结于 [能力路线图](./11-capability-roadmap.md)；`0.1.4` 只做图片输入，`prompt_cache_key` 已拆出。
 
 ## 已实现
 
@@ -15,10 +17,11 @@
 - Web：Harness settings section、中文/英文、loopback-only RPC、登录状态轮询、陈旧 session 防护、取消和二次退出确认；新增参考 Harness 信息层级的账户卡、真实 billing 周期/重置时间和动态模型 capability 卡。完整类型化周期可恢复 proto3 省略的零使用率，其他缺失百分比仍显示未知；renderer 不接触 token 或 identity。
 - TUI：闭合 `/grok status|login|cancel|logout` grammar，`recordInput:false`，不输出 CLI 原文或 token。
 - 发布构建：`src`、测试和 spike 不进入 tarball；`dist`、类型、bundle patch 与发行文档由确定性脚本生成。`prepack` 强制重建 `dist`，避免直接 `npm pack`/`npm publish` 带入陈旧产物。零普通 runtime dependencies。
+- `0.1.4` 图片输入：异步 request compiler 惰性读取 Harness attachment，只为精确 `grok-4.6` 生成有序 jpeg/png data URL，并固定 `detail:"high"`；普通 user 与一层 tool-result 图片受格式、尺寸、像素、张数、总字节、content block 和最终 JSON 上限约束，`grok-4.5` 与未知模型继续 text-only。
 
 ## 已验证
 
-- Node 24 完整构建/测试通过：62 项，60 pass、0 fail、2 项 Windows-only 在 macOS 按预期跳过并由 CI matrix 承接。
+- `0.1.3` 发布基线的 Node 24 完整构建/测试通过：62 项，60 pass、0 fail、2 项 Windows-only 在 macOS 按预期跳过并由 CI matrix 承接。
 - 使用真实脱敏 Ark `toolu_ark1_…|fc_…` ID 形状的回归测试先稳定复现旧版本失败，再验证 `0.1.3` 同时生成匹配的 `function_call` 与 `function_call_output` 安全 ID。
 - `npm audit --omit=dev`：0 vulnerability。
 - 新认证接口的本地候选已安装到隔离的 Harness `0.1.1-rc.2` TUI/Web profile。真实 TUI 的缺失凭据 `unavailable`、`/grok login` 浏览器跳转、官方 CLI 登录成功和有效凭据 `ready` 均通过。真实 Web 的 client bundle 发现、Grok 设置页、登录启动/取消、Host 重启和临时 profile 卸载均通过；rc.2 scanner 所需的 `./package.json` 导出已加入回归测试。
@@ -26,6 +29,9 @@
 - macOS arm64 使用当前 clean-room 代码和本机官方 credential，动态发现 `grok-4.6`、`grok-4.5`；两个模型的首轮流、加密 reasoning 第二轮续接、usage、finish 和 fixture function call 均通过。
 - `max_output_tokens` 真机返回 `response.incomplete/max_output_tokens`，已映射为 Harness `max-tokens`。
 - macOS 隔离 Harness Web profile 已从当前 `dsh-grok-provider@0.1.0` tarball 安装并验证：设置页真实显示登录状态、`grok-4.6`/`grok-4.5` 上下文与推理档位、流式/tool capability、每周周期和重置时间；手动刷新通过。当前真实账号的 CLI Proxy JSON 省略百分比，而同周期官方移动端显示 `0% 已使用`；解析器现按完整类型化周期恢复为 `0% 已使用 / 100% 剩余`。
+- `0.1.4` 固定 CLI Chat Proxy 的 `grok-4.6` 图片门禁已完成：普通 user 与一层 tool-result 分别使用红/蓝合成图，共 4 次 `POST /v1/responses`；全部返回 HTTP 200、`text/event-stream`、正常 completed，且规范化整段回复只含正确颜色词和可选句末标点。脚本只输出脱敏计数和闭合枚举，不保存图片、prompt、模型正文、凭据或身份数据。
+- `grok-4.5` 的受控红图 Proxy 结果语义不可靠，因此从图片 capability 集合移除并保持 text-only；HTTP/SSE 形状不能替代模型实际观察图片的语义断言。
+- Harness `0.1.1-rc.2` 的真实 `attachment-local`/`LlmRuntime` 最终集合 smoke 已通过：内容寻址与 299-byte PNG projection 有效，普通 user 与一层 tool-result 的有序 `text/image/text` 均保留精确图片 wire；仅 `grok-4.6` 保留 image，`grok-4.5`/`grok-future` 均为 text-only，共编译 4 个请求且本地受控 transport 的网络请求为 0。
 
 ## `0.1.0` 发布结果
 
@@ -34,7 +40,7 @@
 - npm Trusted Publisher 已绑定 GitHub Actions `release.yml` 与 Environment `npm`，只允许 `npm publish`。
 - GitHub `NPM_TOKEN` secret 与 npm 首发 Token 已撤销；包已设置为要求 2FA 并禁止 bypass 2FA token。
 - GitHub Release 说明为中文在前、英文在后，且已移除正文重复版本标题。
-- 仓库已添加 `dsh-plugin` 与 `dsh` Topics；YukiRyou catalog 已收录精确 `0.1.0` 的 macOS arm64 验证条目。
+- 仓库已添加 `dsh-plugin` 与 `dsh` Topics；YukiRyou catalog 当前收录精确 `0.1.0`、verification `installed`、仅 `darwin-arm64`，不代表 `0.1.4` 已完成受管安装。
 
 ## 已知首发流程缺陷
 
@@ -81,4 +87,14 @@ Windows x64 真机不再是 `0.1.0` 预发布阻断项。首次发布后必须�
 - 唯一正式 tarball 为 52 个文件、103,305 bytes，SHA-256 `08b00745cbe97599818dce9f9c800ad651fdb781b76d00d34022d24b7e017029`，SRI `sha512-EkBhfoFU0PjQePqxTGvTnYE2bpTeFSN71zJGpt+PrkERJCapMpm1A4QkV98e1NmCe9DW6aa8pmkFHOifbSDvYw==`；隔离安装与 Host 加载通过。
 - GitHub Release `v0.1.3` 与 Trusted Publisher run `33041791394` 发布完成；npm `latest=0.1.3`，Registry tarball 与 Release 制品逐字节一致，签名与 SLSA provenance attestation 均已回读。
 - 三张社区市场预览图保存在 `.github/assets/plugin-preview/` 并由中英文 README 引用；npm tarball 明确排除这些展示资源。
-- 根目录 `screenshots.json` 固定三张预览图顺序；公共 `awesome-dsh-plugin` 收录 PR #3415 的 README 生成、locale parity、awesome-lint 与 build 自动门禁通过，等待独立维护者评审。
+- 根目录 `screenshots.json` 固定三张预览图顺序；公共 `awesome-dsh-plugin` 收录 PR #3415 的 README 生成、locale parity、awesome-lint 与 build 自动门禁通过，随后已由独立维护者合并并进入 `model` 分类。该列表不记录精确 npm 版本或平台验证字段。
+
+## `0.1.4` 候选准备状态
+
+- 仓库所有者已于 2026-08-28 接受按独立切片推进内容类型；`0.1.4` 只做图片输入，搜索与生图顺延且版本号可因修复版变化。
+- 任意 URL 下载与 API Key 模式保持永久非目标。
+- [ADR-0008](./adr/0008-image-input-request-compiler.md)、异步 request compiler、可选 attachment seam、精确模型 route 与离线自动化测试已完成开发。
+- 最终源码与发行文档同步后已用 Node 24 完成 119 项全量测试（117 pass、0 fail、2 项 Windows-only skip）；`npm audit --omit=dev` 为 0 漏洞，dry-run 包含 58 个文件。
+- 公开 xAI 图片协议与精确 `grok-4.6` 的 user/tool-result 红蓝语义 Proxy 门禁已经验证；`grok-4.5` 因语义不可靠失败关闭。最终 Harness attachment modality 复验见[证据页](./12-upstream-image-input-evidence.md)。
+- 本轮未引入 `prompt_cache_key`、搜索、生图、新 SSE 事件、URL 下载、认证或 endpoint 变化。
+- macOS/Windows CI、最终 release commit 的唯一 tarball、同一制品隔离安装、PR 合并和精确 `0.1.4` 发布授权仍待完成；当前不得创建最终 tag 或执行 `npm publish`。
