@@ -4,7 +4,7 @@
 
 让 DeepSeek Harness 使用你已登录的官方 Grok Build 账号：动态模型发现、流式推理、工具调用，以及账号额度与模型能力面板。
 
-> 非官方社区项目，与 xAI 或 DeepSeek Harness 官方无隶属关系。当前源码版本与 npm Registry 的 `latest` 均为 `0.1.5`。项目不再发行预发行版；正式版缺陷通过新的递增稳定版本修复。
+> 非官方社区项目，与 xAI 或 DeepSeek Harness 官方无隶属关系。当前源码版本为 `0.1.5`；npm Registry 的 `latest` 也为 `0.1.5`。项目不再发行预发行版；正式版缺陷通过新的递增稳定版本修复。
 
 ## 它解决什么问题
 
