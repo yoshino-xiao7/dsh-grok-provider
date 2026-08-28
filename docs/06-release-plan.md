@@ -2,7 +2,7 @@
 
 ## 0. 当前状态
 
-当前 npm `latest` 为 `dsh-grok-provider@0.1.4`；其 release commit 为 `59776af8e954aa6e14463c659a22c6c3d5798bb5`，Registry、GitHub Release 与本地验收制品逐字节一致，签名与 SLSA provenance 已回读。`0.1.5` 维护候选位于 `yukiryou/v0.1.5`，只补强发布身份绑定、账户面板能力标签和 Provider Runtime 安装事务，不新增搜索、生图、认证或 endpoint 能力；PR #10 及 macOS/Windows CI 已通过，当前等待最终 release commit 制品核验与精确发布授权。
+当前 npm `latest` 为 `dsh-grok-provider@0.1.5`；其 release commit 为 `4f0bcd84f96c1cd5d95dda2a01ce63ff6403b828`，不可变 tag 为 `v0.1.5`。唯一 tarball、GitHub Release asset 与 Registry 下载文件逐字节一致，Registry 签名、npm publish attestation 与 SLSA provenance 已回读；Trusted Publisher run `33162280108` 的 provenance 精确绑定上述 tag、仓库、workflow 与 commit。`0.1.5` 只补强发布身份绑定、账户面板能力标签和 Provider Runtime 安装事务，不新增搜索、生图、认证或 endpoint 能力。
 
 首个 `dsh-grok-provider@0.1.0` 于 2026-08-26 从 GitHub Release 中唯一的候选 tarball 发布到 npm；Registry 回读的 SHA-512、重新下载文件的 SHA-256 和 GitHub Release 产物完全一致，并生成 npm provenance attestation。后续稳定版沿用由该流程建立的不可变制品与回读原则。
 
@@ -192,7 +192,7 @@ scoped 包首次公开发布必须保留 `--access public`。
 npm 发布不会自动成为受管可安装项。当前发现状态：
 
 - GitHub 仓库已添加 DeepSeek Harness 官方推荐的 `dsh-plugin` 与 `dsh` Topics，可被 Topic 驱动来源发现。
-- YukiRyou curated catalog 当前仍是精确 `dsh-grok-provider@0.1.0`、verification `installed`、仅 `darwin-arm64`。`0.1.4` 已发布及其完整性/provenance 回读不等于从 catalog 安装该精确版本，因此不得据此升级条目或增加平台。
+- YukiRyou curated catalog 当前仍是精确 `dsh-grok-provider@0.1.0`、verification `installed`、仅 `darwin-arm64`。`0.1.5` 已发布及其完整性/provenance 回读不等于从 catalog 安装该精确版本，因此不得据此升级条目或增加平台。
 - 公共 `awesome-dsh-plugin` 的收录 PR #3415 已合并，项目已进入 `model` 分类。该列表不记录精确 npm 版本或平台验证字段，因此收录只代表发现入口，不证明任一后续制品的受管安装或平台验收。
 - Windows x64 仍需对 Registry 精确 `0.1.0` 完成首次 production inspector、安装、重启、浏览器登录、聊天、工具调用和重新认证；完成前保持“代码支持、真机未验证”。
 

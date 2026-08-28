@@ -117,6 +117,7 @@ English summary: every release must close documentation, security, tests, determ
 - [x] 同步 `package.json`、lockfile、CHANGELOG、中英文 README、`SECURITY.md`、状态文档和 `docs/releases/v0.1.5.md`；不把维护候选写成已发布事实。
 - [x] 本地精确 Node `24.19.0` 全量测试通过：133 项、131 pass、0 fail、2 项 Windows-only skip；`npm audit --omit=dev` 为 0 漏洞，`npm run pack:check` 为 59 个文件，`git diff --check` 通过。
 - [x] PR [#10](https://github.com/yoshino-xiao7/dsh-grok-provider/pull/10) 合并到 `yukiryou/main`，merge commit 为 `a0bb3864b474f3129050a211bf44d0bf73a9474e`；PR CI run [33160850486](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33160850486) 的 macOS 14 与 Windows 2022 job 均通过。
-- [ ] 从最终 release commit 冻结唯一候选 tarball并完成隔离安装、digest 与清单核验。
-- [ ] 仓库所有者在最终制品证据后明确授权发布精确 `dsh-grok-provider@0.1.5`。
-- [ ] GitHub Release、不可变 tag、Trusted Publisher、Registry 逐字节回读、签名与 SLSA provenance attestation 完成。
+- [x] 发布证据 PR [#11](https://github.com/yoshino-xiao7/dsh-grok-provider/pull/11) 合并后，最终 release commit 为 `4f0bcd84f96c1cd5d95dda2a01ce63ff6403b828`；其 [CI run 33161259276](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33161259276) 的 macOS 14 与 Windows 2022 job 均通过。
+- [x] 从最终 release commit `4f0bcd84f96c1cd5d95dda2a01ce63ff6403b828` 冻结唯一 `dsh-grok-provider-0.1.5.tgz` 并完成隔离安装、manifest/export、digest 与清单核验：59 个文件、135,800 bytes、SHA-256 `4b1690408703ae9818015e335845e9a4b5fe352ca4c98d34400f4bad4d8d7c14`、SRI `sha512-rVryka0x63QsjBiKnMPK09A5yArB9nmDyYWTOpxFWzs6ged7YzEua2h7CkHgGl/i7Al+Csebzg+30/+Q/8HHKg==`。
+- [x] 仓库所有者于 2026-08-28 在最终制品证据后明确授权发布精确 `dsh-grok-provider@0.1.5`。
+- [x] 不可变 `v0.1.5` tag 精确指向 release commit；GitHub Release [v0.1.5](https://github.com/yoshino-xiao7/dsh-grok-provider/releases/tag/v0.1.5) 只附加唯一已验收 tarball，Trusted Publisher run [33162280108](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33162280108) 发布完成。npm `latest=0.1.5`，Registry tarball 与本地/Release 制品逐字节一致，签名、npm publish attestation 与 SLSA provenance 验证通过。
