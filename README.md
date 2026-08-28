@@ -69,17 +69,30 @@ Web 设置页展示：
 
 ## 插件预览
 
-### 账户额度与模型能力
+点击预览图可查看原图。
 
-![Grok Build 账户额度、重置时间和动态模型能力](.github/assets/plugin-preview/account-dashboard.png)
-
-### Harness 模型选择器
-
-![在 DeepSeek Harness 模型选择器中选择 Grok 4.6 或 Grok 4.5](.github/assets/plugin-preview/model-picker.png)
-
-### Grok 对话上下文
-
-![Grok 4.6 对话的上下文统计与工具调用](.github/assets/plugin-preview/grok-context.png)
+<table>
+  <tr>
+    <td colspan="3" width="50%" valign="top" align="center">
+      <a href=".github/assets/plugin-preview/image-input.png"><img src=".github/assets/plugin-preview/image-input.png" alt="Grok 4.6 分析 Harness 对话中的图片输入" width="100%"></a><br>
+      <sub><strong>图片输入</strong> — Grok 4.6 直接分析 Harness 附件</sub>
+    </td>
+    <td colspan="3" width="50%" valign="top" align="center">
+      <a href=".github/assets/plugin-preview/model-picker.png"><img src=".github/assets/plugin-preview/model-picker.png" alt="在 DeepSeek Harness 模型选择器中选择 Grok 4.6 或 Grok 4.5" width="100%"></a><br>
+      <sub><strong>模型选择</strong> — 按当前账户能力选择 Grok 4.6 或 Grok 4.5</sub>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="4" width="66.67%" valign="top" align="center">
+      <a href=".github/assets/plugin-preview/grok-context.png"><img src=".github/assets/plugin-preview/grok-context.png" alt="Grok 4.6 对话的上下文统计与工具调用" width="100%"></a><br>
+      <sub><strong>对话上下文</strong> — 查看上下文统计与工具调用</sub>
+    </td>
+    <td colspan="2" width="33.33%" valign="top" align="center">
+      <a href=".github/assets/plugin-preview/account-dashboard.png"><img src=".github/assets/plugin-preview/account-dashboard.png" alt="Grok Build 账户额度、重置时间和动态模型能力" width="100%"></a><br>
+      <sub><strong>账户面板</strong> — 额度、重置时间与动态模型能力</sub>
+    </td>
+  </tr>
+</table>
 
 TUI 命令：
 

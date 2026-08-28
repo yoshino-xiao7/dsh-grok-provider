@@ -69,17 +69,30 @@ When protobuf-backed billing includes a complete weekly/monthly period but omits
 
 ## Plugin preview
 
-### Account quota and model capabilities
+Select a preview to view the full-size image.
 
-![Grok Build account quota, reset time, and dynamic model capabilities](.github/assets/plugin-preview/account-dashboard.png)
-
-### Harness model picker
-
-![Selecting Grok 4.6 or Grok 4.5 in the DeepSeek Harness model picker](.github/assets/plugin-preview/model-picker.png)
-
-### Grok conversation context
-
-![Context statistics and tool calls for a Grok 4.6 conversation](.github/assets/plugin-preview/grok-context.png)
+<table>
+  <tr>
+    <td colspan="3" width="50%" valign="top" align="center">
+      <a href=".github/assets/plugin-preview/image-input.png"><img src=".github/assets/plugin-preview/image-input.png" alt="Grok 4.6 analyzing an image attached to a Harness conversation" width="100%"></a><br>
+      <sub><strong>Image input</strong> — Grok 4.6 analyzes Harness attachments directly</sub>
+    </td>
+    <td colspan="3" width="50%" valign="top" align="center">
+      <a href=".github/assets/plugin-preview/model-picker.png"><img src=".github/assets/plugin-preview/model-picker.png" alt="Selecting Grok 4.6 or Grok 4.5 in the DeepSeek Harness model picker" width="100%"></a><br>
+      <sub><strong>Model selection</strong> — Choose Grok 4.6 or Grok 4.5 based on account capabilities</sub>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="4" width="66.67%" valign="top" align="center">
+      <a href=".github/assets/plugin-preview/grok-context.png"><img src=".github/assets/plugin-preview/grok-context.png" alt="Context statistics and tool calls for a Grok 4.6 conversation" width="100%"></a><br>
+      <sub><strong>Conversation context</strong> — Inspect context statistics and tool calls</sub>
+    </td>
+    <td colspan="2" width="33.33%" valign="top" align="center">
+      <a href=".github/assets/plugin-preview/account-dashboard.png"><img src=".github/assets/plugin-preview/account-dashboard.png" alt="Grok Build account quota, reset time, and dynamic model capabilities" width="100%"></a><br>
+      <sub><strong>Account dashboard</strong> — Quota, reset time, and dynamic model capabilities</sub>
+    </td>
+  </tr>
+</table>
 
 TUI commands:
 
