@@ -220,7 +220,7 @@ npm run pack:check
 - [x] 发布 `0.1.2` Windows CLI 兼容性修正版
 - [x] 发布 `0.1.3` 跨 Provider 工具调用历史兼容性修正版
 - [x] 发布 `0.1.4`：仅精确 `grok-4.6` 图片输入；user/tool-result 红蓝语义 Proxy 门禁与最终 Harness attachment 复验通过，`grok-4.5` 失败关闭为 text-only
-- [ ] 发布 `0.1.5`：发布链路、账户面板能力标签与 Provider Runtime 安装回滚维护版（开发与本地门禁已完成）
+- [ ] 发布 `0.1.5`：发布链路、账户面板能力标签与 Provider Runtime 安装回滚维护版（开发、PR 与双平台 CI 已完成）
 - [ ] 后续独立切片：默认关闭、用户分别开启的 Web Search / X Search
 - [ ] 再后续独立切片：默认关闭的图片生成（只收内联结果，提交 Harness attachment）
 - [ ] 完成 Windows x64 独立真机验收并按需发布后续稳定修复版

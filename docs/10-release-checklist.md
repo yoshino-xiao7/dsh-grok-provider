@@ -116,7 +116,7 @@ English summary: every release must close documentation, security, tests, determ
 - [x] Provider Runtime 部分安装失败时按相反顺序回滚已注册资源；成功卸载保持幂等并尽力执行全部清理。
 - [x] 同步 `package.json`、lockfile、CHANGELOG、中英文 README、`SECURITY.md`、状态文档和 `docs/releases/v0.1.5.md`；不把维护候选写成已发布事实。
 - [x] 本地精确 Node `24.19.0` 全量测试通过：133 项、131 pass、0 fail、2 项 Windows-only skip；`npm audit --omit=dev` 为 0 漏洞，`npm run pack:check` 为 59 个文件，`git diff --check` 通过。
-- [ ] macOS/Windows CI、版本分支 PR 与发布基线合并完成。
+- [x] PR [#10](https://github.com/yoshino-xiao7/dsh-grok-provider/pull/10) 合并到 `yukiryou/main`，merge commit 为 `a0bb3864b474f3129050a211bf44d0bf73a9474e`；PR CI run [33160850486](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33160850486) 的 macOS 14 与 Windows 2022 job 均通过。
 - [ ] 从最终 release commit 冻结唯一候选 tarball并完成隔离安装、digest 与清单核验。
 - [ ] 仓库所有者在最终制品证据后明确授权发布精确 `dsh-grok-provider@0.1.5`。
 - [ ] GitHub Release、不可变 tag、Trusted Publisher、Registry 逐字节回读、签名与 SLSA provenance attestation 完成。
