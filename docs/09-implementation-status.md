@@ -1,10 +1,10 @@
 # 当前实现与发布状态
 
-稳定 `0.1.4` 在不改动认证、凭据、额度、endpoint 或平台 subprocess 边界的前提下，只为精确 `grok-4.6` 增加有界图片输入；`grok-4.5` 与所有其他模型保持 text-only。`0.1.5` 是维护候选，只补强发布绑定、账户面板能力展示和 Provider Runtime 安装事务。
+稳定 `0.1.5` 已发布。它沿用 `0.1.4` 只为精确 `grok-4.6` 开启有界图片输入、让 `grok-4.5` 与所有其他模型保持 text-only 的边界，只补强发布绑定、账户面板能力展示和 Provider Runtime 安装事务。
 
 状态日期：2026-08-28
-当前 npm 发布线：`dsh-grok-provider@0.1.4`
-当前候选：`dsh-grok-provider@0.1.5`
+当前 npm 发布线：`dsh-grok-provider@0.1.5`
+当前稳定版：`dsh-grok-provider@0.1.5`
 版本分支：`yukiryou/v0.1.5`
 内容类型路线：已冻结于 [能力路线图](./11-capability-roadmap.md)；`0.1.4` 只做图片输入，`prompt_cache_key` 已拆出。
 
@@ -40,7 +40,7 @@
 - npm Trusted Publisher 已绑定 GitHub Actions `release.yml` 与 Environment `npm`，只允许 `npm publish`。
 - GitHub `NPM_TOKEN` secret 与 npm 首发 Token 已撤销；包已设置为要求 2FA 并禁止 bypass 2FA token。
 - GitHub Release 说明为中文在前、英文在后，且已移除正文重复版本标题。
-- 仓库已添加 `dsh-plugin` 与 `dsh` Topics；YukiRyou catalog 当前收录精确 `0.1.0`、verification `installed`、仅 `darwin-arm64`，不代表 `0.1.4` 已完成受管安装。
+- 仓库已添加 `dsh-plugin` 与 `dsh` Topics；YukiRyou catalog 当前收录精确 `0.1.0`、verification `installed`、仅 `darwin-arm64`，不代表 `0.1.5` 已完成受管安装。
 
 ## 已知首发流程缺陷
 
@@ -101,10 +101,12 @@ Windows x64 真机不再是 `0.1.0` 预发布阻断项。首次发布后必须�
 - 最终 release commit 为 `59776af8e954aa6e14463c659a22c6c3d5798bb5`；不可变 `v0.1.4` tag 精确指向该提交。唯一正式 tarball 为 58 个文件、130,958 bytes，SHA-256 `7a1733c1ab391150430d3f302ff5cb3d04f5153c339ecbdbfba128191d02ad3e`，npm SRI `sha512-IkEFEdBnt/EpE9y8mCAyE6i+023Z2229J6gsR2y1cNZ+md9rwpxiqb5IsDMZO84ewh65wMM/ajCQ6F4UT2bDGg==`。
 - GitHub Release [v0.1.4](https://github.com/yoshino-xiao7/dsh-grok-provider/releases/tag/v0.1.4) 与 Trusted Publisher run [33151195684](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33151195684) 完成；npm `latest=0.1.4`，Registry tarball、Release asset 与本地制品逐字节一致，Registry 签名与 SLSA provenance attestation 验证通过。
 
-## `0.1.5` 开发状态
+## `0.1.5` 发布状态
 
 - 从上述精确 `0.1.4` release commit 创建独立分支 `yukiryou/v0.1.5`，不直接修改发布基线。
 - 维护范围冻结为：发布 workflow 的 tag/ref/commit 与唯一 Release asset 绑定、Node `24.19.0` 固定；账户面板从模型 `inputModalities` 展示图片能力；Provider Runtime 部分安装失败时逆序回滚。
 - 不改变认证、凭据、CLI subprocess、endpoint、Responses wire、图片编译资源策略或平台支持矩阵；Web/X Search 与图片生成继续顺延。
-- `package.json`、lockfile、CHANGELOG、中英文 README、安全策略和双语 Release Notes 已进入 `0.1.5` 候选状态；精确 Node `24.19.0` 全量测试通过（133 项、131 pass、0 fail、2 项 Windows-only skip），生产依赖审计为 0 漏洞，dry-run 打包为 59 个文件。
-- 代码 PR [#10](https://github.com/yoshino-xiao7/dsh-grok-provider/pull/10) 已合并，merge commit 为 `a0bb3864b474f3129050a211bf44d0bf73a9474e`；PR CI run [33160850486](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33160850486) 的 macOS 14 与 Windows 2022 job 均通过。唯一最终制品与精确发布授权仍按发布检查表执行。
+- `package.json`、lockfile、CHANGELOG、中英文 README、安全策略和双语 Release Notes 已冻结为 `0.1.5`；精确 Node `24.19.0` 全量测试通过（133 项、131 pass、0 fail、2 项 Windows-only skip），生产依赖审计为 0 漏洞，dry-run 打包为 59 个文件。
+- 代码 PR [#10](https://github.com/yoshino-xiao7/dsh-grok-provider/pull/10) 与发布证据 PR [#11](https://github.com/yoshino-xiao7/dsh-grok-provider/pull/11) 已合并；最终 release commit 为 `4f0bcd84f96c1cd5d95dda2a01ce63ff6403b828`，其 [CI run 33161259276](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33161259276) 的 macOS 14 与 Windows 2022 job 均通过。
+- 从该 commit 冻结的唯一 `dsh-grok-provider-0.1.5.tgz` 为 59 个文件、135,800 bytes，SHA-256 `4b1690408703ae9818015e335845e9a4b5fe352ca4c98d34400f4bad4d8d7c14`，npm SRI `sha512-rVryka0x63QsjBiKnMPK09A5yArB9nmDyYWTOpxFWzs6ged7YzEua2h7CkHgGl/i7Al+Csebzg+30/+Q/8HHKg==`；同一制品的隔离安装、manifest、Host 与 client export 加载通过。
+- 不可变 `v0.1.5` tag 精确指向 release commit；GitHub Release [v0.1.5](https://github.com/yoshino-xiao7/dsh-grok-provider/releases/tag/v0.1.5) 与 Trusted Publisher run [33162280108](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33162280108) 完成。npm `latest=0.1.5`，Registry tarball、Release asset 与本地制品逐字节一致，Registry 签名、npm publish attestation 与 SLSA provenance 验证通过。

@@ -4,7 +4,7 @@
 
 让 DeepSeek Harness 使用你已登录的官方 Grok Build 账号：动态模型发现、流式推理、工具调用，以及账号额度与模型能力面板。
 
-> 非官方社区项目，与 xAI 或 DeepSeek Harness 官方无隶属关系。当前源码版本为 `0.1.5`；npm 已发布稳定版本以 Registry 的 `latest` 标签为准。项目不再发行预发行版；正式版缺陷通过新的递增稳定版本修复。
+> 非官方社区项目，与 xAI 或 DeepSeek Harness 官方无隶属关系。当前源码版本为 `0.1.5`；npm Registry 的 `latest` 也为 `0.1.5`。项目不再发行预发行版；正式版缺陷通过新的递增稳定版本修复。
 
 ## 它解决什么问题
 
@@ -39,7 +39,7 @@ grok models
 
 ### 2. 安装 Provider
 
-`0.1.5` 发布后，从 npm 安装该精确版本：
+`0.1.5` 已发布；从 npm 安装该精确版本：
 
 ```sh
 dsh plugin --profile web add dsh-grok-provider@0.1.5
@@ -112,8 +112,8 @@ dsh web
 
 ## 项目来源与发现
 
-- npm `0.1.5` 页面（发布后可用）：[dsh-grok-provider@0.1.5](https://www.npmjs.com/package/dsh-grok-provider/v/0.1.5)
-- GitHub `0.1.5` 发行版与校验值（发布后可用）：[v0.1.5](https://github.com/yoshino-xiao7/dsh-grok-provider/releases/tag/v0.1.5)
+- npm `0.1.5` 页面：[dsh-grok-provider@0.1.5](https://www.npmjs.com/package/dsh-grok-provider/v/0.1.5)
+- GitHub `0.1.5` 发行版与校验值：[v0.1.5](https://github.com/yoshino-xiao7/dsh-grok-provider/releases/tag/v0.1.5)
 - GitHub 社区发现：仓库已添加 DeepSeek Harness 官方推荐的 `dsh-plugin` 与 `dsh` Topics
 - YukiRyou 受管来源：[deepseek-yukiryou-plugin-catalog](https://github.com/yoshino-xiao7/deepseek-yukiryou-plugin-catalog)，当前仍锁定已完成真机验收的 `dsh-grok-provider@0.1.0`，且只标记 `darwin-arm64`
 
@@ -126,7 +126,7 @@ dsh web
 | DeepSeek Harness | 精确支持 `0.1.1-rc.2` |
 | Node.js | `>=24.19.0` |
 | macOS arm64 | 已完成真实网络与隔离 Harness 验收 |
-| Windows x64 | 代码与 Windows CI 支持；当前 `0.1.5` 候选未新增独立真机验收 |
+| Windows x64 | 代码与 Windows CI 支持；`0.1.5` 未新增独立真机验收 |
 | macOS x64 / Linux | 不支持 |
 | Grok CLI | 不锁完整版本；严格校验官方路径、`login --oauth` 能力与生产 OIDC 凭据契约 |
 | 模型 | 当前账号目录中 backend 已被严格 codec 支持的全部模型 |
@@ -220,7 +220,7 @@ npm run pack:check
 - [x] 发布 `0.1.2` Windows CLI 兼容性修正版
 - [x] 发布 `0.1.3` 跨 Provider 工具调用历史兼容性修正版
 - [x] 发布 `0.1.4`：仅精确 `grok-4.6` 图片输入；user/tool-result 红蓝语义 Proxy 门禁与最终 Harness attachment 复验通过，`grok-4.5` 失败关闭为 text-only
-- [ ] 发布 `0.1.5`：发布链路、账户面板能力标签与 Provider Runtime 安装回滚维护版（开发、PR 与双平台 CI 已完成）
+- [x] 发布 `0.1.5`：发布链路、账户面板能力标签与 Provider Runtime 安装回滚维护版；唯一制品、双平台 CI、签名与 SLSA provenance 均已验证
 - [ ] 后续独立切片：默认关闭、用户分别开启的 Web Search / X Search
 - [ ] 再后续独立切片：默认关闭的图片生成（只收内联结果，提交 Harness attachment）
 - [ ] 完成 Windows x64 独立真机验收并按需发布后续稳定修复版

@@ -1,8 +1,8 @@
 # 能力路线图
 
-- 状态：**`0.1.4` 图片输入切片已发布；`0.1.5` 维护候选已完成 PR 与双平台 CI，待最终制品与发布授权（2026-08-28）**
-- 当前 npm 稳定版：`0.1.4`
-- 当前候选：`0.1.5`
+- 状态：**`0.1.4` 图片输入切片与 `0.1.5` 维护版均已发布并完成制品、签名与 SLSA provenance 回读（2026-08-28）**
+- 当前 npm 稳定版：`0.1.5`
+- 最近发布：`0.1.5`
 - 当前版本分支：`yukiryou/v0.1.5`
 
 本文是 `0.1.3` 之后内容类型迭代的单一事实来源。`0.1.0`–`0.1.3` 的历史范围仍以 [ADR-0002](./adr/0002-v0.1-scope.md) 和[产品需求](./01-product-requirements.md)为准。
@@ -98,9 +98,19 @@ const request = await requestCompiler.compile(options, preparedRoute)
 - [x] 最终 release commit `59776af8e954aa6e14463c659a22c6c3d5798bb5` 的唯一 tarball、隔离安装、digest 与精确发布授权。
 - [x] GitHub Release `v0.1.4` 与 Trusted Publisher run `33151195684` 发布完成；npm `latest=0.1.4`，Registry、Release 与本地制品逐字节一致，签名和 SLSA provenance 均已回读。
 
-`grok-4.6` Proxy 语义门禁、Harness 最终 modality 复验、本地自动化、双平台 PR/CI、唯一制品与发布回读均已关闭，`grok-4.5` 保持失败关闭。`0.1.5` 仅维护发布供应链、账户面板能力投影与 Provider Runtime 安装事务，不提前实现下一内容切片。
+`grok-4.6` Proxy 语义门禁、Harness 最终 modality 复验、本地自动化、双平台 PR/CI、唯一制品与发布回读均已关闭，`grok-4.5` 保持失败关闭。
 
-## 4. 后续：默认关闭的 Web/X Search
+## 4. `0.1.5`：发布链路、能力展示与安装事务维护
+
+- [x] 发布 workflow 强绑定精确稳定 tag ref、剥离后的 commit、唯一正式 Release asset 与候选 SHA-512，并固定 Node `24.19.0`。
+- [x] 账户面板从严格模型目录投影 text/image capability；Provider Runtime 安装失败时逆序回滚，正常卸载保持幂等并尽力执行全部清理。
+- [x] 代码 PR #10、发布证据 PR #11 与最终 release commit `4f0bcd84f96c1cd5d95dda2a01ce63ff6403b828` 的双平台 CI 全绿。
+- [x] 唯一 59 文件、135,800-byte tarball 完成隔离安装与摘要核验；`v0.1.5`、GitHub Release 与 Trusted Publisher run `33162280108` 发布完成。
+- [x] npm `latest=0.1.5`；Registry、Release 与本地制品逐字节一致，Registry 签名、npm publish attestation 与 SLSA provenance 精确绑定 release commit。
+
+`0.1.5` 不新增模型、搜索或生图能力。下一内容切片必须重新完成独立 ADR、安全边界和发布门禁。
+
+## 5. 后续：默认关闭的 Web/X Search
 
 - 两个独立开关，默认关闭；关闭时请求体完全不存在对应 server tool。
 - 搜索词与提示词会交给 xAI 检索并可能产生额外用量；UI 必须披露。
@@ -108,13 +118,13 @@ const request = await requestCompiler.compile(options, preparedRoute)
 - citation 只作为文本保留；Provider 不请求链接或图片 URL。
 - server-tool 事件不得伪装成 Harness `tool-call`。
 
-## 5. 后续：默认关闭的图片生成
+## 6. 后续：默认关闭的图片生成
 
 - 只接受已验证的内联 base64 结果并有界提交 Harness attachment。
 - 不下载 URL，不写 workspace，不把 Authorization/Cookie/Referer 发送到第二 origin。
 - 当前 SSE 单事件上限与生成图 base64 大小、assistant replay 形状必须先另行解决；`0.1.4` 不提前放行任何实现。
 
-## 6. 永久非目标
+## 7. 永久非目标
 
 - xAI API Key 模式，或订阅路径失败后静默 fallback 到 API Key。
 - 任意 URL 下载、模型可控路径读取/写入、把 Bearer 带到第二 origin。
@@ -122,4 +132,4 @@ const request = await requestCompiler.compile(options, preparedRoute)
 - ACP、`grok -p` Headless、Linux / macOS x64 发布承诺。
 - 厂商 `code_execution`；Harness 已有本地工具权限层。
 
-English summary: `0.1.4` is published with image input only for exact `grok-4.6`. Red/blue user and one-level tool-result Proxy checks passed the normalized whole-response color assertion with `detail:"high"`; `grok-4.5` and all other models remain text-only. The exact release artifact, Registry bytes, signatures, and SLSA provenance were verified. `0.1.5` is a maintenance candidate for release-chain binding, dashboard capability projection, and transactional Provider Runtime installation; it does not add search or image generation.
+English summary: `0.1.4` is published with image input only for exact `grok-4.6`. Red/blue user and one-level tool-result Proxy checks passed the normalized whole-response color assertion with `detail:"high"`; `grok-4.5` and all other models remain text-only. `0.1.5` is also published: its exact tag, release commit, unique artifact, Registry bytes, signatures, npm publish attestation, and SLSA provenance were verified. It maintains release-chain binding, dashboard capability projection, and transactional Provider Runtime installation without adding search or image generation.
