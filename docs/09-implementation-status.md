@@ -1,23 +1,24 @@
 # 当前实现与发布状态
 
-稳定 `0.1.5` 已发布。它沿用 `0.1.4` 只为精确 `grok-4.6` 开启有界图片输入、让 `grok-4.5` 与所有其他模型保持 text-only 的边界，只补强发布绑定、账户面板能力展示和 Provider Runtime 安装事务。
+稳定 `0.1.5` 已发布；`0.1.6` 源码候选已冻结为图片历史兼容与 Windows 官方 CLI 登录 deadline 修复，不新增模型、搜索、生成或 endpoint 能力。
 
 状态日期：2026-08-28
 当前 npm 发布线：`dsh-grok-provider@0.1.5`
-当前稳定版：`dsh-grok-provider@0.1.5`
-版本分支：`yukiryou/v0.1.5`
-内容类型路线：已冻结于 [能力路线图](./11-capability-roadmap.md)；`0.1.4` 只做图片输入，`prompt_cache_key` 已拆出。
+当前源码候选：`dsh-grok-provider@0.1.6`
+版本分支：`yukiryou/v0.1.6`
+内容类型路线：已冻结于 [能力路线图](./11-capability-roadmap.md)；`0.1.6` 为维护版，Web/X Search 顺延到 `0.1.7`。
 
 ## 已实现
 
 - 原创 Host provider、固定 Grok Build transport、动态账号模型目录和严格 Responses SSE codec。
 - 文本、reasoning、usage、`stop|tool-calls|max-tokens`、函数调用/结果、多轮历史和加密 reasoning replay；不兼容 Grok 字符集但有界的第三方历史调用 ID 会确定性映射，并保持调用/结果关联。
-- 官方 CLI 单路径：固定默认路径、版本仅作有界诊断、登录能力探测、受控 cwd/环境、固定 argv、无 shell spawn、10 秒准备期限、5 分钟登录期限、2 分钟退出期限、整棵进程树取消与异步卸载等待；`grok login --oauth` 负责打开浏览器和持久化 token，CLI 退出 0 后插件再次校验生产 OIDC credential schema。
+- 官方 CLI 单路径：固定默认路径、版本仅作有界诊断、登录能力探测、受控 cwd/环境、固定 argv、无 shell spawn、各准备阶段独立 10 秒期限、5 分钟登录期限、2 分钟退出期限、整棵进程树取消与异步卸载等待；`grok login --oauth` 负责打开浏览器和持久化 token，CLI 退出 0 后插件再次校验生产 OIDC credential schema。
 - 包中不存在独立 OAuth client identity、device flow、插件实现的 refresh/revoke、Harness credential grant 或模式选择接口；过期 access token 只通过 single-flight、30 秒有界的官方 CLI `models` 命令续期，插件不提取 refresh token、不执行 refresh grant、不写凭据文件。ADR-0003 已由 ADR-0005 取代。
 - Web：Harness settings section、中文/英文、loopback-only RPC、登录状态轮询、陈旧 session 防护、取消和二次退出确认；新增参考 Harness 信息层级的账户卡、真实 billing 周期/重置时间和动态模型 capability 卡。完整类型化周期可恢复 proto3 省略的零使用率，其他缺失百分比仍显示未知；renderer 不接触 token 或 identity。
 - TUI：闭合 `/grok status|login|cancel|logout` grammar，`recordInput:false`，不输出 CLI 原文或 token。
 - 发布构建：`src`、测试和 spike 不进入 tarball；`dist`、类型、bundle patch 与发行文档由确定性脚本生成。`prepack` 强制重建 `dist`，避免直接 `npm pack`/`npm publish` 带入陈旧产物。零普通 runtime dependencies。
 - `0.1.4` 图片输入：异步 request compiler 惰性读取 Harness attachment，只为精确 `grok-4.6` 生成有序 jpeg/png data URL，并固定 `detail:"high"`；普通 user 与一层 tool-result 图片受格式、尺寸、像素、张数、总字节、content block 和最终 JSON 上限约束，`grok-4.5` 与未知模型继续 text-only。
+- `0.1.6` 历史兼容：普通 user/system 历史中的私有 reasoning 被省略并保留相邻可见 text/image；只有有效的同 Provider assistant 历史可以进入加密 reasoning replay，一层 tool-result 仍只接受公开 text/image。
 
 ## 已验证
 
@@ -110,3 +111,14 @@ Windows x64 真机不再是 `0.1.0` 预发布阻断项。首次发布后必须�
 - 代码 PR [#10](https://github.com/yoshino-xiao7/dsh-grok-provider/pull/10) 与发布证据 PR [#11](https://github.com/yoshino-xiao7/dsh-grok-provider/pull/11) 已合并；最终 release commit 为 `4f0bcd84f96c1cd5d95dda2a01ce63ff6403b828`，其 [CI run 33161259276](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33161259276) 的 macOS 14 与 Windows 2022 job 均通过。
 - 从该 commit 冻结的唯一 `dsh-grok-provider-0.1.5.tgz` 为 59 个文件、135,800 bytes，SHA-256 `4b1690408703ae9818015e335845e9a4b5fe352ca4c98d34400f4bad4d8d7c14`，npm SRI `sha512-rVryka0x63QsjBiKnMPK09A5yArB9nmDyYWTOpxFWzs6ged7YzEua2h7CkHgGl/i7Al+Csebzg+30/+Q/8HHKg==`；同一制品的隔离安装、manifest、Host 与 client export 加载通过。
 - 不可变 `v0.1.5` tag 精确指向 release commit；GitHub Release [v0.1.5](https://github.com/yoshino-xiao7/dsh-grok-provider/releases/tag/v0.1.5) 与 Trusted Publisher run [33162280108](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33162280108) 完成。npm `latest=0.1.5`，Registry tarball、Release asset 与本地制品逐字节一致，Registry 签名、npm publish attestation 与 SLSA provenance 验证通过。
+
+## `0.1.6` 候选状态
+
+- 已从 `origin/yukiryou/main@9dbd655e01188892db650dcbfb1b9c6d7a67099c` 创建 `yukiryou/v0.1.6`，manifest、lockfile、CHANGELOG、中英文 README、安全策略与双语 Release Notes 已同步为 `0.1.6` 候选事实；npm `latest` 在正式回读前仍为 `0.1.5`。
+- 未完成的 Web/X Search 方案已从候选制品移出并保存在本地 `yukiryou/v0.1.7-search-planning@71cab9c`；`0.1.6` runtime、types、配置和响应 decoder 均不启用 Search。
+- 已修复 Harness `subagent-settled` 等普通 user/system 上下文携带私有 reasoning 时，后续图片请求在 POST 前被误判为 `INVALID_RESPONSE` 的缺陷。回归覆盖 `text/reasoning/text + image`、同消息 `text/reasoning/image/reasoning/text`、assistant replay 隔离和 tool-result 错误分类。
+- 已修复 Windows 浏览器登录在启动官方 CLI 前立即失败的累计预算缺陷：executable 解析、只读文件验证、`--version`、`login --help` 与最终动作分别拥有并释放 deadline；固定 executable/argv、输出上限、无 shell、最小环境和 caller abort 边界不变。
+- Windows slow-fake 让多个准备阶段分别低于 100ms、累计超过旧预算后仍到达 `login --oauth`；只读 verifier 在 spawn 前超时失败关闭。新增生命周期回归证明 direct `done` 与 tree wait 都有界，tree wait 期间 caller abort 返回 cancelled，cleanup `false`/异常经 driver/controller 保留并隔离当前 capability，subprocess driver replacement 后才恢复。登录 starting、confirmed logout 和 credential refresh 均预先登记为 controller-owned operation；并发、shutdown、旧确认、replacement 前后 stale success/cleanup failure 均按 registration token 失败关闭，不会漏等旧树或污染新 driver。
+- 仓库所有者于 2026-08-28 明确决定先发布 Registry 精确 `0.1.6`，再在 Windows x64 验证外部浏览器弹出，并自行复验图片。发布前只声明代码、聚焦测试与 Windows CI 覆盖；若真机验证失败，使用新的递增稳定版修复。
+- 精确 Node `24.19.0` 本地全量测试已通过：161 项、159 pass、0 fail、2 项 Windows-only skip；`npm audit --omit=dev` 为 0 漏洞，最终 dry-run pack 为 60 个文件，`git diff --check` 与秘密模式扫描通过。Search 规划文件和用户未跟踪的重复 checklist 均不在 pack 清单。
+- 正式发布仍须完成受保护 PR 的 macOS/Windows CI、最终 release commit、唯一 tarball、隔离安装、digest/SRI、精确制品授权、Trusted Publisher 与 Registry 回读。

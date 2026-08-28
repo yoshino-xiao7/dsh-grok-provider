@@ -155,6 +155,60 @@ test("the complete text wire remains byte-identical to the 0.1.3 encoder", () =>
   assert.equal(JSON.stringify(request), String.raw`{"model":"grok-4.6","input":[{"role":"user","content":"Hi"},{"type":"reasoning","id":"rs_1","encrypted_content":"sealed","summary":[{"type":"summary_text","text":"Brief."}]},{"role":"assistant","content":"Calling."},{"type":"function_call","call_id":"call_1","name":"lookup","arguments":"{\"q\":\"x\"}"},{"type":"function_call_output","call_id":"call_1","output":"Done"}],"instructions":"Be concise.","tools":[{"type":"function","name":"lookup","description":"Look up","parameters":{"type":"object","properties":{"q":{"type":"string"}},"required":["q"]}}],"reasoning":{"effort":"high"},"temperature":0.2,"max_output_tokens":512,"include":["reasoning.encrypted_content"],"stream":true,"store":false}`)
 })
 
+test("text-only user and system reasoning stays private while visible text is preserved", () => {
+  const request = encodeResponsesRequest({
+    provider: "grok",
+    model: "grok-4.6",
+    messages: [
+      {
+        id: "user-reasoning",
+        role: "user",
+        source: { kind: "user" },
+        content: [
+          { type: "text", text: "User " },
+          { type: "reasoning", text: "Private user reasoning." },
+          { type: "text", text: "visible." },
+        ],
+      },
+      {
+        id: "system-reasoning",
+        role: "system",
+        content: [
+          { type: "text", text: "System " },
+          { type: "reasoning", text: "Private system reasoning." },
+          { type: "text", text: "visible." },
+        ],
+      },
+    ],
+  })
+
+  assert.deepEqual(request.input, [
+    { role: "user", content: "User visible." },
+    { role: "system", content: "System visible." },
+  ])
+})
+
+test("omitted reasoning still obeys the closed text schema", () => {
+  const invalidValues = [undefined, null, 42, "x".repeat(8 * 1024 * 1024 + 1)]
+  for (const role of ["user", "system"]) {
+    for (const text of invalidValues) {
+      assert.throws(() => encodeResponsesRequest({
+        provider: "grok",
+        model: "grok-4.6",
+        messages: [{
+          id: `${role}-invalid-reasoning`,
+          role,
+          source: role === "user" ? { kind: "user" } : undefined,
+          content: [
+            { type: "text", text: "Visible." },
+            { type: "reasoning", text },
+          ],
+        }],
+      }), { name: "UnsupportedResponsesRequestError" })
+    }
+  }
+})
+
 test("foreign tool call IDs are mapped consistently when Grok cannot accept their characters", () => {
   const arkCallId = "toolu_ark1_fixture|fc_fixture"
   const request = encodeResponsesRequest({

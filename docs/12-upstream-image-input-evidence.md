@@ -91,4 +91,4 @@ Node 24 协议测试使用内存 attachment store 和合成 jpeg/png 字节，�
 - [x] 不可变 `v0.1.4` tag、GitHub Release、Trusted Publisher run `33151195684`、Registry 逐字节回读、签名和 SLSA provenance。
 - [x] 仓库所有者明确授权并完成精确 `dsh-grok-provider@0.1.4` 发布；npm `latest=0.1.4`。
 
-这些发布事实不扩大图片能力集合。维护版 `0.1.5` 继续沿用相同的 `grok-4.6` image / 其他模型 text-only policy。
+这些发布事实不扩大图片能力集合。维护版 `0.1.5` 继续沿用相同的 `grok-4.6` image / 其他模型 text-only policy；`0.1.6` 只省略普通 user/system 历史中的私有 reasoning 并保留相邻可见 text/image，不改变图片模型集合、投影来源、资源上限或 Proxy wire。

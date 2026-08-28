@@ -2,7 +2,7 @@
 
 ## 0. 当前状态
 
-当前 npm `latest` 为 `dsh-grok-provider@0.1.5`；其 release commit 为 `4f0bcd84f96c1cd5d95dda2a01ce63ff6403b828`，不可变 tag 为 `v0.1.5`。唯一 tarball、GitHub Release asset 与 Registry 下载文件逐字节一致，Registry 签名、npm publish attestation 与 SLSA provenance 已回读；Trusted Publisher run `33162280108` 的 provenance 精确绑定上述 tag、仓库、workflow 与 commit。`0.1.5` 只补强发布身份绑定、账户面板能力标签和 Provider Runtime 安装事务，不新增搜索、生图、认证或 endpoint 能力。
+当前 npm `latest` 为 `dsh-grok-provider@0.1.5`；其 release commit 为 `4f0bcd84f96c1cd5d95dda2a01ce63ff6403b828`，不可变 tag 为 `v0.1.5`。唯一 tarball、GitHub Release asset 与 Registry 下载文件逐字节一致，Registry 签名、npm publish attestation 与 SLSA provenance 已回读；Trusted Publisher run `33162280108` 的 provenance 精确绑定上述 tag、仓库、workflow 与 commit。`0.1.6` 当前在 `yukiryou/v0.1.6` 冻结为图片历史兼容与 Windows 官方 CLI 分阶段 deadline 维护版；正式回读完成前不得把 npm `latest` 写成 `0.1.6`。
 
 首个 `dsh-grok-provider@0.1.0` 于 2026-08-26 从 GitHub Release 中唯一的候选 tarball 发布到 npm；Registry 回读的 SHA-512、重新下载文件的 SHA-256 和 GitHub Release 产物完全一致，并生成 npm provenance attestation。后续稳定版沿用由该流程建立的不可变制品与回读原则。
 
@@ -130,7 +130,7 @@ patch 路径必须为不含 `..`、绝对路径、反斜线或 NUL 的相对 `.y
 
 ## 7. Git 与版本
 
-- `0.1.0` 历史开发分支：`yukiryou/v0.1.0`；当前版本分支：`yukiryou/v0.1.5`。
+- `0.1.0` 历史开发分支：`yukiryou/v0.1.0`；当前版本分支：`yukiryou/v0.1.6`。
 - `package.json`、CHANGELOG、release notes、Git tag 和 tarball 必须使用同一个精确候选版本。
 - 发布提交必须干净且可复现。
 - tag 使用 `v<major>.<minor>.<patch>`，只在发布提交确定后创建。

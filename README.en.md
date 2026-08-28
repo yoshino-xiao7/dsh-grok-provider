@@ -4,7 +4,7 @@
 
 Use an already authenticated official Grok Build account from DeepSeek Harness, with dynamic model discovery, streaming reasoning, tool calls, and an account quota/model capability dashboard.
 
-> Unofficial community project; not affiliated with xAI or DeepSeek Harness. The current source version is `0.1.5`; the npm Registry `latest` tag is also `0.1.5`. The project no longer publishes prereleases; stable defects are fixed in a new incremented stable version.
+> Unofficial community project; not affiliated with xAI or DeepSeek Harness. The current source version is `0.1.6`; published stable versions are identified by the npm Registry `latest` tag. The project no longer publishes prereleases; stable defects are fixed in a new incremented stable version.
 
 ## What it provides
 
@@ -39,10 +39,10 @@ The official CLI opens a browser on first use. The provider supports only the of
 
 ### 2. Install the provider
 
-`0.1.5` is published; install that exact version from npm:
+After `0.1.6` is published, install that exact version from npm:
 
 ```sh
-dsh plugin --profile web add dsh-grok-provider@0.1.5
+dsh plugin --profile web add dsh-grok-provider@0.1.6
 dsh web
 ```
 
@@ -112,8 +112,8 @@ Uninstalling the provider does not remove the official Grok CLI or directly modi
 
 ## Sources and discovery
 
-- npm `0.1.5` page: [dsh-grok-provider@0.1.5](https://www.npmjs.com/package/dsh-grok-provider/v/0.1.5)
-- GitHub `0.1.5` release and integrity values: [v0.1.5](https://github.com/yoshino-xiao7/dsh-grok-provider/releases/tag/v0.1.5)
+- npm `0.1.6` page (available after publication): [dsh-grok-provider@0.1.6](https://www.npmjs.com/package/dsh-grok-provider/v/0.1.6)
+- GitHub `0.1.6` release and integrity values (available after publication): [v0.1.6](https://github.com/yoshino-xiao7/dsh-grok-provider/releases/tag/v0.1.6)
 - GitHub community discovery: the repository carries the DeepSeek Harness-recommended `dsh-plugin` and `dsh` topics
 - YukiRyou managed source: [deepseek-yukiryou-plugin-catalog](https://github.com/yoshino-xiao7/deepseek-yukiryou-plugin-catalog), still pinned to the real-device-accepted `dsh-grok-provider@0.1.0` and marking only `darwin-arm64`
 
@@ -121,17 +121,17 @@ Directory inclusion is not an endorsement by xAI or DeepSeek Harness. [Listing P
 
 ## Compatibility and scope
 
-| Item | `0.1.5` status |
+| Item | `0.1.6` status |
 | --- | --- |
 | DeepSeek Harness | Exact support for `0.1.1-rc.2` |
 | Node.js | `>=24.19.0` |
 | macOS arm64 | Real-network and isolated Harness acceptance completed |
-| Windows x64 | Code and Windows CI supported; `0.1.5` adds no independent real-device acceptance |
+| Windows x64 | Code, slow-fake, and Windows CI supported; by owner decision, real browser launch is checked against the exact Registry version after publication |
 | macOS x64 / Linux | Unsupported |
 | Grok CLI | No full-version lock; official path, `login --oauth` capability, and production OIDC credential contract are enforced |
 | Models | Every account catalog model whose backend has a strict codec in this release |
 
-`0.1.5` preserves the `0.1.4` image boundary: image input is enabled only for exact `grok-4.6`, while `grok-4.5` and every other dynamically discovered model remain text-only. The account dashboard projects capability badges from that same catalog, so only image-capable models show “Image input.” Images must be verified JPEG/PNG projections from the Harness attachment service. Ordinary user content and images nested one level inside a tool result are supported, with `detail:"high"` fixed to the official xAI Responses image example; URLs, filesystem paths, file IDs, and caller-supplied data URLs are rejected.
+`0.1.6` preserves the `0.1.4` image boundary: image input is enabled only for exact `grok-4.6`, while `grok-4.5` and every other dynamically discovered model remain text-only. The account dashboard projects capability badges from that same catalog, so only image-capable models show “Image input.” Images must be verified JPEG/PNG projections from the Harness attachment service. Ordinary user content and images nested one level inside a tool result are supported, with `detail:"high"` fixed to the official xAI Responses image example; URLs, filesystem paths, file IDs, and caller-supplied data URLs are rejected. Private reasoning in ordinary user/system history is omitted while adjacent visible text remains ordered, so `subagent-settled` history and same-message reasoning no longer block image requests.
 
 Each projected image is limited to 4 MiB, 16,777,216 pixels, and 8192px per side. A request retains at most eight images and 8 MiB of projected image bytes. When a limit is exceeded, the globally oldest images are offloaded to Harness text placeholders; the final JSON remains capped at 16 MiB. Web/X Search, image generation, arbitrary downloads, API-key mode, multiple accounts, enterprise OIDC, ACP, and Headless agent wrapping remain out of scope; see the [capability roadmap](docs/11-capability-roadmap.md).
 
@@ -221,7 +221,8 @@ Read the [contributing guide](CONTRIBUTING.md) before filing an issue or PR. Cha
 - [x] Publish the `0.1.3` cross-provider tool-history compatibility correction
 - [x] Publish `0.1.4`: image input only for exact `grok-4.6`; red/blue user/tool-result Proxy gates and final Harness attachment revalidation passed, while `grok-4.5` fails closed as text-only
 - [x] Publish `0.1.5`: maintenance for release binding, dashboard capability badges, and transactional Provider Runtime installation; the unique artifact, dual-platform CI, signatures, and SLSA provenance are verified
-- [ ] Later independent slice: opt-in, default-off Web Search / X Search
+- [ ] Publish `0.1.6`: image-history reasoning compatibility and per-stage official-CLI deadline repair for Windows
+- [ ] Independent `0.1.7` slice: opt-in, default-off Web Search / X Search
 - [ ] A subsequent slice: opt-in image generation (inline results only, committed through Harness attachments)
 - [ ] Complete independent Windows x64 acceptance and publish a later stable fix if needed
 

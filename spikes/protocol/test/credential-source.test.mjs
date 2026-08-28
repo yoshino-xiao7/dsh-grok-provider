@@ -5,6 +5,7 @@ import {
   GROK_PRODUCTION_OIDC_AUTH_CONTRACT,
   createCredentialSource,
 } from "../../../src/internal/credential-source.mjs"
+import { createAuthController } from "../../../src/internal/auth-controller.mjs"
 
 test("a unique Grok production OIDC record authorizes one operation", async () => {
   const fixture = JSON.stringify({
@@ -145,6 +146,62 @@ test("an expired official access token is refreshed by the CLI before one operat
 
   assert.equal(result, "fresh-access-token")
   assert.equal(refreshCalls, 1)
+})
+
+test("subprocess disposal makes an in-flight credential refresh fail closed", async () => {
+  let refreshStarted
+  const started = new Promise((resolve) => { refreshStarted = resolve })
+  const controller = createAuthController({
+    registry: {
+      invalidate() {},
+      async status() { return {} },
+    },
+    randomUUID: () => "disposed-refresh",
+  })
+  const removeDriver = controller.installDriver({
+    async begin() {
+      return { completion: Promise.resolve({ kind: "succeeded" }) }
+    },
+    async refresh({ signal }) {
+      refreshStarted()
+      return new Promise((resolve) => signal.addEventListener("abort", () => {
+        resolve({ kind: "succeeded" })
+      }, { once: true }))
+    },
+  })
+  let loadCalls = 0
+  let operationCalls = 0
+  const source = createCredentialSource({
+    contract: GROK_PRODUCTION_OIDC_AUTH_CONTRACT,
+    load: async () => {
+      loadCalls += 1
+      return JSON.stringify({
+        "https://auth.x.ai::b1a00492-073a-47ea-816f-4c329264a828": {
+          key: "expired-access-token",
+          auth_mode: "oidc",
+          expires_at: "2029-12-31T23:00:00.000Z",
+          oidc_issuer: "https://auth.x.ai",
+          oidc_client_id: "b1a00492-073a-47ea-816f-4c329264a828",
+        },
+      })
+    },
+    now: () => new Date("2030-01-01T00:00:00.000Z"),
+    refresh: async () => {
+      const outcome = await controller.refresh()
+      if (outcome.kind !== "succeeded") throw new Error("fixture refresh rejected")
+    },
+  })
+
+  const request = source.withAccessToken(async () => {
+    operationCalls += 1
+  })
+  await started
+  removeDriver()
+  assert.equal(await controller.shutdown(), true)
+
+  await assert.rejects(request, { name: "UnsupportedCredentialError" })
+  assert.equal(loadCalls, 1)
+  assert.equal(operationCalls, 0)
 })
 
 test("concurrent operations share one official CLI credential refresh", async () => {

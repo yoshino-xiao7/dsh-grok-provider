@@ -1,9 +1,9 @@
 # Grok Build Provider 文档索引
 
-- 状态：**稳定版 `0.1.5` 已发布，唯一制品、双平台 CI、签名与 SLSA provenance 均已验证**
+- 状态：**稳定版 `0.1.5` 已发布；`0.1.6` 图片历史/Windows 登录维护版已进入发布候选阶段**
 - 当前 npm 稳定版本：`0.1.5`
 - 最近发布版本：`0.1.5`
-- 版本分支：`yukiryou/v0.1.5`
+- 当前开发分支：`yukiryou/v0.1.6`
 - 发布状态：不可变 `v0.1.5` 精确指向 release commit `4f0bcd84f96c1cd5d95dda2a01ce63ff6403b828`；唯一 Release asset、Trusted Publisher run `33162280108`、Registry 逐字节回读、签名与 SLSA provenance 已全部关闭
 - 兼容基线：DeepSeek Harness `0.1.1-rc.2`
 - 目标平台：macOS arm64、Windows x64
@@ -46,6 +46,7 @@
 - [v0.1.3 中英双语发行说明](./releases/v0.1.3.md)
 - [v0.1.4 中英双语发行说明](./releases/v0.1.4.md)
 - [v0.1.5 中英双语发行说明](./releases/v0.1.5.md)
+- [v0.1.6 中英双语发行说明](./releases/v0.1.6.md)
 - [v0.1.2-rc.1 中英双语预发行说明](./releases/v0.1.2-rc.1.md)
 - [ADR-0001：认证与传输路线](./adr/0001-auth-and-transport-route.md)
 - [ADR-0002：首版能力边界](./adr/0002-v0.1-scope.md)
@@ -58,7 +59,7 @@
 
 ## 开发门禁
 
-`0.1.2-rc.1` 是唯一一次预发行尝试。仓库所有者决定从稳定 `0.1.2` 起不再发行预发行版；正式版缺陷通过新的递增稳定版本修复。`0.1.4` 已发布：仅精确 `grok-4.6` 开启图片，普通 user 与一层 tool-result 的红/蓝合成图共四次脱敏 Proxy 请求均通过；`grok-4.5` 的红图语义结果不可靠，因此失败关闭并与其他模型保持 text-only。`0.1.5` 不新增模型能力，只维护发布供应链、账户面板投影与 Provider Runtime 安装事务；其完整测试、审计、打包、双平台 CI、唯一制品、精确授权与发布回读均已按[逐版发布检查表](./10-release-checklist.md)关闭。
+`0.1.2-rc.1` 是唯一一次预发行尝试。仓库所有者决定从稳定 `0.1.2` 起不再发行预发行版；正式版缺陷通过新的递增稳定版本修复。`0.1.4` 已发布：仅精确 `grok-4.6` 开启图片，普通 user 与一层 tool-result 的红/蓝合成图共四次脱敏 Proxy 请求均通过；`grok-4.5` 的红图语义结果不可靠，因此失败关闭并与其他模型保持 text-only。`0.1.5` 维护发布供应链、账户面板投影与 Provider Runtime 安装事务。`0.1.6` 候选只修复普通 user/system 私有 reasoning 阻断图片请求，以及 Windows CLI 冷启动共用 deadline 导致 `login --oauth` 尚未启动即失败的问题；Web/X Search 顺延至 `0.1.7`。完整门禁见[逐版发布检查表](./10-release-checklist.md)。
 
 ## 官方依据
 

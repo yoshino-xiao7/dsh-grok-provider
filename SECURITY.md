@@ -4,7 +4,11 @@
 
 ## 支持范围
 
-本安全策略对应源码版本 `0.1.5`；当前已发布稳定版本以 npm Registry 的 `latest` 标签为准。DeepSeek Harness、Node.js 与操作系统按发布线明确维护；Grok CLI 不使用完整版本字符串作为信任门禁，而是严格校验官方默认路径、命令能力、生产 OIDC 凭据契约和固定服务端协议。macOS arm64 已完成真实验收；Windows x64 有代码与 CI 覆盖。`0.1.5` 沿用 `0.1.4` 的图片边界：只为精确 `grok-4.6` 提供有界图片输入；`grok-4.5` 与所有其他模型保持 text-only，不改动认证、凭据、CLI subprocess 或 endpoint 边界。图片只能来自 Harness attachment service 的已验证 JPEG/PNG 投影，以 `detail:"high"` 发送，并受单图字节、像素、边长、数量、总字节与最终 JSON 上限约束；URL、路径、file ID 和调用方预制 data URL 都会被拒绝。项目不再发行预发行版，安全或兼容性缺陷使用新的递增稳定版本修复。
+本安全策略对应源码版本 `0.1.6`；当前已发布稳定版本以 npm Registry 的 `latest` 标签为准。DeepSeek Harness、Node.js 与操作系统按发布线明确维护；Grok CLI 不使用完整版本字符串作为信任门禁，而是严格校验官方默认路径、命令能力、生产 OIDC 凭据契约和固定服务端协议。macOS arm64 已完成真实验收；Windows x64 有代码、slow-fake 与 CI 覆盖，外部浏览器弹出由仓库所有者在 Registry 精确 `0.1.6` 发布后验证。
+
+`0.1.6` 沿用 `0.1.4` 的图片边界：只为精确 `grok-4.6` 提供有界图片输入；`grok-4.5` 与所有其他模型保持 text-only。普通 user/system 历史中的私有 reasoning 会被省略并保留相邻可见 text/image；只有有效的同 Provider assistant 历史可进入加密 reasoning replay，一层 tool-result 仍只接受公开 text/image。图片只能来自 Harness attachment service 的已验证 JPEG/PNG 投影，以 `detail:"high"` 发送，并受单图字节、像素、边长、数量、总字节与最终 JSON 上限约束；URL、路径、file ID 和调用方预制 data URL 都会被拒绝。
+
+CLI executable 解析、只读验证、`--version`、`login --help` 与最终 action 各自拥有 deadline；direct-process completion 观察同一取消，whole-tree teardown 另有有界 wait。登录 starting、confirmed logout 与 credential refresh 共享 controller-owned single-flight、shutdown fence 和 driver-generation 门禁；清理失败会隔离当前认证 driver 直到 Host 重启或 subprocess driver replacement，旧代际操作不能迟发 CLI 动作或报告成功。固定路径/argv、最小环境、无 shell、输出上限、取消和登录后凭据重验边界不变；本版不新增认证模式、Search、生成或 endpoint。项目不再发行预发行版，安全或兼容性缺陷使用新的递增稳定版本修复。
 
 ## 私下报告漏洞
 
@@ -32,4 +36,4 @@
 
 ---
 
-English summary: GitHub Private vulnerability reporting is enabled and is the preferred reporting channel. Version `0.1.5` preserves the `0.1.4` bounded JPEG/PNG attachment boundary with `detail:"high"` only for exact `grok-4.6`; `grok-4.5` and all other models remain text-only. It accepts no URL, path, file ID, or caller-supplied data URL and does not change authentication or endpoints. If private reporting is unavailable, open only a detail-free contact issue. Never publish or send real credentials, identity data, prompts, tool arguments, cookies, source/projected image bytes, or unreviewed diagnostic archives. Include exact versions, platform, minimal reproduction conditions, impact, and redacted evidence.
+English summary: GitHub Private vulnerability reporting is enabled and is the preferred reporting channel. Version `0.1.6` preserves bounded JPEG/PNG attachment input with `detail:"high"` only for exact `grok-4.6`; `grok-4.5` and all other models remain text-only. It omits schema-valid private reasoning from ordinary user/system history while preserving visible text/images, gives each official-CLI preparation/action stage an independent deadline, and bounds direct-process/tree settlement. Login start, confirmed logout, and credential refresh share controller-owned single-flight, a shutdown fence, and driver-generation guards. Cleanup failure quarantines the current authentication driver until Host restart or subprocess-driver replacement, and stale operations cannot dispatch or report success. Fixed path/argv, no-shell, credential, origin, and URL-rejection boundaries remain unchanged; no Search, generation, new auth mode, or custom endpoint is added. Never send credentials, identity data, prompts, tool arguments, cookies, image bytes, or unreviewed diagnostics.

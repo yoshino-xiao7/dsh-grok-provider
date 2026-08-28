@@ -377,16 +377,18 @@ function validateImagePlacements(messages) {
         content.length !== 1 ||
         !isPlainObject(result) ||
         result.type !== "tool-result" ||
-        result.toolCallId !== message.source.callId ||
-        !contentAllowsImages(captureDataArray(result.content))
+        result.toolCallId !== message.source.callId
       ) {
         throw new UnsupportedImageInputError()
+      }
+      if (!contentAllowsImages(captureDataArray(result.content))) {
+        throw new UnsupportedResponsesRequestError()
       }
       continue
     }
     if (
       message.role !== "user" ||
-      !contentAllowsImages(content)
+      !contentAllowsImages(content, { allowReasoning: true })
     ) {
       throw new UnsupportedImageInputError()
     }
@@ -407,9 +409,10 @@ function messageHasImage(message) {
   return false
 }
 
-function contentAllowsImages(content) {
+function contentAllowsImages(content, { allowReasoning = false } = {}) {
   for (let index = 0; index < content.length; index += 1) {
     const type = content[index].type
+    if (allowReasoning && type === "reasoning") continue
     if (type !== "text" && type !== "image") return false
   }
   return true

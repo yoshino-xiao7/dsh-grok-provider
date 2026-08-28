@@ -135,7 +135,8 @@ Web 的“退出”或 TUI `/grok logout` 先中止本插件所有在途 Grok �
 
 - `0.1.4`：仅图片输入。
 - `0.1.5`：发布链路、账户面板能力标签和 Provider Runtime 安装事务维护；不新增模型能力。
-- 后续独立切片：默认关闭的 Web Search / X Search。
+- `0.1.6`：图片历史中非 assistant 私有 reasoning 的兼容修复，以及 Windows 官方 CLI 登录预检的分阶段 deadline 修复；不新增模型能力。
+- `0.1.7` 独立切片：默认关闭的 Web Search / X Search。
 - 再后续独立切片：默认关闭的图片生成（内联结果 → Harness attachment）。
 
 `prompt_cache_key` 不与图片输入捆绑；若以后排期，需独立分析会话标识隐私和 POST 不自动重放边界。任意 URL 下载、API Key、企业 OIDC、ACP、Headless 和 Linux 仍不在路线内。公开协议可驱动隔离原型，但每个切片在声明能力、合并发布基线前必须有独立 ADR 与固定 CLI Chat Proxy spike；`0.1.4` 的 `grok-4.6` user/tool-result 红蓝语义门禁已于 2026-08-28 通过，`grok-4.5` 因语义不可靠失败关闭，最终 Harness attachment 复验见[上游证据页](./12-upstream-image-input-evidence.md)。

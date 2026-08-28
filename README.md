@@ -4,7 +4,7 @@
 
 让 DeepSeek Harness 使用你已登录的官方 Grok Build 账号：动态模型发现、流式推理、工具调用，以及账号额度与模型能力面板。
 
-> 非官方社区项目，与 xAI 或 DeepSeek Harness 官方无隶属关系。当前源码版本为 `0.1.5`；npm Registry 的 `latest` 也为 `0.1.5`。项目不再发行预发行版；正式版缺陷通过新的递增稳定版本修复。
+> 非官方社区项目，与 xAI 或 DeepSeek Harness 官方无隶属关系。当前源码版本为 `0.1.6`；npm 已发布稳定版本以 Registry 的 `latest` 标签为准。项目不再发行预发行版；正式版缺陷通过新的递增稳定版本修复。
 
 ## 它解决什么问题
 
@@ -39,10 +39,10 @@ grok models
 
 ### 2. 安装 Provider
 
-`0.1.5` 已发布；从 npm 安装该精确版本：
+`0.1.6` 发布后，从 npm 安装该精确版本：
 
 ```sh
-dsh plugin --profile web add dsh-grok-provider@0.1.5
+dsh plugin --profile web add dsh-grok-provider@0.1.6
 dsh web
 ```
 
@@ -112,8 +112,8 @@ dsh web
 
 ## 项目来源与发现
 
-- npm `0.1.5` 页面：[dsh-grok-provider@0.1.5](https://www.npmjs.com/package/dsh-grok-provider/v/0.1.5)
-- GitHub `0.1.5` 发行版与校验值：[v0.1.5](https://github.com/yoshino-xiao7/dsh-grok-provider/releases/tag/v0.1.5)
+- npm `0.1.6` 页面（发布后可用）：[dsh-grok-provider@0.1.6](https://www.npmjs.com/package/dsh-grok-provider/v/0.1.6)
+- GitHub `0.1.6` 发行版与校验值（发布后可用）：[v0.1.6](https://github.com/yoshino-xiao7/dsh-grok-provider/releases/tag/v0.1.6)
 - GitHub 社区发现：仓库已添加 DeepSeek Harness 官方推荐的 `dsh-plugin` 与 `dsh` Topics
 - YukiRyou 受管来源：[deepseek-yukiryou-plugin-catalog](https://github.com/yoshino-xiao7/deepseek-yukiryou-plugin-catalog)，当前仍锁定已完成真机验收的 `dsh-grok-provider@0.1.0`，且只标记 `darwin-arm64`
 
@@ -121,17 +121,17 @@ dsh web
 
 ## 兼容性与范围
 
-| 项目 | `0.1.5` 状态 |
+| 项目 | `0.1.6` 状态 |
 | --- | --- |
 | DeepSeek Harness | 精确支持 `0.1.1-rc.2` |
 | Node.js | `>=24.19.0` |
 | macOS arm64 | 已完成真实网络与隔离 Harness 验收 |
-| Windows x64 | 代码与 Windows CI 支持；`0.1.5` 未新增独立真机验收 |
+| Windows x64 | 代码、slow-fake 与 Windows CI 支持；按仓库所有者决定，发布 Registry 精确版本后验证真实浏览器弹出 |
 | macOS x64 / Linux | 不支持 |
 | Grok CLI | 不锁完整版本；严格校验官方路径、`login --oauth` 能力与生产 OIDC 凭据契约 |
 | 模型 | 当前账号目录中 backend 已被严格 codec 支持的全部模型 |
 
-`0.1.5` 沿用 `0.1.4` 的图片边界：只为精确的 `grok-4.6` 开启图片输入；`grok-4.5` 与其他动态发现的模型继续按 text-only 处理。账户面板从同一模型目录投影能力标签，因此只有图片模型显示“图片输入”。图片只能来自 Harness attachment service 的已验证 JPEG/PNG 投影，支持普通用户内容和一层工具结果中的图片，并按 xAI 官方 Responses 图片示例固定使用 `detail:"high"`；不接受 URL、文件路径、file ID 或调用方预制的 data URL。
+`0.1.6` 沿用 `0.1.4` 的图片边界：只为精确的 `grok-4.6` 开启图片输入；`grok-4.5` 与其他动态发现的模型继续按 text-only 处理。账户面板从同一模型目录投影能力标签，因此只有图片模型显示“图片输入”。图片只能来自 Harness attachment service 的已验证 JPEG/PNG 投影，支持普通用户内容和一层工具结果中的图片，并按 xAI 官方 Responses 图片示例固定使用 `detail:"high"`；不接受 URL、文件路径、file ID 或调用方预制的 data URL。普通 user/system 历史中的私有 reasoning 会被省略并保留相邻可见文本，因此 `subagent-settled` 历史和同消息 reasoning 不再阻断图片请求。
 
 每张投影图片最多 4 MiB、16,777,216 像素且任一边不超过 8192px；每次请求最多保留 8 张、投影字节合计最多 8 MiB。超限时按全局最旧优先移除图片并保留 Harness 的文本占位，最终 JSON 仍受 16 MiB 上限约束。Web/X Search、图片生成、任意文件下载、API Key 模式、多账号、企业 OIDC、ACP 与 Headless agent 封装仍不在本版本范围内；后续切片见[能力路线图](docs/11-capability-roadmap.md)。
 
@@ -221,7 +221,8 @@ npm run pack:check
 - [x] 发布 `0.1.3` 跨 Provider 工具调用历史兼容性修正版
 - [x] 发布 `0.1.4`：仅精确 `grok-4.6` 图片输入；user/tool-result 红蓝语义 Proxy 门禁与最终 Harness attachment 复验通过，`grok-4.5` 失败关闭为 text-only
 - [x] 发布 `0.1.5`：发布链路、账户面板能力标签与 Provider Runtime 安装回滚维护版；唯一制品、双平台 CI、签名与 SLSA provenance 均已验证
-- [ ] 后续独立切片：默认关闭、用户分别开启的 Web Search / X Search
+- [ ] 发布 `0.1.6`：图片历史 reasoning 兼容与 Windows 官方 CLI 分阶段 deadline 修复版
+- [ ] `0.1.7` 独立切片：默认关闭、用户分别开启的 Web Search / X Search
 - [ ] 再后续独立切片：默认关闭的图片生成（只收内联结果，提交 Harness attachment）
 - [ ] 完成 Windows x64 独立真机验收并按需发布后续稳定修复版
 

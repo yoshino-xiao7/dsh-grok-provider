@@ -42,6 +42,105 @@ test("Windows Grok CLI 0.2.82 reaches fixed OAuth login after capability discove
   ])
 })
 
+test("Windows CLI cold-start preflight stages receive independent deadline budgets", async () => {
+  const spawned = []
+  let resolveSignal
+  let verifySignal
+  const executable = "C:\\Users\\fixture\\.grok\\bin\\grok.exe"
+  const outputs = [
+    "grok 0.2.82 (6d0b07d2de) [stable]\n",
+    "Usage: grok login [OPTIONS]\n\nOptions:\n      --oauth  Use browser OAuth\n",
+    "Login completed\n",
+  ]
+  const delays = [60, 60, 0]
+  const subprocess = {
+    async resolveExecutable(_candidate, _options, signal) {
+      resolveSignal = signal
+      await new Promise((resolve) => setTimeout(resolve, 60))
+      return executable
+    },
+    spawn(spec) {
+      const index = spawned.length
+      spawned.push(spec)
+      const done = new Promise((resolve) => {
+        let timer
+        const settle = (outcome) => {
+          clearTimeout(timer)
+          spec.signal.removeEventListener("abort", onAbort)
+          resolve(outcome)
+        }
+        const onAbort = () => settle({ exitCode: null, signal: "SIGTERM" })
+        if (spec.signal.aborted) onAbort()
+        else {
+          spec.signal.addEventListener("abort", onAbort, { once: true })
+          timer = setTimeout(() => settle({ exitCode: 0, signal: null }), delays[index])
+        }
+      })
+      return {
+        done,
+        collected: {
+          stdout: { readFrom: () => ({ text: outputs[index], lossy: false }) },
+          stderr: { readFrom: () => ({ text: "", lossy: false }) },
+        },
+        async waitForExit() { return true },
+        terminate() {},
+      }
+    },
+  }
+  const auth = createOfficialCliAuth({
+    subprocess,
+    platform: "win32",
+    homeDir: "C:\\Users\\fixture",
+    verifyExecutable: async (_facts, signal) => {
+      verifySignal = signal
+      await new Promise((resolve) => setTimeout(resolve, 60))
+    },
+    versionTimeoutMs: 100,
+  })
+
+  assert.deepEqual(await auth.login(), { kind: "succeeded" })
+  const stageSignals = [resolveSignal, verifySignal, ...spawned.map((spec) => spec.signal)]
+  assert.equal(new Set(stageSignals).size, stageSignals.length)
+  assert.notEqual(resolveSignal, spawned[0].signal)
+  assert.notEqual(resolveSignal, verifySignal)
+  assert.notEqual(verifySignal, spawned[0].signal)
+  assert.notEqual(spawned[0].signal, spawned[1].signal)
+  assert.notEqual(spawned[1].signal, spawned[2].signal)
+  await new Promise((resolve) => setTimeout(resolve, 120))
+  assert.equal(stageSignals.every((signal) => signal.aborted === false), true)
+})
+
+test("executable verification observes its own deadline before any CLI process starts", async () => {
+  let spawned = 0
+  let verifySignal
+  const auth = createOfficialCliAuth({
+    subprocess: {
+      async resolveExecutable() {
+        return "C:\\Users\\fixture\\.grok\\bin\\grok.exe"
+      },
+      spawn() {
+        spawned += 1
+        throw new Error("verification timeout must fail before spawn")
+      },
+    },
+    platform: "win32",
+    homeDir: "C:\\Users\\fixture",
+    verifyExecutable: async (_facts, signal) => {
+      verifySignal = signal
+      await new Promise((resolve) => signal.addEventListener("abort", resolve, { once: true }))
+      signal.throwIfAborted()
+    },
+    versionTimeoutMs: 5,
+  })
+
+  await assert.rejects(Promise.race([
+    auth.login(),
+    new Promise((_, reject) => setTimeout(() => reject(new Error("deadline missing")), 500)),
+  ]), { name: "OfficialCliAuthError" })
+  assert.equal(verifySignal.aborted, true)
+  assert.equal(spawned, 0)
+})
+
 test("browser login fails closed before the action when OAuth capability is absent", async () => {
   const spawned = []
   const outputs = [
@@ -221,6 +320,131 @@ test("official browser login owns a deadline and terminates a stalled process tr
   assert.equal(actionSignal.aborted, true)
 })
 
+test("a stage deadline also bounds process-tree teardown", async () => {
+  let stageSignal
+  let teardownSignal
+  let terminations = 0
+  const auth = createOfficialCliAuth({
+    subprocess: {
+      async resolveExecutable() {
+        return "/Users/fixture/.grok/downloads/grok-macos-aarch64"
+      },
+      spawn(spec) {
+        stageSignal = spec.signal
+        return {
+          done: new Promise((resolve) => spec.signal.addEventListener("abort", () => {
+            resolve({ exitCode: null, signal: "SIGTERM" })
+          }, { once: true })),
+          collected: {
+            stdout: { readFrom: () => ({ text: "", lossy: false }) },
+            stderr: { readFrom: () => ({ text: "", lossy: false }) },
+          },
+          waitForExit(signal) {
+            teardownSignal = signal
+            if (signal === undefined) return new Promise(() => {})
+            return new Promise((resolve) => {
+              if (signal.aborted) resolve(false)
+              else signal.addEventListener("abort", () => resolve(false), { once: true })
+            })
+          },
+          terminate() { terminations += 1 },
+        }
+      },
+    },
+    platform: "darwin",
+    homeDir: "/Users/fixture",
+    verifyExecutable: async () => {},
+    versionTimeoutMs: 5,
+  })
+
+  await assert.rejects(settlesWithin(auth.refresh(), 100), { name: "OfficialCliAuthError" })
+  assert.equal(stageSignal.aborted, true)
+  assert.equal(teardownSignal?.aborted, true)
+  assert.equal(terminations >= 1, true)
+})
+
+test("a stage deadline does not depend on the direct process done promise settling", async () => {
+  let stageSignal
+  let waits = 0
+  const auth = createOfficialCliAuth({
+    subprocess: {
+      async resolveExecutable() {
+        return "/Users/fixture/.grok/downloads/grok-macos-aarch64"
+      },
+      spawn(spec) {
+        stageSignal = spec.signal
+        return {
+          done: new Promise(() => {}),
+          collected: {
+            stdout: { readFrom: () => ({ text: "", lossy: false }) },
+            stderr: { readFrom: () => ({ text: "", lossy: false }) },
+          },
+          async waitForExit() {
+            waits += 1
+            return true
+          },
+          terminate() {},
+        }
+      },
+    },
+    platform: "darwin",
+    homeDir: "/Users/fixture",
+    verifyExecutable: async () => {},
+    versionTimeoutMs: 5,
+  })
+
+  await assert.rejects(settlesWithin(auth.refresh(), 100), { name: "OfficialCliAuthError" })
+  assert.equal(stageSignal.aborted, true)
+  assert.equal(waits, 1)
+})
+
+test("caller abort during process-tree wait cannot be reported as success", async () => {
+  const caller = new AbortController()
+  let spawned = 0
+  let releaseActionWait
+  let actionWaitStarted
+  const actionWait = new Promise((resolve) => { actionWaitStarted = resolve })
+  const outputs = [
+    "grok 1.0.5 (5115b46bc909)\n",
+    "Usage: grok login [OPTIONS]\n\nOptions:\n      --oauth  Use browser OAuth\n",
+    "Login completed\n",
+  ]
+  const auth = createOfficialCliAuth({
+    subprocess: {
+      async resolveExecutable() {
+        return "/Users/fixture/.grok/downloads/grok-macos-aarch64"
+      },
+      spawn(spec) {
+        const index = spawned
+        spawned += 1
+        return {
+          done: Promise.resolve({ exitCode: 0, signal: null }),
+          collected: {
+            stdout: { readFrom: () => ({ text: outputs[index], lossy: false }) },
+            stderr: { readFrom: () => ({ text: "", lossy: false }) },
+          },
+          async waitForExit() {
+            if (index < 2) return true
+            actionWaitStarted()
+            return new Promise((resolve) => { releaseActionWait = () => resolve(true) })
+          },
+          terminate() {},
+        }
+      },
+    },
+    platform: "darwin",
+    homeDir: "/Users/fixture",
+    verifyExecutable: async () => {},
+  })
+
+  const login = auth.login({ signal: caller.signal })
+  await settlesWithin(actionWait, 100)
+  caller.abort(new DOMException("Cancelled", "AbortError"))
+  releaseActionWait()
+
+  assert.deepEqual(await settlesWithin(login, 100), { kind: "cancelled" })
+})
+
 test("official credential refresh uses the verified CLI models command", async () => {
   const spawned = []
   const outputs = ["grok 1.0.5 (5115b46bc909)\n", "Available models:\n  * grok-4.6\n"]
@@ -253,3 +477,17 @@ test("official credential refresh uses the verified CLI models command", async (
     ["/Users/fixture/.grok/downloads/grok-macos-aarch64", "models"],
   ])
 })
+
+async function settlesWithin(promise, timeoutMs) {
+  let timer
+  try {
+    return await Promise.race([
+      promise,
+      new Promise((_, reject) => {
+        timer = setTimeout(() => reject(new Error("operation did not settle in time")), timeoutMs)
+      }),
+    ])
+  } finally {
+    clearTimeout(timer)
+  }
+}

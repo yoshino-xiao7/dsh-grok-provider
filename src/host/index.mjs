@@ -83,19 +83,19 @@ export function apply(ctx) {
       homeDir,
       verifyExecutable: verifyOfficialCliExecutable,
     })
-    const refresh = async () => {
-      const outcome = await officialAuth.refresh()
-      if (outcome.kind !== "succeeded") throw new UnsupportedCredentialError()
-    }
-    refreshOfficialCredential = refresh
     const removeDriver = authController.installDriver(createOfficialAuthDriver({
       officialAuth,
       credentialSource: officialSource,
     }))
+    const refresh = async () => {
+      const outcome = await authController.refresh()
+      if (outcome.kind !== "succeeded") throw new UnsupportedCredentialError()
+    }
+    refreshOfficialCredential = refresh
     return async () => {
-      await authController.shutdown()
       if (refreshOfficialCredential === refresh) refreshOfficialCredential = undefined
       removeDriver()
+      await authController.shutdown()
     }
   })
 

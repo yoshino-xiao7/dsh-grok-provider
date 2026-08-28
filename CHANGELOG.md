@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.6 - 2026-08-28
+
+- Accept schema-valid provider-neutral user and system history containing private reasoning blocks, omit that reasoning from the Grok wire, and preserve adjacent visible text and ordered image input; malformed or oversized omitted blocks still fail closed before attachment I/O.
+- Keep encrypted reasoning replay restricted to valid same-provider assistant history and retain the one-level tool-result text/image boundary with stable generic-error classification for unsupported tool-result blocks.
+- Give executable resolution, read-only verification, `--version`, `login --help`, and the final official CLI action independent deadlines so Windows cold starts cannot consume the browser-login budget before `login --oauth` launches; process-tree teardown is independently bounded and late caller cancellation cannot be reported as success.
+- Make executable metadata verification and direct-process completion observe cancellation; bound whole-tree teardown separately, and quarantine the authentication driver after cleanup failure until the Host restarts or the subprocess driver is replaced. Login start, logout, and credential refresh share controller-owned single-flight, cancellation, shutdown, and driver-generation guards so stale operations cannot dispatch or report success after replacement, without changing the fixed official path, fixed argv, scrubbed environment, output bounds, no-shell policy, or post-login credential validation.
+- Keep Web/X Search, image generation, new server-tool events, arbitrary URL downloads, API-key mode, and custom endpoints out of this maintenance release; the proposed Search slice moves to `0.1.7`.
+
 ## 0.1.5 - 2026-08-28
 
 - Bind Trusted Publisher runs to the exact stable tag ref and peeled commit, require one non-draft/non-prerelease GitHub Release asset with the exact package filename, and pin the publishing runtime to Node.js `24.19.0`.
