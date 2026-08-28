@@ -131,7 +131,7 @@ English summary: every release must close documentation, security, tests, determ
 - [x] 仓库所有者于 2026-08-28 明确决定先发布 Registry 精确 `0.1.6`，再自行验证图片和 Windows 外部浏览器弹出；发布前不得把代码、slow-fake 或 Windows CI 表述为 Windows 真机已确认，失败时发布新的递增稳定修复版。
 - [x] `package.json`/lockfile、CHANGELOG、中英文 README、`SECURITY.md`、状态文档、路线图与 `docs/releases/v0.1.6.md` 已同步为候选事实；npm `latest` 在正式回读前继续如实记为 `0.1.5`。
 - [x] 精确 Node `24.19.0` 全量测试通过：161 项、159 pass、0 fail、2 项 Windows-only skip；`npm audit --omit=dev` 为 0 漏洞，最终 dry-run pack 为 60 个文件，`git diff --check` 与秘密模式扫描通过。Search 规划文件和用户未跟踪的重复 checklist 均未进入清单。
-- [ ] 代码 PR 合入受保护 `yukiryou/main`，macOS 14 与 Windows 2022 CI 全绿；若合并证据改变发布文档，再经证据 PR 得到最终 release commit。
+- [x] 代码 PR [#13](https://github.com/yoshino-xiao7/dsh-grok-provider/pull/13) 已合入受保护 `yukiryou/main`，merge commit 为 `712d0212f137850af4fc063cc30a7ff2f1e53ea3`；最终 head `40796e1feba0fe36f45f63ebdf89ce34d365033f` 的 CI runs [33176392234](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33176392234) 与 [33176396649](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33176396649) 均完成 macOS 14、Windows 2022 全绿。当前证据分支经 PR 合入后得到最终 release commit。
 - [ ] 从最终 release commit 的干净 checkout 只生成一次 `dsh-grok-provider-0.1.6.tgz`，完成 pack-list、隔离安装/加载、SHA-256 与 npm SRI，并复用同一字节发布。
 - [ ] 在完整提交与制品证据后取得对精确 `dsh-grok-provider@0.1.6` tarball 的最终授权。
 - [ ] 不可变 tag、唯一 GitHub Release asset、Trusted Publisher、npm `latest`、Registry 字节、签名与 provenance 回读全部关闭。
