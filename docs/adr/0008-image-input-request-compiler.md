@@ -35,7 +35,7 @@ model catalog 为每条记录生成同源的两类信息：
 
 `prepareCall()` 必须在同一个 auth/transport generation 中解析完整 route，并将它与 stream closure 一起冻结。图片能力不能由 `api_backend === "responses"` 推导。
 
-`0.1.4` 候选的精确图片模型集合只有 `grok-4.6`；`grok-4.5` 与未知 ID 明确保持文本。若 Proxy 后续提供可信、闭合的逐模型 modality 字段，可另行修订 catalog parser；在此之前不接受模糊 family、alias 或前缀匹配。
+`0.1.4` 发布版与维护版 `0.1.5` 的精确图片模型集合只有 `grok-4.6`；`grok-4.5` 与未知 ID 明确保持文本。若 Proxy 后续提供可信、闭合的逐模型 modality 字段，可另行修订 catalog parser；在此之前不接受模糊 family、alias 或前缀匹配。
 
 ### 3. wire shape
 

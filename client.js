@@ -21,7 +21,7 @@ window.__ModuleLoader__.load({
         usageUnknown: "上游未提供使用比例", quotaUnavailable: "暂时无法读取 Grok Build 额度。",
         modelsTitle: "当前账号可用的模型", modelsDescription: "模型来自 Grok Build 动态目录；Harness 模型选择器会显示这里列出的全部模型。",
         modelsUnavailable: "暂时无法读取模型目录。", noModels: "当前账号没有返回可用模型。",
-        context: "上下文", reasoning: "推理档位", defaultEffort: "默认", text: "文本输入", streaming: "流式输出", tools: "工具调用",
+        context: "上下文", reasoning: "推理档位", defaultEffort: "默认", text: "文本输入", image: "图片输入", streaming: "流式输出", tools: "工具调用",
         lastUpdated: "数据更新时间",
       },
       en: {
@@ -38,7 +38,7 @@ window.__ModuleLoader__.load({
         usageUnknown: "Usage percentage was not provided", quotaUnavailable: "Grok Build quota is temporarily unavailable.",
         modelsTitle: "Models available to this account", modelsDescription: "Models come from the live Grok Build catalog; every model listed here remains visible in the Harness model selector.",
         modelsUnavailable: "The model catalog is temporarily unavailable.", noModels: "This account returned no available models.",
-        context: "Context", reasoning: "Reasoning", defaultEffort: "default", text: "Text input", streaming: "Streaming", tools: "Tool calling",
+        context: "Context", reasoning: "Reasoning", defaultEffort: "default", text: "Text input", image: "Image input", streaming: "Streaming", tools: "Tool calling",
         lastUpdated: "Updated",
       },
     }
@@ -158,6 +158,7 @@ window.__ModuleLoader__.load({
           React.createElement("div", { className: "dsh-grok-badges" },
             React.createElement("span", { className: "dsh-grok-badge", "data-accent": true }, `${t("context")} ${formatContext(model.contextWindow)}`),
             model.capabilities?.textInput && React.createElement("span", { className: "dsh-grok-badge" }, t("text")),
+            model.capabilities?.imageInput && React.createElement("span", { className: "dsh-grok-badge" }, t("image")),
             model.capabilities?.streaming && React.createElement("span", { className: "dsh-grok-badge" }, t("streaming")),
             model.capabilities?.functionTools && React.createElement("span", { className: "dsh-grok-badge" }, t("tools"))),
           effortText && React.createElement("div", { className: "dsh-grok-efforts" }, `${t("reasoning")}：${effortText}`))

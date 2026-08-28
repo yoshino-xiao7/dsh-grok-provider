@@ -88,6 +88,8 @@ ctx.llm.registerConfigurableProviders([{
 }])
 ```
 
+`0.1.5` 将这组 Host 注册定义为一个事务：先安装官方 auth source，再创建/注册 adapter，最后注册 configurable provider。任一后续步骤失败都按相反顺序回滚已经取得的 disposer；单个 disposer 抛错不得阻止剩余清理。安装错误与清理错误必须同时保留（多错误使用 `AggregateError`）。成功安装后的 `dispose()` 同样逆序、尽力执行全部清理，并在首次调用开始时即标记为已处置，因此即使清理抛错，后续调用也不会重复执行副作用。对外仍只暴露同一个 runtime `adapter`、`auth` 与 `dispose()` Interface。
+
 `listModels()` 是异步动态目录：使用所选 auth generation 请求固定 `/v1/models`，返回该账号当前全部可见模型。目录是 discovery surface，不是路由白名单；`resolveModel()` 对未缓存的显式模型 ID 可做一次有界刷新，但不得根据 ID 名称猜 capability。
 
 每个 provider HTTP 请求必须包含 `attributionHeaders()`。
@@ -186,7 +188,7 @@ ctx.connection.rpc.handle(
 
 `status`、`login`、`logout` 只接受空对象；`cancel` 只接受当前公开状态中的 `sessionId`。不存在 `authMode`、模式选择、OAuth URL、device code、access/refresh token、identity 或 token endpoint 字段。
 
-`dashboard` 也只接受空对象，并且只在 `status.available === true` 时由页面调用。它返回脱敏模型 capability 和额度摘要；不得返回 credential metadata、用户身份、上游原文、headers 或 endpoint。额度重置时间只能来自 billing period end，不得使用 OAuth credential expiry。
+`dashboard` 也只接受空对象，并且只在 `status.available === true` 时由页面调用。它返回脱敏模型 capability 和额度摘要；模型的 `textInput`/`imageInput` 必须从同一动态目录的 `inputModalities` 严格投影，缺失、重复、未知或 accessor-backed modality 使 models 分支失败关闭，renderer 不按模型名猜测。不得返回 credential metadata、用户身份、上游原文、headers 或 endpoint。额度重置时间只能来自 billing period end，不得使用 OAuth credential expiry。
 
 业务状态不能冒充 rc.2 的 `RpcErrorCode`。成功分支承载闭合 outcome：
 
@@ -326,4 +328,5 @@ Harness rc.2 不提供 HTTPS URL opener，也不需要插件自建 opener：插�
 - 清空 token 内存缓存。
 - 清理 timer、reader 与 event listener。
 - 等待受控 inflight promise settle，不留下未处理 rejection。
+- Provider Runtime 的部分安装失败必须逆序回滚；正常卸载即使某个 disposer 失败也继续清理其他资源，且整个 `dispose()` 只执行一次。
 - 覆盖 Host activate → unload → activate 后只有一个 adapter/RPC/command；client bundle revision 更新后旧 slot、listener、store/controller 全部释放；subprocess service 替换时 child fiber 执行进程终止与有界等待后才卸载，并覆盖 `waitForExit()` 返回 `false` 的路径。

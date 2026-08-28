@@ -207,6 +207,8 @@ Web 与 TUI 分别验证：
 - Web、TUI、headless profile 分别覆盖缺失 optional peer/service；缺少 subprocess 时登录按钮/命令明确不可用，但已有合格会话的 Provider 可安全启动。
 - Web dashboard 只在 credential ready 后请求固定 billing/models；分别覆盖百分比+重置时间、仅重置时间、旧 monthly counters、空 config 与两个分支独立失败。
 - dashboard RPC 与 client bundle 断言不含 token、credential path、`user_id`、email、team/principal ID、balance、history、原始响应或远端错误。
+- dashboard 从同一模型目录投影 `textInput`/`imageInput`；覆盖精确 image/text-only 卡片和缺失、空、未知、重复、accessor-backed modality，只有 image-capable 卡片渲染图片标签。
+- Provider Runtime 覆盖 official source、adapter 创建/注册和 configurable provider 注册各阶段失败；已取得资源逆序回滚，disposer 抛错后继续清理，多错误顺序稳定，`dispose()` 即使首次抛错也不重复执行。
 - 视觉验收覆盖桌面双列模型卡和 `max-width:680px` 单列规则；刷新操作不得触发重复登录或持久化额度。
 
 ## 8. 打包与供应链
@@ -218,6 +220,8 @@ Web 与 TUI 分别验证：
 - root 与完整 runtime/optional dependency 图均无 `preinstall`、`install`、`postinstall`；普通构建/测试 scripts 不在该市场阻断集合中，但候选包不得依赖安装时构建。
 - 从真实 tarball 在全新 Harness profile 安装，不依赖仓库外文件。
 - GitHub macOS/Windows checkout 后发行文本统一为 LF；`grok-provider.patch.yml` 的逐字节契约不得因 `core.autocrlf` 改写。
+- 发布 workflow 契约测试固定 Node `24.19.0`，并要求输入 tag、workflow ref/type/name/SHA、递归 peeled commit、非草稿/非预发行 Release 与唯一精确 asset 全部一致。
+- 制品契约测试同时锁定 manifest/lockfile 版本、中英文 README 安装命令、`SECURITY.md` 源码版本和中文在前/英文在后的无重复标题 Release Notes。
 
 ## 9. 发布验收
 
@@ -229,4 +233,4 @@ Web 与 TUI 分别验证：
 - Windows x64 自动化平台测试通过，且 README、release notes 和 marketplace 元数据在首次真机验证前明确披露“代码支持、真机未验证”。
 - npm 回读的 SHA-512 与本地发布 tarball 一致。
 
-`0.1.0` 发布后原计划完成一次 Windows x64 Registry 精确版本真机验收；仓库所有者随后明确决定该验收不再阻断稳定发布，且普通后续版本不重复要求真机验证。`0.1.1` 及后续版本以 CI、契约测试、隔离安装和制品校验为常规门禁；只有认证流程、Harness subprocess seam 或平台安全策略发生变化时才必须定向真机验证。`0.1.3` 只修改平台无关的历史消息请求转换，并以真实脱敏 Ark 调用 ID 回归和 macOS/Windows CI 为平台门禁。
+`0.1.0` 发布后原计划完成一次 Windows x64 Registry 精确版本真机验收；仓库所有者随后明确决定该验收不再阻断稳定发布，且普通后续版本不重复要求真机验证。`0.1.1` 及后续版本以 CI、契约测试、隔离安装和制品校验为常规门禁；只有认证流程、Harness subprocess seam 或平台安全策略发生变化时才必须定向真机验证。`0.1.3` 只修改平台无关的历史消息请求转换；`0.1.4` 的图片输入已完成独立 Proxy/Harness 门禁并发布；`0.1.5` 只维护发布链路、dashboard 投影和 runtime 生命周期，均以聚焦回归与 macOS/Windows CI 为平台门禁。

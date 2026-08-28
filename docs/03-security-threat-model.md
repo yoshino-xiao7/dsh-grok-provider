@@ -51,7 +51,7 @@ Host AuthCoordinator
 | external/企业/歧义凭据误送固定 xAI Proxy | token 泄漏或账号混淆 | 唯一候选；闭合 auth mode/issuer/scope/client/expiry 关系；schema 不符失败关闭；承认 metadata 未签名 | P0 |
 | token 被发往自定义或重定向 origin | 账号接管 | endpoint ID；固定 HTTPS origin/path；`redirect: "error"` | P0 |
 | Authorization 被继承到远端 URL | 账号接管 | 所有版本永久禁止任意图片 URL 下载；transport 不接受调用方 URL | P0 |
-| SSE/压缩响应无限增长 | 内存、CPU、磁盘 DoS | 字节、行、事件、总时长和 idle timeout 双重上限 | P0 |
+| SSE/压缩响应无限增长 | 内存、CPU、磁盘 DoS | 解压后字节、行、事件、单事件与整体请求期限均有上限；当前没有独立 first-byte/idle timeout | P0 |
 | 原始远端错误返回 UI | token、账号或内部信息泄漏 | 只返回插件稳定错误码和安全文案；Harness RPC correlation 留在 carrier 内部 | P0 |
 | billing 响应或 credential metadata 越界进入 renderer | 身份、订阅或凭据泄漏 | Host 严格抽取百分比、周期与模型 capability；拒绝/忽略 identity、balance、history、headers、URL 和原始响应 | P0 |
 | token 到期被误标为额度重置 | 错误产品决策、误导用户 | 重置时间只接受 billing period end；credential `expires_at` 不进入 dashboard DTO | P0 |
@@ -220,7 +220,7 @@ TUI 通过 Harness 的 human-command registry 注册一个全局 `/grok`，只�
 - 不存在模型可控文件路径写入。
 - 不存在把 Bearer token 带到第二个 origin 的功能路径。
 
-`0.1.4` 候选按 [ADR-0008](./adr/0008-image-input-request-compiler.md) 只增加图片输入：
+`0.1.4` 发布版按 [ADR-0008](./adr/0008-image-input-request-compiler.md) 只增加图片输入；`0.1.5` 沿用同一边界：
 
 - 仅精确 `grok-4.6` route 声明 image；`grok-4.5` 与未知模型继续 text-only。
 - 只从可选 Harness attachment store 调用 `readImageRequest`，不解析 URL、路径、file ID 或调用方 data URL。
@@ -231,7 +231,7 @@ TUI 通过 Harness 的 human-command registry 注册一个全局 `/grok`，只�
 - 最终 JSON 超限继续逐张淘汰最旧图片；缺服务、projection unsupported、源图片位置/引用/MIME 不支持在 Responses POST 前以 `UNSUPPORTED_CONTENT` 拒绝。store 返回损坏或不自洽的投影、超过含图编译 block 预算、更深 tool-result，以及图片全部淘汰后剩余非图片请求仍不合法，都保持通用 `INVALID_RESPONSE`。
 - AbortSignal 在查询服务前检查并传给所有投影读取；编译失败时 Responses POST 调用必须为 0，但模型目录 GET 可能已发生。
 
-公开 xAI 文档、离线测试与真机验证继续作为三类独立证据。[上游证据页](./12-upstream-image-input-evidence.md)记录的固定 Proxy 门禁已对 `grok-4.6` 的普通 user 与一层 tool-result 分别发送红/蓝合成图：4 次均为 HTTP 200、`text/event-stream`、completed，规范化整段回复只含正确颜色词和可选句末标点。`grok-4.5` 的受控红图结果语义不可靠，因此即使公开模型页声明图片能力也不进入本插件图片集合。图片固定使用 `detail:"high"`。Harness `0.1.1-rc.2` attachment-local/LlmRuntime 必须复验 `grok-4.6` image、`grok-4.5`/未知模型 text-only 后才能关闭候选门禁。任意 URL 下载与把 Authorization 带到第二个 origin 在所有后续版本仍永久禁止；Web/X Search、图片生成和 `prompt_cache_key` 不属于 `0.1.4`。
+公开 xAI 文档、离线测试与真机验证继续作为三类独立证据。[上游证据页](./12-upstream-image-input-evidence.md)记录的固定 Proxy 门禁已对 `grok-4.6` 的普通 user 与一层 tool-result 分别发送红/蓝合成图：4 次均为 HTTP 200、`text/event-stream`、completed，规范化整段回复只含正确颜色词和可选句末标点。`grok-4.5` 的受控红图结果语义不可靠，因此即使公开模型页声明图片能力也不进入本插件图片集合。图片固定使用 `detail:"high"`。Harness `0.1.1-rc.2` attachment-local/LlmRuntime 已复验 `grok-4.6` image、`grok-4.5`/未知模型 text-only，候选门禁随后关闭并完成 `0.1.4` 发布。任意 URL 下载与把 Authorization 带到第二个 origin 在所有后续版本仍永久禁止；Web/X Search、图片生成和 `prompt_cache_key` 不属于 `0.1.4` 或维护版 `0.1.5`。
 
 ## 9. 残余风险
 

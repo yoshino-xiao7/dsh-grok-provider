@@ -33,19 +33,61 @@ jobs:
           echo "RELEASE_VERSION=$release_version" >> "$GITHUB_ENV"
           echo "ARTIFACT_NAME=dsh-grok-provider-$release_version.tgz" >> "$GITHUB_ENV"
 
-      - name: Download immutable release artifact
+      - name: Bind workflow run to immutable tag commit
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag }}
+          CONTEXT_REF: ${{ github.ref }}
+          CONTEXT_REF_NAME: ${{ github.ref_name }}
+          CONTEXT_REF_TYPE: ${{ github.ref_type }}
+          CONTEXT_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          test "$CONTEXT_REF_TYPE" = tag
+          test "$CONTEXT_REF" = "refs/tags/$RELEASE_TAG"
+          test "$CONTEXT_REF_NAME" = "$RELEASE_TAG"
+
+          ref_json="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$RELEASE_TAG")"
+          test "$(jq -r .ref <<< "$ref_json")" = "refs/tags/$RELEASE_TAG"
+          peeled_type="$(jq -r .object.type <<< "$ref_json")"
+          peeled_sha="$(jq -r .object.sha <<< "$ref_json")"
+          for _ in {1..8}; do
+            if [[ "$peeled_type" = commit ]]; then
+              break
+            fi
+            test "$peeled_type" = tag
+            tag_json="$(gh api "repos/$GITHUB_REPOSITORY/git/tags/$peeled_sha")"
+            peeled_type="$(jq -r .object.type <<< "$tag_json")"
+            peeled_sha="$(jq -r .object.sha <<< "$tag_json")"
+          done
+          test "$peeled_type" = commit
+          test "$peeled_sha" = "$CONTEXT_SHA"
+
+      - name: Validate release and download exact artifact
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ inputs.tag }}
         run: |
           set -euo pipefail
+          release_json="$(gh release view "$RELEASE_TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --json tagName,isDraft,isPrerelease,assets)"
+          test "$(jq -r .tagName <<< "$release_json")" = "$RELEASE_TAG"
+          test "$(jq -r .isDraft <<< "$release_json")" = false
+          test "$(jq -r .isPrerelease <<< "$release_json")" = false
+          test "$(jq -r '.assets | length' <<< "$release_json")" = 1
+          test "$(jq -r '.assets[0].name' <<< "$release_json")" = "$ARTIFACT_NAME"
+
+          mkdir -- release
           gh release download "$RELEASE_TAG" \
             --repo "$GITHUB_REPOSITORY" \
             --pattern "$ARTIFACT_NAME" \
             --dir release
-          is_prerelease="$(gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --json isPrerelease --jq .isPrerelease)"
-          test "$is_prerelease" = false
+          mapfile -t downloaded < <(find release -maxdepth 1 -type f -print)
+          test "${#downloaded[@]}" -eq 1
+          test "${downloaded[0]}" = "release/$ARTIFACT_NAME"
 
       - name: Verify artifact digest and manifest
         shell: bash
@@ -64,7 +106,7 @@ jobs:
       - name: Use supported Node.js
         uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444
         with:
-          node-version: 24
+          node-version: 24.19.0
           registry-url: https://registry.npmjs.org
 
       - name: Use supported npm CLI
