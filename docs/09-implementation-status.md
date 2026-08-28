@@ -106,4 +106,5 @@ Windows x64 真机不再是 `0.1.0` 预发布阻断项。首次发布后必须�
 - 从上述精确 `0.1.4` release commit 创建独立分支 `yukiryou/v0.1.5`，不直接修改发布基线。
 - 维护范围冻结为：发布 workflow 的 tag/ref/commit 与唯一 Release asset 绑定、Node `24.19.0` 固定；账户面板从模型 `inputModalities` 展示图片能力；Provider Runtime 部分安装失败时逆序回滚。
 - 不改变认证、凭据、CLI subprocess、endpoint、Responses wire、图片编译资源策略或平台支持矩阵；Web/X Search 与图片生成继续顺延。
-- `package.json`、lockfile、CHANGELOG、中英文 README、安全策略和双语 Release Notes 已进入 `0.1.5` 候选状态；精确 Node `24.19.0` 全量测试通过（133 项、131 pass、0 fail、2 项 Windows-only skip），生产依赖审计为 0 漏洞，dry-run 打包为 59 个文件。双平台 CI、唯一制品与精确发布授权仍按发布检查表执行。
+- `package.json`、lockfile、CHANGELOG、中英文 README、安全策略和双语 Release Notes 已进入 `0.1.5` 候选状态；精确 Node `24.19.0` 全量测试通过（133 项、131 pass、0 fail、2 项 Windows-only skip），生产依赖审计为 0 漏洞，dry-run 打包为 59 个文件。
+- 代码 PR [#10](https://github.com/yoshino-xiao7/dsh-grok-provider/pull/10) 已合并，merge commit 为 `a0bb3864b474f3129050a211bf44d0bf73a9474e`；PR CI run [33160850486](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33160850486) 的 macOS 14 与 Windows 2022 job 均通过。唯一最终制品与精确发布授权仍按发布检查表执行。

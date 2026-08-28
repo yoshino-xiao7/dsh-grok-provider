@@ -220,7 +220,7 @@ Read the [contributing guide](CONTRIBUTING.md) before filing an issue or PR. Cha
 - [x] Publish the `0.1.2` Windows CLI compatibility correction
 - [x] Publish the `0.1.3` cross-provider tool-history compatibility correction
 - [x] Publish `0.1.4`: image input only for exact `grok-4.6`; red/blue user/tool-result Proxy gates and final Harness attachment revalidation passed, while `grok-4.5` fails closed as text-only
-- [ ] Publish `0.1.5`: maintenance for release binding, dashboard capability badges, and transactional Provider Runtime installation (development and local gates are complete)
+- [ ] Publish `0.1.5`: maintenance for release binding, dashboard capability badges, and transactional Provider Runtime installation (development, PR, and dual-platform CI are complete)
 - [ ] Later independent slice: opt-in, default-off Web Search / X Search
 - [ ] A subsequent slice: opt-in image generation (inline results only, committed through Harness attachments)
 - [ ] Complete independent Windows x64 acceptance and publish a later stable fix if needed

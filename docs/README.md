@@ -1,10 +1,10 @@
 # Grok Build Provider 文档索引
 
-- 状态：**稳定版 `0.1.4` 已发布；`0.1.5` 维护候选已完成本地门禁，待双平台 CI、最终制品与发布授权**
+- 状态：**稳定版 `0.1.4` 已发布；`0.1.5` 维护候选已完成 PR 与双平台 CI，待最终制品与发布授权**
 - 当前 npm 稳定版本：`0.1.4`
 - 当前候选版本：`0.1.5`
 - 版本分支：`yukiryou/v0.1.5`
-- 候选状态：发布 tag/ref/commit 与唯一 Release asset 绑定、账户面板图片能力标签、Provider Runtime 安装事务已实现；精确 Node 24 全量测试、生产依赖审计与 dry-run 打包通过，双平台 CI、最终制品和精确发布授权仍待关闭
+- 候选状态：发布 tag/ref/commit 与唯一 Release asset 绑定、账户面板图片能力标签、Provider Runtime 安装事务已实现；精确 Node 24 全量测试、生产依赖审计、dry-run 打包及 PR #10 双平台 CI 通过，最终制品和精确发布授权仍待关闭
 - 兼容基线：DeepSeek Harness `0.1.1-rc.2`
 - 目标平台：macOS arm64、Windows x64
 
