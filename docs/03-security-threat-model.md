@@ -79,8 +79,8 @@ macOS 官方默认路径可能是 symlink；验证时允许 symlink，但 `realp
 
 | 用户动作 | 可执行参数 | 说明 |
 |---|---|---|
-| 检查版本 | `--version` | 10 秒、16 KiB 输出上限 |
-| 探测浏览器登录 | `login --help` | 只确认独立 `--oauth` 选项，不执行登录 |
+| 检查版本 | `--version` | 独立 10 秒 deadline、16 KiB 输出上限 |
+| 探测浏览器登录 | `login --help` | 独立 10 秒 deadline；只确认独立 `--oauth` 选项，不执行登录 |
 | 浏览器登录 | `login --oauth` | 标准配置下官方 CLI 打开浏览器并处理 callback |
 | 退出 | `logout` | 官方 CLI 删除自己的凭据 |
 
@@ -106,6 +106,8 @@ macOS 官方默认路径可能是 symlink；验证时允许 symlink，但 `realp
 官方 loopback 登录可能先清除旧 credential，取消/失败也可能使共享会话失效；成功后 CLI 还可能同步 managed config 或发送其自身已启用的遥测。插件无法撤销这些官方副作用。登录前 UI 必须提示，`logout` 必须经前台用户确认，且会影响所有共享同一 `GROK_HOME` 的应用。
 
 “插件不自动更新”只约束本插件；官方 CLI 自身的更新检查/替换仍属于 vendor boundary。版本输出仅用于有界诊断，不能充当信任证明。每次动作仍重新解析 executable identity；登录还必须通过命令能力探测，并在完成后重新验证生产 OIDC 凭据契约。任何检查失败都不得回退到 PATH、其他命令、shell 或非生产凭据。
+
+解析、文件验证、`--version`、`login --help` 和最终动作各自拥有并及时释放独立 deadline。不能让前序阶段消耗后序阶段预算；尤其 Windows 冷启动时，大型官方 `grok.exe` 可能经过系统安全扫描，累计共享预算会在 `login --oauth` 启动前把正常路径误判为失败。文件验证只启动只读元数据操作，并在取消时停止等待其结果；调用方取消仍贯穿所有阶段，任一阶段自身超时继续失败关闭。每个已启动进程的 tree wait 使用新的有界 teardown signal；清理超时/异常保持失败，进程退出后到 tree wait 完成前发生的 caller abort 必须结算为取消而非成功。登录 starting、confirmed logout 与过期凭据 refresh 都必须先登记为 controller-owned operation；三者共享 single-flight、shutdown fence 与 driver-generation 门禁。replacement 会使旧 logout confirmation 和旧代际结果失效；当前代际任一 cleanup failure 会隔离 login/logout/refresh，直到 Host 重启或 subprocess driver replacement。
 
 ### 状态机
 
@@ -181,7 +183,7 @@ POST https://cli-chat-proxy.grok.com/v1/responses
 - `auth.json`：64 KiB。
 - model catalog 与 billing/error JSON：各 256 KiB。
 - Responses 请求：最多 10,000 条消息、128 个 function tools；每个 tool schema 的 JSON 最多 1 MiB；完整请求 JSON UTF-8 最多 16 MiB。
-- 文本或纯文本 tool-result 的单个累计段最多 8,388,608 个 JavaScript code units；function arguments 最多 2 MiB UTF-8。最终 16 MiB JSON 是独立硬门禁。
+- 文本或纯文本 tool-result 的单个累计段，以及被省略前的 request reasoning block，最多 8,388,608 个 JavaScript code units；function arguments 最多 2 MiB UTF-8。最终 16 MiB JSON 是独立硬门禁。
 - SSE：单事件/未切分 buffer 最多 2 MiB、解析事件最多 100,000、单次流实际读取字节最多 128 MiB。comment/heartbeat 不单独计数，但仍受流字节上限。
 - response block text 与 encrypted reasoning 各最多 8 MiB UTF-8；tool arguments 最多 2 MiB UTF-8。block 数量由事件数与总流字节间接约束，没有另行宣称 4,096 上限。
 - models deadline 30 秒、billing deadline 15 秒、Responses 请求整体 deadline 10 分钟；当前没有独立首字节或 idle deadline。
@@ -231,7 +233,7 @@ TUI 通过 Harness 的 human-command registry 注册一个全局 `/grok`，只�
 - 最终 JSON 超限继续逐张淘汰最旧图片；缺服务、projection unsupported、源图片位置/引用/MIME 不支持在 Responses POST 前以 `UNSUPPORTED_CONTENT` 拒绝。store 返回损坏或不自洽的投影、超过含图编译 block 预算、更深 tool-result，以及图片全部淘汰后剩余非图片请求仍不合法，都保持通用 `INVALID_RESPONSE`。
 - AbortSignal 在查询服务前检查并传给所有投影读取；编译失败时 Responses POST 调用必须为 0，但模型目录 GET 可能已发生。
 
-公开 xAI 文档、离线测试与真机验证继续作为三类独立证据。[上游证据页](./12-upstream-image-input-evidence.md)记录的固定 Proxy 门禁已对 `grok-4.6` 的普通 user 与一层 tool-result 分别发送红/蓝合成图：4 次均为 HTTP 200、`text/event-stream`、completed，规范化整段回复只含正确颜色词和可选句末标点。`grok-4.5` 的受控红图结果语义不可靠，因此即使公开模型页声明图片能力也不进入本插件图片集合。图片固定使用 `detail:"high"`。Harness `0.1.1-rc.2` attachment-local/LlmRuntime 已复验 `grok-4.6` image、`grok-4.5`/未知模型 text-only，候选门禁随后关闭并完成 `0.1.4` 发布。任意 URL 下载与把 Authorization 带到第二个 origin 在所有后续版本仍永久禁止；Web/X Search、图片生成和 `prompt_cache_key` 不属于 `0.1.4` 或维护版 `0.1.5`。
+公开 xAI 文档、离线测试与真机验证继续作为三类独立证据。[上游证据页](./12-upstream-image-input-evidence.md)记录的固定 Proxy 门禁已对 `grok-4.6` 的普通 user 与一层 tool-result 分别发送红/蓝合成图：4 次均为 HTTP 200、`text/event-stream`、completed，规范化整段回复只含正确颜色词和可选句末标点。`grok-4.5` 的受控红图结果语义不可靠，因此即使公开模型页声明图片能力也不进入本插件图片集合。图片固定使用 `detail:"high"`。Harness `0.1.1-rc.2` attachment-local/LlmRuntime 已复验 `grok-4.6` image、`grok-4.5`/未知模型 text-only，候选门禁随后关闭并完成 `0.1.4` 发布。`0.1.6` 只允许普通 user/system 历史省略通过闭合字符串/长度校验的私有 reasoning 并保留相邻可见 text/image；畸形或超限 reasoning 仍在 attachment I/O 和 Responses POST 前失败。该修复不改变 assistant 加密 reasoning replay 或一层 tool-result 的公开内容边界。任意 URL 下载与把 Authorization 带到第二个 origin 在所有后续版本仍永久禁止；Web/X Search、图片生成和 `prompt_cache_key` 不属于 `0.1.6`。
 
 ## 9. 残余风险
 

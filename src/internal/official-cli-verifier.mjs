@@ -8,12 +8,13 @@ export class OfficialCliVerificationError extends Error {
   }
 }
 
-export async function verifyOfficialCliExecutable({ candidate, resolved, grokHome, platform }) {
+export async function verifyOfficialCliExecutable({ candidate, resolved, grokHome, platform }, signal) {
   if (
     typeof candidate !== "string" ||
     typeof resolved !== "string" ||
     typeof grokHome !== "string" ||
-    (platform !== "darwin" && platform !== "win32")
+    (platform !== "darwin" && platform !== "win32") ||
+    !isOptionalAbortSignal(signal)
   ) throw new TypeError("Invalid official Grok CLI verification request")
 
   const pathApi = platform === "win32" ? path.win32 : path.posix
@@ -22,13 +23,15 @@ export async function verifyOfficialCliExecutable({ candidate, resolved, grokHom
   }
 
   try {
-    const [candidateInfo, canonicalCandidate, canonicalResolved, canonicalHome] = await Promise.all([
+    signal?.throwIfAborted()
+    const [candidateInfo, canonicalCandidate, canonicalResolved, canonicalHome] = await waitForMetadata([
       lstat(candidate),
       realpath(candidate),
       realpath(resolved),
       realpath(grokHome),
-    ])
-    const resolvedInfo = await stat(canonicalCandidate)
+    ], signal)
+    signal?.throwIfAborted()
+    const [resolvedInfo] = await waitForMetadata([stat(canonicalCandidate)], signal)
     if (!resolvedInfo.isFile()) throw new OfficialCliVerificationError()
 
     if (platform === "darwin") {
@@ -58,5 +61,33 @@ export async function verifyOfficialCliExecutable({ candidate, resolved, grokHom
   } catch (error) {
     if (error instanceof OfficialCliVerificationError || error instanceof TypeError) throw error
     throw new OfficialCliVerificationError()
+  }
+}
+
+function isOptionalAbortSignal(signal) {
+  return signal === undefined || (
+    signal !== null &&
+    typeof signal === "object" &&
+    typeof signal.aborted === "boolean" &&
+    typeof signal.addEventListener === "function" &&
+    typeof signal.removeEventListener === "function" &&
+    typeof signal.throwIfAborted === "function"
+  )
+}
+
+async function waitForMetadata(operations, signal) {
+  const pending = Promise.all(operations)
+  if (signal === undefined) return pending
+  signal.throwIfAborted()
+  let onAbort
+  const aborted = new Promise((_, reject) => {
+    onAbort = () => reject(signal.reason ?? new DOMException("Aborted", "AbortError"))
+    signal.addEventListener("abort", onAbort, { once: true })
+    if (signal.aborted) onAbort()
+  })
+  try {
+    return await Promise.race([pending, aborted])
+  } finally {
+    signal.removeEventListener("abort", onAbort)
   }
 }

@@ -56,6 +56,7 @@
 - workspace/PATH 中的假 `grok` 不会被选中。
 - `--version` 超时、超限、非零退出、stderr 非空或非单行 `grok ...` 输出失败；合法的未知版本输出不得仅因版本号不同而失败。
 - 登录前 `login --help` 必须成功并包含独立 `--oauth` 选项；缺失、畸形、超时、超限或非零退出时不得启动 `login --oauth`。
+- executable 解析、文件验证、`--version`、`login --help` 与最终动作各自使用独立 deadline；Windows 冷启动 fake 让每个准备阶段都低于单阶段预算、累计远超该预算时仍必须到达 `login --oauth`。caller abort 与每阶段自身超时仍立即失败关闭，完成后等待超过预算也不得迟发 abort。另用永不结算的 direct `done` 与 tree fake 证明 stage/teardown wait 都有界，用进程已成功但 tree wait 未完成的 fake 证明 late caller abort 返回 cancelled；cleanup `false`/异常经 official driver 保留为内部 `cleanup-failed`，controller 公开 `failed` 并隔离当前 driver，replacement 后才能恢复。并发 begin 必须只启动一棵树；confirmed logout 与 credential refresh 必须纳入 shutdown；replacement 前后的 pending/stale success、cleanup failure 和 logout confirmation 都按 registration token 失败关闭，不能调用旧 driver 或隔离新 driver。
 - 覆盖 macOS `grok 1.0.5 (5115b46bc909)` 与 Windows `grok 0.2.82 (6d0b07d2de) [stable]` 的真实输出形状，并断言两者都能在能力存在时进入固定登录 argv。
 - 登录期间 symlink/文件 identity/version 改变，或官方 CLI 自更新到未测试版本时失败关闭；不把 vendor updater 误记成插件下载安装。
 - 路径/owner/version 检查不得在 UI 中宣称已密码学证明 publisher；从非官方安装入口取得的候选不在支持范围。
@@ -80,7 +81,7 @@
 - 未知非关键字段只能有界忽略；精确 schema 与生产 issuer 绑定到发布支持的 CLI 版本。
 - symlink/reparse、目录、替换竞态和读取中断。
 - access/refresh token canary 不出现在 `JSON.stringify(status)`、异常、日志、cache、诊断输出或 fingerprint；测试承认完整文件字节会瞬时进入 Host 内存。
-- 新鲜 access token 不启动 CLI；过期的同源官方 record 通过固定 `models` 命令刷新并只重试一次；并发请求 single-flight；外国 issuer/client/scope/schema 永不触发刷新；刷新失败或刷新后仍过期统一失败关闭。
+- 新鲜 access token 不启动 CLI；过期的同源官方 record 通过 controller-owned 固定 `models` 命令刷新并只重试一次；并发请求 single-flight；外国 issuer/client/scope/schema 永不触发刷新；刷新失败或刷新后仍过期统一失败关闭。refresh cleanup failure 必须隔离当前 driver；subprocess replacement/dispose 前开始的 refresh 即使迟到成功也不能让 credential source 继续读取或授权操作。
 - email、user ID、team/org、subscription 与 fingerprint canary 不进入 `PublicAuthStatus`、RPC、命令返回或持久事件。
 - credential source 已挂载但文件缺失、无效或过期且续期失败时，Web/TUI 状态必须为 unavailable；不得把 source/transport 已注册误报为凭据 ready。状态校验与登录/退出 generation 竞态时失败关闭。
 - `expires_at` 边界、固定 clock skew、缺失/畸形 expiry 和本机时钟偏移。
@@ -126,10 +127,11 @@
 - 每个请求都有 Harness attribution headers。
 - `0.1.0`–`0.1.3` text-only modality 把图片投影为稳定文本；`0.1.4` 未验证模型继续该行为，精确图片模型不得被 `LlmRuntime` 静默投影。
 - 无图 compiler 不查询 attachment store，完整 wire JSON 与 `0.1.3` encoder 一致；user 图片及一层 tool-result 图片保持 `text/image/text` 顺序。
+- 用真实故障形状锁定历史兼容：纯文本 user/system 与 `role:user` / `source.kind:subagent-settled` 的 `text/reasoning/text` 只保留可见文本，后续追加普通 user 图片时仍必须编译成功；普通 user 的同一消息内为 `text/reasoning/image/reasoning/text` 时也必须保持可见 text/image 顺序。私有 user reasoning 即使伪带同模型 replay metadata 也不进入 wire，有效 assistant replay 则仍恢复。省略前仍校验 reasoning text 的类型和长度；非字符串/超限负例在纯文本与含图路径均按通用非法 request 失败，含图路径 attachment store lookup 为 0。
 - attachment fake 覆盖同一 AbortSignal、请求内相同 attachment ID 只读一次、相同 ID 元数据冲突、缺 store、`ATTACHMENT_PROJECTION_UNSUPPORTED`、存储故障及 I/O 完成前 Responses POST 调用数为 0。
 - jpeg/png 正确 MIME/魔数与 jpeg/png 交叉伪造；webp/gif；`bytes === data.byteLength`；`uchar`/sRGB/hasAlpha；4 MiB、16,777,216 pixels、8192 最大边的边界值。
 - 图片数 8/9、派生图总字节 8 MiB、含图路径全请求 content blocks 20,000、完整 JSON 16 MiB；跨普通消息/一层 tool-result 均按全局 oldest-first 淘汰，淘汰项不读取 attachment。另锁定 20,001 个纯文本 block 仍走 `0.1.3` fast path。
-- 更深 tool-result、assistant/system 图片与未知 block 在 attachment I/O 或 Responses POST 前失败；源图片 policy 错误为 `UNSUPPORTED_CONTENT`，store 返回损坏投影、图片淘汰后仍超限及通用 stop/schema/request 错误保持 `INVALID_RESPONSE`。
+- 更深 tool-result、assistant/system 图片与未知 block 在 attachment I/O 或 Responses POST 前失败；源图片 policy 错误为 `UNSUPPORTED_CONTENT`，store 返回损坏投影、图片淘汰后仍超限及通用 stop/schema/request 错误保持 `INVALID_RESPONSE`。tool-result 的 reasoning 与图片同行时仍锁定为通用非法 request，不能漂移成图片 capability 错误。
 - 本地 fake/codec 测试与 CLI Chat Proxy 脱敏图片 spike 是两类独立证据；精确 `grok-4.6` 必须分别通过普通 user 与一层 tool-result 的红/蓝语义门禁，请求图片固定为 `detail:"high"`。`grok-4.5` 的受控红图语义不可靠，必须失败关闭为 text-only；真实 Harness attachment smoke 还必须独立复验仅 `grok-4.6` 保留图片、`grok-4.5`/未知模型 text-only 且网络请求为 0。
 - Provider 只发 tool-call chunks，不执行工具/写文件；未声明工具名、恶意路径参数、伪造 server search/image/tool 事件不能绕过 Harness 权限层。后续搜索/生图版本仍不得把厂商 server-tool 事件映射为 Harness `tool-call`。
 
@@ -233,4 +235,4 @@ Web 与 TUI 分别验证：
 - Windows x64 自动化平台测试通过，且 README、release notes 和 marketplace 元数据在首次真机验证前明确披露“代码支持、真机未验证”。
 - npm 回读的 SHA-512 与本地发布 tarball 一致。
 
-`0.1.0` 发布后原计划完成一次 Windows x64 Registry 精确版本真机验收；仓库所有者随后明确决定该验收不再阻断稳定发布，且普通后续版本不重复要求真机验证。`0.1.1` 及后续版本以 CI、契约测试、隔离安装和制品校验为常规门禁；只有认证流程、Harness subprocess seam 或平台安全策略发生变化时才必须定向真机验证。`0.1.3` 只修改平台无关的历史消息请求转换；`0.1.4` 的图片输入已完成独立 Proxy/Harness 门禁并发布；`0.1.5` 只维护发布链路、dashboard 投影和 runtime 生命周期，均以聚焦回归与 macOS/Windows CI 为平台门禁。
+`0.1.0` 发布后原计划完成一次 Windows x64 Registry 精确版本真机验收；仓库所有者随后明确决定该验收不再阻断稳定发布，且普通后续版本不重复要求真机验证。`0.1.1` 及后续版本以 CI、契约测试、隔离安装和制品校验为常规门禁。`0.1.6` 改变了认证预检 deadline 所有权，因此加入 Windows slow-fake 与 Windows CI 聚焦门禁；仓库所有者于 2026-08-28 明确决定先发布 Registry 精确版本，再在 Windows x64 上验证浏览器确实弹出、取消与超时结算。发布前不得把代码/CI 覆盖表述为 Windows 真机已确认；验证失败时发布新的递增稳定修复版。

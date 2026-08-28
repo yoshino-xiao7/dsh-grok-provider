@@ -1,9 +1,9 @@
 # 能力路线图
 
-- 状态：**`0.1.4` 图片输入切片与 `0.1.5` 维护版均已发布并完成制品、签名与 SLSA provenance 回读（2026-08-28）**
+- 状态：**`0.1.4` 图片输入与 `0.1.5` 维护版已发布；`0.1.6` 图片历史/Windows 登录维护版进入发布候选阶段（2026-08-28）**
 - 当前 npm 稳定版：`0.1.5`
 - 最近发布：`0.1.5`
-- 当前版本分支：`yukiryou/v0.1.5`
+- 当前开发分支：`yukiryou/v0.1.6`
 
 本文是 `0.1.3` 之后内容类型迭代的单一事实来源。`0.1.0`–`0.1.3` 的历史范围仍以 [ADR-0002](./adr/0002-v0.1-scope.md) 和[产品需求](./01-product-requirements.md)为准。
 
@@ -25,7 +25,8 @@
 | --- | --- | --- | --- |
 | `0.1.4` | 图片输入 | Proxy 接受本版本的 data URL wire shape；Harness attachment 投影与限额可执行 | [ADR-0008](./adr/0008-image-input-request-compiler.md) |
 | `0.1.5` | 发布链路、能力展示与安装事务维护；不新增模型能力 | 精确 tag/commit/Release 制品绑定、回滚与 UI 投影测试 | 复用现有接口与发布契约 |
-| 后续版本 | 默认关闭的 Web Search / X Search | Proxy 接受 server tools；已记录可放行事件 | ADR-0009 |
+| `0.1.6` 候选 | 图片历史 reasoning 兼容与 Windows 官方 CLI 分阶段 deadline | 聚焦回归、macOS/Windows CI、唯一制品与发布回读 | 复用现有图片与认证契约 |
+| `0.1.7` 候选 | 默认关闭的 Web Search / X Search | Proxy 接受 server tools；已记录可放行事件 | 独立 ADR 与固定 Proxy 证据 |
 | 再后续版本 | 默认关闭的图片生成 | Proxy 返回可有界提交到 Harness attachment 的内联结果 | ADR-0010 |
 
 版本号可因缺陷修复顺延。`prompt_cache_key` 与图片输入相互独立，不属于 `0.1.4`：它需要独立的会话标识隐私、路由稳定性和“不得自动重放已经发送的 POST”分析，不得作为图片请求失败后的重试/降级机制。
@@ -110,15 +111,22 @@ const request = await requestCompiler.compile(options, preparedRoute)
 
 `0.1.5` 不新增模型、搜索或生图能力。下一内容切片必须重新完成独立 ADR、安全边界和发布门禁。
 
-## 5. 后续：默认关闭的 Web/X Search
+## 5. `0.1.6` 候选：图片历史与 Windows 登录维护
 
-- 两个独立开关，默认关闭；关闭时请求体完全不存在对应 server tool。
-- 搜索词与提示词会交给 xAI 检索并可能产生额外用量；UI 必须披露。
-- `purpose=compaction|session-title` 等后台调用必须由 Host policy 强制关闭搜索。
-- citation 只作为文本保留；Provider 不请求链接或图片 URL。
-- server-tool 事件不得伪装成 Harness `tool-call`。
+- 普通 user/system 历史中的私有 reasoning 只被省略，不转成 user text；相邻可见 text/image 顺序保持。
+- 同 Provider assistant 的有效 encrypted reasoning replay 保持不变；一层 tool-result 仍只接受公开 text/image。
+- executable 解析、只读验证、`--version`、`login --help` 和最终 CLI action 各自拥有 deadline，避免 Windows 冷启动累计消耗登录预算。
+- 本版不改 Config、模型能力集合、固定 origin、认证模式或响应事件集合，不包含 Web/X Search。
+- Windows 真机浏览器弹出按仓库所有者决定在发布 Registry 精确 `0.1.6` 后验证；发布前证据限于聚焦测试与 Windows CI。
 
-## 6. 后续：默认关闭的图片生成
+## 6. `0.1.7` 候选：默认关闭的 Web/X Search
+
+- 两个独立开关默认关闭；关闭时 request wire 不包含 server tool。
+- 必须先完成固定 CLI Chat Proxy 的独立脱敏协议门禁、安全 ADR、严格 response policy 与 Harness 映射测试。
+- 搜索词、远端检索、额外用量、citation 和 prompt injection 风险必须在 UI 与安全文档中就近披露。
+- 不得把公开 API 文档、其他 endpoint 或 `0.1.6` 维护版证据外推为 Search 已实现。
+
+## 7. 后续：默认关闭的图片生成
 
 - 只接受已验证的内联 base64 结果并有界提交 Harness attachment。
 - 不下载 URL，不写 workspace，不把 Authorization/Cookie/Referer 发送到第二 origin。
@@ -132,4 +140,4 @@ const request = await requestCompiler.compile(options, preparedRoute)
 - ACP、`grok -p` Headless、Linux / macOS x64 发布承诺。
 - 厂商 `code_execution`；Harness 已有本地工具权限层。
 
-English summary: `0.1.4` is published with image input only for exact `grok-4.6`. Red/blue user and one-level tool-result Proxy checks passed the normalized whole-response color assertion with `detail:"high"`; `grok-4.5` and all other models remain text-only. `0.1.5` is also published: its exact tag, release commit, unique artifact, Registry bytes, signatures, npm publish attestation, and SLSA provenance were verified. It maintains release-chain binding, dashboard capability projection, and transactional Provider Runtime installation without adding search or image generation.
+English summary: `0.1.4` is published with image input only for exact `grok-4.6`, while `grok-4.5` and all other models remain text-only. `0.1.5` is published with its artifact, signatures, and provenance verified. The `yukiryou/v0.1.6` candidate is a focused maintenance release: it omits private reasoning from ordinary user/system history while preserving visible text/images, and gives each official-CLI preparation/action stage an independent deadline for Windows cold starts. Default-off Web/X Search moves to the independent `0.1.7` slice.

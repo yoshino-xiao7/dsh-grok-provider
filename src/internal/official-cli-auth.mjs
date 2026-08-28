@@ -14,6 +14,8 @@ export class OfficialCliAuthError extends Error {
   }
 }
 
+export class OfficialCliCleanupError extends OfficialCliAuthError {}
+
 export function createOfficialCliAuth({
   subprocess,
   platform,
@@ -46,58 +48,64 @@ export function createOfficialCliAuth({
   const cliEnvironment = buildCliEnvironment(platform, homeDir)
 
   const runAction = async (argvTail, callerSignal, timeoutMs, requiredCapability) => {
-    let preparationDeadline = createDeadline(callerSignal, versionTimeoutMs)
-    let actionDeadline
     let resolved
     try {
-      resolved = await subprocess.resolveExecutable(candidate, {}, preparationDeadline.signal)
-      if (typeof resolved !== "string" || !pathApi.isAbsolute(resolved)) throw new OfficialCliAuthError()
-      await verifyExecutable({ candidate, resolved, grokHome, platform })
+      resolved = await withDeadline(callerSignal, versionTimeoutMs, async (signal) => {
+        const executable = await subprocess.resolveExecutable(candidate, {}, signal)
+        if (typeof executable !== "string" || !pathApi.isAbsolute(executable)) {
+          throw new OfficialCliAuthError()
+        }
+        signal.throwIfAborted()
+        return executable
+      })
+      await withDeadline(callerSignal, versionTimeoutMs, async (signal) => {
+        await verifyExecutable({ candidate, resolved, grokHome, platform }, signal)
+        signal.throwIfAborted()
+      })
 
-      const version = await runCollected(subprocess, {
+      const version = await withDeadline(callerSignal, versionTimeoutMs, (signal) => runCollected(subprocess, {
         argv: [resolved, "--version"],
         cwd: grokHome,
         maxBytes: 4 * 1024,
-        signal: preparationDeadline.signal,
+        signal,
         env: cliEnvironment,
-      })
+        teardownTimeoutMs: versionTimeoutMs,
+      }))
       if (!isGrokVersionOutput(version.stdout) || version.stderr.length !== 0) {
         throw new OfficialCliAuthError()
       }
 
       if (requiredCapability) {
-        const help = await runCollected(subprocess, {
+        const help = await withDeadline(callerSignal, versionTimeoutMs, (signal) => runCollected(subprocess, {
           argv: [resolved, ...requiredCapability.helpArgv],
           cwd: grokHome,
           maxBytes: 16 * 1024,
-          signal: preparationDeadline.signal,
+          signal,
           env: cliEnvironment,
-        })
+          teardownTimeoutMs: versionTimeoutMs,
+        }))
         if (help.stderr.length !== 0 || !hasCliOption(help.stdout, requiredCapability.option)) {
           throw new OfficialCliAuthError()
         }
       }
 
-      preparationDeadline.dispose()
-      preparationDeadline = undefined
-      actionDeadline = createDeadline(callerSignal, timeoutMs)
-      await runCollected(subprocess, {
+      await withDeadline(callerSignal, timeoutMs, (signal) => runCollected(subprocess, {
         argv: [resolved, ...argvTail],
         cwd: grokHome,
         maxBytes: 64 * 1024,
-        signal: actionDeadline.signal,
+        signal,
         env: cliEnvironment,
-      })
+        teardownTimeoutMs: versionTimeoutMs,
+      }))
       return Object.freeze({ kind: "succeeded" })
     } catch (error) {
+      if (error instanceof OfficialCliCleanupError) throw error
       if (callerSignal?.aborted) {
         return Object.freeze({ kind: "cancelled" })
       }
       if (error instanceof OfficialCliAuthError || error instanceof TypeError) throw error
       throw new OfficialCliAuthError()
     } finally {
-      actionDeadline?.dispose()
-      preparationDeadline?.dispose()
       resolved = undefined
     }
   }
@@ -147,14 +155,24 @@ function createDeadline(callerSignal, timeoutMs) {
   }
 }
 
+async function withDeadline(callerSignal, timeoutMs, operation) {
+  const deadline = createDeadline(callerSignal, timeoutMs)
+  try {
+    return await operation(deadline.signal)
+  } finally {
+    deadline.dispose()
+  }
+}
+
 function isTimeout(value) {
   return Number.isSafeInteger(value) && value > 0 && value <= MAX_TIMER_DELAY_MS
 }
 
-async function runCollected(subprocess, { argv, cwd, maxBytes, signal, env }) {
+async function runCollected(subprocess, { argv, cwd, maxBytes, signal, env, teardownTimeoutMs }) {
   let handle
   let stdout
   let stderr
+  let processSucceeded = false
   try {
     handle = subprocess.spawn({
       argv,
@@ -169,21 +187,64 @@ async function runCollected(subprocess, { argv, cwd, maxBytes, signal, env }) {
       env,
     })
     if (!isProcessHandle(handle)) throw new OfficialCliAuthError()
-    const outcome = await handle.done
+    const outcome = await waitForProcessDone(handle.done, signal)
     if (!isOutcome(outcome) || outcome.exitCode !== 0 || outcome.signal !== null) {
       throw new OfficialCliAuthError()
     }
     stdout = readCollected(handle.collected.stdout)
     stderr = readCollected(handle.collected.stderr)
+    processSucceeded = true
     return { stdout, stderr }
   } finally {
     if (handle && typeof handle.waitForExit === "function") {
-      const exited = await handle.waitForExit()
-      if (exited !== true && !signal?.aborted) throw new OfficialCliAuthError()
+      if (!processSucceeded || signal?.aborted) terminateBestEffort(handle)
+      await waitForProcessTree(handle, teardownTimeoutMs)
+      signal?.throwIfAborted()
     }
     stderr = undefined
     stdout = undefined
     handle = undefined
+  }
+}
+
+async function waitForProcessDone(done, signal) {
+  signal?.throwIfAborted()
+  if (signal === undefined) return done
+  let onAbort
+  const aborted = new Promise((_, reject) => {
+    onAbort = () => reject(signal.reason ?? new DOMException("Aborted", "AbortError"))
+    signal.addEventListener("abort", onAbort, { once: true })
+    if (signal.aborted) onAbort()
+  })
+  try {
+    return await Promise.race([Promise.resolve(done), aborted])
+  } finally {
+    signal.removeEventListener("abort", onAbort)
+  }
+}
+
+async function waitForProcessTree(handle, timeoutMs) {
+  const deadline = createDeadline(undefined, timeoutMs)
+  try {
+    const exited = await handle.waitForExit(deadline.signal)
+    if (exited !== true) {
+      terminateBestEffort(handle)
+      throw new OfficialCliCleanupError()
+    }
+  } catch (error) {
+    terminateBestEffort(handle)
+    if (error instanceof OfficialCliCleanupError) throw error
+    throw new OfficialCliCleanupError()
+  } finally {
+    deadline.dispose()
+  }
+}
+
+function terminateBestEffort(handle) {
+  try {
+    handle.terminate()
+  } catch {
+    // The subprocess service retains ownership of a tree that failed bounded cleanup.
   }
 }
 

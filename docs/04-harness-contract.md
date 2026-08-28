@@ -131,6 +131,7 @@ finish
 - `0.1.0`–`0.1.3` 对外声明 `inputModalities:["text"]`，Harness 会把图片历史投影为确定性文本占位；若 raw image 仍到达旧 Adapter，则在 Responses POST 前拒绝。
 - `0.1.4` 只对经过公开模型证据与固定 Proxy 语义验证的精确 `grok-4.6` 声明 `inputModalities:["text","image"]`，并由异步 request compiler 通过可选 `ctx.get("attachments")` 读取图片。`grok-4.5` 与未知模型继续 text-only，不能从 Responses backend 推导 modality。
 - 无图请求不查询 attachment service，继续使用 `0.1.3` 同步 encoder；有图请求支持普通 user 内容和一层 tool-result content，按原顺序生成 `input_text`/`input_image`，并固定使用 `detail:"high"`。更深 tool-result、assistant/system 图片、webp/gif、无 projection 或超限均在 attachment I/O 或 Responses POST 前尽早拒绝。
+- Provider-neutral 历史允许非 assistant 消息携带 `reasoning` block（例如 `subagent-settled` 上下文）。Grok wire 只重放同模型 assistant 的有效加密 reasoning；普通 user/system 历史中的 schema-valid reasoning 必须像 Harness 其他官方 adapter 一样省略，同时保留相邻可见文本，不得把私有 reasoning 改写成 user text，也不得因此阻断同消息或后续消息中的图片请求。被省略的块仍须通过字符串与长度校验，畸形/超限输入在 attachment I/O 前按通用非法 request 拒绝。一层 tool-result 的公开内容边界仍只接受 text/image，不借此放宽；其中出现 reasoning/未知 block 仍按通用非法 request 拒绝，不能因同行有图片改报为模型图片能力不足。
 - request compiler 完成全部读取、jpeg/png 元数据与魔数检查、oldest-first 淘汰和 16 MiB 最终 JSON 检查后，Adapter 才调用推理 transport。源图片 policy 失败映射 `UNSUPPORTED_CONTENT`；损坏投影、图片淘汰后仍不合法的请求与其他通用非法 request 映射 `INVALID_RESPONSE`。完整策略见 [ADR-0008](./adr/0008-image-input-request-compiler.md)。
 - Harness `0.1.1-rc.2` 隔离门禁已加载真实 `attachment-local` 与 `LlmRuntime`：内容寻址引用生成有界 PNG request projection，仅 `grok-4.6` 保留内联 `input_image`，`grok-4.5` 与未知 `grok-future` 均投影为 text-only，并使用 0 网络请求的本地受控 transport。
 - 认证缺失或被拒使用 Harness 已识别的 LLM code `AUTH`，不用自造 `AUTH_REQUIRED`。
@@ -311,6 +312,8 @@ Harness rc.2 不提供 HTTPS URL opener，也不需要插件自建 opener：插�
 - 固定完整 argv；seam 不做 shell 解释，插件自身不启动 shell。
 - stdin ignored；stdout/stderr 使用 raw pipe，自行按 UTF-8 原始字节计数，任一超过 64 KiB 就 abort；始终 drain 且不透传原文。collect 模式的截断本身不会终止进程，因此不用于该门禁。
 - 受控 cwd 与过滤环境。
+- executable 解析、只读文件验证、`--version`、`login --help` 和最终动作分别取得并释放自己的 deadline；前一阶段不能消耗后一阶段的预算，caller AbortSignal 则贯穿全部阶段。文件系统 API 自身不可取消时，验证阶段在 abort 后停止等待结果且绝不启动 CLI。`handle.done` 与阶段 signal 竞争，不能阻止后续 cleanup；已启动进程的 whole-tree wait 使用新的有界 teardown signal。返回 `false` 或异常时调用幂等 terminate，并把内部 `cleanup-failed` 结果跨 official driver 传给 controller；公开状态只显示 `failed`，当前 driver 被隔离到 Host 重启或 subprocess replacement。tree wait 期间发生的 caller abort 不能被成功返回覆盖。
+- 登录 starting、confirmed logout 与 credential refresh 都先登记为 controller-owned operation，再调用 official driver；三者共享 single-flight、AbortController、shutdown fence/async wait 和 driver registration token。replacement 会清除旧 logout confirmation；旧代际成功/失败不得启动后续动作或污染新 driver，当前代际 cleanup failure 会同时禁止 login/logout/refresh，直到 Host 重启或 subprocess replacement。
 - single-flight、5 分钟 deadline、AbortSignal、`terminate()`、有界 `waitForExit(teardownSignal)` 与 async dispose cleanup。`waitForExit()` 返回 `false` 时记录脱敏 cleanup failure、让 disposer 有界结算，并把登录 capability 隔离为“需 Host 重启或 subprocess service replacement”；不得自动重新启用或永久卡住卸载。
 - 只承诺 seam 可观察到的受管进程树；官方 CLI 根据可信配置启动并主动脱离该树的后代属于 vendor trust boundary。
 

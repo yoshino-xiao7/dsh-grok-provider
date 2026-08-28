@@ -172,18 +172,21 @@ function encodeOrdinaryMessage(message, content, input, targetModel, requestImag
       if (text.length > MAX_TEXT_LENGTH) fail()
       continue
     }
-    if (block.type === "reasoning" && message.role === "assistant") {
-      const replay = replayBlocks?.[position]
-      if (isReasoningReplay(replay)) {
-        flushText()
-        input.push({
-          type: "reasoning",
-          id: replay.id,
-          encrypted_content: replay.encryptedContent,
-          summary: block.text.length === 0
-            ? []
-            : [{ type: "summary_text", text: parseText(block.text) }],
-        })
+    if (block.type === "reasoning") {
+      const reasoningText = parseText(block.text)
+      if (message.role === "assistant") {
+        const replay = replayBlocks?.[position]
+        if (isReasoningReplay(replay)) {
+          flushText()
+          input.push({
+            type: "reasoning",
+            id: replay.id,
+            encrypted_content: replay.encryptedContent,
+            summary: reasoningText.length === 0
+              ? []
+              : [{ type: "summary_text", text: reasoningText }],
+          })
+        }
       }
       continue
     }
@@ -227,6 +230,10 @@ function encodeImageMessage(message, contentBlocks, input, requestImages) {
     if (block.type === "text") {
       text += parseText(block.text)
       if (text.length > MAX_TEXT_LENGTH) fail()
+      continue
+    }
+    if (block.type === "reasoning") {
+      parseText(block.text)
       continue
     }
     if (block.type !== "image" || !isPlainObject(block.attachment)) fail()

@@ -121,3 +121,17 @@ English summary: every release must close documentation, security, tests, determ
 - [x] 从最终 release commit `4f0bcd84f96c1cd5d95dda2a01ce63ff6403b828` 冻结唯一 `dsh-grok-provider-0.1.5.tgz` 并完成隔离安装、manifest/export、digest 与清单核验：59 个文件、135,800 bytes、SHA-256 `4b1690408703ae9818015e335845e9a4b5fe352ca4c98d34400f4bad4d8d7c14`、SRI `sha512-rVryka0x63QsjBiKnMPK09A5yArB9nmDyYWTOpxFWzs6ged7YzEua2h7CkHgGl/i7Al+Csebzg+30/+Q/8HHKg==`。
 - [x] 仓库所有者于 2026-08-28 在最终制品证据后明确授权发布精确 `dsh-grok-provider@0.1.5`。
 - [x] 不可变 `v0.1.5` tag 精确指向 release commit；GitHub Release [v0.1.5](https://github.com/yoshino-xiao7/dsh-grok-provider/releases/tag/v0.1.5) 只附加唯一已验收 tarball，Trusted Publisher run [33162280108](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33162280108) 发布完成。npm `latest=0.1.5`，Registry tarball 与本地/Release 制品逐字节一致，签名、npm publish attestation 与 SLSA provenance 验证通过。
+
+## `0.1.6` 维护版开发与发布门禁
+
+- [x] 从 `origin/yukiryou/main@9dbd655e01188892db650dcbfb1b9c6d7a67099c` 创建独立分支 `yukiryou/v0.1.6`；用户未跟踪文档 `docs/10-release-checklist 2.md` 未修改、未暂存且由 `docs/.npmignore` 排除。
+- [x] 未完成的 Web/X Search 方案移出 `0.1.6` runtime、测试脚本与 npm 制品，并保存在本地 `yukiryou/v0.1.7-search-planning@71cab9c`；本版不新增 Search、生成、API Key 或 endpoint 能力。
+- [x] 图片历史兼容回归覆盖 `subagent-settled` 后续图片及普通 user 同消息 `text/reasoning/image/reasoning/text`；普通 user/system 私有 reasoning 省略且可见 text/image 顺序保持，assistant replay 与 tool-result 边界不放宽。非字符串/超限 reasoning 仍在 attachment I/O 前按通用非法 request 失败。
+- [x] Windows 冷启动 fake 先红后绿：executable 解析、文件验证、`--version`、`login --help` 与最终动作使用独立 deadline；各准备阶段均低于预算但累计超过旧总预算时仍到达 `login --oauth`。direct `done`/tree wait、cleanup 失败、driver quarantine/replacement 和 caller late-abort 回归已关闭；login starting、confirmed logout 与 credential refresh 都受 controller-owned single-flight、shutdown fence 和 registration-token 门禁，不会永久悬挂、漏等旧树、误报 stale success 或自动启动第二棵进程树。
+- [x] 仓库所有者于 2026-08-28 明确决定先发布 Registry 精确 `0.1.6`，再自行验证图片和 Windows 外部浏览器弹出；发布前不得把代码、slow-fake 或 Windows CI 表述为 Windows 真机已确认，失败时发布新的递增稳定修复版。
+- [x] `package.json`/lockfile、CHANGELOG、中英文 README、`SECURITY.md`、状态文档、路线图与 `docs/releases/v0.1.6.md` 已同步为候选事实；npm `latest` 在正式回读前继续如实记为 `0.1.5`。
+- [x] 精确 Node `24.19.0` 全量测试通过：161 项、159 pass、0 fail、2 项 Windows-only skip；`npm audit --omit=dev` 为 0 漏洞，最终 dry-run pack 为 60 个文件，`git diff --check` 与秘密模式扫描通过。Search 规划文件和用户未跟踪的重复 checklist 均未进入清单。
+- [ ] 代码 PR 合入受保护 `yukiryou/main`，macOS 14 与 Windows 2022 CI 全绿；若合并证据改变发布文档，再经证据 PR 得到最终 release commit。
+- [ ] 从最终 release commit 的干净 checkout 只生成一次 `dsh-grok-provider-0.1.6.tgz`，完成 pack-list、隔离安装/加载、SHA-256 与 npm SRI，并复用同一字节发布。
+- [ ] 在完整提交与制品证据后取得对精确 `dsh-grok-provider@0.1.6` tarball 的最终授权。
+- [ ] 不可变 tag、唯一 GitHub Release asset、Trusted Publisher、npm `latest`、Registry 字节、签名与 provenance 回读全部关闭。

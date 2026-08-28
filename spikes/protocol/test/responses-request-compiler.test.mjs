@@ -72,7 +72,7 @@ test("the text-only fast path keeps the legacy acceptance domain outside the ima
   assert.equal(attachmentLookups, 0)
 })
 
-test("the request compiler reads and preserves an ordered user image through the attachment seam", async () => {
+test("the request compiler preserves an ordered user image while omitting private user reasoning", async () => {
   const data = Buffer.from(
     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
     "base64",
@@ -109,7 +109,9 @@ test("the request compiler reads and preserves an ordered user image through the
       source: { kind: "user" },
       content: [
         { type: "text", text: "Before" },
+        { type: "reasoning", text: "Private before-image reasoning." },
         { type: "image", attachment },
+        { type: "reasoning", text: "Private after-image reasoning." },
         { type: "text", text: "After" },
       ],
     }],
@@ -134,6 +136,198 @@ test("the request compiler reads and preserves an ordered user image through the
       { type: "input_text", text: "After" },
     ],
   }])
+})
+
+test("subagent settlement reasoning does not block a later image request", async () => {
+  const data = Buffer.from(
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
+    "base64",
+  )
+  const attachment = imageRef({ bytes: data.byteLength })
+  const compiler = createResponsesRequestCompiler({
+    getAttachmentStore: () => ({
+      async readImageRequest(ref) {
+        return {
+          variantId: `fixture:${ref.attachmentId}`,
+          attachment: ref,
+          data,
+          mediaType: "image/png",
+          bytes: data.byteLength,
+          width: 1,
+          height: 1,
+          depth: "uchar",
+          space: "srgb",
+          hasAlpha: true,
+        }
+      },
+    }),
+  })
+
+  const request = await compiler.compile({
+    provider: "grok",
+    model: "grok-4.6",
+    messages: [
+      {
+        id: "subagent-settled",
+        role: "user",
+        source: {
+          kind: "subagent-settled",
+          form: "notice",
+          summary: "A child settled.",
+          senderSessionId: "session-child",
+        },
+        content: [
+          { type: "text", text: "Child " },
+          { type: "text", text: "work " },
+          { type: "reasoning", text: "Private child reasoning." },
+          { type: "text", text: "settled." },
+        ],
+      },
+      {
+        id: "user-image",
+        role: "user",
+        source: { kind: "user" },
+        content: [
+          { type: "image", attachment },
+          { type: "text", text: "Describe this image." },
+        ],
+      },
+    ],
+  }, imageRoute())
+
+  assert.deepEqual(request.input, [
+    { role: "user", content: "Child work settled." },
+    {
+      role: "user",
+      content: [
+        {
+          type: "input_image",
+          image_url: `data:image/png;base64,${data.toString("base64")}`,
+          detail: "high",
+        },
+        { type: "input_text", text: "Describe this image." },
+      ],
+    },
+  ])
+})
+
+test("image compilation replays only assistant reasoning and never user reasoning metadata", async () => {
+  const data = Buffer.from(
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
+    "base64",
+  )
+  const attachment = imageRef({ bytes: data.byteLength })
+  const compiler = createResponsesRequestCompiler({
+    getAttachmentStore: () => ({
+      async readImageRequest(ref) {
+        return {
+          variantId: `fixture:${ref.attachmentId}`,
+          attachment: ref,
+          data,
+          mediaType: "image/png",
+          bytes: data.byteLength,
+          width: 1,
+          height: 1,
+          depth: "uchar",
+          space: "srgb",
+          hasAlpha: true,
+        }
+      },
+    }),
+  })
+
+  const request = await compiler.compile({
+    provider: "grok",
+    model: "grok-4.6",
+    messages: [
+      {
+        id: "assistant-replay",
+        role: "assistant",
+        source: {
+          kind: "model",
+          provider: "grok",
+          model: "grok-4.6",
+          replayState: {
+            response: { version: 1 },
+            blocks: [
+              { type: "reasoning", id: "rs_assistant", encryptedContent: "sealed-assistant" },
+              null,
+            ],
+          },
+        },
+        content: [
+          { type: "reasoning", text: "Assistant summary." },
+          { type: "text", text: "Assistant answer." },
+        ],
+      },
+      {
+        id: "user-image-spoofed-replay",
+        role: "user",
+        source: {
+          kind: "model",
+          provider: "grok",
+          model: "grok-4.6",
+          replayState: {
+            response: { version: 1 },
+            blocks: [
+              { type: "reasoning", id: "rs_user", encryptedContent: "sealed-user" },
+              null,
+            ],
+          },
+        },
+        content: [
+          { type: "reasoning", text: "Private user reasoning." },
+          { type: "image", attachment },
+        ],
+      },
+    ],
+  }, imageRoute())
+
+  assert.deepEqual(request.input, [
+    {
+      type: "reasoning",
+      id: "rs_assistant",
+      encrypted_content: "sealed-assistant",
+      summary: [{ type: "summary_text", text: "Assistant summary." }],
+    },
+    { role: "assistant", content: "Assistant answer." },
+    {
+      role: "user",
+      content: [{
+        type: "input_image",
+        image_url: `data:image/png;base64,${data.toString("base64")}`,
+        detail: "high",
+      }],
+    },
+  ])
+})
+
+test("invalid omitted user reasoning fails before attachment storage", async () => {
+  let attachmentLookups = 0
+  const compiler = createResponsesRequestCompiler({
+    getAttachmentStore() {
+      attachmentLookups += 1
+      throw new Error("invalid reasoning must fail before attachment storage")
+    },
+  })
+
+  await assert.rejects(compiler.compile({
+    provider: "grok",
+    model: "grok-4.6",
+    messages: [{
+      id: "invalid-user-reasoning-image",
+      role: "user",
+      source: { kind: "user" },
+      content: [
+        { type: "reasoning", text: 42 },
+        { type: "image", attachment: imageRef() },
+      ],
+    }],
+  }, imageRoute()), (error) => (
+    error?.name === "UnsupportedResponsesRequestError" &&
+    !(error instanceof UnsupportedImageInputError)
+  ))
+  assert.equal(attachmentLookups, 0)
 })
 
 test("a verified JPEG projection is encoded as a JPEG data URL", async () => {
@@ -230,6 +424,40 @@ test("the request compiler preserves text and images nested in one tool result",
       { type: "input_text", text: "After" },
     ],
   }])
+})
+
+test("tool-result reasoning with an image remains a generic invalid request", async () => {
+  let attachmentLookups = 0
+  const compiler = createResponsesRequestCompiler({
+    getAttachmentStore() {
+      attachmentLookups += 1
+      return undefined
+    },
+  })
+
+  await assert.rejects(compiler.compile({
+    provider: "grok",
+    model: "grok-4.6",
+    messages: [{
+      id: "tool-reasoning-image",
+      role: "user",
+      source: { kind: "tool", callId: "call_fixture" },
+      content: [{
+        type: "tool-result",
+        toolCallId: "call_fixture",
+        isError: false,
+        content: [
+          { type: "text", text: "Visible tool output." },
+          { type: "reasoning", text: "Unsupported private tool reasoning." },
+          { type: "image", attachment: imageRef() },
+        ],
+      }],
+    }],
+  }, imageRoute()), (error) => (
+    error?.name === "UnsupportedResponsesRequestError" &&
+    !(error instanceof UnsupportedImageInputError)
+  ))
+  assert.equal(attachmentLookups, 0)
 })
 
 test("the request compiler removes the oldest image until the final JSON fits 16 MiB", async () => {

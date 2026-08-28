@@ -1,4 +1,4 @@
-const OUTCOMES = new Set(["succeeded", "cancelled", "failed"])
+const OUTCOMES = new Set(["succeeded", "cancelled", "failed", "cleanup-failed"])
 
 export class AuthLoginBusyError extends Error {
   constructor() {
@@ -25,9 +25,12 @@ export function createAuthController({ registry, randomUUID, now = () => new Dat
 
   let installed
   let active
+  let refreshing
+  let shutdownWait
   let state
   let confirmation
-  let closing = false
+  let closing
+  let quarantined = false
   if (driver !== undefined) install(driver)
 
   function install(nextDriver) {
@@ -36,8 +39,14 @@ export function createAuthController({ registry, randomUUID, now = () => new Dat
     }
     const token = Object.freeze({})
     installed = { driver: nextDriver, token }
+    quarantined = false
+    confirmation = undefined
     return () => {
-      if (installed?.token === token) installed = undefined
+      if (installed?.token === token) {
+        installed = undefined
+        quarantined = false
+        confirmation = undefined
+      }
     }
   }
 
@@ -47,42 +56,51 @@ export function createAuthController({ registry, randomUUID, now = () => new Dat
     async status() {
       return Object.freeze({
         ...await registry.status(),
-        driver: installed !== undefined,
+        driver: installed !== undefined && !quarantined,
         ...(state === undefined ? {} : { session: Object.freeze({ ...state }) }),
       })
     },
 
     async beginLogin() {
-      if (active !== undefined || closing) throw new AuthLoginBusyError()
-      if (installed === undefined) throw new AuthDriverUnavailableError()
+      if (active !== undefined || refreshing !== undefined || closing || shutdownWait !== undefined) {
+        throw new AuthLoginBusyError()
+      }
+      if (installed === undefined || quarantined) throw new AuthDriverUnavailableError()
 
       const sessionId = createId(randomUUID, "Invalid Grok auth session id")
       const abortController = new AbortController()
-      let started
-      try {
-        started = await installed.driver.begin({ signal: abortController.signal })
-      } catch {
-        state = { state: "failed", sessionId }
-        registry.invalidate()
-        throw new AuthDriverUnavailableError()
-      }
-      if (
-        !isPlainObject(started) ||
-        Object.keys(started).length !== 1 ||
-        !started.completion ||
-        typeof started.completion.then !== "function"
-      ) throw new TypeError("Invalid Grok auth driver session")
-
+      const driverRegistration = installed
       const publicState = Object.freeze({ sessionId, state: "running" })
       state = publicState
-      const settled = Promise.resolve(started.completion).then(
-        (outcome) => normalizeOutcome(outcome),
+      confirmation = undefined
+      let resolveStarted
+      let rejectStarted
+      const startedReady = new Promise((resolve, reject) => {
+        resolveStarted = resolve
+        rejectStarted = reject
+      })
+      const settled = startedReady.then(
+        (started) => Promise.resolve(started.completion).then(
+          (outcome) => normalizeOutcome(outcome),
+          () => Object.freeze({ kind: abortController.signal.aborted ? "cancelled" : "failed" }),
+        ),
         () => Object.freeze({ kind: abortController.signal.aborted ? "cancelled" : "failed" }),
       ).then((outcome) => {
-        state = { state: outcome.kind, sessionId }
-        active = undefined
+        const registrationIsCurrent = installed?.token === driverRegistration.token
+        const cleanupFailed = outcome.kind === "cleanup-failed"
+        if (cleanupFailed && registrationIsCurrent) {
+          quarantined = true
+          confirmation = undefined
+        }
+        const publicOutcome = cleanupFailed || !registrationIsCurrent
+          ? Object.freeze({ kind: "failed" })
+          : abortController.signal.aborted
+            ? Object.freeze({ kind: "cancelled" })
+            : outcome
+        state = { state: publicOutcome.kind, sessionId }
+        if (active === session) active = undefined
         registry.invalidate()
-        return outcome
+        return publicOutcome
       })
 
       const session = Object.freeze({
@@ -106,6 +124,26 @@ export function createAuthController({ registry, randomUUID, now = () => new Dat
         },
       })
       active = session
+
+      let started
+      try {
+        started = await driverRegistration.driver.begin({ signal: abortController.signal })
+      } catch {
+        rejectStarted(new AuthDriverUnavailableError())
+        await settled
+        throw new AuthDriverUnavailableError()
+      }
+      if (
+        !isPlainObject(started) ||
+        Object.keys(started).length !== 1 ||
+        !started.completion ||
+        typeof started.completion.then !== "function"
+      ) {
+        rejectStarted(new TypeError("Invalid Grok auth driver session"))
+        await settled
+        throw new TypeError("Invalid Grok auth driver session")
+      }
+      resolveStarted(started)
       return session
     },
 
@@ -116,25 +154,102 @@ export function createAuthController({ registry, randomUUID, now = () => new Dat
     },
 
     async shutdown() {
-      if (active === undefined) return false
-      active.cancel()
-      await active.wait()
-      return true
+      if (shutdownWait !== undefined) return shutdownWait
+      const operations = [active, refreshing, closing].filter((operation) => operation !== undefined)
+      if (operations.length === 0) return false
+      let resolveShutdown
+      let rejectShutdown
+      const wait = new Promise((resolve, reject) => {
+        resolveShutdown = resolve
+        rejectShutdown = reject
+      })
+      shutdownWait = wait
+      for (const operation of operations) operation.cancel()
+      Promise.all(operations.map((operation) => operation.wait())).then(
+        () => resolveShutdown(true),
+        rejectShutdown,
+      )
+      try {
+        return await wait
+      } finally {
+        if (shutdownWait === wait) shutdownWait = undefined
+      }
+    },
+
+    async refresh({ signal } = {}) {
+      if (active !== undefined || refreshing !== undefined || closing || shutdownWait !== undefined) {
+        throw new AuthLoginBusyError()
+      }
+      if (installed === undefined || quarantined || typeof installed.driver.refresh !== "function") {
+        throw new AuthDriverUnavailableError()
+      }
+
+      const driverRegistration = installed
+      const abortController = new AbortController()
+      const abortFromCaller = () => abortController.abort(signal.reason)
+      if (signal?.aborted) abortFromCaller()
+      else signal?.addEventListener("abort", abortFromCaller, { once: true })
+      confirmation = undefined
+
+      let operation
+      const settled = Promise.resolve().then(() => {
+        if (installed?.token !== driverRegistration.token || quarantined) {
+          throw new AuthDriverUnavailableError()
+        }
+        abortController.signal.throwIfAborted()
+        return driverRegistration.driver.refresh({ signal: abortController.signal })
+      }).then(
+        (outcome) => normalizeOutcome(outcome),
+        () => Object.freeze({ kind: abortController.signal.aborted ? "cancelled" : "failed" }),
+      ).then((outcome) => {
+        const registrationIsCurrent = installed?.token === driverRegistration.token
+        const cleanupFailed = outcome.kind === "cleanup-failed"
+        if (cleanupFailed && registrationIsCurrent) {
+          quarantined = true
+          confirmation = undefined
+        }
+        if (!registrationIsCurrent || quarantined || cleanupFailed) {
+          return Object.freeze({ kind: "failed" })
+        }
+        if (abortController.signal.aborted) return Object.freeze({ kind: "cancelled" })
+        return outcome
+      }).finally(() => {
+        signal?.removeEventListener("abort", abortFromCaller)
+        if (refreshing === operation) refreshing = undefined
+        registry.invalidate()
+      })
+      operation = Object.freeze({
+        driverToken: driverRegistration.token,
+        cancel() {
+          abortController.abort()
+        },
+        wait() {
+          return settled
+        },
+      })
+      refreshing = operation
+      return settled
     },
 
     async logout({ signal } = {}) {
-      if (closing) throw new AuthLoginBusyError()
-      if (installed === undefined || typeof installed.driver.logout !== "function") {
+      if (closing !== undefined || refreshing !== undefined || shutdownWait !== undefined) {
+        throw new AuthLoginBusyError()
+      }
+      if (installed === undefined || quarantined || typeof installed.driver.logout !== "function") {
         throw new AuthDriverUnavailableError()
       }
       const currentTime = now()
       if (!(currentTime instanceof Date) || !Number.isFinite(currentTime.getTime())) {
         throw new TypeError("Invalid Grok auth controller clock")
       }
-      if (confirmation === undefined || confirmation.expiresAt <= currentTime.getTime()) {
+      if (
+        confirmation === undefined ||
+        confirmation.driverToken !== installed.token ||
+        confirmation.expiresAt <= currentTime.getTime()
+      ) {
         const confirmationId = createId(randomUUID, "Invalid Grok logout confirmation id")
         const expiresAt = currentTime.getTime() + 30_000
-        confirmation = { confirmationId, expiresAt }
+        confirmation = { confirmationId, expiresAt, driverToken: installed.token }
         return Object.freeze({
           kind: "confirmation-required",
           confirmationId,
@@ -143,23 +258,59 @@ export function createAuthController({ registry, randomUUID, now = () => new Dat
       }
 
       confirmation = undefined
-      closing = true
-      try {
-        if (active !== undefined) {
-          active.cancel()
-          await active.wait()
+      const driverRegistration = installed
+      const loginOperation = active
+      loginOperation?.cancel()
+      const abortController = new AbortController()
+      const abortFromCaller = () => abortController.abort(signal.reason)
+      if (signal?.aborted) abortFromCaller()
+      else signal?.addEventListener("abort", abortFromCaller, { once: true })
+
+      let operation
+      const settled = Promise.resolve().then(async () => {
+        if (loginOperation !== undefined) {
+          await loginOperation.wait()
+        }
+        if (installed?.token !== driverRegistration.token || quarantined) {
+          return Object.freeze({ kind: "failed" })
         }
         let outcome
         try {
-          outcome = normalizeOutcome(await installed.driver.logout({ signal }))
+          abortController.signal.throwIfAborted()
+          outcome = normalizeOutcome(await driverRegistration.driver.logout({
+            signal: abortController.signal,
+          }))
         } catch {
-          outcome = Object.freeze({ kind: signal?.aborted ? "cancelled" : "failed" })
+          outcome = Object.freeze({ kind: abortController.signal.aborted ? "cancelled" : "failed" })
         }
+        const registrationIsCurrent = installed?.token === driverRegistration.token
+        const cleanupFailed = outcome.kind === "cleanup-failed"
+        if (cleanupFailed && registrationIsCurrent) {
+          quarantined = true
+          confirmation = undefined
+        }
+        const publicOutcome = cleanupFailed || !registrationIsCurrent || quarantined
+          ? Object.freeze({ kind: "failed" })
+          : abortController.signal.aborted
+            ? Object.freeze({ kind: "cancelled" })
+            : outcome
+        return publicOutcome
+      }).finally(() => {
+        signal?.removeEventListener("abort", abortFromCaller)
+        if (closing === operation) closing = undefined
         registry.invalidate()
-        return outcome
-      } finally {
-        closing = false
-      }
+      })
+      operation = Object.freeze({
+        driverToken: driverRegistration.token,
+        cancel() {
+          abortController.abort()
+        },
+        wait() {
+          return settled
+        },
+      })
+      closing = operation
+      return settled
     },
   })
 }
