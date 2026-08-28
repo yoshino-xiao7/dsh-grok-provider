@@ -86,6 +86,7 @@ Node 24 协议测试使用内存 attachment store 和合成 jpeg/png 字节，�
 
 - [x] 按第 5 节最终模型集合完成 Harness attachment/LlmRuntime 复验。
 - [x] 最终版本与发行文档同步后的 Node 24 全量测试（119 项、117 pass、0 fail、2 项 Windows-only skip）、`npm audit --omit=dev`（0 漏洞）与 `npm run pack:check`（58 个文件）。
-- [ ] macOS/Windows CI、唯一候选 tarball、隔离安装与制品 digest。
-- [ ] 版本分支 PR、最终 release commit、tag、GitHub Release、Trusted Publisher、Registry 回读和 provenance。
+- [x] 代码 PR [#8](https://github.com/yoshino-xiao7/dsh-grok-provider/pull/8) 已合并，macOS/Windows CI run [33149124946](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33149124946) 全绿。
+- [ ] 最终 release commit、唯一候选 tarball、隔离安装与制品 digest。
+- [ ] tag、GitHub Release、Trusted Publisher、Registry 回读和 provenance。
 - [ ] 仓库所有者明确授权发布精确 `dsh-grok-provider@0.1.4`。

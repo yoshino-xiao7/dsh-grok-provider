@@ -93,9 +93,10 @@ const request = await requestCompiler.compile(options, preparedRoute)
 - [x] 按最终集合复验 Harness `0.1.1-rc.2` 真实 `attachment-local` → request compiler → `LlmRuntime`：普通 user 与一层 tool-result 均保留有序图片 wire，仅 `grok-4.6` 保留图片，`grok-4.5`/未知模型 text-only，共编译 4 个请求且网络请求为 0。
 - [x] 开发树 Node 24 本地全量测试、preflight `npm run pack:check` 与真机脚本加入后的聚焦测试。
 - [x] 最终版本/发行文档同步后的 Node 24 全量测试（119 项、117 pass、0 fail、2 项 Windows-only skip）、生产依赖审计（0 漏洞）与 `npm run pack:check`（58 个文件）。
-- [ ] macOS/Windows CI、唯一候选 tarball、隔离安装与精确发布授权。
+- [x] 代码 PR [#8](https://github.com/yoshino-xiao7/dsh-grok-provider/pull/8) 已合并，macOS/Windows CI run [33149124946](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33149124946) 全绿。
+- [ ] 最终 release commit 的唯一候选 tarball、隔离安装、digest 与精确发布授权。
 
-`grok-4.6` Proxy 语义门禁、Harness 最终 modality 复验与本地自动化门禁已关闭，`grok-4.5` 已失败关闭；最终制品、PR/CI 与仓库所有者精确发布授权未完成前，不得创建最终 tag、GitHub Release 或执行 `npm publish`。
+`grok-4.6` Proxy 语义门禁、Harness 最终 modality 复验、本地自动化与双平台 PR/CI 门禁已关闭，`grok-4.5` 已失败关闭；最终制品与仓库所有者精确发布授权未完成前，不得创建最终 tag、GitHub Release 或执行 `npm publish`。
 
 ## 4. 后续：默认关闭的 Web/X Search
 
