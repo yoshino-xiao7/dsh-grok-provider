@@ -97,4 +97,4 @@ Windows x64 真机不再是 `0.1.0` 预发布阻断项。首次发布后必须�
 - 最终源码与发行文档同步后已用 Node 24 完成 119 项全量测试（117 pass、0 fail、2 项 Windows-only skip）；`npm audit --omit=dev` 为 0 漏洞，dry-run 包含 58 个文件。
 - 公开 xAI 图片协议与精确 `grok-4.6` 的 user/tool-result 红蓝语义 Proxy 门禁已经验证；`grok-4.5` 因语义不可靠失败关闭。最终 Harness attachment modality 复验见[证据页](./12-upstream-image-input-evidence.md)。
 - 本轮未引入 `prompt_cache_key`、搜索、生图、新 SSE 事件、URL 下载、认证或 endpoint 变化。
-- macOS/Windows CI、最终 release commit 的唯一 tarball、同一制品隔离安装、PR 合并和精确 `0.1.4` 发布授权仍待完成；当前不得创建最终 tag 或执行 `npm publish`。
+- 代码 PR [#8](https://github.com/yoshino-xiao7/dsh-grok-provider/pull/8) 已合并，CI run [33149124946](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33149124946) 的 macOS/Windows job 均通过；最终 release commit 的唯一 tarball、同一制品隔离安装与精确 `0.1.4` 发布授权仍待完成，当前不得创建最终 tag 或执行 `npm publish`。

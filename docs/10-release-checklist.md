@@ -100,9 +100,9 @@ English summary: every release must close documentation, security, tests, determ
 - [x] 按最终模型集合复验 Harness `0.1.1-rc.2` 真实 attachment-local/LlmRuntime：内容寻址与 299-byte PNG projection、普通 user 与一层 tool-result `text/image/text` 有序 wire、仅 `grok-4.6` 保留 `input_image`、`grok-4.5`/`grok-future` text-only、共编译 4 个请求且网络请求为 0。
 - [x] 开发树 Node 24 完整测试通过：93 项、91 pass、0 fail、2 项 Windows-only skip；preflight `npm run pack:check` 与加入真机脚本后的聚焦测试通过，未跟踪的重复文档未进入 dry-run 清单。
 - [x] 最终版本与发行文档同步后重新运行 Node 24 全量测试（119 项、117 pass、0 fail、2 项 Windows-only skip）、`npm audit --omit=dev`（0 漏洞）和 `npm run pack:check`（58 个文件）。
-- [ ] 新候选的 macOS/Windows CI 全绿，并记录对应 run；既有 `0.1.3` CI 不替代本项。
+- [x] 新候选的 macOS/Windows CI run [33149124946](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33149124946) 全绿；两个 job 均完成 `npm ci --ignore-scripts`、全量测试、生产依赖审计与 `pack:check`。
 - [x] 同步 `package.json`、lockfile、制品契约测试、中英文 README 安装版本、正式 CHANGELOG 日期和 `docs/releases/v0.1.4.md`；未发布事实使用“当前源码版本/发布后可用”表述，未预写 npm 或 GitHub Release 已存在。
-- [ ] 版本分支经 PR 合并 `yukiryou/main`；不得预写 PR、run、release commit 或 tag。
+- [x] 版本分支经 [PR #8](https://github.com/yoshino-xiao7/dsh-grok-provider/pull/8) 合并 `yukiryou/main`；代码合并提交为 `39fbaf1ab3f77b3f0af0727e87b8a64534efbb8d`。
 - [ ] 从最终 release commit 冻结唯一 `dsh-grok-provider-0.1.4.tgz`，记录文件数、bytes、SHA-256、base64 SHA-512，并从同一制品完成隔离安装/加载 smoke。
 - [ ] GitHub 正式 Release 使用中文在前、英文在后且不重复页面标题，只附加唯一已验收 tarball；`v0.1.4` 精确指向 release commit。
 - [ ] 仓库所有者明确授权发布精确 `dsh-grok-provider@0.1.4`；开发请求与绿色自动化均不构成发布授权。
