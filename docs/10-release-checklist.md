@@ -147,9 +147,8 @@ English summary: every release must close documentation, security, tests, determ
 - [x] ADR-0009、产品需求、威胁模型、测试计划、发布计划、实现状态、路线图与上游图片证据已同步为 `0.1.7` 候选事实，并保持 Windows 浏览器验证边界。
 - [x] `package.json`/lockfile、CHANGELOG、中英文 README、`SECURITY.md`、制品契约与双语 `docs/releases/v0.1.7.md` 已同步为精确 `0.1.7` 候选事实和候选文件名。
 - [x] 精确 Node `24.19.0` 本地全量测试通过：190 项、188 pass、0 fail、2 项 Windows-only skip；`npm audit --omit=dev` 为 0 漏洞，dry-run pack 为 64 个文件，`git diff --check`、生成 client bundle 一致性与秘密模式扫描通过。用户未跟踪的重复 checklist 和 Search runtime 均未进入清单。
-- [ ] 取得当前候选的 macOS 14 与 Windows 2022 CI 结果；本地 Node 24 门禁不能替代双平台 runner。
+- [x] 代码 PR [#16](https://github.com/yoshino-xiao7/dsh-grok-provider/pull/16) 已合入受保护 `yukiryou/main`，merge commit 为 `b1d8bdf3f063d0a8f61ec28cde83c5cefd5352ff`；候选 head `da66a2305184aa187de6fc657b08d1ab58dc0672` 的 CI runs [33225068169](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33225068169) 与 [33225065967](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33225065967)，以及 merge commit run [33225274039](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33225274039)，均完成 macOS 14、Windows 2022 全绿。当前证据分支经受保护 PR 合入后得到最终 release commit。
 - [ ] 完成 Windows 真机三态证据：CLI 缺失提示；OIDC discovery timeout 及时闭合并显示安全提示；discovery 可访问时由官方 CLI 实际弹出外部浏览器。完成前不得声明 Windows 浏览器登录已修复或已验证。
-- [ ] 通过受保护 PR 合并代码与最终发布证据，并记录最终 release commit 与对应双平台 CI。
 - [ ] 从最终 release commit 只生成一次唯一 `dsh-grok-provider-0.1.7.tgz`，完成 pack-list、隔离安装/加载、文件数、大小、SHA-256 与 npm SRI，并复用同一字节发布。
 - [ ] 在完整提交与最终制品证据后取得对精确 `dsh-grok-provider@0.1.7` 的发布授权。
 - [ ] 不可变 tag、唯一 GitHub Release asset、Trusted Publisher、npm `latest`、Registry 字节、签名与 provenance 回读全部关闭。
