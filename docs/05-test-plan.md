@@ -7,7 +7,7 @@
 - 所有本地模拟服务使用随机 loopback 端口，不访问真实第三方。
 - 真实账号 smoke 只在发布候选上人工执行，记录脱敏结果。
 - `0.1.0` 发布前必须通过 macOS arm64 真机与 macOS/Windows 自动化矩阵；Windows x64 首次真机验证在发布后对 Registry 精确版本执行，验证前对外标注“代码支持、真机未验证”。
-- `0.1.1` 及后续版本不要求每次重复真机验证；自动化矩阵、契约测试、干净安装和 tarball 校验是常规发版门禁。认证流程、平台 subprocess seam 或安全契约发生变化的版本原则上仍须做对应平台的定向真机验证；若仓库所有者对精确版本明确批准发布后验证，发布前必须公开标注未验证范围、保留自动化门禁，并在失败时使用新的递增稳定版修复。`0.1.6` 采用该已记录特例。
+- `0.1.1` 及后续版本不要求每次重复真机验证；自动化矩阵、契约测试、干净安装和 tarball 校验是常规发版门禁。认证流程、平台 subprocess seam 或安全契约发生变化的版本原则上仍须做对应平台的定向真机验证；若仓库所有者对精确版本明确批准发布后验证，发布前必须公开标注未验证范围、保留自动化门禁，并在失败时使用新的递增稳定版修复。`0.1.6` 采用该已记录特例并已发布；发布后图片已确认可用，Windows 官方 CLI 则在生成登录 URL 前复现 OIDC discovery timeout。当前 `0.1.7` 候选负责解释并闭合这些状态，不把系统网络失败冒充成浏览器弹出修复。
 
 ## 2. Gate 0：方案确认
 
@@ -72,7 +72,15 @@
 - stdout/stderr 超过 64 KiB 时终止。
 - 退出 0 但 auth 文件缺失/无效仍失败。
 - canary secret 出现在 fake CLI 输出时，不出现在 RPC、命令结果、错误和日志。
-- Windows 真实 Gate 1 验证无额外 console 闪窗；通常若出现则发布阻断，不能用 rc.2 契约中不存在的 `windowsHide` 伪造单测。对仓库所有者已明确批准发布后验证的精确 `0.1.6`，该项按披露状态后置；若发布后出现闪窗或未打开浏览器，必须使用新的递增稳定版修复。
+- Windows 真实 Gate 1 验证无额外 console 闪窗；通常若出现则发布阻断，不能用 rc.2 契约中不存在的 `windowsHide` 伪造单测。精确 `0.1.6` 的发布后验证已证明官方 CLI 可在 OIDC discovery 阶段超时，此时登录 URL 尚不存在。`0.1.7` 必须验证页面结束 spinner 并显示脱敏网络提示；只有另行证明 discovery 可访问时由官方 CLI 实际打开浏览器，才能声称浏览器弹出通过。
+
+### Runtime diagnostics 与闭合失败
+
+- diagnostics 只在首次打开、主动重新检测和登录结算后调用，不进入每秒 status polling；同一 inspector 的并发请求只启动一个有界检测。
+- 覆盖 `ready`、`missing`、`invalid`、`unavailable`，以及 Provider/CLI 双版本投影、额外字段/超限版本拒绝；renderer 不得到 executable path、stderr、环境、代理配置或 OAuth URL。
+- CLI 缺失、无效、检测失败时登录保持禁用；中英文官方安装入口、重新检测与 `aria-live` 状态可用。有效 credential 下的 logout 不因 diagnostics 失败而被错误禁用。
+- 只有固定 discovery 地址与 timeout 特征同时匹配才投影 `auth-network-timeout`；action deadline 投影 `login-timeout`，未知 stderr/畸形 reason 折叠为通用失败。网络提前失败立即结算，五分钟真人授权期限与取消不变。
+- 覆盖 diagnostics single-flight、最后 caller 取消、capability teardown 取消并等待、cleanup 失败锁存隔离，以及 request epoch/generation/session/effect cleanup 防止陈旧状态回写。
 
 ### Credential source
 
@@ -204,6 +212,7 @@ Web 与 TUI 分别验证：
 - HMR/unload 后 adapter、RPC、command、settings slot 和子进程全部清理。
 - Host 连续 activate → unload → activate 两轮后仍只有一个 adapter/RPC/command；async disposer 在 `Promise.allSettled(inflight)` 后才完成。
 - client bundle revision 更新后旧 settings slot、listener、store/controller 被释放，不出现重复页面。
+- 设置导航图标兼容层覆盖“插件先激活、随后打开 dialog”、唯一精确标签与 SVG/span 结构、同名歧义/近似标签/结构变化保留齿轮、无关页面 mutation 不扫描、重复 apply 只保留一个 observer、独立 style 不被其他 bundle HMR 认领，以及排队更新后的最终 unload 不恢复 marker。
 - subprocess service 替换时对应 child fiber 卸载，login tree 终止并 `waitForExit()` 后才重新安装 capability。
 - teardown wait 有界；`waitForExit()` 返回 `false` 时 HMR 不永久挂起，登录 capability 保持隔离并要求 Host 重启或 subprocess service replacement，不能自动启动第二棵树。
 - Web、TUI、headless profile 分别覆盖缺失 optional peer/service；缺少 subprocess 时登录按钮/命令明确不可用，但已有合格会话的 Provider 可安全启动。
@@ -235,4 +244,4 @@ Web 与 TUI 分别验证：
 - Windows x64 自动化平台测试通过，且 README、release notes 和 marketplace 元数据在首次真机验证前明确披露“代码支持、真机未验证”。
 - npm 回读的 SHA-512 与本地发布 tarball 一致。
 
-`0.1.0` 发布后原计划完成一次 Windows x64 Registry 精确版本真机验收；仓库所有者随后明确决定该验收不再阻断稳定发布，且普通后续版本不重复要求真机验证。`0.1.1` 及后续版本以 CI、契约测试、隔离安装和制品校验为常规门禁。`0.1.6` 改变了认证预检 deadline 所有权，因此加入 Windows slow-fake 与 Windows CI 聚焦门禁；仓库所有者于 2026-08-28 明确决定先发布 Registry 精确版本，再在 Windows x64 上验证浏览器确实弹出、取消与超时结算。发布前不得把代码/CI 覆盖表述为 Windows 真机已确认；验证失败时发布新的递增稳定修复版。
+`0.1.0` 发布后原计划完成一次 Windows x64 Registry 精确版本真机验收；仓库所有者随后明确决定该验收不再阻断稳定发布，且普通后续版本不重复要求真机验证。`0.1.1` 及后续版本以 CI、契约测试、隔离安装和制品校验为常规门禁。已发布 `0.1.6` 改变了认证预检 deadline 所有权并通过 Windows slow-fake 与 Windows CI；发布后图片已确认可用，但 Windows 官方 CLI 直接命令在固定 OIDC discovery 请求上超时，未生成登录 URL。`0.1.7` 的门禁是准确区分 CLI 缺失、discovery 超时与 discovery 可访问三类状态，并确保前两类及时、脱敏结算；在第三类真实通过前不得把代码、CI 或错误可解释性表述为 Windows 浏览器弹出已修复或已验证。

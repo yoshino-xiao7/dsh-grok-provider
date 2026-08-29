@@ -6,15 +6,29 @@ const DEFAULT_LOGIN_TIMEOUT_MS = 5 * 60 * 1000
 const DEFAULT_LOGOUT_TIMEOUT_MS = 2 * 60 * 1000
 const DEFAULT_REFRESH_TIMEOUT_MS = 30 * 1000
 const MAX_TIMER_DELAY_MS = 2_147_483_647
+const FAILURE_REASONS = new Set([
+  "cli-missing",
+  "cli-invalid",
+  "auth-network-timeout",
+  "login-timeout",
+  "cli-failed",
+])
+const OIDC_DISCOVERY_PATH = "auth.x.ai/.well-known/openid-configuration"
 
 export class OfficialCliAuthError extends Error {
-  constructor() {
+  constructor(reason = "cli-failed") {
     super("The official Grok CLI login could not be completed")
     this.name = "OfficialCliAuthError"
+    this.reason = FAILURE_REASONS.has(reason) ? reason : "cli-failed"
   }
 }
 
-export class OfficialCliCleanupError extends OfficialCliAuthError {}
+export class OfficialCliCleanupError extends OfficialCliAuthError {
+  constructor() {
+    super()
+    this.name = "OfficialCliCleanupError"
+  }
+}
 
 export function createOfficialCliAuth({
   subprocess,
@@ -25,6 +39,7 @@ export function createOfficialCliAuth({
   loginTimeoutMs = DEFAULT_LOGIN_TIMEOUT_MS,
   logoutTimeoutMs = DEFAULT_LOGOUT_TIMEOUT_MS,
   refreshTimeoutMs = DEFAULT_REFRESH_TIMEOUT_MS,
+  onCleanupFailure = () => {},
 }) {
   if (
     !subprocess ||
@@ -37,7 +52,8 @@ export function createOfficialCliAuth({
     !isTimeout(versionTimeoutMs) ||
     !isTimeout(loginTimeoutMs) ||
     !isTimeout(logoutTimeoutMs) ||
-    !isTimeout(refreshTimeoutMs)
+    !isTimeout(refreshTimeoutMs) ||
+    typeof onCleanupFailure !== "function"
   ) {
     throw new TypeError("Invalid official Grok CLI auth dependencies")
   }
@@ -46,23 +62,53 @@ export function createOfficialCliAuth({
   const grokHome = pathApi.join(homeDir, ".grok")
   const candidate = pathApi.join(grokHome, "bin", platform === "win32" ? "grok.exe" : "grok")
   const cliEnvironment = buildCliEnvironment(platform, homeDir)
+  const isolation = new AbortController()
+  let cleanupFailed = false
 
-  const runAction = async (argvTail, callerSignal, timeoutMs, requiredCapability) => {
+  const latchCleanupFailure = (error = new OfficialCliCleanupError()) => {
+    if (cleanupFailed) return
+    cleanupFailed = true
+    isolation.abort(error)
+    try {
+      onCleanupFailure()
+    } catch {
+      // The CLI instance remains latched even if its owner cannot synchronously isolate it.
+    }
+  }
+
+  const assertCleanupHealthy = () => {
+    if (cleanupFailed) throw new OfficialCliCleanupError()
+  }
+
+  const inspectExecutable = async (callerSignal) => {
     let resolved
     try {
-      resolved = await withDeadline(callerSignal, versionTimeoutMs, async (signal) => {
-        const executable = await subprocess.resolveExecutable(candidate, {}, signal)
-        if (typeof executable !== "string" || !pathApi.isAbsolute(executable)) {
-          throw new OfficialCliAuthError()
+      try {
+        resolved = await withDeadline(callerSignal, versionTimeoutMs, async (signal) => {
+          const executable = await subprocess.resolveExecutable(candidate, {}, signal)
+          if (typeof executable !== "string" || !pathApi.isAbsolute(executable)) {
+            throw new OfficialCliAuthError("cli-invalid")
+          }
+          signal.throwIfAborted()
+          return executable
+        })
+      } catch (error) {
+        if (callerSignal?.aborted || isTimeoutError(error) || error instanceof OfficialCliAuthError) {
+          throw error
         }
-        signal.throwIfAborted()
-        return executable
-      })
-      await withDeadline(callerSignal, versionTimeoutMs, async (signal) => {
-        await verifyExecutable({ candidate, resolved, grokHome, platform }, signal)
-        signal.throwIfAborted()
-      })
-
+        throw new OfficialCliAuthError("cli-missing")
+      }
+      try {
+        await withDeadline(callerSignal, versionTimeoutMs, async (signal) => {
+          await verifyExecutable({ candidate, resolved, grokHome, platform }, signal)
+          signal.throwIfAborted()
+        })
+      } catch (error) {
+        if (callerSignal?.aborted || isTimeoutError(error) || error instanceof OfficialCliCleanupError) {
+          throw error
+        }
+        throw new OfficialCliAuthError("cli-invalid")
+      }
       const version = await withDeadline(callerSignal, versionTimeoutMs, (signal) => runCollected(subprocess, {
         argv: [resolved, "--version"],
         cwd: grokHome,
@@ -71,63 +117,144 @@ export function createOfficialCliAuth({
         env: cliEnvironment,
         teardownTimeoutMs: versionTimeoutMs,
       }))
-      if (!isGrokVersionOutput(version.stdout) || version.stderr.length !== 0) {
-        throw new OfficialCliAuthError()
+      const displayVersion = parseGrokVersion(version.stdout)
+      if (!didProcessSucceed(version) || displayVersion === undefined || version.stderr.length !== 0) {
+        throw new OfficialCliAuthError("cli-invalid")
       }
+      return Object.freeze({ resolved, version: displayVersion })
+    } finally {
+      resolved = undefined
+    }
+  }
 
+  const inspectCapability = async (resolved, callerSignal, requiredCapability) => {
+    try {
+      const help = await withDeadline(callerSignal, versionTimeoutMs, (signal) => runCollected(subprocess, {
+        argv: [resolved, ...requiredCapability.helpArgv],
+        cwd: grokHome,
+        maxBytes: 16 * 1024,
+        signal,
+        env: cliEnvironment,
+        teardownTimeoutMs: versionTimeoutMs,
+      }))
+      if (!didProcessSucceed(help) || help.stderr.length !== 0 || !hasCliOption(help.stdout, requiredCapability.option)) {
+        throw new OfficialCliAuthError("cli-invalid")
+      }
+    } catch (error) {
+      if (callerSignal?.aborted || error instanceof OfficialCliCleanupError) throw error
+      if (error instanceof OfficialCliAuthError) throw error
+      throw new OfficialCliAuthError("cli-invalid")
+    }
+  }
+
+  const runAction = async (argvTail, callerSignal, timeoutMs, requiredCapability, timeoutReason) => {
+    const operation = createLinkedSignal(callerSignal, isolation.signal)
+    let executable
+    let actionStarted = false
+    try {
+      assertCleanupHealthy()
+      executable = await inspectExecutable(operation.signal)
       if (requiredCapability) {
-        const help = await withDeadline(callerSignal, versionTimeoutMs, (signal) => runCollected(subprocess, {
-          argv: [resolved, ...requiredCapability.helpArgv],
-          cwd: grokHome,
-          maxBytes: 16 * 1024,
-          signal,
-          env: cliEnvironment,
-          teardownTimeoutMs: versionTimeoutMs,
-        }))
-        if (help.stderr.length !== 0 || !hasCliOption(help.stdout, requiredCapability.option)) {
-          throw new OfficialCliAuthError()
-        }
+        await inspectCapability(executable.resolved, operation.signal, requiredCapability)
       }
 
-      await withDeadline(callerSignal, timeoutMs, (signal) => runCollected(subprocess, {
-        argv: [resolved, ...argvTail],
+      actionStarted = true
+      const action = await withDeadline(operation.signal, timeoutMs, (signal) => runCollected(subprocess, {
+        argv: [executable.resolved, ...argvTail],
         cwd: grokHome,
         maxBytes: 64 * 1024,
         signal,
         env: cliEnvironment,
         teardownTimeoutMs: versionTimeoutMs,
       }))
+      if (!didProcessSucceed(action)) {
+        throw new OfficialCliAuthError(classifyActionFailure(action.stderr))
+      }
       return Object.freeze({ kind: "succeeded" })
     } catch (error) {
-      if (error instanceof OfficialCliCleanupError) throw error
+      if (error instanceof OfficialCliCleanupError) {
+        latchCleanupFailure(error)
+        throw error
+      }
       if (callerSignal?.aborted) {
         return Object.freeze({ kind: "cancelled" })
       }
-      if (error instanceof OfficialCliAuthError || error instanceof TypeError) throw error
-      throw new OfficialCliAuthError()
+      const reason = error instanceof OfficialCliAuthError
+        ? error.reason
+        : actionStarted && isTimeoutError(error)
+          ? timeoutReason
+          : "cli-failed"
+      if (!actionStarted) {
+        if (error instanceof OfficialCliAuthError) throw error
+        throw new OfficialCliAuthError(reason)
+      }
+      return Object.freeze({ kind: "failed", reason })
     } finally {
-      resolved = undefined
+      operation.dispose()
+      executable = undefined
     }
   }
 
   return Object.freeze({
+    async inspect({ signal } = {}) {
+      if (cleanupFailed) return Object.freeze({ state: "unavailable" })
+      const operation = createLinkedSignal(signal, isolation.signal)
+      try {
+        const executable = await inspectExecutable(operation.signal)
+        await inspectCapability(executable.resolved, operation.signal, {
+          helpArgv: ["login", "--help"],
+          option: "--oauth",
+        })
+        return Object.freeze({ state: "ready", version: executable.version })
+      } catch (error) {
+        if (error instanceof OfficialCliCleanupError) {
+          latchCleanupFailure(error)
+          return Object.freeze({ state: "unavailable" })
+        }
+        if (signal?.aborted) throw error
+        if (error instanceof OfficialCliAuthError && error.reason === "cli-missing") {
+          return Object.freeze({ state: "missing" })
+        }
+        return Object.freeze({ state: "invalid" })
+      } finally {
+        operation.dispose()
+      }
+    },
     login({ signal } = {}) {
       return runAction(["login", "--oauth"], signal, loginTimeoutMs, {
         helpArgv: ["login", "--help"],
         option: "--oauth",
-      })
+      }, "login-timeout")
     },
     logout({ signal } = {}) {
-      return runAction(["logout"], signal, logoutTimeoutMs)
+      return runAction(["logout"], signal, logoutTimeoutMs, undefined, "cli-failed")
     },
     refresh({ signal } = {}) {
-      return runAction(["models"], signal, refreshTimeoutMs)
+      return runAction(["models"], signal, refreshTimeoutMs, undefined, "cli-failed")
     },
   })
 }
 
-function isGrokVersionOutput(output) {
-  return typeof output === "string" && /^grok [^\r\n]+$/u.test(output.trim())
+function parseGrokVersion(output) {
+  if (typeof output !== "string") return undefined
+  const match = /^grok\s+([0-9A-Za-z][0-9A-Za-z.+_-]{0,63})(?:\s+[^\r\n]+)?$/u.exec(output.trim())
+  return match?.[1]
+}
+
+function didProcessSucceed(result) {
+  return result?.outcome?.exitCode === 0 && result.outcome.signal === null
+}
+
+function classifyActionFailure(stderr) {
+  const normalized = typeof stderr === "string" ? stderr.toLowerCase() : ""
+  if (normalized.includes(OIDC_DISCOVERY_PATH) && normalized.includes("operation timed out")) {
+    return "auth-network-timeout"
+  }
+  return "cli-failed"
+}
+
+function isTimeoutError(error) {
+  return error?.name === "TimeoutError"
 }
 
 function hasCliOption(output, expectedOption) {
@@ -138,6 +265,23 @@ function hasCliOption(output, expectedOption) {
     const optionColumn = trimmed.split(/\s{2,}/u, 1)[0]
     return optionColumn.split(/[\s,]+/u).includes(expectedOption)
   })
+}
+
+function createLinkedSignal(callerSignal, isolationSignal) {
+  const controller = new AbortController()
+  const sources = [callerSignal, isolationSignal].filter((signal) => signal !== undefined)
+  const listeners = sources.map((source) => {
+    const listener = () => controller.abort(source.reason)
+    if (source.aborted) listener()
+    else source.addEventListener("abort", listener, { once: true })
+    return { source, listener }
+  })
+  return {
+    signal: controller.signal,
+    dispose() {
+      for (const { source, listener } of listeners) source.removeEventListener("abort", listener)
+    },
+  }
 }
 
 function createDeadline(callerSignal, timeoutMs) {
@@ -172,7 +316,7 @@ async function runCollected(subprocess, { argv, cwd, maxBytes, signal, env, tear
   let handle
   let stdout
   let stderr
-  let processSucceeded = false
+  let processFinished = false
   try {
     handle = subprocess.spawn({
       argv,
@@ -188,16 +332,14 @@ async function runCollected(subprocess, { argv, cwd, maxBytes, signal, env, tear
     })
     if (!isProcessHandle(handle)) throw new OfficialCliAuthError()
     const outcome = await waitForProcessDone(handle.done, signal)
-    if (!isOutcome(outcome) || outcome.exitCode !== 0 || outcome.signal !== null) {
-      throw new OfficialCliAuthError()
-    }
+    if (!isOutcome(outcome)) throw new OfficialCliAuthError()
     stdout = readCollected(handle.collected.stdout)
     stderr = readCollected(handle.collected.stderr)
-    processSucceeded = true
-    return { stdout, stderr }
+    processFinished = true
+    return { outcome, stdout, stderr }
   } finally {
     if (handle && typeof handle.waitForExit === "function") {
-      if (!processSucceeded || signal?.aborted) terminateBestEffort(handle)
+      if (!processFinished || signal?.aborted) terminateBestEffort(handle)
       await waitForProcessTree(handle, teardownTimeoutMs)
       signal?.throwIfAborted()
     }

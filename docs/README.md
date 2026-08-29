@@ -1,10 +1,10 @@
 # Grok Build Provider 文档索引
 
-- 状态：**稳定版 `0.1.5` 已发布；`0.1.6` 图片历史/Windows 登录维护版已进入发布候选阶段**
-- 当前 npm 稳定版本：`0.1.5`
-- 最近发布版本：`0.1.5`
-- 当前开发分支：`yukiryou/v0.1.6`
-- 发布状态：不可变 `v0.1.5` 精确指向 release commit `4f0bcd84f96c1cd5d95dda2a01ce63ff6403b828`；唯一 Release asset、Trusted Publisher run `33162280108`、Registry 逐字节回读、签名与 SLSA provenance 已全部关闭
+- 状态：**稳定版 `0.1.6` 已发布；`0.1.7` Windows 运行时诊断、登录失败可解释性与设置图标维护版处于候选开发阶段**
+- 当前 npm 稳定版本：`0.1.6`
+- 最近发布版本：`0.1.6`
+- 当前开发分支：`yukiryou/windows-auth-runtime-status`
+- 发布状态：不可变 `v0.1.6` 精确指向 release commit `93519f77adc4ce2edfc1bbd27bce9e44d4805da6`；唯一 60 文件、145,620-byte tarball 的 SHA-256 为 `fd660d91216086496a4d189cb7e60b3445079913c97da41fccf805e3086c0347`，npm SRI 为 `sha512-Vsmzm+8tgmHCuS8WKfzicjgauupY9FZ5B/V+55KbCTggBrThDDArjeS2bwHUVpjd92CvO47ya3SHELdWtTijAQ==`；Trusted Publisher run `33177647530` 已完成，Registry signature 与 provenance 已验证
 - 兼容基线：DeepSeek Harness `0.1.1-rc.2`
 - 目标平台：macOS arm64、Windows x64
 
@@ -47,6 +47,7 @@
 - [v0.1.4 中英双语发行说明](./releases/v0.1.4.md)
 - [v0.1.5 中英双语发行说明](./releases/v0.1.5.md)
 - [v0.1.6 中英双语发行说明](./releases/v0.1.6.md)
+- [v0.1.7 中英双语发行说明](./releases/v0.1.7.md)
 - [v0.1.2-rc.1 中英双语预发行说明](./releases/v0.1.2-rc.1.md)
 - [ADR-0001：认证与传输路线](./adr/0001-auth-and-transport-route.md)
 - [ADR-0002：首版能力边界](./adr/0002-v0.1-scope.md)
@@ -56,10 +57,13 @@
 - [ADR-0006：账户额度与模型能力面板](./adr/0006-account-dashboard.md)
 - [ADR-0007：以能力与凭据契约判断 CLI 兼容性](./adr/0007-capability-based-cli-compatibility.md)
 - [ADR-0008：图片输入使用异步请求编译器](./adr/0008-image-input-request-compiler.md)
+- [ADR-0009：运行时版本诊断与闭合登录失败](./adr/0009-runtime-diagnostics-and-login-failures.md)
 
 ## 开发门禁
 
-`0.1.2-rc.1` 是唯一一次预发行尝试。仓库所有者决定从稳定 `0.1.2` 起不再发行预发行版；正式版缺陷通过新的递增稳定版本修复。`0.1.4` 已发布：仅精确 `grok-4.6` 开启图片，普通 user 与一层 tool-result 的红/蓝合成图共四次脱敏 Proxy 请求均通过；`grok-4.5` 的红图语义结果不可靠，因此失败关闭并与其他模型保持 text-only。`0.1.5` 维护发布供应链、账户面板投影与 Provider Runtime 安装事务。`0.1.6` 候选只修复普通 user/system 私有 reasoning 阻断图片请求，以及 Windows CLI 冷启动共用 deadline 导致 `login --oauth` 尚未启动即失败的问题；Web/X Search 顺延至 `0.1.7`。完整门禁见[逐版发布检查表](./10-release-checklist.md)。
+`0.1.2-rc.1` 是唯一一次预发行尝试。仓库所有者决定从稳定 `0.1.2` 起不再发行预发行版；正式版缺陷通过新的递增稳定版本修复。`0.1.4` 已发布：仅精确 `grok-4.6` 开启图片，普通 user 与一层 tool-result 的红/蓝合成图共四次脱敏 Proxy 请求均通过；`grok-4.5` 的红图语义结果不可靠，因此失败关闭并与其他模型保持 text-only。`0.1.5` 维护发布供应链、账户面板投影与 Provider Runtime 安装事务。`0.1.6` 已发布图片历史 reasoning 兼容与 Windows CLI 分阶段 deadline 修复，精确制品、Trusted Publisher、Registry signature 与 provenance 均已验证；发布后图片能力已由仓库所有者确认可用。Windows 真机同时确认官方 `grok login --oauth` 可在 xAI OIDC discovery 阶段超时，此时登录 URL 尚未生成，不能据此声称 Provider 已修复或验证浏览器弹出。
+
+当前 `0.1.7` 候选只增加闭合 CLI 安装/版本诊断、登录失败可解释性，以及采用 MIT 许可的 Harness `IconThinkOutline16` 路径几何；它不接管官方 CLI 的网络、代理或 OAuth 流程。Web/X Search 顺延至独立 `0.1.8` 切片。完整门禁见[逐版发布检查表](./10-release-checklist.md)。
 
 ## 官方依据
 

@@ -1,13 +1,15 @@
 import { AuthDriverUnavailableError, AuthLoginBusyError } from "./auth-controller.mjs"
+import { normalizeRuntimeDiagnostics } from "./runtime-diagnostics.mjs"
 
-export function createAuthRpcHandler({ controller, dashboard }) {
+export function createAuthRpcHandler({ controller, dashboard, diagnostics }) {
   if (
     !controller ||
     typeof controller.status !== "function" ||
     typeof controller.beginLogin !== "function" ||
     typeof controller.cancel !== "function" ||
     typeof controller.logout !== "function" ||
-    typeof dashboard !== "function"
+    typeof dashboard !== "function" ||
+    typeof diagnostics !== "function"
   ) throw new TypeError("Invalid Grok auth RPC controller")
 
   return async function handleAuthRpc(endpoint, payload, signal) {
@@ -21,6 +23,11 @@ export function createAuthRpcHandler({ controller, dashboard }) {
       if (endpoint === "dashboard") {
         if (!hasExactKeys(payload, [])) return badRequest()
         return ok({ kind: "dashboard", dashboard: serializable(await dashboard({ signal })) })
+      }
+      if (endpoint === "diagnostics") {
+        if (!hasExactKeys(payload, [])) return badRequest()
+        const facts = normalizeRuntimeDiagnostics(await diagnostics({ signal }))
+        return ok({ kind: "diagnostics", diagnostics: serializable(facts) })
       }
       if (endpoint === "login") {
         if (!hasExactKeys(payload, [])) return badRequest()

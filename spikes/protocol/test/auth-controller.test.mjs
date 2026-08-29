@@ -43,6 +43,42 @@ test("one login session exposes only public state, cancels, and invalidates auth
   })
 })
 
+test("one closed CLI failure reason reaches public login state and unknown reasons fail closed", async () => {
+  const registry = createAuthRegistry({
+    createTransport: (source) => ({ source }),
+  })
+  let sequence = 0
+  const controller = createAuthController({
+    registry,
+    randomUUID: () => `failure-${sequence += 1}`,
+    driver: {
+      async begin() {
+        return sequence === 1
+          ? { completion: Promise.resolve({ kind: "failed", reason: "auth-network-timeout" }) }
+          : { completion: Promise.resolve({ kind: "failed", reason: "raw-upstream-error" }) }
+      },
+    },
+  })
+
+  const networkFailure = await controller.beginLogin()
+  assert.deepEqual(await networkFailure.wait(), {
+    kind: "failed",
+    reason: "auth-network-timeout",
+  })
+  assert.deepEqual((await controller.status()).session, {
+    state: "failed",
+    sessionId: "failure-1",
+    reason: "auth-network-timeout",
+  })
+
+  const unknownFailure = await controller.beginLogin()
+  assert.deepEqual(await unknownFailure.wait(), { kind: "failed" })
+  assert.deepEqual((await controller.status()).session, {
+    state: "failed",
+    sessionId: "failure-2",
+  })
+})
+
 test("concurrent login starts reserve one single-flight session", async () => {
   const registry = createAuthRegistry({
     createTransport: (source) => ({ source }),

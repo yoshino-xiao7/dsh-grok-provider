@@ -3,6 +3,216 @@ import test from "node:test"
 
 import { createOfficialCliAuth } from "../../../src/internal/official-cli-auth.mjs"
 
+test("CLI inspection reports one verified safe display version", async () => {
+  const executable = "C:\\Users\\fixture\\.grok\\bin\\grok.exe"
+  const spawned = []
+  const outputs = [
+    "grok 1.0.5 (5115b46bc909)\n",
+    "Usage: grok login [OPTIONS]\n\nOptions:\n      --oauth  Use browser OAuth\n",
+  ]
+  const auth = createOfficialCliAuth({
+    subprocess: {
+      async resolveExecutable() { return executable },
+      spawn(spec) {
+        const output = outputs[spawned.length]
+        spawned.push(spec)
+        return {
+          done: Promise.resolve({ exitCode: 0, signal: null }),
+          collected: {
+            stdout: { readFrom: () => ({ text: output, lossy: false }) },
+            stderr: { readFrom: () => ({ text: "", lossy: false }) },
+          },
+          async waitForExit() { return true },
+          terminate() {},
+        }
+      },
+    },
+    platform: "win32",
+    homeDir: "C:\\Users\\fixture",
+    verifyExecutable: async () => {},
+  })
+
+  assert.deepEqual(await auth.inspect(), {
+    state: "ready",
+    version: "1.0.5",
+  })
+  assert.deepEqual(spawned.map((spec) => spec.argv), [
+    [executable, "--version"],
+    [executable, "login", "--help"],
+  ])
+})
+
+test("CLI inspection reports a missing default executable without starting a process", async () => {
+  let spawned = 0
+  let verified = 0
+  const auth = createOfficialCliAuth({
+    subprocess: {
+      async resolveExecutable() { throw new Error("fixture executable missing") },
+      spawn() { spawned += 1; throw new Error("missing CLI must not spawn") },
+    },
+    platform: "win32",
+    homeDir: "C:\\Users\\fixture",
+    verifyExecutable: async () => { verified += 1 },
+  })
+
+  assert.deepEqual(await auth.inspect(), { state: "missing" })
+  assert.equal(verified, 0)
+  assert.equal(spawned, 0)
+})
+
+test("CLI inspection reports an invalid executable when version output is not Grok", async () => {
+  const executable = "C:\\Users\\fixture\\.grok\\bin\\grok.exe"
+  const auth = createOfficialCliAuth({
+    subprocess: {
+      async resolveExecutable() { return executable },
+      spawn() {
+        return {
+          done: Promise.resolve({ exitCode: 0, signal: null }),
+          collected: {
+            stdout: { readFrom: () => ({ text: "not-grok 1.0.5\n", lossy: false }) },
+            stderr: { readFrom: () => ({ text: "", lossy: false }) },
+          },
+          async waitForExit() { return true },
+          terminate() {},
+        }
+      },
+    },
+    platform: "win32",
+    homeDir: "C:\\Users\\fixture",
+    verifyExecutable: async () => {},
+  })
+
+  assert.deepEqual(await auth.inspect(), { state: "invalid" })
+})
+
+test("CLI inspection reports invalid when browser OAuth capability is absent", async () => {
+  const executable = "C:\\Users\\fixture\\.grok\\bin\\grok.exe"
+  const outputs = [
+    "grok 1.0.5 (5115b46bc909)\n",
+    "Usage: grok login [OPTIONS]\n\nOptions:\n      --device-auth  Use device authentication\n",
+  ]
+  let spawned = 0
+  const auth = createOfficialCliAuth({
+    subprocess: {
+      async resolveExecutable() { return executable },
+      spawn() {
+        const output = outputs[spawned]
+        spawned += 1
+        return {
+          done: Promise.resolve({ exitCode: 0, signal: null }),
+          collected: {
+            stdout: { readFrom: () => ({ text: output, lossy: false }) },
+            stderr: { readFrom: () => ({ text: "", lossy: false }) },
+          },
+          async waitForExit() { return true },
+          terminate() {},
+        }
+      },
+    },
+    platform: "win32",
+    homeDir: "C:\\Users\\fixture",
+    verifyExecutable: async () => {},
+  })
+
+  assert.deepEqual(await auth.inspect(), { state: "invalid" })
+})
+
+test("CLI inspection cleanup failure isolates and permanently latches that CLI instance", async () => {
+  const executable = "C:\\Users\\fixture\\.grok\\bin\\grok.exe"
+  let spawned = 0
+  let isolated = 0
+  const auth = createOfficialCliAuth({
+    subprocess: {
+      async resolveExecutable() { return executable },
+      spawn() {
+        spawned += 1
+        return {
+          done: Promise.resolve({ exitCode: 0, signal: null }),
+          collected: {
+            stdout: { readFrom: () => ({ text: "grok 1.0.5 (5115b46bc909)\n", lossy: false }) },
+            stderr: { readFrom: () => ({ text: "", lossy: false }) },
+          },
+          async waitForExit() { return false },
+          terminate() {},
+        }
+      },
+    },
+    platform: "win32",
+    homeDir: "C:\\Users\\fixture",
+    verifyExecutable: async () => {},
+    onCleanupFailure: () => { isolated += 1 },
+  })
+
+  assert.deepEqual(await auth.inspect(), { state: "unavailable" })
+  assert.equal(spawned, 1)
+  assert.equal(isolated, 1)
+  assert.deepEqual(await auth.inspect(), { state: "unavailable" })
+  await assert.rejects(auth.login(), { name: "OfficialCliCleanupError" })
+  assert.equal(spawned, 1)
+  assert.equal(isolated, 1)
+})
+
+test("CLI inspection cleanup failure aborts an authentication action already in flight", async () => {
+  const executable = "C:\\Users\\fixture\\.grok\\bin\\grok.exe"
+  const outputs = [
+    "grok 1.0.5 (5115b46bc909)\n",
+    "Usage: grok login [OPTIONS]\n\nOptions:\n      --oauth  Use browser OAuth\n",
+    "",
+    "grok 1.0.5 (5115b46bc909)\n",
+  ]
+  let spawned = 0
+  let actionSignal
+  let actionStarted
+  const actionReady = new Promise((resolve) => { actionStarted = resolve })
+  let isolated = 0
+  const auth = createOfficialCliAuth({
+    subprocess: {
+      async resolveExecutable() { return executable },
+      spawn(spec) {
+        const index = spawned
+        spawned += 1
+        if (index === 2) {
+          actionSignal = spec.signal
+          actionStarted()
+          return {
+            done: new Promise((resolve) => spec.signal.addEventListener("abort", () => {
+              resolve({ exitCode: null, signal: "SIGTERM" })
+            }, { once: true })),
+            collected: {
+              stdout: { readFrom: () => ({ text: outputs[index], lossy: false }) },
+              stderr: { readFrom: () => ({ text: "", lossy: false }) },
+            },
+            async waitForExit() { return true },
+            terminate() {},
+          }
+        }
+        return {
+          done: Promise.resolve({ exitCode: 0, signal: null }),
+          collected: {
+            stdout: { readFrom: () => ({ text: outputs[index], lossy: false }) },
+            stderr: { readFrom: () => ({ text: "", lossy: false }) },
+          },
+          async waitForExit() { return index !== 3 },
+          terminate() {},
+        }
+      },
+    },
+    platform: "win32",
+    homeDir: "C:\\Users\\fixture",
+    verifyExecutable: async () => {},
+    onCleanupFailure: () => { isolated += 1 },
+  })
+
+  const login = auth.login()
+  await actionReady
+  assert.equal(actionSignal.aborted, false)
+  assert.deepEqual(await auth.inspect(), { state: "unavailable" })
+  assert.equal(actionSignal.aborted, true)
+  await assert.rejects(login, { name: "OfficialCliCleanupError" })
+  assert.equal(spawned, 4)
+  assert.equal(isolated, 1)
+})
+
 test("Windows Grok CLI 0.2.82 reaches fixed OAuth login after capability discovery", async () => {
   const spawned = []
   const executable = "C:\\Users\\fixture\\.grok\\bin\\grok.exe"
@@ -268,7 +478,87 @@ test("official browser login uses one verified default executable and fixed argv
   assert.deepEqual(waited, [0, 1, 2])
 })
 
-test("official browser login owns a deadline and terminates a stalled process tree", async () => {
+test("OIDC discovery timeout becomes one closed login failure without exposing CLI output", async () => {
+  const executable = "C:\\Users\\fixture\\.grok\\bin\\grok.exe"
+  const spawned = []
+  const outputs = [
+    { stdout: "grok 1.0.5 (5115b46bc9)\n", stderr: "", exitCode: 0 },
+    { stdout: "Usage: grok login [OPTIONS]\n\nOptions:\n      --oauth  Use browser OAuth\n", stderr: "", exitCode: 0 },
+    {
+      stdout: "",
+      stderr: "Error: error sending request for url (https://auth.x.ai/.well-known/openid-configuration): operation timed out\n",
+      exitCode: 1,
+    },
+  ]
+  const auth = createOfficialCliAuth({
+    subprocess: {
+      async resolveExecutable() { return executable },
+      spawn(spec) {
+        const output = outputs[spawned.length]
+        spawned.push(spec)
+        return {
+          done: Promise.resolve({ exitCode: output.exitCode, signal: null }),
+          collected: {
+            stdout: { readFrom: () => ({ text: output.stdout, lossy: false }) },
+            stderr: { readFrom: () => ({ text: output.stderr, lossy: false }) },
+          },
+          async waitForExit() { return true },
+          terminate() {},
+        }
+      },
+    },
+    platform: "win32",
+    homeDir: "C:\\Users\\fixture",
+    verifyExecutable: async () => {},
+  })
+
+  const outcome = await auth.login()
+  assert.deepEqual(outcome, { kind: "failed", reason: "auth-network-timeout" })
+  assert.deepEqual(Object.keys(outcome), ["kind", "reason"])
+  assert.doesNotMatch(JSON.stringify(outcome), /auth\.x\.ai|openid-configuration|operation timed out/iu)
+  assert.deepEqual(spawned.map((spec) => spec.argv), [
+    [executable, "--version"],
+    [executable, "login", "--help"],
+    [executable, "login", "--oauth"],
+  ])
+})
+
+test("an unknown nonzero login exit becomes a generic closed failure", async () => {
+  const executable = "/Users/fixture/.grok/bin/grok"
+  const outputs = [
+    { stdout: "grok 1.0.5 (5115b46bc909)\n", stderr: "", exitCode: 0 },
+    { stdout: "Usage: grok login [OPTIONS]\n\nOptions:\n      --oauth  Use browser OAuth\n", stderr: "", exitCode: 0 },
+    { stdout: "", stderr: "fixture upstream detail that must remain private\n", exitCode: 1 },
+  ]
+  let spawned = 0
+  const auth = createOfficialCliAuth({
+    subprocess: {
+      async resolveExecutable() { return executable },
+      spawn() {
+        const output = outputs[spawned]
+        spawned += 1
+        return {
+          done: Promise.resolve({ exitCode: output.exitCode, signal: null }),
+          collected: {
+            stdout: { readFrom: () => ({ text: output.stdout, lossy: false }) },
+            stderr: { readFrom: () => ({ text: output.stderr, lossy: false }) },
+          },
+          async waitForExit() { return true },
+          terminate() {},
+        }
+      },
+    },
+    platform: "darwin",
+    homeDir: "/Users/fixture",
+    verifyExecutable: async () => {},
+  })
+
+  const outcome = await auth.login()
+  assert.deepEqual(outcome, { kind: "failed", reason: "cli-failed" })
+  assert.doesNotMatch(JSON.stringify(outcome), /fixture upstream detail/iu)
+})
+
+test("official browser login maps its action deadline and terminates a stalled process tree", async () => {
   let spawned = 0
   let actionSignal
   const subprocess = {
@@ -313,10 +603,10 @@ test("official browser login owns a deadline and terminates a stalled process tr
     loginTimeoutMs: 5,
   })
 
-  await assert.rejects(Promise.race([
+  assert.deepEqual(await Promise.race([
     auth.login(),
     new Promise((_, reject) => setTimeout(() => reject(new Error("deadline missing")), 500)),
-  ]), { name: "OfficialCliAuthError" })
+  ]), { kind: "failed", reason: "login-timeout" })
   assert.equal(actionSignal.aborted, true)
 })
 
@@ -357,7 +647,7 @@ test("a stage deadline also bounds process-tree teardown", async () => {
     versionTimeoutMs: 5,
   })
 
-  await assert.rejects(settlesWithin(auth.refresh(), 100), { name: "OfficialCliAuthError" })
+  await assert.rejects(settlesWithin(auth.refresh(), 100), { name: "OfficialCliCleanupError" })
   assert.equal(stageSignal.aborted, true)
   assert.equal(teardownSignal?.aborted, true)
   assert.equal(terminations >= 1, true)
