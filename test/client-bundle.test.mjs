@@ -668,6 +668,102 @@ test("running-status polling is serial and ignores an older response after cance
   harness.unmount()
 })
 
+test("a successful login start enters polling even when the immediate status refresh fails", async () => {
+  let statusCallCount = 0
+  const harness = await createSettingsLifecycleHarness({
+    async rpc(endpoint) {
+      if (endpoint === "status") {
+        statusCallCount += 1
+        if (statusCallCount === 1) {
+          return { kind: "status", status: { generation: 1, available: false, driver: true } }
+        }
+        if (statusCallCount === 2) throw new Error("Transient local status failure")
+        return {
+          kind: "status",
+          status: {
+            generation: 1,
+            available: false,
+            driver: true,
+            session: { sessionId: "login-started", state: "running" },
+          },
+        }
+      }
+      if (endpoint === "diagnostics") {
+        return { kind: "diagnostics", diagnostics: { pluginVersion: "0.1.7", cli: { state: "ready", version: "1.0.5" } } }
+      }
+      if (endpoint === "login") {
+        return {
+          kind: "login-started",
+          status: { sessionId: "login-started", state: "running" },
+          sessionId: "login-started",
+        }
+      }
+      throw new Error(`Unexpected Grok auth RPC endpoint: ${endpoint}`)
+    },
+  })
+
+  const login = findElements(harness.tree(), (node) => (
+    node.type === "button" && textContent(node) === harness.dictionaries.en.login
+  ))[0]
+  assert.ok(login)
+  await login.props.onClick()
+  await harness.flush()
+
+  assert.equal(statusCallCount, 2)
+  assert.equal(textContent(harness.tree()).includes(harness.dictionaries.en.running), true)
+  assert.equal(harness.pendingTimerCount(), 1, "the returned running session starts polling")
+
+  harness.runNextTimer()
+  await harness.flush()
+  assert.equal(statusCallCount, 3)
+  assert.equal(harness.pendingTimerCount(), 1)
+  harness.unmount()
+})
+
+test("a newer CLI diagnostic cannot be overwritten by an older response", async () => {
+  const olderDiagnostic = deferred()
+  let diagnosticCallCount = 0
+  const harness = await createSettingsLifecycleHarness({
+    async rpc(endpoint) {
+      if (endpoint === "status") {
+        return { kind: "status", status: { generation: 2, available: true, driver: true } }
+      }
+      if (endpoint === "diagnostics") {
+        diagnosticCallCount += 1
+        if (diagnosticCallCount === 1) return olderDiagnostic.promise
+        return {
+          kind: "diagnostics",
+          diagnostics: { pluginVersion: "0.1.7", cli: { state: "ready", version: "2.0.0" } },
+        }
+      }
+      if (endpoint === "dashboard") return { kind: "dashboard", dashboard: undefined }
+      throw new Error(`Unexpected Grok auth RPC endpoint: ${endpoint}`)
+    },
+  })
+
+  const refresh = findElements(harness.tree(), (node) => (
+    node.type === "button" && textContent(node) === harness.dictionaries.en.refresh
+  ))[0]
+  assert.ok(refresh)
+  await refresh.props.onClick()
+  await harness.flush()
+  assert.equal(diagnosticCallCount, 2)
+  assert.match(textContent(harness.tree()), /Grok Build version\s*2\.0\.0/iu)
+
+  olderDiagnostic.resolve({
+    kind: "diagnostics",
+    diagnostics: { pluginVersion: "0.1.7", cli: { state: "missing" } },
+  })
+  await Promise.resolve()
+  await Promise.resolve()
+  await harness.flush()
+
+  const content = textContent(harness.tree())
+  assert.match(content, /Grok Build version\s*2\.0\.0/iu)
+  assert.equal(content.includes(harness.dictionaries.en.cliMissingBody), false)
+  harness.unmount()
+})
+
 test("a fresh ready CLI diagnostic supersedes a historical missing-CLI failure", async () => {
   const fixture = await renderSettingsPage({
     locale: "zh",

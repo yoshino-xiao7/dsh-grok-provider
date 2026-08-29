@@ -127,5 +127,5 @@ Windows x64 真机不再是 `0.1.0` 预发布阻断项。首次发布后必须�
 - 代码与文档已定义独立只读 diagnostics RPC、插件/CLI 版本安全投影、`ready|missing|invalid|unavailable` 闭合状态、安装入口与重新检测，以及 `auth-network-timeout` 等白名单登录失败 reason；原始 stderr、路径、环境与授权 URL 不进入 renderer。
 - 诊断 single-flight、调用方取消、capability teardown、driver replacement 与陈旧轮询响应均有闭合 lifecycle；网络错误提前退出时结束 spinner，但插件不修复系统代理、OIDC 网络或自行构造 OAuth URL。
 - Harness `settings.section` 当前没有 icon slot；候选包内嵌 `@deepseek-ai/dsh-client-ui-primitives@0.1.0-rc.7` 的 MIT `IconThinkOutline16` 几何，通过设置导航内的精确本地化标签唯一匹配应用，歧义时保持桌面端原图标，并在卸载时移除 marker、style 与 observer。
-- 精确 Node `24.19.0` 本地全量测试已通过：188 项、186 pass、0 fail、2 项 Windows-only skip；生产依赖审计为 0 漏洞，dry-run pack 为 64 个文件，diff、生成 bundle 一致性与秘密模式扫描通过。
+- 精确 Node `24.19.0` 本地全量测试已通过：190 项、188 pass、0 fail、2 项 Windows-only skip；生产依赖审计为 0 漏洞，dry-run pack 为 64 个文件，diff、生成 bundle 一致性与秘密模式扫描通过。
 - PR、macOS/Windows CI、最终 release commit、唯一正式制品、digest/SRI、发布授权、Trusted Publisher 与 Registry 回读仍待完成；当前候选不得作为 Windows 浏览器弹出已修复或已验证的证据。

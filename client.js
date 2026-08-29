@@ -199,6 +199,7 @@ window.__ModuleLoader__.load({
       const [diagnostics, setDiagnostics] = React.useState()
       const [diagnosticsError, setDiagnosticsError] = React.useState(false)
       const [statusEpoch] = React.useState(() => ({ value: 0 }))
+      const [diagnosticsEpoch] = React.useState(() => ({ value: 0 }))
       const call = React.useCallback(async (endpoint, payload = {}) => {
         const result = await connection.rpc.call("/grok-auth", endpoint, payload)
         if (!result || result.ok !== true) throw new Error("Grok account RPC failed")
@@ -212,15 +213,21 @@ window.__ModuleLoader__.load({
         } catch { setDashboardError(true) }
       }, [call])
       const refreshDiagnostics = React.useCallback(async () => {
+        const requestEpoch = diagnosticsEpoch.value + 1
+        diagnosticsEpoch.value = requestEpoch
         try {
           const value = await call("diagnostics")
+          if (diagnosticsEpoch.value !== requestEpoch) return { kind: "stale" }
           setDiagnostics(value.diagnostics)
           setDiagnosticsError(false)
+          return { kind: "diagnostics", diagnostics: value.diagnostics }
         } catch {
+          if (diagnosticsEpoch.value !== requestEpoch) return { kind: "stale" }
           setDiagnostics(undefined)
           setDiagnosticsError(true)
+          return { kind: "error" }
         }
-      }, [call])
+      }, [call, diagnosticsEpoch])
       const refreshStatus = React.useCallback(async ({ includeDashboard = false, diagnosticsOnSettlement = false, isCurrent } = {}) => {
         const requestEpoch = statusEpoch.value
         const canWrite = () => statusEpoch.value === requestEpoch && (typeof isCurrent !== "function" || isCurrent())
@@ -242,9 +249,15 @@ window.__ModuleLoader__.load({
         }
       }, [call, refreshDashboard, refreshDiagnostics, statusEpoch])
       React.useEffect(() => {
-        refreshStatus({ includeDashboard: true })
+        let active = true
+        refreshStatus({ includeDashboard: true, isCurrent: () => active })
         refreshDiagnostics()
-      }, [refreshDiagnostics, refreshStatus])
+        return () => {
+          active = false
+          statusEpoch.value += 1
+          diagnosticsEpoch.value += 1
+        }
+      }, [diagnosticsEpoch, refreshDiagnostics, refreshStatus, statusEpoch])
       React.useEffect(() => {
         if (status?.session?.state !== "running") return undefined
         let active = true
@@ -273,7 +286,16 @@ window.__ModuleLoader__.load({
       }
       const login = () => act(async () => {
         statusEpoch.value += 1
-        await call("login"); setConfirmLogout(false); await refreshStatus({ diagnosticsOnSettlement: true })
+        const value = await call("login")
+        if (
+          value?.kind !== "login-started" ||
+          value.status?.state !== "running" ||
+          typeof value.status.sessionId !== "string"
+        ) throw new Error("Invalid Grok login start response")
+        setConfirmLogout(false)
+        setStatus((current) => ({ ...(current ?? {}), session: value.status }))
+        setError(false)
+        await refreshStatus({ diagnosticsOnSettlement: true })
       })
       const cancel = () => act(async () => {
         const sessionId = status?.session?.sessionId
