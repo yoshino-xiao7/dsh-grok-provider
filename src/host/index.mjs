@@ -1,6 +1,7 @@
 import os from "node:os"
 import path from "node:path"
 import { randomUUID } from "node:crypto"
+import packageJson from "../../package.json" with { type: "json" }
 
 import { attributionHeaders } from "@deepseek-ai/dsh-llm"
 import Schema from "@deepseek-ai/schemastery"
@@ -22,6 +23,7 @@ import { createOfficialCliAuth } from "../internal/official-cli-auth.mjs"
 import { createOfficialAuthDriver } from "../internal/official-auth-driver.mjs"
 import { verifyOfficialCliExecutable } from "../internal/official-cli-verifier.mjs"
 import { installProviderRuntime } from "../internal/provider-runtime.mjs"
+import { createRuntimeDiagnostics } from "../internal/runtime-diagnostics.mjs"
 
 export const name = "llm-grok"
 export const inject = ["llm"]
@@ -36,6 +38,7 @@ export function apply(ctx) {
 
   const homeDir = os.homedir()
   let refreshOfficialCredential
+  let inspectOfficialCli
   const officialSource = createCredentialSource({
     contract: GROK_PRODUCTION_OIDC_AUTH_CONTRACT,
     load: createOfficialCredentialLoader({
@@ -74,28 +77,55 @@ export function apply(ctx) {
     getBilling: ({ signal } = {}) => runtime.auth.getGeneration().transport.getBilling({ signal }),
     now: () => new Date(),
   })
-  const authRpcHandler = createAuthRpcHandler({ controller: authController, dashboard })
+  const runtimeDiagnostics = createRuntimeDiagnostics({
+    pluginVersion: packageJson.version,
+    getCliInspector: () => inspectOfficialCli,
+  })
+  const authRpcHandler = createAuthRpcHandler({
+    controller: authController,
+    dashboard,
+    diagnostics: runtimeDiagnostics.read,
+  })
 
   ctx.inject(["subprocess"], (subprocessCtx) => {
+    let removeDriver
+    let refresh
+    let inspectCli
+    let isolated = false
+    const isolate = () => {
+      if (isolated) return
+      isolated = true
+      if (inspectOfficialCli === inspectCli) inspectOfficialCli = undefined
+      if (refreshOfficialCredential === refresh) refreshOfficialCredential = undefined
+      removeDriver?.()
+    }
     const officialAuth = createOfficialCliAuth({
       subprocess: subprocessCtx.subprocess,
       platform,
       homeDir,
       verifyExecutable: verifyOfficialCliExecutable,
+      onCleanupFailure: isolate,
     })
-    const removeDriver = authController.installDriver(createOfficialAuthDriver({
+    inspectCli = ({ signal } = {}) => officialAuth.inspect({ signal })
+    inspectOfficialCli = inspectCli
+    removeDriver = authController.installDriver(createOfficialAuthDriver({
       officialAuth,
       credentialSource: officialSource,
     }))
-    const refresh = async () => {
+    refresh = async () => {
       const outcome = await authController.refresh()
       if (outcome.kind !== "succeeded") throw new UnsupportedCredentialError()
     }
     refreshOfficialCredential = refresh
     return async () => {
-      if (refreshOfficialCredential === refresh) refreshOfficialCredential = undefined
-      removeDriver()
-      await authController.shutdown()
+      isolate()
+      const results = await Promise.allSettled([
+        runtimeDiagnostics.disposeInspector(inspectCli),
+        authController.shutdown(),
+      ])
+      const failures = results.filter((result) => result.status === "rejected").map((result) => result.reason)
+      if (failures.length === 1) throw failures[0]
+      if (failures.length > 1) throw new AggregateError(failures, "Failed to dispose Grok CLI capability")
     }
   })
 

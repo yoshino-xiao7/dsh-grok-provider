@@ -6,12 +6,12 @@ import test from "node:test"
 
 const root = path.resolve(import.meta.dirname, "..")
 
-test("the exact 0.1.6 manifest exports runtime artifacts and Web loader metadata", async () => {
+test("the exact 0.1.7 manifest exports runtime artifacts and Web loader metadata", async () => {
   const attributes = await fs.readFile(path.join(root, ".gitattributes"), "utf8")
   assert.match(attributes, /^\*\.yml text eol=lf$/mu)
   const manifest = JSON.parse(await fs.readFile(path.join(root, "package.json"), "utf8"))
   assert.equal(manifest.name, "dsh-grok-provider")
-  assert.equal(manifest.version, "0.1.6")
+  assert.equal(manifest.version, "0.1.7")
   const lockfile = JSON.parse(await fs.readFile(path.join(root, "package-lock.json"), "utf8"))
   assert.equal(lockfile.version, manifest.version)
   assert.equal(lockfile.packages[""].version, manifest.version)
@@ -39,8 +39,20 @@ test("the exact 0.1.6 manifest exports runtime artifacts and Web loader metadata
     "CONTRIBUTING.md",
     "SECURITY.md",
     "LICENSE",
+    "THIRD_PARTY_NOTICES.md",
     "CHANGELOG.md",
   ])
+  const thirdPartyNotices = await fs.readFile(path.join(root, "THIRD_PARTY_NOTICES.md"), "utf8")
+  assert.match(thirdPartyNotices, /@deepseek-ai\/dsh-client-ui-primitives@0\.1\.0-rc\.7/u)
+  assert.match(
+    thirdPartyNotices,
+    /https:\/\/github\.com\/deepseek-ai\/deepseek-harness\/tree\/master\/packages\/client\/ui-primitives/u,
+  )
+  assert.match(thirdPartyNotices, /Copyright \(c\) 2026 DeepSeek/u)
+  assert.match(thirdPartyNotices, /Permission is hereby granted, free of charge, to any person obtaining a copy/u)
+  assert.match(thirdPartyNotices, /The above copyright notice and this permission notice shall be included in all/u)
+  assert.match(thirdPartyNotices, /THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND/u)
+  assert.match(thirdPartyNotices, /AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM/u)
   assert.equal(manifest.dependencies, undefined)
   assert.equal(manifest.peerDependencies["@deepseek-ai/dsh-credentials"], undefined)
   assert.equal(manifest.devDependencies["@deepseek-ai/dsh-credentials"], undefined)
@@ -99,22 +111,24 @@ test("the exact 0.1.6 manifest exports runtime artifacts and Web loader metadata
   assert.match(englishReadme, /\[简体中文\]\(README\.md\)/u)
   assert.match(chineseReadme, /## 快速开始/u)
   assert.match(chineseReadme, /## 安全与隐私/u)
-  assert.match(chineseReadme, /当前源码版本为 `0\.1\.6`/u)
-  assert.match(chineseReadme, /dsh-grok-provider@0\.1\.6/u)
+  assert.match(chineseReadme, /当前源码候选版本为 `0\.1\.7`/u)
+  assert.match(chineseReadme, /dsh-grok-provider@0\.1\.7/u)
+  assert.match(chineseReadme, /\[`THIRD_PARTY_NOTICES\.md`\]\(THIRD_PARTY_NOTICES\.md\)/u)
   assert.match(englishReadme, /## Quick start/u)
   assert.match(englishReadme, /## Security and privacy/u)
-  assert.match(englishReadme, /current source version is `0\.1\.6`/u)
-  assert.match(englishReadme, /dsh-grok-provider@0\.1\.6/u)
+  assert.match(englishReadme, /current source candidate is `0\.1\.7`/u)
+  assert.match(englishReadme, /dsh-grok-provider@0\.1\.7/u)
+  assert.match(englishReadme, /\[`THIRD_PARTY_NOTICES\.md`\]\(THIRD_PARTY_NOTICES\.md\)/u)
   const securityPolicy = await fs.readFile(path.join(root, "SECURITY.md"), "utf8")
-  assert.match(securityPolicy, /源码版本 `0\.1\.6`/u)
-  assert.match(securityPolicy, /Version `0\.1\.6`/u)
+  assert.match(securityPolicy, /源码候选版本 `0\.1\.7`/u)
+  assert.match(securityPolicy, /source candidate is `0\.1\.7`/u)
   const releaseNotes = await fs.readFile(
-    path.join(root, "docs/releases/v0.1.6.md"),
+    path.join(root, "docs/releases/v0.1.7.md"),
     "utf8",
   )
   assert.equal(releaseNotes.startsWith("## 中文\n"), true)
   assert.match(releaseNotes, /\n## English\n/u)
-  assert.doesNotMatch(releaseNotes, /^# .*0\.1\.6/mu)
+  assert.doesNotMatch(releaseNotes, /^# .*0\.1\.7/mu)
   for (const filename of ["CONTRIBUTING.md", "SECURITY.md"]) {
     assert.match(chineseReadme, new RegExp(`\\(${filename.replace(".", "\\.")}\\)`, "u"))
     await fs.access(path.join(root, filename))
@@ -123,7 +137,15 @@ test("the exact 0.1.6 manifest exports runtime artifacts and Web loader metadata
   const host = await fs.readFile(path.join(root, "dist/host/index.mjs"), "utf8")
   const client = await fs.readFile(path.join(root, "dist/client/client.js"), "utf8")
   assert.match(host, /export const name = "llm-grok"/u)
+  assert.match(host, /packageJson from "\.\.\/\.\.\/package\.json" with \{ type: "json" \}/u)
+  assert.match(host, /pluginVersion: packageJson\.version/u)
   assert.match(client, /id: "dsh-grok-provider"/u)
+  assert.match(client, /IconThinkOutline16 geometry from @deepseek-ai\/dsh-client-ui-primitives@0\.1\.0-rc\.7/u)
+  assert.doesNotMatch(
+    client,
+    /pluginVersion:\s*["']\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?["']/u,
+    "the Web bundle must receive the package version from Host diagnostics",
+  )
   assert.doesNotMatch(client, /node:fs|node:path|refreshToken|accessToken|auth\.json/u)
   for (const filename of [
     "managed-capability.mjs",

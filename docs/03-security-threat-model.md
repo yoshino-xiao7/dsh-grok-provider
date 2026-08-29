@@ -9,6 +9,8 @@
 
 只有本文所有 P0 门禁和 [测试计划](./05-test-plan.md) 的安全用例通过，才允许发布。
 
+`0.1.6` 已从 release commit `93519f77adc4ce2edfc1bbd27bce9e44d4805da6` 正式发布；唯一 60 文件、145,620-byte 制品的 SHA-256 为 `fd660d91216086496a4d189cb7e60b3445079913c97da41fccf805e3086c0347`，npm SRI 为 `sha512-Vsmzm+8tgmHCuS8WKfzicjgauupY9FZ5B/V+55KbCTggBrThDDArjeS2bwHUVpjd92CvO47ya3SHELdWtTijAQ==`，Trusted Publisher run `33177647530`、Registry signature 与 provenance 已验证。当前 `0.1.7` 候选新增闭合运行时诊断与本地 UI 图标兼容层，不改变推理 token、固定 origin、官方 CLI OAuth 所有权或系统网络/代理边界。
+
 ## 2. 信任边界
 
 ```text
@@ -55,6 +57,7 @@ Host AuthCoordinator
 | 原始远端错误返回 UI | token、账号或内部信息泄漏 | 只返回插件稳定错误码和安全文案；Harness RPC correlation 留在 carrier 内部 | P0 |
 | billing 响应或 credential metadata 越界进入 renderer | 身份、订阅或凭据泄漏 | Host 严格抽取百分比、周期与模型 capability；拒绝/忽略 identity、balance、history、headers、URL 和原始响应 | P0 |
 | token 到期被误标为额度重置 | 错误产品决策、误导用户 | 重置时间只接受 billing period end；credential `expires_at` 不进入 dashboard DTO | P0 |
+| 设置导航图标兼容层误扫页面或标记其他按钮 | 性能退化、错误界面 | 只检查设置 dialog 的 nav；标签与 SVG/span 结构必须唯一精确匹配；过滤并合并 DOM 变化；effect 卸载移除 observer、marker 与 style；不读取其他页面文本或联网 | P1 |
 | 凭据轮换期间读到半写文件 | 认证失败或旧 token 重放 | 只接受完整 JSON；短退避重读；不写回；已发送请求不自动重放 | P1 |
 | CLI 更新改变命令或凭据格式 | 静默错误 | 登录前重查 realpath/identity；版本只作有界诊断；探测 `login --help` 的独立 `--oauth` 选项；登录后重验生产 OIDC 凭据契约与固定服务端 codec；CLI 自身更新行为属于 vendor boundary | P1 |
 | 未授权复用官方/第三方 OAuth Client ID | 客户端冒充、封禁或条款违约 | 包中不存在独立 OAuth client；只调用官方 CLI 的公开登录命令 | P0 |
@@ -198,6 +201,7 @@ Web RPC 只允许：
 ```ts
 type AuthRpc = {
   status(input: {}): Promise<AuthOutcome>
+  diagnostics(input: {}): Promise<AuthOutcome>
   login(input: {}): Promise<AuthOutcome>
   cancel(input: { sessionId: string }): Promise<AuthOutcome>
   logout(input: { phase: "begin" } | { phase: "confirm"; confirmationId: string }): Promise<AuthOutcome>
@@ -210,7 +214,8 @@ type AuthRpc = {
 - Web 的前台按钮与 logout 二次确认属于防误操作 UX，不是 Host 授权边界。能以当前用户身份直接访问本机 Harness RPC 的恶意进程已能直接运行 `grok logout`/读取用户凭据，属于同一用户权限残余风险。
 - handler 对 endpoint/payload 使用严格 schema；拒绝未知字段。`sessionId`/短期 confirmation ID 只降低误操作与陈旧 UI 重放，不能抵御同用户本地进程。
 - `sessionId` 是随机的不透明 ID，不是 OAuth state 或 process ID。
-- renderer 不能获得 token、URL、文件路径或任意命令能力。
+- `diagnostics` 是独立的只读调用，不进入登录状态轮询；它只投影插件版本与闭合 CLI 安装状态/安全版本号。同一 inspector 的并发调用共享一个有界进程序列，capability teardown 会取消并等待它；无法确认进程树退出时，该实例锁存、取消同实例的在途认证 action 并移除对应 driver，直到 capability 被替换。
+- renderer 不能获得 token、URL、文件路径、stderr、代理配置或任意命令能力。登录失败只允许闭合 reason；固定 discovery timeout 的原始 URL 与错误文本也不得跨越 Host 边界。
 
 TUI 通过 Harness 的 human-command registry 注册一个全局 `/grok`，只接受 `status|login|cancel|logout` 的闭合语法。命令直接在 Host 执行，不发送给模型；取消使用 invocation 自带的 `AbortSignal`。
 
@@ -234,7 +239,7 @@ TUI 通过 Harness 的 human-command registry 注册一个全局 `/grok`，只�
 - 最终 JSON 超限继续逐张淘汰最旧图片；缺服务、projection unsupported、源图片位置/引用/MIME 不支持在 Responses POST 前以 `UNSUPPORTED_CONTENT` 拒绝。store 返回损坏或不自洽的投影、超过含图编译 block 预算、更深 tool-result，以及图片全部淘汰后剩余非图片请求仍不合法，都保持通用 `INVALID_RESPONSE`。
 - AbortSignal 在查询服务前检查并传给所有投影读取；编译失败时 Responses POST 调用必须为 0，但模型目录 GET 可能已发生。
 
-公开 xAI 文档、离线测试与真机验证继续作为三类独立证据。[上游证据页](./12-upstream-image-input-evidence.md)记录的固定 Proxy 门禁已对 `grok-4.6` 的普通 user 与一层 tool-result 分别发送红/蓝合成图：4 次均为 HTTP 200、`text/event-stream`、completed，规范化整段回复只含正确颜色词和可选句末标点。`grok-4.5` 的受控红图结果语义不可靠，因此即使公开模型页声明图片能力也不进入本插件图片集合。图片固定使用 `detail:"high"`。Harness `0.1.1-rc.2` attachment-local/LlmRuntime 已复验 `grok-4.6` image、`grok-4.5`/未知模型 text-only，候选门禁随后关闭并完成 `0.1.4` 发布。`0.1.6` 只允许普通 user/system 历史省略通过闭合字符串/长度校验的私有 reasoning 并保留相邻可见 text/image；畸形或超限 reasoning 仍在 attachment I/O 和 Responses POST 前失败。该修复不改变 assistant 加密 reasoning replay 或一层 tool-result 的公开内容边界。任意 URL 下载与把 Authorization 带到第二个 origin 在所有后续版本仍永久禁止；Web/X Search、图片生成和 `prompt_cache_key` 不属于 `0.1.6`。
+公开 xAI 文档、离线测试与真机验证继续作为三类独立证据。[上游证据页](./12-upstream-image-input-evidence.md)记录的固定 Proxy 门禁已对 `grok-4.6` 的普通 user 与一层 tool-result 分别发送红/蓝合成图：4 次均为 HTTP 200、`text/event-stream`、completed，规范化整段回复只含正确颜色词和可选句末标点。`grok-4.5` 的受控红图结果语义不可靠，因此即使公开模型页声明图片能力也不进入本插件图片集合。图片固定使用 `detail:"high"`。Harness `0.1.1-rc.2` attachment-local/LlmRuntime 已复验 `grok-4.6` image、`grok-4.5`/未知模型 text-only，候选门禁随后关闭并完成 `0.1.4` 发布。已发布 `0.1.6` 只允许普通 user/system 历史省略通过闭合字符串/长度校验的私有 reasoning 并保留相邻可见 text/image；畸形或超限 reasoning 仍在 attachment I/O 和 Responses POST 前失败。该修复不改变 assistant 加密 reasoning replay 或一层 tool-result 的公开内容边界。`0.1.7` 候选同样不改变图片集合、投影、Responses wire 或固定 origin；任意 URL 下载与把 Authorization 带到第二个 origin 在所有后续版本仍永久禁止，Web/X Search 顺延至 `0.1.8`。
 
 ## 9. 残余风险
 

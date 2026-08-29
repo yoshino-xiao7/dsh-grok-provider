@@ -1,9 +1,9 @@
 # 能力路线图
 
-- 状态：**`0.1.4` 图片输入与 `0.1.5` 维护版已发布；`0.1.6` 图片历史/Windows 登录维护版进入发布候选阶段（2026-08-28）**
-- 当前 npm 稳定版：`0.1.5`
-- 最近发布：`0.1.5`
-- 当前开发分支：`yukiryou/v0.1.6`
+- 状态：**`0.1.6` 图片历史/Windows deadline 维护版已发布；`0.1.7` Windows 诊断、登录失败可解释性与设置图标维护版正在开发（2026-08-29）**
+- 当前 npm 稳定版：`0.1.6`
+- 最近发布：`0.1.6`
+- 当前开发分支：`yukiryou/windows-auth-runtime-status`
 
 本文是 `0.1.3` 之后内容类型迭代的单一事实来源。`0.1.0`–`0.1.3` 的历史范围仍以 [ADR-0002](./adr/0002-v0.1-scope.md) 和[产品需求](./01-product-requirements.md)为准。
 
@@ -25,8 +25,9 @@
 | --- | --- | --- | --- |
 | `0.1.4` | 图片输入 | Proxy 接受本版本的 data URL wire shape；Harness attachment 投影与限额可执行 | [ADR-0008](./adr/0008-image-input-request-compiler.md) |
 | `0.1.5` | 发布链路、能力展示与安装事务维护；不新增模型能力 | 精确 tag/commit/Release 制品绑定、回滚与 UI 投影测试 | 复用现有接口与发布契约 |
-| `0.1.6` 候选 | 图片历史 reasoning 兼容与 Windows 官方 CLI 分阶段 deadline | 聚焦回归、macOS/Windows CI、唯一制品与发布回读 | 复用现有图片与认证契约 |
-| `0.1.7` 候选 | 默认关闭的 Web Search / X Search | Proxy 接受 server tools；已记录可放行事件 | 独立 ADR 与固定 Proxy 证据 |
+| `0.1.6` | 图片历史 reasoning 兼容与 Windows 官方 CLI 分阶段 deadline | 聚焦回归、macOS/Windows CI、唯一制品与发布回读 | 复用现有图片与认证契约 |
+| `0.1.7` 候选 | Windows 运行时诊断、登录失败可解释性与 `IconThinkOutline16` 设置导航图标维护 | 闭合 DTO/reason、lifecycle、UI/图标回归与 Windows 三态真机证据 | [ADR-0009](./adr/0009-runtime-diagnostics-and-login-failures.md) |
+| `0.1.8` 候选 | 默认关闭的 Web Search / X Search | Proxy 接受 server tools；已记录可放行事件 | 独立 ADR 与固定 Proxy 证据 |
 | 再后续版本 | 默认关闭的图片生成 | Proxy 返回可有界提交到 Harness attachment 的内联结果 | ADR-0010 |
 
 版本号可因缺陷修复顺延。`prompt_cache_key` 与图片输入相互独立，不属于 `0.1.4`：它需要独立的会话标识隐私、路由稳定性和“不得自动重放已经发送的 POST”分析，不得作为图片请求失败后的重试/降级机制。
@@ -111,28 +112,39 @@ const request = await requestCompiler.compile(options, preparedRoute)
 
 `0.1.5` 不新增模型、搜索或生图能力。下一内容切片必须重新完成独立 ADR、安全边界和发布门禁。
 
-## 5. `0.1.6` 候选：图片历史与 Windows 登录维护
+## 5. `0.1.6`：图片历史与 Windows deadline 维护
 
 - 普通 user/system 历史中的私有 reasoning 只被省略，不转成 user text；相邻可见 text/image 顺序保持。
 - 同 Provider assistant 的有效 encrypted reasoning replay 保持不变；一层 tool-result 仍只接受公开 text/image。
 - executable 解析、只读验证、`--version`、`login --help` 和最终 CLI action 各自拥有 deadline，避免 Windows 冷启动累计消耗登录预算。
 - 本版不改 Config、模型能力集合、固定 origin、认证模式或响应事件集合，不包含 Web/X Search。
-- Windows 真机浏览器弹出按仓库所有者决定在发布 Registry 精确 `0.1.6` 后验证；发布前证据限于聚焦测试与 Windows CI。
+- 最终 release commit `93519f77adc4ce2edfc1bbd27bce9e44d4805da6` 的唯一 tarball 为 60 个文件、145,620 bytes；SHA-256 为 `fd660d91216086496a4d189cb7e60b3445079913c97da41fccf805e3086c0347`，npm SRI 为 `sha512-Vsmzm+8tgmHCuS8WKfzicjgauupY9FZ5B/V+55KbCTggBrThDDArjeS2bwHUVpjd92CvO47ya3SHELdWtTijAQ==`。
+- Trusted Publisher run `33177647530` 已完成，Registry 签名与 provenance 验证通过；npm `latest=0.1.6`。
+- 发布后仓库所有者确认图片输入可用；Windows 直接运行官方 CLI 时在生成登录 URL 前发生 xAI OIDC discovery timeout，因此没有外部浏览器弹出证据，不得声称 Provider 已修复或已验证 Windows 浏览器登录。
 
-## 6. `0.1.7` 候选：默认关闭的 Web/X Search
+## 6. `0.1.7` 候选：Windows 诊断、闭合登录失败与设置图标维护
+
+- 独立只读 diagnostics RPC 只在页面打开、用户重新检测或登录结算后运行，不进入每秒认证状态轮询；公开 DTO 只投影插件版本与 CLI 的 `ready|missing|invalid|unavailable` 闭合集合。
+- CLI 缺失或无 `login --oauth` 能力时禁用登录，显示 xAI 官方安装入口与重新检测；插件不下载、安装、更新 CLI，不搜索 PATH 或接受 UI 任意路径。
+- 登录失败只投影白名单 reason；固定 OIDC discovery endpoint 与 timeout 特征同时出现时显示“登录链接尚未生成”，不把 stderr、路径、环境或授权 URL 送到 renderer。本版不修复系统代理、上游网络或自行打开浏览器。
+- 诊断并发共享、调用方取消、capability teardown、driver replacement 与认证轮询 epoch 必须闭合；失败进程树无法确认退出时锁存 `unavailable`，防止旧结果污染新 driver。
+- Harness `settings.section` 当前没有原生 icon slot；候选包内嵌 MIT `IconThinkOutline16` 几何，通过设置导航内的精确本地化标签唯一匹配应用。匹配缺失或歧义时保留桌面端原图标，卸载时清理 marker、style 与 observer，并在发行制品中保留第三方归属。
+- 本版不新增模型能力、Responses wire、认证 origin 或 Search runtime；Windows 可访问 discovery 时由官方 CLI 实际弹出浏览器仍是发布门禁，不得由自动化或图标变更替代。
+
+## 7. `0.1.8` 候选：默认关闭的 Web/X Search
 
 - 两个独立开关默认关闭；关闭时 request wire 不包含 server tool。
 - 必须先完成固定 CLI Chat Proxy 的独立脱敏协议门禁、安全 ADR、严格 response policy 与 Harness 映射测试。
 - 搜索词、远端检索、额外用量、citation 和 prompt injection 风险必须在 UI 与安全文档中就近披露。
-- 不得把公开 API 文档、其他 endpoint 或 `0.1.6` 维护版证据外推为 Search 已实现。
+- 不得把公开 API 文档、其他 endpoint 或 `0.1.7` 诊断/UI 维护版证据外推为 Search 已实现。
 
-## 7. 后续：默认关闭的图片生成
+## 8. 后续：默认关闭的图片生成
 
 - 只接受已验证的内联 base64 结果并有界提交 Harness attachment。
 - 不下载 URL，不写 workspace，不把 Authorization/Cookie/Referer 发送到第二 origin。
 - 当前 SSE 单事件上限与生成图 base64 大小、assistant replay 形状必须先另行解决；`0.1.4` 不提前放行任何实现。
 
-## 7. 永久非目标
+## 9. 永久非目标
 
 - xAI API Key 模式，或订阅路径失败后静默 fallback 到 API Key。
 - 任意 URL 下载、模型可控路径读取/写入、把 Bearer 带到第二 origin。
@@ -140,4 +152,4 @@ const request = await requestCompiler.compile(options, preparedRoute)
 - ACP、`grok -p` Headless、Linux / macOS x64 发布承诺。
 - 厂商 `code_execution`；Harness 已有本地工具权限层。
 
-English summary: `0.1.4` is published with image input only for exact `grok-4.6`, while `grok-4.5` and all other models remain text-only. `0.1.5` is published with its artifact, signatures, and provenance verified. The `yukiryou/v0.1.6` candidate is a focused maintenance release: it omits private reasoning from ordinary user/system history while preserving visible text/images, and gives each official-CLI preparation/action stage an independent deadline for Windows cold starts. Default-off Web/X Search moves to the independent `0.1.7` slice.
+English summary: `0.1.6` is published from commit `93519f77adc4ce2edfc1bbd27bce9e44d4805da6`; its 60-file, 145,620-byte artifact, Registry signature, and provenance are verified. The current `yukiryou/windows-auth-runtime-status` branch targets `0.1.7` with closed runtime diagnostics, explainable login failures, and a scoped MIT `IconThinkOutline16` settings-nav fallback. The observed Windows CLI timeout occurs before a login URL is created, so browser launch is neither fixed nor verified. Default-off Web/X Search moves to `0.1.8`.

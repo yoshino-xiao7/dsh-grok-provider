@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.7 - 2026-08-29
+
+- Add a separate Host diagnostics RPC that reports the installed package version and a closed Grok Build CLI state/version without exposing executable paths, stderr, environment, proxy data, or OAuth URLs.
+- Disable browser sign-in until the official default CLI executable, bounded version output, and `login --oauth` capability pass; show the official install guide and a re-detection action when the CLI is missing or invalid.
+- End the Web sign-in spinner with actionable, redacted outcomes for known OIDC discovery network timeout, the five-minute login deadline, missing/invalid CLI, and unknown CLI failure while preserving cancellation and cleanup quarantine semantics.
+- Keep runtime diagnostics single-flight and lifecycle-owned: capability teardown cancels and awaits inspection, cleanup failure latches the CLI instance and aborts its in-flight authentication actions, and serial authentication polling uses a request epoch to reject stale responses after user actions, settlement, or unmount.
+- Document the Windows pre-browser OIDC failure boundary and keep runtime diagnostics outside the authentication status polling path; the official CLI still owns sign-in URL generation and external-browser launch, so this release does not claim to repair Windows network/proxy conditions or to have verified network-reachable browser launch on a real Windows device.
+- Render the MIT-licensed `IconThinkOutline16` path geometry from `@deepseek-ai/dsh-client-ui-primitives@0.1.0-rc.7` for the one exact Grok Build settings navigation match through a scoped, lifecycle-owned compatibility layer; ambiguous labels or unexpected DOM structure retain the Host gear, unload removes every injected resource, and the bundled third-party notice preserves attribution.
+- Keep Web/X Search, image generation, new server-tool events, arbitrary URL downloads, API-key mode, and custom endpoints out of this maintenance release; the independent Search slice moves to `0.1.8`.
+
 ## 0.1.6 - 2026-08-28
 
 - Accept schema-valid provider-neutral user and system history containing private reasoning blocks, omit that reasoning from the Grok wire, and preserve adjacent visible text and ordered image input; malformed or oversized omitted blocks still fail closed before attachment I/O.

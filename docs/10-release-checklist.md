@@ -14,6 +14,7 @@
 - [ ] `npm test`、`npm audit --omit=dev`、`npm run pack:check` 和 macOS/Windows CI 全部通过。
 - [ ] 从干净 checkout 只生成一个候选 tarball；记录文件数、大小、SHA-256 和 base64 SHA-512。
 - [ ] 候选 tarball 内的 name、version、repository、exports、peer、patch、脚本和文件白名单通过审查。
+- [ ] 候选 tarball 内的 `LICENSE`、`THIRD_PARTY_NOTICES.md` 与实际内嵌第三方代码逐项一致，发行制品不遗漏归属、版本或许可证说明。
 - [ ] 从同一个 tarball 在隔离 Harness profile 完成安装、加载与必要 smoke；普通版本不重复要求跨平台真机，认证、CLI 或平台边界变化时另行指定。
 - [ ] GitHub Release 说明中文在前、英文在后，且正文不重复页面已有的版本标题。
 - [ ] 版本分支经 PR 合并到 `yukiryou/main`；最终 tag 指向被验收的发布提交。
@@ -131,7 +132,24 @@ English summary: every release must close documentation, security, tests, determ
 - [x] 仓库所有者于 2026-08-28 明确决定先发布 Registry 精确 `0.1.6`，再自行验证图片和 Windows 外部浏览器弹出；发布前不得把代码、slow-fake 或 Windows CI 表述为 Windows 真机已确认，失败时发布新的递增稳定修复版。
 - [x] `package.json`/lockfile、CHANGELOG、中英文 README、`SECURITY.md`、状态文档、路线图与 `docs/releases/v0.1.6.md` 已同步为候选事实；npm `latest` 在正式回读前继续如实记为 `0.1.5`。
 - [x] 精确 Node `24.19.0` 全量测试通过：161 项、159 pass、0 fail、2 项 Windows-only skip；`npm audit --omit=dev` 为 0 漏洞，最终 dry-run pack 为 60 个文件，`git diff --check` 与秘密模式扫描通过。Search 规划文件和用户未跟踪的重复 checklist 均未进入清单。
-- [x] 代码 PR [#13](https://github.com/yoshino-xiao7/dsh-grok-provider/pull/13) 已合入受保护 `yukiryou/main`，merge commit 为 `712d0212f137850af4fc063cc30a7ff2f1e53ea3`；最终 head `40796e1feba0fe36f45f63ebdf89ce34d365033f` 的 CI runs [33176392234](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33176392234) 与 [33176396649](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33176396649) 均完成 macOS 14、Windows 2022 全绿。当前证据分支经 PR 合入后得到最终 release commit。
-- [ ] 从最终 release commit 的干净 checkout 只生成一次 `dsh-grok-provider-0.1.6.tgz`，完成 pack-list、隔离安装/加载、SHA-256 与 npm SRI，并复用同一字节发布。
-- [ ] 在完整提交与制品证据后取得对精确 `dsh-grok-provider@0.1.6` tarball 的最终授权。
+- [x] 代码 PR [#13](https://github.com/yoshino-xiao7/dsh-grok-provider/pull/13) 已合入受保护 `yukiryou/main`，merge commit 为 `712d0212f137850af4fc063cc30a7ff2f1e53ea3`；最终 head `40796e1feba0fe36f45f63ebdf89ce34d365033f` 的 CI runs [33176392234](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33176392234) 与 [33176396649](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33176396649) 均完成 macOS 14、Windows 2022 全绿。发布证据合并后的最终 release commit 为 `93519f77adc4ce2edfc1bbd27bce9e44d4805da6`。
+- [x] 从最终 release commit 只冻结并发布同一份 `dsh-grok-provider-0.1.6.tgz`：60 个文件、145,620 bytes、SHA-256 `fd660d91216086496a4d189cb7e60b3445079913c97da41fccf805e3086c0347`、npm SRI `sha512-Vsmzm+8tgmHCuS8WKfzicjgauupY9FZ5B/V+55KbCTggBrThDDArjeS2bwHUVpjd92CvO47ya3SHELdWtTijAQ==`。
+- [x] 仓库所有者在完整提交与制品证据后明确授权发布精确 `dsh-grok-provider@0.1.6`。
+- [x] 不可变 tag、唯一 GitHub Release asset 与 Trusted Publisher run [33177647530](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33177647530) 发布完成；npm `latest=0.1.6`，Registry 字节、签名与 provenance 已回读验证。
+
+## `0.1.7` Windows 运行时诊断与设置图标维护版门禁
+
+- [x] 当前候选分支 `yukiryou/windows-auth-runtime-status` 基于 `origin/yukiryou/main@3b2a1c3b40e852be4974cd46a8b921e485900857`；范围冻结为 Windows 运行时诊断、登录失败可解释性与 `IconThinkOutline16` 设置导航图标维护，Web/X Search 顺延到 `0.1.8`，本版不新增模型、Responses wire、认证 origin 或 Search runtime。
+- [x] 发布后事实已如实记录：精确 `0.1.6` 的图片输入可用；Windows 直接运行官方 CLI 时在生成登录 URL 前发生 xAI OIDC discovery timeout。该事实不是 Windows 外部浏览器弹出已修复或已验证的证据。
+- [x] 候选代码已加入独立只读 diagnostics RPC、插件/CLI 版本安全投影、`ready|missing|invalid|unavailable` 闭合状态、并发 single-flight、调用方取消与 capability teardown；公开 DTO 不包含路径、环境、stdout/stderr 或授权 URL。
+- [x] 候选代码已把登录失败限制为白名单 reason，并只在固定 OIDC discovery endpoint 与 timeout 特征同时出现时投影 `auth-network-timeout`；错误退出会闭合 spinner，插件不修复代理或接管官方 OAuth。
+- [x] 候选代码已内嵌 MIT `IconThinkOutline16` 几何并实现设置导航内的精确标签唯一匹配、歧义失败关闭、重复挂载引用计数与完整卸载清理；`THIRD_PARTY_NOTICES.md` 和发行物测试已记录来源与包内许可要求。
+- [x] ADR-0009、产品需求、威胁模型、测试计划、发布计划、实现状态、路线图与上游图片证据已同步为 `0.1.7` 候选事实，并保持 Windows 浏览器验证边界。
+- [x] `package.json`/lockfile、CHANGELOG、中英文 README、`SECURITY.md`、制品契约与双语 `docs/releases/v0.1.7.md` 已同步为精确 `0.1.7` 候选事实和候选文件名。
+- [x] 精确 Node `24.19.0` 本地全量测试通过：190 项、188 pass、0 fail、2 项 Windows-only skip；`npm audit --omit=dev` 为 0 漏洞，dry-run pack 为 64 个文件，`git diff --check`、生成 client bundle 一致性与秘密模式扫描通过。用户未跟踪的重复 checklist 和 Search runtime 均未进入清单。
+- [ ] 取得当前候选的 macOS 14 与 Windows 2022 CI 结果；本地 Node 24 门禁不能替代双平台 runner。
+- [ ] 完成 Windows 真机三态证据：CLI 缺失提示；OIDC discovery timeout 及时闭合并显示安全提示；discovery 可访问时由官方 CLI 实际弹出外部浏览器。完成前不得声明 Windows 浏览器登录已修复或已验证。
+- [ ] 通过受保护 PR 合并代码与最终发布证据，并记录最终 release commit 与对应双平台 CI。
+- [ ] 从最终 release commit 只生成一次唯一 `dsh-grok-provider-0.1.7.tgz`，完成 pack-list、隔离安装/加载、文件数、大小、SHA-256 与 npm SRI，并复用同一字节发布。
+- [ ] 在完整提交与最终制品证据后取得对精确 `dsh-grok-provider@0.1.7` 的发布授权。
 - [ ] 不可变 tag、唯一 GitHub Release asset、Trusted Publisher、npm `latest`、Registry 字节、签名与 provenance 回读全部关闭。

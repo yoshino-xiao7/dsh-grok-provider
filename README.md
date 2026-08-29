@@ -4,13 +4,13 @@
 
 让 DeepSeek Harness 使用你已登录的官方 Grok Build 账号：动态模型发现、流式推理、工具调用，以及账号额度与模型能力面板。
 
-> 非官方社区项目，与 xAI 或 DeepSeek Harness 官方无隶属关系。当前源码版本为 `0.1.6`；npm 已发布稳定版本以 Registry 的 `latest` 标签为准。项目不再发行预发行版；正式版缺陷通过新的递增稳定版本修复。
+> 非官方社区项目，与 xAI 或 DeepSeek Harness 官方无隶属关系。当前源码候选版本为 `0.1.7`；npm Registry 的 `latest` 与最近发布的稳定版本均为 `0.1.6`。项目不再发行预发行版；正式版缺陷通过新的递增稳定版本修复。
 
 ## 它解决什么问题
 
 | 能力 | 当前实现 |
 | --- | --- |
-| 登录 | 调用官方 `grok login --oauth` 打开浏览器；插件不实现 OAuth grant |
+| 登录 | 调用官方 `grok login --oauth`；登录 URL 生成与外部浏览器打开均由官方 CLI 负责，插件不实现 OAuth grant |
 | 凭据 | 复用官方 CLI 的登录状态；插件不创建第二份 token 存储 |
 | 模型 | 运行时读取账号可见的全部 Grok Build 模型，不维护静态模型白名单 |
 | 对话 | Responses 流式文本、reasoning、加密 reasoning replay、usage 与 finish reason |
@@ -39,10 +39,10 @@ grok models
 
 ### 2. 安装 Provider
 
-`0.1.6` 发布后，从 npm 安装该精确版本：
+`0.1.7` 发布后，从 npm 安装该精确版本：
 
 ```sh
-dsh plugin --profile web add dsh-grok-provider@0.1.6
+dsh plugin --profile web add dsh-grok-provider@0.1.7
 dsh web
 ```
 
@@ -50,7 +50,7 @@ dsh web
 
 打开 **设置 → Grok Build**：
 
-1. 点击“使用 Grok 登录”；
+1. 点击“通过浏览器登录”；
 2. 在官方 Grok CLI 打开的浏览器页面完成授权；
 3. 返回 Harness，刷新账户面板；
 4. 在模型选择器中选择当前账号可见的 Grok 模型。
@@ -61,11 +61,14 @@ dsh web
 
 Web 设置页展示：
 
-- 当前登录状态及登录、取消、退出操作；
+- 当前登录状态、Provider/Grok Build CLI 版本及登录、取消、退出操作；
+- CLI 缺失或无效时的官方安装入口与“重新检测”操作；
 - 已使用/剩余额度和真实周期重置时间；
 - 当前账号可见模型、上下文窗口、reasoning 档位，以及图片输入、streaming 与 tool capability。
 
 当 protobuf-backed billing 返回完整的 weekly/monthly 周期但省略零值百分比时，页面会恢复为“已使用 0% / 剩余 100%”；其他不完整响应保持未知，不伪造额度。
+
+当前 Harness `0.1.1-rc.2` 的 `settings.section` 没有插件图标字段。Provider 内嵌来自 `@deepseek-ai/dsh-client-ui-primitives@0.1.0-rc.7`、采用 MIT 许可的 `IconThinkOutline16` 路径几何；仅当设置对话框中的标签与 DOM 结构都精确且唯一匹配时，才用它显示 `Grok Build` 导航项，否则安全保留宿主齿轮。兼容层的观察器、标记和样式均随插件卸载清理。
 
 ## 插件预览
 
@@ -125,8 +128,8 @@ dsh web
 
 ## 项目来源与发现
 
-- npm `0.1.6` 页面（发布后可用）：[dsh-grok-provider@0.1.6](https://www.npmjs.com/package/dsh-grok-provider/v/0.1.6)
-- GitHub `0.1.6` 发行版与校验值（发布后可用）：[v0.1.6](https://github.com/yoshino-xiao7/dsh-grok-provider/releases/tag/v0.1.6)
+- npm 当前稳定版：[dsh-grok-provider@0.1.6](https://www.npmjs.com/package/dsh-grok-provider/v/0.1.6)
+- GitHub 最近发行版与校验值：[v0.1.6](https://github.com/yoshino-xiao7/dsh-grok-provider/releases/tag/v0.1.6)
 - GitHub 社区发现：仓库已添加 DeepSeek Harness 官方推荐的 `dsh-plugin` 与 `dsh` Topics
 - YukiRyou 受管来源：[deepseek-yukiryou-plugin-catalog](https://github.com/yoshino-xiao7/deepseek-yukiryou-plugin-catalog)，当前仍锁定已完成真机验收的 `dsh-grok-provider@0.1.0`，且只标记 `darwin-arm64`
 
@@ -134,17 +137,17 @@ dsh web
 
 ## 兼容性与范围
 
-| 项目 | `0.1.6` 状态 |
+| 项目 | `0.1.7` 候选状态 |
 | --- | --- |
 | DeepSeek Harness | 精确支持 `0.1.1-rc.2` |
 | Node.js | `>=24.19.0` |
 | macOS arm64 | 已完成真实网络与隔离 Harness 验收 |
-| Windows x64 | 代码、slow-fake 与 Windows CI 支持；按仓库所有者决定，发布 Registry 精确版本后验证真实浏览器弹出 |
+| Windows x64 | 代码与 slow-fake 覆盖；正式候选仍需通过 Windows CI。网络可达时由官方 CLI 生成 URL 并打开浏览器，`0.1.7` 候选尚未完成该路径的 Windows 真机验收 |
 | macOS x64 / Linux | 不支持 |
 | Grok CLI | 不锁完整版本；严格校验官方路径、`login --oauth` 能力与生产 OIDC 凭据契约 |
 | 模型 | 当前账号目录中 backend 已被严格 codec 支持的全部模型 |
 
-`0.1.6` 沿用 `0.1.4` 的图片边界：只为精确的 `grok-4.6` 开启图片输入；`grok-4.5` 与其他动态发现的模型继续按 text-only 处理。账户面板从同一模型目录投影能力标签，因此只有图片模型显示“图片输入”。图片只能来自 Harness attachment service 的已验证 JPEG/PNG 投影，支持普通用户内容和一层工具结果中的图片，并按 xAI 官方 Responses 图片示例固定使用 `detail:"high"`；不接受 URL、文件路径、file ID 或调用方预制的 data URL。普通 user/system 历史中的私有 reasoning 会被省略并保留相邻可见文本，因此 `subagent-settled` 历史和同消息 reasoning 不再阻断图片请求。
+`0.1.7` 沿用已发布 `0.1.6` 的图片边界：只为精确的 `grok-4.6` 开启图片输入；`grok-4.5` 与其他动态发现的模型继续按 text-only 处理。`0.1.6` 的图片发送已在真实 Harness 对话中确认可用，`0.1.7` 不改变模型集合、图片投影或 Responses wire。账户面板从同一模型目录投影能力标签，因此只有图片模型显示“图片输入”。图片只能来自 Harness attachment service 的已验证 JPEG/PNG 投影，支持普通用户内容和一层工具结果中的图片，并按 xAI 官方 Responses 图片示例固定使用 `detail:"high"`；不接受 URL、文件路径、file ID 或调用方预制的 data URL。普通 user/system 历史中的私有 reasoning 会被省略并保留相邻可见文本，因此 `subagent-settled` 历史和同消息 reasoning 不再阻断图片请求。
 
 每张投影图片最多 4 MiB、16,777,216 像素且任一边不超过 8192px；每次请求最多保留 8 张、投影字节合计最多 8 MiB。超限时按全局最旧优先移除图片并保留 Harness 的文本占位，最终 JSON 仍受 16 MiB 上限约束。Web/X Search、图片生成、任意文件下载、API Key 模式、多账号、企业 OIDC、ACP 与 Headless agent 封装仍不在本版本范围内；后续切片见[能力路线图](docs/11-capability-roadmap.md)。
 
@@ -180,11 +183,23 @@ dsh-grok-provider Host
 
 ### 页面显示“找不到 Grok CLI”
 
-确认官方 CLI 位于默认路径，并在终端执行 `grok --version`。插件不会从 PATH、工作区或 UI 指定的任意路径加载可执行文件。
+按页面中的官方安装入口安装 Grok Build CLI，再点击“重新检测”。确认 CLI 位于默认路径，并在终端执行 `grok --version`。插件不会自动安装 CLI，也不会从 PATH、工作区或 UI 指定的任意路径加载可执行文件。设置页会同时显示 Provider 与已验证 CLI 的版本。
 
 ### 页面要求重新登录
 
 在设置页点击登录，或先在终端运行 `grok login --oauth`。插件不锁完整 CLI 版本，但路径、`--oauth` 能力或生产 OIDC 凭据契约不匹配时会失败关闭。
+
+### Windows 点击登录后没有弹出浏览器
+
+先直接运行官方 CLI：
+
+```powershell
+& "$env:USERPROFILE\.grok\bin\grok.exe" login --oauth
+```
+
+如果它在 `auth.x.ai/.well-known/openid-configuration` 超时，失败发生在生成登录链接之前，不是 Provider 的浏览器按钮失效。请检查 Windows 的 DNS、HTTPS 出站、防火墙、VPN 与代理；尤其是浏览器使用 PAC/系统代理、CLI 进程却没有 `HTTPS_PROXY` 的情况。不要关闭 TLS 校验，也不要把代理凭据、登录 URL、授权码或 token 提交到 Issue。
+
+`0.1.7` 设置页会及时结算这个已知 discovery 超时并显示“浏览器登录尚未开始”；实际仍在运行的五分钟登录流程可以取消，未知 CLI 输出只显示脱敏的通用错误。这是对失败边界的准确诊断，不是插件自行打开浏览器，也不修复 Windows 的 DNS、代理、防火墙、VPN 或官方 CLI 行为。
 
 ### 没有看到某个模型
 
@@ -200,7 +215,7 @@ dsh-grok-provider Host
 
 ### Windows 能用吗
 
-代码和 Windows CI 覆盖 Windows x64。普通后续稳定修复不重复要求真机验收；认证流程、Harness subprocess seam 或平台安全策略发生变化时仍会定向验证。
+代码与 slow-fake 已覆盖 Windows x64，正式候选仍需通过 Windows CI。官方 CLI 仍负责生成登录 URL 与打开外部浏览器；`0.1.7` 尚未在网络可达的 Windows 真机上确认浏览器弹出，因此不能表述为该问题已经修复或验证。
 
 ## 开发
 
@@ -234,8 +249,9 @@ npm run pack:check
 - [x] 发布 `0.1.3` 跨 Provider 工具调用历史兼容性修正版
 - [x] 发布 `0.1.4`：仅精确 `grok-4.6` 图片输入；user/tool-result 红蓝语义 Proxy 门禁与最终 Harness attachment 复验通过，`grok-4.5` 失败关闭为 text-only
 - [x] 发布 `0.1.5`：发布链路、账户面板能力标签与 Provider Runtime 安装回滚维护版；唯一制品、双平台 CI、签名与 SLSA provenance 均已验证
-- [ ] 发布 `0.1.6`：图片历史 reasoning 兼容与 Windows 官方 CLI 分阶段 deadline 修复版
-- [ ] `0.1.7` 独立切片：默认关闭、用户分别开启的 Web Search / X Search
+- [x] 发布 `0.1.6`：图片历史 reasoning 兼容与 Windows 官方 CLI 分阶段 deadline 修复版；图片发送已完成真实 Harness 验证
+- [ ] 发布 `0.1.7`：Provider/CLI 双版本诊断、CLI 安装恢复、OIDC discovery 超时脱敏结算与 `IconThinkOutline16` 设置导航兼容层
+- [ ] `0.1.8` 独立切片：默认关闭、用户分别开启的 Web Search / X Search
 - [ ] 再后续独立切片：默认关闭的图片生成（只收内联结果，提交 Harness attachment）
 - [ ] 完成 Windows x64 独立真机验收并按需发布后续稳定修复版
 
@@ -243,4 +259,4 @@ npm run pack:check
 
 ## 许可证
 
-[MIT](LICENSE)
+[MIT](LICENSE)。复用的 Harness 图标几何及其许可见 [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md)。

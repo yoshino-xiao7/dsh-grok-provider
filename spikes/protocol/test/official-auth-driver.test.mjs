@@ -2,7 +2,10 @@ import assert from "node:assert/strict"
 import test from "node:test"
 
 import { createOfficialAuthDriver } from "../../../src/internal/official-auth-driver.mjs"
-import { OfficialCliCleanupError } from "../../../src/internal/official-cli-auth.mjs"
+import {
+  OfficialCliAuthError,
+  OfficialCliCleanupError,
+} from "../../../src/internal/official-cli-auth.mjs"
 
 test("official login succeeds only after the resulting credential passes the bound schema", async () => {
   const calls = []
@@ -41,6 +44,45 @@ test("a zero-exit official login with an invalid credential fails closed", async
   })
   const session = await driver.begin({ signal: new AbortController().signal })
   await assert.rejects(session.completion)
+})
+
+test("official CLI login failure preserves one closed reason without reading credentials", async () => {
+  let credentialReads = 0
+  const driver = createOfficialAuthDriver({
+    officialAuth: {
+      async login() { return { kind: "failed", reason: "auth-network-timeout" } },
+      async logout() { return { kind: "succeeded" } },
+      async refresh() { return { kind: "succeeded" } },
+    },
+    credentialSource: {
+      async withAccessToken() { credentialReads += 1 },
+    },
+  })
+
+  const session = await driver.begin({ signal: new AbortController().signal })
+  assert.deepEqual(await session.completion, {
+    kind: "failed",
+    reason: "auth-network-timeout",
+  })
+  assert.equal(credentialReads, 0)
+})
+
+test("official CLI preflight errors become closed failures without reading credentials", async () => {
+  let credentialReads = 0
+  const driver = createOfficialAuthDriver({
+    officialAuth: {
+      async login() { throw new OfficialCliAuthError("cli-missing") },
+      async logout() { return { kind: "succeeded" } },
+      async refresh() { return { kind: "succeeded" } },
+    },
+    credentialSource: {
+      async withAccessToken() { credentialReads += 1 },
+    },
+  })
+
+  const session = await driver.begin({ signal: new AbortController().signal })
+  assert.deepEqual(await session.completion, { kind: "failed", reason: "cli-missing" })
+  assert.equal(credentialReads, 0)
 })
 
 test("official CLI cleanup failure is preserved for controller quarantine", async () => {

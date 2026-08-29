@@ -1,4 +1,11 @@
 const OUTCOMES = new Set(["succeeded", "cancelled", "failed", "cleanup-failed"])
+const FAILURE_REASONS = new Set([
+  "cli-missing",
+  "cli-invalid",
+  "auth-network-timeout",
+  "login-timeout",
+  "cli-failed",
+])
 
 export class AuthLoginBusyError extends Error {
   constructor() {
@@ -97,7 +104,13 @@ export function createAuthController({ registry, randomUUID, now = () => new Dat
           : abortController.signal.aborted
             ? Object.freeze({ kind: "cancelled" })
             : outcome
-        state = { state: publicOutcome.kind, sessionId }
+        state = {
+          state: publicOutcome.kind,
+          sessionId,
+          ...(publicOutcome.kind === "failed" && publicOutcome.reason !== undefined
+            ? { reason: publicOutcome.reason }
+            : {}),
+        }
         if (active === session) active = undefined
         registry.invalidate()
         return publicOutcome
@@ -316,9 +329,18 @@ export function createAuthController({ registry, randomUUID, now = () => new Dat
 }
 
 function normalizeOutcome(outcome) {
-  if (!isPlainObject(outcome) || !OUTCOMES.has(outcome.kind) || Object.keys(outcome).length !== 1) {
+  if (!isPlainObject(outcome) || !OUTCOMES.has(outcome.kind)) {
     return Object.freeze({ kind: "failed" })
   }
+  const keys = Object.keys(outcome)
+  if (outcome.kind === "failed") {
+    if (keys.length === 1) return Object.freeze({ kind: "failed" })
+    if (keys.length === 2 && FAILURE_REASONS.has(outcome.reason)) {
+      return Object.freeze({ kind: "failed", reason: outcome.reason })
+    }
+    return Object.freeze({ kind: "failed" })
+  }
+  if (keys.length !== 1) return Object.freeze({ kind: "failed" })
   return Object.freeze({ kind: outcome.kind })
 }
 

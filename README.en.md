@@ -4,13 +4,13 @@
 
 Use an already authenticated official Grok Build account from DeepSeek Harness, with dynamic model discovery, streaming reasoning, tool calls, and an account quota/model capability dashboard.
 
-> Unofficial community project; not affiliated with xAI or DeepSeek Harness. The current source version is `0.1.6`; published stable versions are identified by the npm Registry `latest` tag. The project no longer publishes prereleases; stable defects are fixed in a new incremented stable version.
+> Unofficial community project; not affiliated with xAI or DeepSeek Harness. The current source candidate is `0.1.7`; npm Registry `latest` and the most recently published stable release are both `0.1.6`. The project no longer publishes prereleases; stable defects are fixed in a new incremented stable version.
 
 ## What it provides
 
 | Capability | Current implementation |
 | --- | --- |
-| Sign-in | Invokes official `grok login --oauth`; the plugin does not implement an OAuth grant |
+| Sign-in | Invokes official `grok login --oauth`; the official CLI owns sign-in URL generation and external-browser launch, while the plugin does not implement an OAuth grant |
 | Credentials | Reuses official CLI session state without creating a second token store |
 | Models | Discovers every model visible to the account at runtime; no static model allowlist |
 | Conversations | Streaming Responses text, reasoning, encrypted reasoning replay, usage, and finish reasons |
@@ -39,10 +39,10 @@ The official CLI opens a browser on first use. The provider supports only the of
 
 ### 2. Install the provider
 
-After `0.1.6` is published, install that exact version from npm:
+After `0.1.7` is published, install that exact version from npm:
 
 ```sh
-dsh plugin --profile web add dsh-grok-provider@0.1.6
+dsh plugin --profile web add dsh-grok-provider@0.1.7
 dsh web
 ```
 
@@ -50,7 +50,7 @@ dsh web
 
 Open **Settings → Grok Build**:
 
-1. Select “Sign in with Grok.”
+1. Select “Sign in with browser.”
 2. Complete authorization in the page opened by the official Grok CLI.
 3. Return to Harness and refresh the account dashboard.
 4. Select any account-visible Grok model from the model picker.
@@ -61,11 +61,14 @@ The provider does not take over the login page or ask you to paste an access or 
 
 The Web settings page shows:
 
-- login state and sign-in, cancel, and logout actions;
+- login state, Provider/Grok Build CLI versions, and sign-in, cancel, and logout actions;
+- the official installation link and “Check again” recovery when the CLI is missing or invalid;
 - used/remaining quota and the real billing-period reset time;
 - account-visible models, context windows, reasoning efforts, and image-input, streaming, and tool capabilities.
 
 When protobuf-backed billing includes a complete weekly/monthly period but omits a zero-valued percentage, the page restores “0% used / 100% remaining.” Other incomplete responses remain unknown.
+
+Harness `0.1.1-rc.2` does not expose an icon field on `settings.section`. The Provider embeds the MIT-licensed `IconThinkOutline16` path geometry from `@deepseek-ai/dsh-client-ui-primitives@0.1.0-rc.7` and displays it only when the `Grok Build` label and settings-dialog DOM structure produce one exact match; otherwise it safely keeps the Host gear. The compatibility observer, marker, and style are all removed when the plugin unloads.
 
 ## Plugin preview
 
@@ -125,8 +128,8 @@ Uninstalling the provider does not remove the official Grok CLI or directly modi
 
 ## Sources and discovery
 
-- npm `0.1.6` page (available after publication): [dsh-grok-provider@0.1.6](https://www.npmjs.com/package/dsh-grok-provider/v/0.1.6)
-- GitHub `0.1.6` release and integrity values (available after publication): [v0.1.6](https://github.com/yoshino-xiao7/dsh-grok-provider/releases/tag/v0.1.6)
+- Current npm stable release: [dsh-grok-provider@0.1.6](https://www.npmjs.com/package/dsh-grok-provider/v/0.1.6)
+- Most recent GitHub release and integrity values: [v0.1.6](https://github.com/yoshino-xiao7/dsh-grok-provider/releases/tag/v0.1.6)
 - GitHub community discovery: the repository carries the DeepSeek Harness-recommended `dsh-plugin` and `dsh` topics
 - YukiRyou managed source: [deepseek-yukiryou-plugin-catalog](https://github.com/yoshino-xiao7/deepseek-yukiryou-plugin-catalog), still pinned to the real-device-accepted `dsh-grok-provider@0.1.0` and marking only `darwin-arm64`
 
@@ -134,17 +137,17 @@ Directory inclusion is not an endorsement by xAI or DeepSeek Harness. [Listing P
 
 ## Compatibility and scope
 
-| Item | `0.1.6` status |
+| Item | `0.1.7` candidate status |
 | --- | --- |
 | DeepSeek Harness | Exact support for `0.1.1-rc.2` |
 | Node.js | `>=24.19.0` |
 | macOS arm64 | Real-network and isolated Harness acceptance completed |
-| Windows x64 | Code, slow-fake, and Windows CI supported; by owner decision, real browser launch is checked against the exact Registry version after publication |
+| Windows x64 | Covered by code and slow fakes; the final candidate must still pass Windows CI. On a reachable network the official CLI generates the URL and opens the browser, and that path has not yet completed real-device Windows acceptance for the `0.1.7` candidate |
 | macOS x64 / Linux | Unsupported |
 | Grok CLI | No full-version lock; official path, `login --oauth` capability, and production OIDC credential contract are enforced |
 | Models | Every account catalog model whose backend has a strict codec in this release |
 
-`0.1.6` preserves the `0.1.4` image boundary: image input is enabled only for exact `grok-4.6`, while `grok-4.5` and every other dynamically discovered model remain text-only. The account dashboard projects capability badges from that same catalog, so only image-capable models show “Image input.” Images must be verified JPEG/PNG projections from the Harness attachment service. Ordinary user content and images nested one level inside a tool result are supported, with `detail:"high"` fixed to the official xAI Responses image example; URLs, filesystem paths, file IDs, and caller-supplied data URLs are rejected. Private reasoning in ordinary user/system history is omitted while adjacent visible text remains ordered, so `subagent-settled` history and same-message reasoning no longer block image requests.
+`0.1.7` preserves the image boundary of published `0.1.6`: image input is enabled only for exact `grok-4.6`, while `grok-4.5` and every other dynamically discovered model remain text-only. Image sending from `0.1.6` has been confirmed in a real Harness conversation; `0.1.7` does not change the model set, image projection, or Responses wire. The account dashboard projects capability badges from that same catalog, so only image-capable models show “Image input.” Images must be verified JPEG/PNG projections from the Harness attachment service. Ordinary user content and images nested one level inside a tool result are supported, with `detail:"high"` fixed to the official xAI Responses image example; URLs, filesystem paths, file IDs, and caller-supplied data URLs are rejected. Private reasoning in ordinary user/system history is omitted while adjacent visible text remains ordered, so `subagent-settled` history and same-message reasoning no longer block image requests.
 
 Each projected image is limited to 4 MiB, 16,777,216 pixels, and 8192px per side. A request retains at most eight images and 8 MiB of projected image bytes. When a limit is exceeded, the globally oldest images are offloaded to Harness text placeholders; the final JSON remains capped at 16 MiB. Web/X Search, image generation, arbitrary downloads, API-key mode, multiple accounts, enterprise OIDC, ACP, and Headless agent wrapping remain out of scope; see the [capability roadmap](docs/11-capability-roadmap.md).
 
@@ -180,11 +183,23 @@ See the full [threat model](docs/03-security-threat-model.md). For vulnerabiliti
 
 ### “Grok CLI not found”
 
-Confirm the official CLI is in its default location and run `grok --version`. The provider will not load an executable from PATH, the workspace, or a UI-selected arbitrary path.
+Install Grok Build CLI from the official link shown on the page, then click “Detect again.” Confirm that the CLI is in its default location and run `grok --version`. The provider does not install the CLI automatically and will not load an executable from PATH, the workspace, or a UI-selected arbitrary path. The settings page displays both the provider and verified CLI versions.
 
 ### The page asks you to sign in again
 
 Use the settings button or run `grok login --oauth` in a terminal. The provider does not lock the complete CLI version, but fails closed when the path, `--oauth` capability, or production OIDC credential contract does not match.
+
+### The browser does not open after clicking sign-in on Windows
+
+Run the official CLI directly first:
+
+```powershell
+& "$env:USERPROFILE\.grok\bin\grok.exe" login --oauth
+```
+
+If it times out at `auth.x.ai/.well-known/openid-configuration`, the failure occurs before a sign-in URL is generated; it is not a broken Provider browser button. Check Windows DNS, outbound HTTPS, firewall, VPN, and proxy settings—especially when the browser uses PAC/system proxy but the CLI process has no `HTTPS_PROXY`. Do not disable TLS verification or post proxy credentials, sign-in URLs, authorization codes, or tokens in an issue.
+
+The `0.1.7` settings page promptly settles this known discovery timeout and says that browser sign-in has not started. An authentication flow that is still running within the five-minute deadline remains cancellable, while unknown CLI output is reduced to a redacted generic error. This is accurate diagnosis of the failure boundary: the Provider does not open the browser itself and does not repair Windows DNS, proxy, firewall, VPN, or official-CLI behavior.
 
 ### A model is missing
 
@@ -200,7 +215,7 @@ Versions through `0.1.2` could not convert some third-party tool-call histories 
 
 ### Does Windows work?
 
-Windows x64 code and CI coverage are present. Ordinary later stable fixes do not repeat real-device acceptance; changes to authentication, the Harness subprocess seam, or platform security policy still require targeted validation.
+Windows x64 is covered by code and slow fakes, and the final candidate must still pass Windows CI. The official CLI still generates the sign-in URL and launches the external browser. Network-reachable browser launch has not yet been confirmed on a real Windows device for `0.1.7`, so it must not be described as fixed or verified.
 
 ## Development
 
@@ -234,8 +249,9 @@ Read the [contributing guide](CONTRIBUTING.md) before filing an issue or PR. Cha
 - [x] Publish the `0.1.3` cross-provider tool-history compatibility correction
 - [x] Publish `0.1.4`: image input only for exact `grok-4.6`; red/blue user/tool-result Proxy gates and final Harness attachment revalidation passed, while `grok-4.5` fails closed as text-only
 - [x] Publish `0.1.5`: maintenance for release binding, dashboard capability badges, and transactional Provider Runtime installation; the unique artifact, dual-platform CI, signatures, and SLSA provenance are verified
-- [ ] Publish `0.1.6`: image-history reasoning compatibility and per-stage official-CLI deadline repair for Windows
-- [ ] Independent `0.1.7` slice: opt-in, default-off Web Search / X Search
+- [x] Publish `0.1.6`: image-history reasoning compatibility and per-stage official-CLI deadline repair for Windows; image sending is confirmed in a real Harness conversation
+- [ ] Publish `0.1.7`: Provider/CLI version diagnostics, CLI installation recovery, redacted OIDC discovery-timeout settlement, and the `IconThinkOutline16` settings-navigation compatibility layer
+- [ ] Independent `0.1.8` slice: opt-in, default-off Web Search / X Search
 - [ ] A subsequent slice: opt-in image generation (inline results only, committed through Harness attachments)
 - [ ] Complete independent Windows x64 acceptance and publish a later stable fix if needed
 
@@ -243,4 +259,4 @@ Slice details, gates, and permanent non-goals are in the [capability roadmap](do
 
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE). See [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) for the reused Harness icon geometry and its license.

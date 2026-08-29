@@ -91,4 +91,8 @@ Node 24 协议测试使用内存 attachment store 和合成 jpeg/png 字节，�
 - [x] 不可变 `v0.1.4` tag、GitHub Release、Trusted Publisher run `33151195684`、Registry 逐字节回读、签名和 SLSA provenance。
 - [x] 仓库所有者明确授权并完成精确 `dsh-grok-provider@0.1.4` 发布；npm `latest=0.1.4`。
 
-这些发布事实不扩大图片能力集合。维护版 `0.1.5` 继续沿用相同的 `grok-4.6` image / 其他模型 text-only policy；`0.1.6` 只省略普通 user/system 历史中的私有 reasoning 并保留相邻可见 text/image，不改变图片模型集合、投影来源、资源上限或 Proxy wire。
+这些发布事实不扩大图片能力集合。维护版 `0.1.5` 沿用相同的 `grok-4.6` image / 其他模型 text-only policy；`0.1.6` 只省略普通 user/system 历史中的私有 reasoning 并保留相邻可见 text/image，不改变图片模型集合、投影来源、资源上限或 Proxy wire。
+
+`0.1.6` 已从 release commit `93519f77adc4ce2edfc1bbd27bce9e44d4805da6` 正式发布：唯一 tarball 为 60 个文件、145,620 bytes，SHA-256 `fd660d91216086496a4d189cb7e60b3445079913c97da41fccf805e3086c0347`，npm SRI `sha512-Vsmzm+8tgmHCuS8WKfzicjgauupY9FZ5B/V+55KbCTggBrThDDArjeS2bwHUVpjd92CvO47ya3SHELdWtTijAQ==`；Trusted Publisher run `33177647530` 完成，Registry 签名与 provenance 验证通过。发布后仓库所有者确认该精确版本的图片输入可用。
+
+当前 `0.1.7` 候选只增加 Windows 运行时诊断、登录失败可解释性与 `IconThinkOutline16` 设置导航图标维护，不修改上述图片能力边界、attachment 投影或 wire。Web/X Search 顺延到 `0.1.8`。

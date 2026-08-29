@@ -182,12 +182,17 @@ ctx.connection.rpc.handle(
 闭合方法：
 
 - `status`
+- `diagnostics`
 - `dashboard`
 - `login`
 - `cancel`
 - `logout`
 
-`status`、`login`、`logout` 只接受空对象；`cancel` 只接受当前公开状态中的 `sessionId`。不存在 `authMode`、模式选择、OAuth URL、device code、access/refresh token、identity 或 token endpoint 字段。
+`status`、`diagnostics`、`login`、`logout` 只接受空对象；`cancel` 只接受当前公开状态中的 `sessionId`。不存在 `authMode`、模式选择、OAuth URL、device code、access/refresh token、identity 或 token endpoint 字段。
+
+`diagnostics` 与登录 `status` 轮询分离，只在页面首次打开、用户主动重新检测或登录结算后调用。同一 inspector 的并发调用只运行一个有界检测；subprocess capability teardown 会取消并等待它。若进程树无法确认退出，该 CLI 实例锁存为 `unavailable`、取消同实例的在途认证 action，并移除对应 driver，直到 capability 被替换。它返回 `pluginVersion` 与闭合 CLI 状态：`ready` 表示默认 executable、安全单行 `grok --version` 和独立 `--oauth` 能力均通过，并额外携带提取后的版本号；其他状态只能是 `missing`、`invalid` 或 `unavailable`。不得返回可执行路径、stderr、环境变量、代理地址或上游 URL。renderer 的登录轮询串行调度并使用单调 request epoch，必须拒绝旧 generation/session、旧 epoch 或 effect cleanup 后的响应回写。
+
+登录失败状态可额外携带一个闭合 `reason`：`cli-missing`、`cli-invalid`、`auth-network-timeout`、`login-timeout` 或 `cli-failed`。只有固定 OIDC discovery 地址与 timeout 特征同时匹配时才能投影为 `auth-network-timeout`；其他上游文本折叠为 `cli-failed`，renderer 不能取得原始输出。
 
 `dashboard` 也只接受空对象，并且只在 `status.available === true` 时由页面调用。它返回脱敏模型 capability 和额度摘要；模型的 `textInput`/`imageInput` 必须从同一动态目录的 `inputModalities` 严格投影，缺失、重复、未知或 accessor-backed modality 使 models 分支失败关闭，renderer 不按模型名猜测。不得返回 credential metadata、用户身份、上游原文、headers 或 endpoint。额度重置时间只能来自 billing period end，不得使用 OAuth credential expiry。
 
@@ -196,6 +201,7 @@ ctx.connection.rpc.handle(
 ```ts
 type AuthOutcome =
   | { kind: "status"; status: PublicAuthStatus }
+  | { kind: "diagnostics"; diagnostics: { pluginVersion: string; cli: { state: "ready"; version: string } | { state: "missing" | "invalid" | "unavailable" } } }
   | { kind: "login-started"; status: PublicAuthStatus; sessionId: string }
   | { kind: "logout-confirmation-required"; confirmationId: string; expiresAt: string }
   | { kind: "busy"; status: PublicAuthStatus; diagnosticId: string }
@@ -271,6 +277,8 @@ bundle ID 必须由最终 `package.json.name` 在构建时注入，不能在包�
 rc.2 的 Host 端 client-module scanner 会执行 `require.resolve("<package>/package.json")` 读取 `dsh.client` 声明，因此 `./package.json` 是 Web bundle 可发现性的必要公开元数据入口；缺失时 Host 插件仍可挂载，但浏览器启动图不会包含该包。
 
 client bundle 导出 Cordis `inject` 与 `apply`，所需 services 至少为 `slots`、`locale`、`connection`。设置页通过 `ctx.slots.inject("settings.section", () => ctx.slots.register(...))` 注册。
+
+Harness `0.1.1-rc.2` 的 `settings.section` options 只有 `id`、`order` 与 `label`，没有图标字段；未知 section id 会由设置 shell 显示 `IconSettingsOutline16`。Provider 可用独立、effect-owned 的视觉兼容层，将结构和规范化标签均唯一精确匹配的 `Grok Build` 导航按钮标记为内嵌的 `IconThinkOutline16` 路径几何。该层不是 Host DOM API：只能在本地读取设置导航标签用于匹配，不得读取设置页正文或用户内容、不得模糊匹配其他按钮，也不得外传或发起网络请求；歧义或结构不符时保留宿主齿轮。独立 style 必须显式带本插件的 `data-plugin` ownership，避免被其他 bundle 的 materialize/HMR 认领和删除。唯一 MutationObserver 必须过滤无关页面变化、合并同轮更新，并在最后一个 effect disposer 中停用待执行任务、断开 observer、移除 marker/style。
 
 三类依赖必须分开：`dsh.client.inject` 只列提供所需 Cordis service 的 client plugin；bundle 动态 `require()` 且不是平台 seed 的 package 列入 `dsh.client.external`；React、UI primitives 等 Runtime 平台 seed 不进入 inject。Host/client 的真实静态和动态 import 图决定 peer 与 external，不能把所有 bundle require 一律塞进 inject。
 

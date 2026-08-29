@@ -1,12 +1,12 @@
 # 当前实现与发布状态
 
-稳定 `0.1.5` 已发布；`0.1.6` 源码候选已冻结为图片历史兼容与 Windows 官方 CLI 登录 deadline 修复，不新增模型、搜索、生成或 endpoint 能力。
+稳定 `0.1.6` 已发布；当前 `0.1.7` 源码候选聚焦 Windows 运行时诊断、登录失败可解释性与 `IconThinkOutline16` 设置导航图标维护，不新增模型、搜索、生成或 endpoint 能力。
 
-状态日期：2026-08-28
-当前 npm 发布线：`dsh-grok-provider@0.1.5`
-当前源码候选：`dsh-grok-provider@0.1.6`
-版本分支：`yukiryou/v0.1.6`
-内容类型路线：已冻结于 [能力路线图](./11-capability-roadmap.md)；`0.1.6` 为维护版，Web/X Search 顺延到 `0.1.7`。
+状态日期：2026-08-29
+当前 npm 发布线：`dsh-grok-provider@0.1.6`
+当前源码候选：`dsh-grok-provider@0.1.7`
+版本分支：`yukiryou/windows-auth-runtime-status`
+内容类型路线：已冻结于 [能力路线图](./11-capability-roadmap.md)；`0.1.7` 为诊断与 UI 维护版，Web/X Search 顺延到 `0.1.8`。
 
 ## 已实现
 
@@ -19,6 +19,7 @@
 - 发布构建：`src`、测试和 spike 不进入 tarball；`dist`、类型、bundle patch 与发行文档由确定性脚本生成。`prepack` 强制重建 `dist`，避免直接 `npm pack`/`npm publish` 带入陈旧产物。零普通 runtime dependencies。
 - `0.1.4` 图片输入：异步 request compiler 惰性读取 Harness attachment，只为精确 `grok-4.6` 生成有序 jpeg/png data URL，并固定 `detail:"high"`；普通 user 与一层 tool-result 图片受格式、尺寸、像素、张数、总字节、content block 和最终 JSON 上限约束，`grok-4.5` 与未知模型继续 text-only。
 - `0.1.6` 历史兼容：普通 user/system 历史中的私有 reasoning 被省略并保留相邻可见 text/image；只有有效的同 Provider assistant 历史可以进入加密 reasoning replay，一层 tool-result 仍只接受公开 text/image。
+- `0.1.7` 候选维护：独立只读 diagnostics RPC 投影插件版本与官方 CLI 的 `ready|missing|invalid|unavailable` 闭合集合；登录失败只投影白名单 reason 并及时结束 spinner。设置导航在 Harness 当前无原生 icon slot 时，以精确标签匹配、冲突失败关闭和可回收 lifecycle 应用 MIT 许可的 `IconThinkOutline16` 几何。
 
 ## 已验证
 
@@ -112,14 +113,19 @@ Windows x64 真机不再是 `0.1.0` 预发布阻断项。首次发布后必须�
 - 从该 commit 冻结的唯一 `dsh-grok-provider-0.1.5.tgz` 为 59 个文件、135,800 bytes，SHA-256 `4b1690408703ae9818015e335845e9a4b5fe352ca4c98d34400f4bad4d8d7c14`，npm SRI `sha512-rVryka0x63QsjBiKnMPK09A5yArB9nmDyYWTOpxFWzs6ged7YzEua2h7CkHgGl/i7Al+Csebzg+30/+Q/8HHKg==`；同一制品的隔离安装、manifest、Host 与 client export 加载通过。
 - 不可变 `v0.1.5` tag 精确指向 release commit；GitHub Release [v0.1.5](https://github.com/yoshino-xiao7/dsh-grok-provider/releases/tag/v0.1.5) 与 Trusted Publisher run [33162280108](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33162280108) 完成。npm `latest=0.1.5`，Registry tarball、Release asset 与本地制品逐字节一致，Registry 签名、npm publish attestation 与 SLSA provenance 验证通过。
 
-## `0.1.6` 候选状态
+## `0.1.6` 发布状态
 
-- 已从 `origin/yukiryou/main@9dbd655e01188892db650dcbfb1b9c6d7a67099c` 创建 `yukiryou/v0.1.6`，manifest、lockfile、CHANGELOG、中英文 README、安全策略与双语 Release Notes 已同步为 `0.1.6` 候选事实；npm `latest` 在正式回读前仍为 `0.1.5`。
-- 未完成的 Web/X Search 方案已从候选制品移出并保存在本地 `yukiryou/v0.1.7-search-planning@71cab9c`；`0.1.6` runtime、types、配置和响应 decoder 均不启用 Search。
-- 已修复 Harness `subagent-settled` 等普通 user/system 上下文携带私有 reasoning 时，后续图片请求在 POST 前被误判为 `INVALID_RESPONSE` 的缺陷。回归覆盖 `text/reasoning/text + image`、同消息 `text/reasoning/image/reasoning/text`、assistant replay 隔离和 tool-result 错误分类。
-- 已修复 Windows 浏览器登录在启动官方 CLI 前立即失败的累计预算缺陷：executable 解析、只读文件验证、`--version`、`login --help` 与最终动作分别拥有并释放 deadline；固定 executable/argv、输出上限、无 shell、最小环境和 caller abort 边界不变。
-- Windows slow-fake 让多个准备阶段分别低于 100ms、累计超过旧预算后仍到达 `login --oauth`；只读 verifier 在 spawn 前超时失败关闭。新增生命周期回归证明 direct `done` 与 tree wait 都有界，tree wait 期间 caller abort 返回 cancelled，cleanup `false`/异常经 driver/controller 保留并隔离当前 capability，subprocess driver replacement 后才恢复。登录 starting、confirmed logout 和 credential refresh 均预先登记为 controller-owned operation；并发、shutdown、旧确认、replacement 前后 stale success/cleanup failure 均按 registration token 失败关闭，不会漏等旧树或污染新 driver。
-- 仓库所有者于 2026-08-28 明确决定先发布 Registry 精确 `0.1.6`，再在 Windows x64 验证外部浏览器弹出，并自行复验图片。发布前只声明代码、聚焦测试与 Windows CI 覆盖；若真机验证失败，使用新的递增稳定版修复。
-- 精确 Node `24.19.0` 本地全量测试已通过：161 项、159 pass、0 fail、2 项 Windows-only skip；`npm audit --omit=dev` 为 0 漏洞，最终 dry-run pack 为 60 个文件，`git diff --check` 与秘密模式扫描通过。Search 规划文件和用户未跟踪的重复 checklist 均不在 pack 清单。
-- 代码 PR [#13](https://github.com/yoshino-xiao7/dsh-grok-provider/pull/13) 已合并到受保护 `yukiryou/main`，merge commit 为 `712d0212f137850af4fc063cc30a7ff2f1e53ea3`；最终 head `40796e1feba0fe36f45f63ebdf89ce34d365033f` 的 CI runs [33176392234](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33176392234) 与 [33176396649](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33176396649) 均完成 macOS 14、Windows 2022 全绿。
-- 正式发布仍须完成发布证据 PR 的最终 release commit、唯一 tarball、隔离安装、digest/SRI、精确制品授权、Trusted Publisher 与 Registry 回读。
+- 已修复普通 user/system 历史携带私有 reasoning 时后续图片请求在 POST 前被误判为 `INVALID_RESPONSE` 的缺陷，并为官方 CLI 的 executable 解析、只读验证、`--version`、`login --help` 与最终动作拆分 deadline；本版不启用 Search。
+- 精确 Node `24.19.0` 本地全量测试通过：161 项、159 pass、0 fail、2 项 Windows-only skip；`npm audit --omit=dev` 为 0 漏洞，最终 dry-run pack 为 60 个文件，macOS 14 与 Windows 2022 CI 全绿。
+- 最终 release commit 为 `93519f77adc4ce2edfc1bbd27bce9e44d4805da6`。唯一 `dsh-grok-provider-0.1.6.tgz` 为 60 个文件、145,620 bytes，SHA-256 `fd660d91216086496a4d189cb7e60b3445079913c97da41fccf805e3086c0347`，npm SRI `sha512-Vsmzm+8tgmHCuS8WKfzicjgauupY9FZ5B/V+55KbCTggBrThDDArjeS2bwHUVpjd92CvO47ya3SHELdWtTijAQ==`。
+- Trusted Publisher run [33177647530](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33177647530) 已完成；Registry 签名与 provenance 验证通过，npm `latest` 指向 `0.1.6`。
+- 发布后仓库所有者确认图片输入可用。Windows 直接运行官方 CLI 时在生成登录 URL 前发生 xAI OIDC discovery timeout；因此没有外部浏览器弹出证据，不得表述为 Provider 已修复或已验证 Windows 浏览器登录。
+
+## `0.1.7` 候选状态
+
+- 当前分支为 `yukiryou/windows-auth-runtime-status`；范围冻结为 Windows 运行时诊断、登录失败可解释性与 `IconThinkOutline16` 设置导航图标维护，Web/X Search 顺延到 `0.1.8`。
+- 代码与文档已定义独立只读 diagnostics RPC、插件/CLI 版本安全投影、`ready|missing|invalid|unavailable` 闭合状态、安装入口与重新检测，以及 `auth-network-timeout` 等白名单登录失败 reason；原始 stderr、路径、环境与授权 URL 不进入 renderer。
+- 诊断 single-flight、调用方取消、capability teardown、driver replacement 与陈旧轮询响应均有闭合 lifecycle；网络错误提前退出时结束 spinner，但插件不修复系统代理、OIDC 网络或自行构造 OAuth URL。
+- Harness `settings.section` 当前没有 icon slot；候选包内嵌 `@deepseek-ai/dsh-client-ui-primitives@0.1.0-rc.7` 的 MIT `IconThinkOutline16` 几何，通过设置导航内的精确本地化标签唯一匹配应用，歧义时保持桌面端原图标，并在卸载时移除 marker、style 与 observer。
+- 精确 Node `24.19.0` 本地全量测试已通过：190 项、188 pass、0 fail、2 项 Windows-only skip；生产依赖审计为 0 漏洞，dry-run pack 为 64 个文件，diff、生成 bundle 一致性与秘密模式扫描通过。
+- PR、macOS/Windows CI、最终 release commit、唯一正式制品、digest/SRI、发布授权、Trusted Publisher 与 Registry 回读仍待完成；当前候选不得作为 Windows 浏览器弹出已修复或已验证的证据。

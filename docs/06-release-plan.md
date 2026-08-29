@@ -2,7 +2,7 @@
 
 ## 0. 当前状态
 
-当前 npm `latest` 为 `dsh-grok-provider@0.1.5`；其 release commit 为 `4f0bcd84f96c1cd5d95dda2a01ce63ff6403b828`，不可变 tag 为 `v0.1.5`。唯一 tarball、GitHub Release asset 与 Registry 下载文件逐字节一致，Registry 签名、npm publish attestation 与 SLSA provenance 已回读；Trusted Publisher run `33162280108` 的 provenance 精确绑定上述 tag、仓库、workflow 与 commit。`0.1.6` 当前在 `yukiryou/v0.1.6` 冻结为图片历史兼容与 Windows 官方 CLI 分阶段 deadline 维护版；正式回读完成前不得把 npm `latest` 写成 `0.1.6`。
+当前 npm `latest` 为 `dsh-grok-provider@0.1.6`；其 release commit 为 `93519f77adc4ce2edfc1bbd27bce9e44d4805da6`，不可变 tag 为 `v0.1.6`。唯一 tarball 含 60 个文件、145,620 bytes，SHA-256 为 `fd660d91216086496a4d189cb7e60b3445079913c97da41fccf805e3086c0347`，npm SRI 为 `sha512-Vsmzm+8tgmHCuS8WKfzicjgauupY9FZ5B/V+55KbCTggBrThDDArjeS2bwHUVpjd92CvO47ya3SHELdWtTijAQ==`；Trusted Publisher run `33177647530` 已完成，Registry signature 与 provenance 已验证。当前 `0.1.7` 在 `yukiryou/windows-auth-runtime-status` 开发为 Windows CLI 诊断、登录失败可解释性与设置图标维护候选；Search 顺延至 `0.1.8`。
 
 首个 `dsh-grok-provider@0.1.0` 于 2026-08-26 从 GitHub Release 中唯一的候选 tarball 发布到 npm；Registry 回读的 SHA-512、重新下载文件的 SHA-256 和 GitHub Release 产物完全一致，并生成 npm provenance attestation。后续稳定版沿用由该流程建立的不可变制品与回读原则。
 
@@ -53,6 +53,7 @@ README.en.md
 CONTRIBUTING.md
 SECURITY.md
 LICENSE
+THIRD_PARTY_NOTICES.md
 CHANGELOG.md
 ```
 
@@ -63,7 +64,7 @@ CHANGELOG.md
 - auth.json、token、真实 prompt/响应和用户路径。
 - symlink、hardlink、socket 或设备文件。
 
-`docs/` 与根目录中相互链接的中文默认页 `README.md`、英文版 `README.en.md`、`CONTRIBUTING.md` 和 `SECURITY.md` 一起进入 tarball，使安装后的架构、安全边界、社区维护方式和发布门禁链接保持可读。发布前的证据文档只记录脱敏事实、hash 与固定公开地址，不得包含 token、真实 prompt/响应或用户身份数据。
+`docs/` 与根目录中相互链接的中文默认页 `README.md`、英文版 `README.en.md`、`CONTRIBUTING.md`、`SECURITY.md` 和 `THIRD_PARTY_NOTICES.md` 一起进入 tarball，使安装后的架构、安全边界、第三方许可、社区维护方式和发布门禁链接保持可读。发布前的证据文档只记录脱敏事实、hash 与固定公开地址，不得包含 token、真实 prompt/响应或用户身份数据。
 
 目标为零普通 runtime dependencies。DSH peer 精确使用 `0.1.1-rc.2`；Cordis `4.0.1`、Schemastery `3.18.1` 由目标桌面 Runtime snapshot 满足。`@deepseek-ai/dsh-subprocess`、settings、commands、connection 和 client UI/locale 等 profile-specific peer 通过 `peerDependenciesMeta.optional: true` 标注，并有 Web/TUI/headless 缺失-peer 测试。插件不打包本地 subprocess 实现。
 
@@ -130,7 +131,7 @@ patch 路径必须为不含 `..`、绝对路径、反斜线或 NUL 的相对 `.y
 
 ## 7. Git 与版本
 
-- `0.1.0` 历史开发分支：`yukiryou/v0.1.0`；当前版本分支：`yukiryou/v0.1.6`。
+- `0.1.0` 历史开发分支：`yukiryou/v0.1.0`；当前候选分支：`yukiryou/windows-auth-runtime-status`（目标版本 `0.1.7`）。
 - `package.json`、CHANGELOG、release notes、Git tag 和 tarball 必须使用同一个精确候选版本。
 - 发布提交必须干净且可复现。
 - tag 使用 `v<major>.<minor>.<patch>`，只在发布提交确定后创建。
@@ -184,6 +185,7 @@ scoped 包首次公开发布必须保留 `--access public`。
 - peerDependenciesMeta 与 publishConfig 的 Registry 回读表现。
 - engines、os、cpu 和 `dsh.bundle.patch`。
 - `dist-tags.latest` 等于刚发布的精确版本。
+- 实际 tarball 中存在项目 `LICENSE`；复制第三方 geometry/asset 时还必须存在完整 `THIRD_PARTY_NOTICES.md`，其组件、package version、来源与许可和 bundle 内实现一致。
 
 从 Registry 重新下载，计算 SRI 并与 `dist.integrity` 及候选 digest 比较；在临时项目安装精确版本、生成 lockfile 后执行 `npm audit signatures`；核对 provenance attestation 的 GitHub repository 与 release commit，不使用 `latest` 安装代替证据。
 
@@ -192,9 +194,9 @@ scoped 包首次公开发布必须保留 `--access public`。
 npm 发布不会自动成为受管可安装项。当前发现状态：
 
 - GitHub 仓库已添加 DeepSeek Harness 官方推荐的 `dsh-plugin` 与 `dsh` Topics，可被 Topic 驱动来源发现。
-- YukiRyou curated catalog 当前仍是精确 `dsh-grok-provider@0.1.0`、verification `installed`、仅 `darwin-arm64`。`0.1.5` 已发布及其完整性/provenance 回读不等于从 catalog 安装该精确版本，因此不得据此升级条目或增加平台。
+- YukiRyou curated catalog 当前仍是精确 `dsh-grok-provider@0.1.0`、verification `installed`、仅 `darwin-arm64`。`0.1.6` 已发布及其完整性/provenance 回读不等于从 catalog 安装该精确版本，因此不得据此升级条目或增加平台。
 - 公共 `awesome-dsh-plugin` 的收录 PR #3415 已合并，项目已进入 `model` 分类。该列表不记录精确 npm 版本或平台验证字段，因此收录只代表发现入口，不证明任一后续制品的受管安装或平台验收。
-- Windows x64 仍需对 Registry 精确 `0.1.0` 完成首次 production inspector、安装、重启、浏览器登录、聊天、工具调用和重新认证；完成前保持“代码支持、真机未验证”。
+- Windows x64 仍未完成一条闭合的 Registry 精确版本 production inspector、安装、重启、浏览器登录、聊天、工具调用和重新认证链路。`0.1.6` 发布后已确认图片可用，并确认官方 CLI 可在生成登录 URL 前因 OIDC discovery timeout 退出；这不是浏览器弹出已修复或已验证的证据。
 
 catalog 条目只能记录实际验证完成的精确版本和平台。当前条目记录：
 
@@ -203,7 +205,7 @@ catalog 条目只能记录实际验证完成的精确版本和平台。当前条
 - verification `installed`。
 - 仅 `darwin-arm64`。
 
-从 `0.1.1` 起，常规发版不再要求重复 macOS/Windows 真机 smoke。每次仍须通过两平台 CI、协议与安全测试、干净 profile 安装、确定性 tarball 和 Registry integrity/provenance 回读。涉及认证、官方 CLI、Harness subprocess seam、内容输入或平台安全策略的变更应安排定向真机复核；`0.1.4` 因新增图片输入，已完成精确 `grok-4.6` 的 Proxy 红蓝语义门禁和收窄后的 Harness modality 复验，但不能替代最终制品安装与双平台 CI。
+从 `0.1.1` 起，常规发版不再要求重复 macOS/Windows 真机 smoke。每次仍须通过两平台 CI、协议与安全测试、干净 profile 安装、确定性 tarball 和 Registry integrity/provenance 回读。涉及认证、官方 CLI、Harness subprocess seam、内容输入或平台安全策略的变更应安排定向真机复核；`0.1.4` 因新增图片输入，已完成精确 `grok-4.6` 的 Proxy 红蓝语义门禁和收窄后的 Harness modality 复验，但不能替代最终制品安装与双平台 CI。`0.1.7` 必须区分 CLI 缺失、discovery timeout 与 discovery 可访问三类 Windows 事实；若最后一类尚未验证，文档只能声明诊断和结算行为，不能声明官方 CLI 已弹出浏览器。
 
 macOS x64 不在当前官方 Grok CLI 支持矩阵，不进入 `0.1.0` catalog 或发布承诺。npm SHA-512 作为 release evidence 保存；它不是当前 curated schema 字段，市场会从 Registry `dist.integrity` 自行验证 SHA-512。
 

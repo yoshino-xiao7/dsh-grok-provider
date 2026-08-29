@@ -18,6 +18,7 @@
 - 在 Harness `0.1.1-rc.2` 中安装精确 npm 版本后出现 Grok Provider，并动态列出当前账号通过 Grok Build 可用的全部模型。
 - macOS 和 Windows 用户使用相同的插件包，不需要平台专属脚本。
 - 用户可从 Harness 发起官方 CLI 浏览器登录；插件能识别登录中、成功、取消、失败、凭据过期和未登录状态。
+- Web 设置页能区分官方 CLI 缺失、无效、检测不可用、OIDC discovery 网络超时与真人授权超时，并显示 Provider/已验证 CLI 版本；这些诊断不得暴露路径、stderr、代理配置或 OAuth URL。
 - 首版只接受与发布绑定 CLI 版本的 xAI 第一方 OIDC schema 相符的候选。CLI 有效配置若选择外部 auth provider、企业 OIDC、API key 或无法判定的凭据结构，插件必须显示“不受支持的认证配置”并拒绝由本插件把该 token 发给 xAI CLI Chat Proxy；这不把未签名 metadata 宣称成来源证明。
 - 支持多轮文本对话、reasoning 增量、流式文本、工具调用、usage 和明确 finish 原因。
 - Harness 中止请求时，网络流和解析器都能及时终止。
@@ -69,7 +70,7 @@
 - Grok ACP 或 `grok -p` headless 代理。
 - 厂商侧 Web Search、X Search、远程抓取。
 - 图片生成、图片 URL 下载或文件落盘。
-- 图片输入（`0.1.0`–`0.1.3`）；已发布 `0.1.4` 按[能力路线图](./11-capability-roadmap.md)与 [ADR-0008](./adr/0008-image-input-request-compiler.md)只为精确 `grok-4.6` 独立引入，`grok-4.5` 与所有其他模型继续 text-only；维护版 `0.1.5` 不扩大该集合。
+- 图片输入（`0.1.0`–`0.1.3`）；已发布 `0.1.4` 按[能力路线图](./11-capability-roadmap.md)与 [ADR-0008](./adr/0008-image-input-request-compiler.md)只为精确 `grok-4.6` 独立引入，`grok-4.5` 与所有其他模型继续 text-only；维护版 `0.1.5`、`0.1.6` 与当前 `0.1.7` 候选均不扩大该集合。
 - 自定义 endpoint、企业 OIDC、自定义代理或多账号。
 - 自动安装或更新 Grok CLI。
 - 在远程 Web/headless 主机自动打开浏览器或无人值守登录的承诺。
@@ -111,7 +112,7 @@ Web 的“退出”或 TUI `/grok logout` 先中止本插件所有在途 Grok �
 - macOS arm64 和 Windows x64 的自动测试通过。macOS x64 不在当前官方 CLI 支持矩阵，也不属于 `0.1.0` 承诺。
 - `0.1.0` 发布前至少一台真实 macOS arm64 设备完成安装、登录、流式对话、工具调用、中止、重启与重新认证 smoke。
 - `0.1.0` 发布后在一台真实 Windows x64 设备对 Registry 中的精确 `0.1.0` 执行首次安装、登录、流式对话、工具调用、中止、重启与重新认证 smoke；该项是发布后跟进，不回溯阻断已经完成的首次发布。
-- `0.1.1` 及后续版本不把重复真机 smoke 设为常规发版门禁；由 macOS/Windows CI、契约测试、干净安装和精确 tarball 校验承接。认证、官方 CLI、Harness subprocess 或平台安全边界变化时安排定向真机复核，但除非当次发布另行声明，不作为强制门禁。
+- `0.1.1` 及后续版本不把重复真机 smoke 设为常规发版门禁；由 macOS/Windows CI、契约测试、干净安装和精确 tarball 校验承接。认证、官方 CLI、Harness subprocess 或平台安全边界变化时安排定向真机复核，但除非当次发布另行声明，不作为强制门禁。`0.1.7` 必须分别记录 CLI 缺失、discovery 超时与 discovery 可访问三种状态；在最后一种状态完成前不得声称 Windows 浏览器弹出已修复或已验证。
 - canary secret 扫描确认日志、RPC、错误、临时文件和打包产物无泄漏。
 - 协议测试确认第二个测试 origin 永远收不到 Authorization。
 
@@ -135,8 +136,9 @@ Web 的“退出”或 TUI `/grok logout` 先中止本插件所有在途 Grok �
 
 - `0.1.4`：仅图片输入。
 - `0.1.5`：发布链路、账户面板能力标签和 Provider Runtime 安装事务维护；不新增模型能力。
-- `0.1.6`：图片历史中非 assistant 私有 reasoning 的兼容修复，以及 Windows 官方 CLI 登录预检的分阶段 deadline 修复；不新增模型能力。
-- `0.1.7` 独立切片：默认关闭的 Web Search / X Search。
+- `0.1.6`：已发布图片历史中非 assistant 私有 reasoning 的兼容修复，以及 Windows 官方 CLI 登录预检的分阶段 deadline 修复；不新增模型能力。
+- `0.1.7`：Windows 官方 CLI 安装/版本诊断、登录失败可解释性与 Web 设置导航 `IconThinkOutline16` 维护；不改变官方 CLI 网络/代理或 OAuth 流程，不新增模型能力。
+- `0.1.8` 独立切片：默认关闭的 Web Search / X Search。
 - 再后续独立切片：默认关闭的图片生成（内联结果 → Harness attachment）。
 
 `prompt_cache_key` 不与图片输入捆绑；若以后排期，需独立分析会话标识隐私和 POST 不自动重放边界。任意 URL 下载、API Key、企业 OIDC、ACP、Headless 和 Linux 仍不在路线内。公开协议可驱动隔离原型，但每个切片在声明能力、合并发布基线前必须有独立 ADR 与固定 CLI Chat Proxy spike；`0.1.4` 的 `grok-4.6` user/tool-result 红蓝语义门禁已于 2026-08-28 通过，`grok-4.5` 因语义不可靠失败关闭，最终 Harness attachment 复验见[上游证据页](./12-upstream-image-input-evidence.md)。
