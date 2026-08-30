@@ -4,7 +4,7 @@
 - 当前 npm 稳定版：`0.1.10`
 - 最近发布：`0.1.10`
 - 最近撤回：`0.1.8`（npm 版本号不可复用）
-- 当前开发分支：`yukiryou/v0.1.11-reasoning-stream`
+- 当前开发分支：`yukiryou/v0.1.11-release-evidence`
 
 本文是 `0.1.3` 之后内容类型迭代的单一事实来源。`0.1.0`–`0.1.3` 的历史范围仍以 [ADR-0002](./adr/0002-v0.1-scope.md) 和[产品需求](./01-product-requirements.md)为准。
 
@@ -159,7 +159,7 @@ const request = await requestCompiler.compile(options, preparedRoute)
 - 接受完整闭合的空 reasoning item；事件序号、output index、状态、内容与 encrypted replay 仍受闭合校验。
 - 支持官方 raw `reasoning_text` content/delta/done 生命周期，并与 summary reasoning 严格互斥；replay 元数据不保存 raw 明文，后续请求只回传 `encrypted_content` 与 `summary: []`，当前流中的 raw delta 仍作为 Harness 可见 reasoning 输出。
 - 脱敏真实 `grok-4.6` Web Search probe 经生产 decoder 完成 1 次 POST、68 个事件、34 个 summary delta、0 个 raw delta与 1 个 finish。它只证明 summary/Search 路径，raw reasoning 仍只有 fixture 证据。
-- 不改变 Search descriptor、开关、模型 allowlist、citation、认证、图片或平台边界；最终双平台 CI、唯一制品与精确授权待完成。
+- 不改变 Search descriptor、开关、模型 allowlist、citation、认证、图片或平台边界。代码 PR #25、merge commit `307ae3ac83526f388c6b4a0d1e1346353bd5f4aa` 与 main CI run `33302830043` 已通过；发布证据提交的 final CI、唯一制品与精确授权待完成。
 
 ## 8. 后续：默认关闭的图片生成
 
@@ -175,4 +175,4 @@ const request = await requestCompiler.compile(options, preparedRoute)
 - ACP、`grok -p` Headless、Linux / macOS x64 发布承诺。
 - 厂商 `code_execution`；Harness 已有本地工具权限层。
 
-English summary: `0.1.10` is the current stable npm release from commit `fe1e5a7d82defb17ab5bcbb0d9979c43cb48c028`; version `0.1.8` was briefly published for sidebar-quota maintenance and then withdrawn, and its npm version number remains unusable. The unique 70-file, 197,620-byte artifact has an unpacked size of 628,836 bytes, SHA-256 `f9fe1dea743e86e2799a1073a93a8af91ad5bd389e14f4d2f0528428ada93c62`, and SRI `sha512-OnfG4diVqJdzYSwJKERNnaplYFbOvFICZP58E0f2Cdh+t7orlTL1DWokvzEHdJrw6HA+UMoKDZgJ6AMEVv4aUg==`. Final main CI run `33299116564` and Trusted Publisher run `33299599113` passed; npm `latest=0.1.10`, Registry and Release bytes match, and the Registry signature plus SLSA provenance were read back. The `0.1.11` candidate is a focused reasoning-lifecycle repair for exact `grok-4.6` High Effort + Web Search continuation: one strictly empty reuse of a closed reasoning ID only across a completed server Search, closed empty items, and a mutually exclusive official raw `reasoning_text` lifecycle. Replay metadata does not retain raw plaintext; later requests send only encrypted content with an empty summary, while live raw deltas remain visible to Harness. A redacted real probe emitted 34 summary deltas and zero raw deltas, so raw reasoning remains fixture-verified rather than live-probe verified. Final dual-platform CI, the unique artifact, exact authorization, and release readback remain pending. Authentication, Search descriptors, image input, and platform support are unchanged; network-reachable browser launch on a physical Windows device remains a separate acceptance boundary.
+English summary: `0.1.10` is the current stable npm release from commit `fe1e5a7d82defb17ab5bcbb0d9979c43cb48c028`; version `0.1.8` was briefly published for sidebar-quota maintenance and then withdrawn, and its npm version number remains unusable. The unique 70-file, 197,620-byte artifact has an unpacked size of 628,836 bytes, SHA-256 `f9fe1dea743e86e2799a1073a93a8af91ad5bd389e14f4d2f0528428ada93c62`, and SRI `sha512-OnfG4diVqJdzYSwJKERNnaplYFbOvFICZP58E0f2Cdh+t7orlTL1DWokvzEHdJrw6HA+UMoKDZgJ6AMEVv4aUg==`. Final main CI run `33299116564` and Trusted Publisher run `33299599113` passed; npm `latest=0.1.10`, Registry and Release bytes match, and the Registry signature plus SLSA provenance were read back. The `0.1.11` candidate is a focused reasoning-lifecycle repair for exact `grok-4.6` High Effort + Web Search continuation: one strictly empty reuse of a closed reasoning ID only across a completed server Search, closed empty items, and a mutually exclusive official raw `reasoning_text` lifecycle. Replay metadata does not retain raw plaintext; later requests send only encrypted content with an empty summary, while live raw deltas remain visible to Harness. A redacted real probe emitted 34 summary deltas and zero raw deltas, so raw reasoning remains fixture-verified rather than live-probe verified. Code PR #25 merged as `307ae3ac83526f388c6b4a0d1e1346353bd5f4aa`, and main CI run `33302830043` passed on macOS 14 and Windows 2022. The release-evidence commit's final CI, the unique artifact, exact authorization, and release readback remain pending. Authentication, Search descriptors, image input, and platform support are unchanged; network-reachable browser launch on a physical Windows device remains a separate acceptance boundary.

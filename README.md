@@ -143,8 +143,8 @@ dsh web
 | --- | --- |
 | DeepSeek Harness | 精确支持 `0.1.1-rc.2` |
 | Node.js | `>=24.19.0` |
-| macOS arm64 | 图片发送已完成真实 Harness 验证；`0.1.11` reasoning 修复的聚焦回归与脱敏真实 summary/Search 探针通过，最终制品和候选 macOS 14 CI 待发布门禁关闭 |
-| Windows x64 | 现有代码、slow-fake 与 `0.1.10` Windows 2022 CI 已通过；`0.1.11` 最终候选 CI 待完成。网络可达时由官方 CLI 生成 URL 并打开浏览器，该路径仍未完成 Windows 真机验收 |
+| macOS arm64 | 图片发送已完成真实 Harness 验证；`0.1.11` 聚焦回归、脱敏真实 summary/Search 探针及代码 merge commit 的 macOS 14 CI 通过；发布证据提交的 final CI 与唯一制品待关闭 |
+| Windows x64 | `0.1.11` 代码 merge commit 的 Windows 2022 CI 与现有 slow-fake 通过；发布证据提交的 final CI 待关闭。网络可达时由官方 CLI 生成 URL 并打开浏览器，该路径仍未完成 Windows 真机验收 |
 | macOS x64 / Linux | 不支持 |
 | Grok CLI | 不锁完整版本；严格校验官方路径、`login --oauth` 能力与生产 OIDC 凭据契约 |
 | 模型 | 当前账号目录中 backend 已被严格 codec 支持的全部模型 |
@@ -257,7 +257,7 @@ npm run pack:check
 - [x] 发布 `0.1.7`：Provider/CLI 双版本诊断、CLI 安装恢复、OIDC discovery 超时脱敏结算与 `IconThinkOutline16` 设置导航兼容层
 - [x] 发布 `0.1.9`：加入 Web/X Search 协议与设置页，唯一制品、双平台 CI、签名与 SLSA provenance 均已验证；发布后确认 Host 设置 namespace 遗漏，开关不可用
 - [x] 发布 `0.1.10`：`llm-grok` 注册、按调用读取设置、唯一制品、双平台 CI、签名与 provenance 已完成
-- [ ] 发布 `0.1.11`：修复 High Effort + Web Search reasoning 生命周期兼容；最终双平台 CI、唯一制品、精确授权、Registry 与 provenance 回读待完成
+- [ ] 发布 `0.1.11`：修复 High Effort + Web Search reasoning 生命周期兼容；代码 PR 与 main 双平台 CI 已通过，发布证据 final CI、唯一制品、精确授权、Registry 与 provenance 回读待完成
 - [ ] 再后续独立切片：默认关闭的图片生成（只收内联结果，提交 Harness attachment）
 - [ ] 完成 Windows x64 独立真机验收并按需发布后续稳定修复版
 
