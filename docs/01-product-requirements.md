@@ -142,7 +142,7 @@ Web 的“退出”或 TUI `/grok logout` 先中止本插件所有在途 Grok �
 - `0.1.6`：已发布图片历史中非 assistant 私有 reasoning 的兼容修复，以及 Windows 官方 CLI 登录预检的分阶段 deadline 修复；不新增模型能力。
 - `0.1.7`：已发布 Windows 官方 CLI 安装/版本诊断、登录失败可解释性与 Web 设置导航 `IconThinkOutline16` 维护；不改变官方 CLI 网络/代理或 OAuth 流程，不新增模型能力。
 - `0.1.8`：sidebar quota 维护版曾发布后撤回；npm Registry 已消耗该版本号，不能把 Search 重新标记或发布为 `0.1.8`。
-- `0.1.9`：已发布默认关闭的 Web Search / X Search 协议与页面，但遗漏 Host `llm-grok` namespace，真实页面开关不可用。
+- `0.1.9`：已为精确 `grok-4.6` 发布默认关闭、设计为可独立开启的 Web Search / X Search 协议与页面，但遗漏 Host `llm-grok` namespace，真实页面开关不可用。
 - `0.1.10` 当前候选：补齐 canonical settings namespace 与按调用动态快照，使 `0.1.9` 的两个开关真正可写；不改变 Search wire、支持模型或认证边界。
 - 再后续独立切片：默认关闭的图片生成（内联结果 → Harness attachment）。
 

@@ -142,7 +142,7 @@ test("the exact 0.1.10 manifest exports runtime artifacts and Web loader metadat
   assert.match(withdrawnReleaseNotes, /曾短暂发布.*侧栏额度/u)
   assert.match(withdrawnReleaseNotes, /随后.*撤回/u)
   assert.match(withdrawnReleaseNotes, /包名与版本号组合 `dsh-grok-provider@0\.1\.8` 已被永久占用/u)
-  assert.match(withdrawnReleaseNotes, /`latest` 仍为 `0\.1\.7`/u)
+  assert.match(withdrawnReleaseNotes, /撤回后.*`latest` 恢复为 `0\.1\.7`/u)
   assert.match(withdrawnReleaseNotes, /Web\/X Search 顺延至 `0\.1\.9`/u)
   assert.match(withdrawnReleaseNotes, /<summary>English withdrawal record<\/summary>/u)
   assert.doesNotMatch(withdrawnReleaseNotes, /dsh plugin|npm install|安装精确版本|Install the exact version/iu)

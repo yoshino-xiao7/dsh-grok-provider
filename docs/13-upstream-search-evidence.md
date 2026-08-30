@@ -1,6 +1,6 @@
 # `0.1.9` Web/X Search 上游与固定 Proxy 证据
 
-- 状态：`0.1.9` 协议证据、双平台 CI、唯一制品与发布回读已完成；发布后发现 Host settings 集成缺口，由 `0.1.10` 修复
+- 状态：`grok-4.6` 四组脱敏观察、生产顺序 mixed 复验、双平台 CI、隔离 Web Harness、最终制品与发布后回读门禁均已完成；`0.1.9` 已正式发布，发布后发现的 Host settings 集成缺口由 `0.1.10` 修复
 - 观察日期：2026-08-30
 - 固定 origin/path：`https://cli-chat-proxy.grok.com/v1/responses`
 - Provider client identity：`dsh-grok-provider/1.0.5`
@@ -86,7 +86,8 @@ Web + X 观察共 68 个 SSE event、4 个 output item、8 个 citation annotati
 - [x] 以 function → `web_search` 顺序单独重跑 mixed 固定 Proxy 脱敏协议探针，并更新该 case 的 request bytes 与事件计数。
 - [x] 候选 push/PR 与 main 合并提交的 macOS 14 / Windows 2022 CI 通过。
 - [x] macOS 隔离 Web Harness profile 的真实 `ctx.llm` 路径完成默认关闭、Web-only、X-only 与 function → `web_search` Mixed 四组验收；fetch 在插件导入前由失败关闭 fixture 接管，无 passthrough 或外部 xAI、npm、login 请求。该证据不覆盖浏览器手工对话、Agent/session loop、OAuth、真实账号、真实 xAI 请求或 Windows 真机。
-- [x] 唯一 `0.1.9` 制品、digest/SRI、签名、provenance 与 Registry 回读。
+- [x] 发布证据 PR #21 合并后的最终 release commit 为 `a0af7b74882546dc3d9477b8f6c1494935e6bfb4`，CI run `33295408650` 全绿。唯一 `dsh-grok-provider-0.1.9.tgz` 含 69 个文件、190,049 bytes，unpacked size 为 603,475 bytes，SHA-256 为 `78c73c95ea71d66cad6e6146fed41c281f1c8b29f60353e3f20247ec23833210`，SRI 为 `sha512-GeXQg3qedCGZz9D5MMaHd8Afe5Bn0nxjG+PQmKOB2AxB3m6IiGA07PMD77dEAOJVbAzKk0SnxAOKTZMTQFtuYg==`。
+- [x] 不可变 `v0.1.9`、GitHub Release 与 Trusted Publisher run `33295761336` 已完成；npm `latest=0.1.9`，Registry、Release 与本地制品逐字节一致。精确 Registry 安装的 Host/client import/export smoke 通过；精确安装审计图汇总 71 个已验证签名与 3 个 attestations，本包 attestations endpoint 返回 2 项，SLSA provenance 精确绑定 tag、workflow、commit 与 release run。
 
 `0.1.9` 发布后的真实页面检查证明上述协议证据没有覆盖 Host namespace 注册：`settings.describe` 可写但不包含 `llm-grok`，客户端因此正确派生 `unavailable` 并禁用开关；Host 同时只在启动时读取一次组合配置。`0.1.10` 增加真实 SettingsProvider + LLM Runtime 回归和 Adapter 首次 await 前快照回归，只修复设置进入后续请求的链路，不改变本页任何固定 Proxy 结论。
 

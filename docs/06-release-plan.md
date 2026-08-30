@@ -2,7 +2,7 @@
 
 ## 0. 当前状态
 
-当前 npm 稳定基线为 `dsh-grok-provider@0.1.9`；其 release commit 为 `a0af7b74882546dc3d9477b8f6c1494935e6bfb4`，不可变 tag 为 `v0.1.9`。唯一 tarball 含 69 个文件、190,049 bytes，SHA-256 为 `78c73c95ea71d66cad6e6146fed41c281f1c8b29f60353e3f20247ec23833210`，npm SRI 为 `sha512-GeXQg3qedCGZz9D5MMaHd8Afe5Bn0nxjG+PQmKOB2AxB3m6IiGA07PMD77dEAOJVbAzKk0SnxAOKTZMTQFtuYg==`；Trusted Publisher run `33295761336` 已完成，Registry signature 与 provenance 已验证。该版本的 Search 开关因 Host settings namespace 遗漏而不可用；当前 `0.1.10` 在 `yukiryou/v0.1.10-search-settings-fix` 修复该集成，不覆盖或重发 `0.1.9`。
+当前可用 npm 稳定基线为 `dsh-grok-provider@0.1.9`；其 release commit 为 `a0af7b74882546dc3d9477b8f6c1494935e6bfb4`，不可变 tag 为 `v0.1.9`，CI run `33295408650` 全绿。唯一 tarball 含 69 个文件、190,049 bytes，unpacked size 为 603,475 bytes，SHA-256 为 `78c73c95ea71d66cad6e6146fed41c281f1c8b29f60353e3f20247ec23833210`，npm SRI 为 `sha512-GeXQg3qedCGZz9D5MMaHd8Afe5Bn0nxjG+PQmKOB2AxB3m6IiGA07PMD77dEAOJVbAzKk0SnxAOKTZMTQFtuYg==`；Trusted Publisher run `33295761336` 已完成，Registry、GitHub Release 与本地制品逐字节一致，npm `latest=0.1.9`。精确 Registry 安装的 Host/client import/export smoke 通过；精确安装审计图汇总 71 个已验证签名与 3 个 attestations，本包 attestations endpoint 返回 2 项，SLSA provenance 精确绑定 `v0.1.9` tag、release workflow、release commit 与 release run。sidebar quota 维护版 `0.1.8` 曾发布后撤回；npm Registry 已永久消耗该版本号，禁止把 Search 制品重新标记或发布为 `0.1.8`。`0.1.9` 的 Search 开关因 Host settings namespace 遗漏而不可用；当前 `0.1.10` 在 `yukiryou/v0.1.10-search-settings-fix` 修复 canonical settings namespace 与按调用快照，不覆盖或重发 `0.1.9`，也不改变 Search wire、支持模型或认证边界。
 
 首个 `dsh-grok-provider@0.1.0` 于 2026-08-26 从 GitHub Release 中唯一的候选 tarball 发布到 npm；Registry 回读的 SHA-512、重新下载文件的 SHA-256 和 GitHub Release 产物完全一致，并生成 npm provenance attestation。后续稳定版沿用由该流程建立的不可变制品与回读原则。
 
@@ -131,7 +131,7 @@ patch 路径必须为不含 `..`、绝对路径、反斜线或 NUL 的相对 `.y
 
 ## 7. Git 与版本
 
-- `0.1.0` 历史开发分支：`yukiryou/v0.1.0`；当前候选分支：`yukiryou/v0.1.10-search-settings-fix`（目标版本 `0.1.10`）。`0.1.8` 已由撤回发布消耗，`0.1.9` 已发布且不可覆盖。
+- `0.1.0` 历史开发分支为 `yukiryou/v0.1.0`；`0.1.9` 代码分支 `yukiryou/v0.1.9-search` 与发布证据分支 `yukiryou/v0.1.9-release-evidence` 已分别经 PR #20、#21 合入受保护 `yukiryou/main`，最终 release commit 为 `a0af7b74882546dc3d9477b8f6c1494935e6bfb4`。`0.1.8` 已由撤回的 sidebar quota 发布消耗，不得复用；当前候选分支为 `yukiryou/v0.1.10-search-settings-fix`（目标版本 `0.1.10`），已发布 `0.1.9` 不可覆盖或重发。
 - `package.json`、CHANGELOG、release notes、Git tag 和 tarball 必须使用同一个精确候选版本。
 - 发布提交必须干净且可复现。
 - tag 使用 `v<major>.<minor>.<patch>`，只在发布提交确定后创建。
@@ -194,9 +194,9 @@ scoped 包首次公开发布必须保留 `--access public`。
 npm 发布不会自动成为受管可安装项。当前发现状态：
 
 - GitHub 仓库已添加 DeepSeek Harness 官方推荐的 `dsh-plugin` 与 `dsh` Topics，可被 Topic 驱动来源发现。
-- YukiRyou curated catalog 当前仍是精确 `dsh-grok-provider@0.1.0`、verification `installed`、仅 `darwin-arm64`。`0.1.7` 已发布及其完整性/provenance 回读不等于从 catalog 安装该精确版本，因此不得据此升级条目或增加平台。
+- YukiRyou curated catalog 当前仍是精确 `dsh-grok-provider@0.1.0`、verification `installed`、仅 `darwin-arm64`。`0.1.9` 已发布及其完整性/provenance 回读不等于从 catalog 安装该精确版本，因此不得据此升级条目或增加平台。
 - 公共 `awesome-dsh-plugin` 的收录 PR #3415 已合并，项目已进入 `model` 分类。该列表不记录精确 npm 版本或平台验证字段，因此收录只代表发现入口，不证明任一后续制品的受管安装或平台验收。
-- Windows x64 仍未完成一条闭合的 Registry 精确版本 production inspector、安装、重启、浏览器登录、聊天、工具调用和重新认证链路。`0.1.6` 发布后已确认图片可用，并确认官方 CLI 可在生成登录 URL 前因 OIDC discovery timeout 退出；`0.1.7` 只增加闭合诊断，不是浏览器弹出已修复或已验证的证据。
+- Windows x64 仍未完成一条闭合的 Registry 精确版本 production inspector、安装、重启、浏览器登录、聊天、工具调用和重新认证链路。`0.1.6` 发布后已确认图片可用，并确认官方 CLI 可在生成登录 URL 前因 OIDC discovery timeout 退出；`0.1.7` 只增加闭合诊断，不是浏览器弹出已修复或已验证的证据。`0.1.9` 精确 Registry 安装的 Host/client import/export smoke 已通过，但未覆盖上述真实链路、OAuth、真实账号或真实 xAI 请求。
 
 catalog 条目只能记录实际验证完成的精确版本和平台。当前条目记录：
 

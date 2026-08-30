@@ -3,6 +3,7 @@
 - 状态：**`0.1.9` Search 已发布但设置入口不可用；`0.1.10` 正在修复真实 Host settings 链路（2026-08-30）**
 - 当前 npm 稳定版：`0.1.9`
 - 最近发布：`0.1.9`
+- 最近撤回：`0.1.8`（npm 版本号不可复用）
 - 当前开发分支：`yukiryou/v0.1.10-search-settings-fix`
 
 本文是 `0.1.3` 之后内容类型迭代的单一事实来源。`0.1.0`–`0.1.3` 的历史范围仍以 [ADR-0002](./adr/0002-v0.1-scope.md) 和[产品需求](./01-product-requirements.md)为准。
@@ -28,7 +29,7 @@
 | `0.1.6` | 图片历史 reasoning 兼容与 Windows 官方 CLI 分阶段 deadline | 聚焦回归、macOS/Windows CI、唯一制品与发布回读 | 复用现有图片与认证契约 |
 | `0.1.7` | Windows 运行时诊断、登录失败可解释性与 `IconThinkOutline16` 设置导航图标维护 | 闭合 DTO/reason、lifecycle、UI/图标回归与 Windows 三态真机证据 | [ADR-0009](./adr/0009-runtime-diagnostics-and-login-failures.md) |
 | `0.1.8`（已撤回） | sidebar quota 维护；不含 Search | 发布后撤回；npm 号码已消耗且不得复用 | 见 `0.1.8` 撤回说明 |
-| `0.1.9`（已发布） | 默认关闭的 Web Search / X Search 协议与页面；Host namespace 遗漏导致开关不可用 | 唯一制品已发布；确认功能集成缺口 | [ADR-0010](./adr/0010-default-off-web-x-search.md) 与固定 Proxy 证据 |
+| `0.1.9`（已发布） | 默认关闭的 Web Search / X Search 协议与页面；Host namespace 遗漏导致开关不可用 | 固定 Proxy、双平台 CI、隔离 Harness、唯一制品与 Registry 回读均已关闭；发布后确认功能集成缺口 | [ADR-0010](./adr/0010-default-off-web-x-search.md) 与固定 Proxy 证据 |
 | `0.1.10` 候选 | 修复 `llm-grok` 注册与按调用读取 Search 设置 | 真实 SettingsProvider/LLM 回归、隔离安装、双平台 CI、唯一制品 | [ADR-0010](./adr/0010-default-off-web-x-search.md) 的发布后修正 |
 | 再后续版本 | 默认关闭的图片生成 | Proxy 返回可有界提交到 Harness attachment 的内联结果 | ADR-0011 |
 
@@ -134,20 +135,22 @@ const request = await requestCompiler.compile(options, preparedRoute)
 - 本版不新增模型能力、Responses wire、认证 origin 或 Search runtime；Windows 可访问 discovery 时由官方 CLI 实际弹出浏览器仍是发布门禁，不得由自动化或图标变更替代。
 - 最终 release commit `68f6b474bd860b829f03e7712ec79e8afe2b9b8d` 的唯一 64 文件、167,970-byte tarball 已由 Trusted Publisher run `33226665968` 发布；npm `latest=0.1.7`，Registry、Release 与本地制品逐字节一致，签名与 provenance 已验证。
 
-## 7. `0.1.9`：默认关闭的 Web/X Search
+## 7. `0.1.9`：已发布默认关闭的 Web/X Search
 
 - 两个独立开关默认关闭；关闭时 request wire 不包含 server tool。
 - 固定 CLI Chat Proxy 的 Web、X、双开与生产 function → `web_search` 顺序 Web+function 四组脱敏协议观察已完成；实现只允许实测 lifecycle，详见[证据页](./13-upstream-search-evidence.md)。
 - request 与 response receipt 由同一深模块绑定；精确 `grok-4.6` 之外失败关闭，Web/X 远端调用产生零 Harness tool-call chunk。
 - 搜索词、远端检索、额外用量、citation 和 prompt injection 风险必须在 UI 与安全文档中就近披露。
-- 协议、双平台 CI、隔离 fixture 与唯一制品发布门禁均完成；但隔离 UI 使用合成 ready scope，Host Config 测试也只覆盖 startup config，未发现真实 `llm-grok` namespace 没有注册。发布后的真实页面因此失败关闭为不可用。
+- 本地精确 Node 24 全量测试、生产依赖审计、69 文件 dry-run pack、生成 bundle/diff/秘密模式门禁已通过；候选与 main 合并提交的双平台 CI、隔离 Web Harness 四场景验收也已完成。隔离验收不覆盖浏览器手工对话、Agent/session loop、OAuth、真实账号/真实 xAI 请求或 Windows 真机。
+- 最终 release commit `a0af7b74882546dc3d9477b8f6c1494935e6bfb4` 的 CI run `33295408650` 全绿；唯一 69 文件、190,049-byte tarball 的 unpacked size 为 603,475 bytes，SHA-256 为 `78c73c95ea71d66cad6e6146fed41c281f1c8b29f60353e3f20247ec23833210`，SRI 为 `sha512-GeXQg3qedCGZz9D5MMaHd8Afe5Bn0nxjG+PQmKOB2AxB3m6IiGA07PMD77dEAOJVbAzKk0SnxAOKTZMTQFtuYg==`。Trusted Publisher run `33295761336` 完成，npm `latest=0.1.9`，Registry、Release 与本地制品逐字节一致。精确 Registry 安装的 Host/client import/export smoke 通过；精确安装审计图汇总 71 个已验证签名与 3 个 attestations，本包 attestations endpoint 返回 2 项，SLSA provenance 精确绑定 tag、workflow、commit 与 release run。
+- 上述协议与供应链门禁均已完成；但隔离 UI 使用合成 ready scope，Host Config 测试也只覆盖 startup config，未发现真实 `llm-grok` namespace 没有注册。发布后的真实页面因此失败关闭为不可用。
 
 ### `0.1.10` 修复切片
 
 - 使用 Harness canonical settings module 注册 `llm-grok`，默认值、组合配置和用户层按标准顺序解析；无 settings service 时仍使用组合配置。
 - Adapter 在调用开始且首次目录 await 前冻结策略；设置更新只影响后续调用，不改变已准备或在途请求。
 - 不改变 Search descriptor、响应 lifecycle、模型 allowlist、citation 或 replay 规则；本版不新增能力。
-- 发布前必须补齐真实 SettingsProvider/LLM 回归、真实页面可写 smoke、隔离安装、双平台 CI 与唯一制品证据。
+- 真实 SettingsProvider/LLM 回归、真实页面可写 smoke 与候选隔离安装已经完成；发布前仍需关闭双平台 CI、main CI 与最终唯一制品门禁。
 
 ## 8. 后续：默认关闭的图片生成
 
@@ -163,4 +166,4 @@ const request = await requestCompiler.compile(options, preparedRoute)
 - ACP、`grok -p` Headless、Linux / macOS x64 发布承诺。
 - 厂商 `code_execution`；Harness 已有本地工具权限层。
 
-English summary: `0.1.9` is the current npm release. Its Search protocol, dual-platform CI, isolated fixture acceptance, exact artifact, Registry signature, and provenance completed, but the Host omitted the `llm-grok` settings namespace and the real controls therefore remain unavailable. The `0.1.10` candidate is a focused integration repair: canonical namespace registration plus one policy snapshot per new call before model discovery. It does not change authentication, Search wire rules, image input, or platform support. Real xAI Search and network-reachable browser launch on a physical Windows device remain separate acceptance boundaries.
+English summary: `0.1.9` is the current stable npm release from commit `a0af7b74882546dc3d9477b8f6c1494935e6bfb4`; version `0.1.8` was briefly published for sidebar-quota maintenance and then withdrawn, and its npm version number remains unusable. The unique 69-file, 190,049-byte artifact has an unpacked size of 603,475 bytes, SHA-256 `78c73c95ea71d66cad6e6146fed41c281f1c8b29f60353e3f20247ec23833210`, and SRI `sha512-GeXQg3qedCGZz9D5MMaHd8Afe5Bn0nxjG+PQmKOB2AxB3m6IiGA07PMD77dEAOJVbAzKk0SnxAOKTZMTQFtuYg==`. Final CI run `33295408650` and Trusted Publisher run `33295761336` passed; npm `latest=0.1.9`, and the Registry, GitHub Release, and local artifacts are byte-identical. The exact Registry Host/client import/export smoke passed. Its exact-install audit graph reported 71 verified signatures and 3 attestations, while this package's attestations endpoint returned 2; SLSA provenance binds the tag, workflow, commit, and release run. The published Host omitted the `llm-grok` settings namespace, so the real controls remain unavailable. The `0.1.10` candidate is a focused integration repair: canonical namespace registration plus one policy snapshot per new call before model discovery. Its real SettingsProvider/LLM tests, writable-page smoke, and candidate isolated install passed; dual-platform CI and the final exact artifact remain pending. It does not change authentication, Search wire rules, image input, or platform support. Real xAI Search and network-reachable browser launch on a physical Windows device remain separate acceptance boundaries.

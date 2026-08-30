@@ -6,6 +6,7 @@
 当前 npm 发布线：`dsh-grok-provider@0.1.9`
 当前源码候选：`dsh-grok-provider@0.1.10`
 版本分支：`yukiryou/v0.1.10-search-settings-fix`
+发布基线：`yukiryou/main@a0af7b74882546dc3d9477b8f6c1494935e6bfb4`
 内容类型路线：已冻结于 [能力路线图](./11-capability-roadmap.md)；`0.1.9` 单独加入 Web/X Search，`0.1.10` 是可用设置链路修复，不新增内容类型。
 
 ## 已实现
@@ -148,7 +149,10 @@ Windows x64 真机不再是 `0.1.0` 预发布阻断项。首次发布后必须�
 - 只有精确 `grok-4.6` route 支持 Search。Harness functions 后依次追加 `web_search`、`x_search`，共同受 128 项和 16 MiB 上限约束；不支持模型在 Responses POST 前返回 `UNSUPPORTED_CONTENT`。
 - 固定 Proxy 的 Web、X、双开与生产 function → `web_search` 顺序 Web+function 四组脱敏观察已完成。Web 使用标准 search lifecycle；X 使用四项闭合的 `custom_tool_call` 名称。Search 事件产生零 Harness tool-call chunk，结构化 citation 有界校验后丢弃，观察到 Search 后不保存 encrypted reasoning replay。
 - 精确 Node `24.19.0` 本地全量测试已通过：221 项、219 pass、0 fail、2 项 Windows-only skip；生产依赖审计为 0 漏洞，干净提交的 dry-run pack 为 69 个文件，生成 bundle 一致性、diff 与秘密模式扫描通过。
-- 候选、main CI 与隔离协议场景均曾通过，但这些测试向客户端注入了合成的 ready settings scope，只证明 startup Config → request，并未证明真实 Host namespace 存在。最终 `v0.1.9` release commit 为 `a0af7b74882546dc3d9477b8f6c1494935e6bfb4`；唯一制品、Trusted Publisher、Registry signature 与 provenance 均已验证，功能验收缺口不代表制品损坏。
+- 候选 head `402920fa0f5eb0b543a09a597ada0b2dd9661020` 的 push/PR CI、代码 PR #20 合并提交 `89297ad5c30e1edd94936b52fbe89d0331aaddf5` 的 main CI，以及隔离 Web Harness 默认关闭、Web-only、X-only、function → `web_search` Mixed 四场景验收均已通过。隔离 fetch 无 passthrough；浏览器手工对话、Agent/session loop、OAuth、真实账号/真实 xAI 请求和 Windows 真机不由此覆盖。
+- 发布证据 PR #21 合并后的最终 release commit 为 `a0af7b74882546dc3d9477b8f6c1494935e6bfb4`；CI run `33295408650` 全绿。唯一 `dsh-grok-provider-0.1.9.tgz` 含 69 个文件、190,049 bytes，unpacked size 为 603,475 bytes，SHA-256 为 `78c73c95ea71d66cad6e6146fed41c281f1c8b29f60353e3f20247ec23833210`，SRI 为 `sha512-GeXQg3qedCGZz9D5MMaHd8Afe5Bn0nxjG+PQmKOB2AxB3m6IiGA07PMD77dEAOJVbAzKk0SnxAOKTZMTQFtuYg==`。
+- 不可变 `v0.1.9`、GitHub Release 与 Trusted Publisher run `33295761336` 已完成；Registry、Release 与本地制品逐字节一致，npm `latest=0.1.9`。精确 Registry 安装的 Host/client import/export smoke 通过；精确安装审计图汇总 71 个已验证签名与 3 个 attestations，本包 attestations endpoint 返回 2 项，SLSA provenance 精确绑定 tag、workflow、commit 与 release run。
+- 上述候选与隔离协议测试向客户端注入了合成的 ready settings scope，只证明 startup Config → request，并未证明真实 Host namespace 存在。发布后真实页面确认功能集成缺口；它不代表制品损坏，也不会通过覆盖或重发 `0.1.9` 修复。
 
 ## `0.1.10` 候选状态
 
