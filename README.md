@@ -4,11 +4,11 @@
 
 让 DeepSeek Harness 使用你已登录的官方 Grok Build 账号：动态模型发现、流式推理、图片输入、可选 Web/X Search、工具调用，以及账号额度与模型能力面板。
 
-> 非官方社区项目，与 xAI 或 DeepSeek Harness 官方无隶属关系。当前稳定版及 npm Registry 的 `latest` 均为 `1.0.0`。源码正在准备尚未发布的 `1.0.1` 修复候选；`0.1.8` 曾发布后撤回且版本号不可复用。
+> 非官方社区项目，与 xAI 或 DeepSeek Harness 官方无隶属关系。当前稳定版、源码发布版及 npm Registry 的 `latest` 均为 `1.0.1`；`0.1.8` 曾发布后撤回且版本号不可复用。
 
-当前源码候选版为 `1.0.1`；npm Registry 的 `latest` 为 `1.0.0`。在 `1.0.1` 制品冻结、另行获得精确发布授权并完成 Registry 回读前，请继续安装 `1.0.0`。
+当前源码发布版为 `1.0.1`；唯一授权制品、GitHub Release、npm Registry、签名、attestations 与 SLSA provenance 已完成回读。
 
-`1.0.1` 候选修复另一类真实 Search 失败：启用 xAI server `web_search` / `x_search` 时，Harness 同名 function definitions 与 server tools 共存会被固定 Proxy 以 HTTP 400 拒绝。候选先完整验证全部 functions，再只过滤已启用的同名 wire definition；历史 function calls/results 保留。SSE 层也会透传 transport error，使 HTTP 400 显示为 `PROVIDER_ERROR`，而不是误报 `INVALID_RESPONSE`。
+`1.0.1` 修复另一类真实 Search 失败：启用 xAI server `web_search` / `x_search` 时，Harness 同名 function definitions 与 server tools 共存会被固定 Proxy 以 HTTP 400 拒绝。Provider 先完整验证全部 functions，再只过滤已启用的同名 wire definition；历史 function calls/results 保留。SSE 层也会透传 transport error，使 HTTP 400 显示为 `PROVIDER_ERROR`，而不是误报 `INVALID_RESPONSE`。
 
 ## 它解决什么问题
 
@@ -19,7 +19,7 @@
 | 模型 | 运行时读取账号可见的全部 Grok Build 模型，不维护静态模型白名单 |
 | 对话 | Responses 流式文本、reasoning、加密 reasoning replay、usage 与 finish reason |
 | 图片 | 仅精确 `grok-4.6` 接收 Harness attachment 中有界的 JPEG/PNG 图片；`grok-4.5` 与其他模型保持 text-only |
-| 搜索 | 已发布 `1.0.0` 为精确 `grok-4.6` 提供默认关闭的 Web/X Search；`1.0.1` 候选解决 server Search 与 Harness 同名 function definition 的 HTTP 400 冲突 |
+| 搜索 | 已发布 `1.0.1` 为精确 `grok-4.6` 提供默认关闭的 Web/X Search，并解决 server Search 与 Harness 同名 function definition 的 HTTP 400 冲突 |
 | 工具 | 将 function call 交回 Harness 权限层；Provider 本身不执行工具，关闭对应 Search 开关时保留本地 `web_search` / `x_search` |
 | 账户面板 | 登录状态、每周/月额度、重置时间、动态模型能力与 reasoning 档位 |
 | 界面 | Web 设置页中英文切换；TUI 提供闭合的 `/grok` 命令 |
@@ -47,7 +47,7 @@ grok models
 从 npm 安装已发布并完成 Registry 回读的精确版本：
 
 ```sh
-dsh plugin --profile web add dsh-grok-provider@1.0.0
+dsh plugin --profile web add dsh-grok-provider@1.0.1
 dsh web
 ```
 
@@ -134,9 +134,10 @@ dsh web
 
 ## 项目来源与发现
 
-- npm 当前稳定版：[dsh-grok-provider@1.0.0](https://www.npmjs.com/package/dsh-grok-provider/v/1.0.0)（唯一制品、双平台 CI、签名、attestations 与 provenance 已验证）
-- GitHub 最近发行版与校验值：[v1.0.0](https://github.com/yoshino-xiao7/dsh-grok-provider/releases/tag/v1.0.0)
-- 发布证据：release commit `c6548199582b122f1d285422eabea0205eaf602f`，annotated tag object `192561cda1ac58cbc4077f0de8fa614dff9a5557` peel 至该提交，final CI run [`33308603394`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33308603394)，Trusted Publisher run [`33309083806` attempt 1](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33309083806/attempts/1)。仓库所有者明确授权的唯一 tarball 含 72 个文件、226,704 bytes，unpacked size 715,014 bytes；SHA-1 为 `50e5d898dba241d1e19def7705db216e3060b892`，SHA-256 为 `30cd83dad77f7d2611126b3c4737c8fabffeae79f385fa623e61dcecfe39f5e2`，SRI 为 `sha512-WL2f6Kfg5yT5nNf1p4//mLSajCnZttL/pDR3BISrFgSGtZd9DEJlnibq08ETz503n1wHIdCBcU/ICMPG9K4vOw==`。冻结候选、GitHub Release 与 npm Registry 制品逐字节一致；Node 24 Registry 隔离安装的 Host `name`/`apply` 与 client `id` smoke 通过。`npm audit signatures` 确认安装图中 11 个包具有已验证 Registry 签名、2 个包具有已验证 attestations；本包公开 metadata 包含 1 个 Registry signature、2 个 attestations，provenance 精确绑定 `release.yml`、`v1.0.0`、release commit 与 publish run。
+- npm 当前稳定版：[dsh-grok-provider@1.0.1](https://www.npmjs.com/package/dsh-grok-provider/v/1.0.1)（唯一制品、双平台 CI、签名、attestations 与 provenance 已验证）
+- GitHub 最近发行版与校验值：[v1.0.1](https://github.com/yoshino-xiao7/dsh-grok-provider/releases/tag/v1.0.1)
+- 发布证据：release commit `3c25a53571531e35ac888df16df4fe6c01849e85`，annotated tag object `ab79b1bb1e408a0112166cadc26761a327819c3f` peel 至该提交，final CI run [`33312946205`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33312946205)，Trusted Publisher run [`33313699790` attempt 1](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33313699790/attempts/1)。仓库所有者明确授权的唯一 tarball 含 73 个文件、240,904 bytes，unpacked size 748,888 bytes；SHA-1 为 `9e6449160947104e8dbb71b7201c53e81b073f83`，SHA-256 为 `e3e15646d38de23c32c71ed759f9c10be9b2d790d4b10b4b8dfe59a44fbfef9f`，SRI 为 `sha512-Bm1qjJQ9i7CWT0oWah7QKDVBP8dR2YQtvEEZGE/BOSwZCo8sZbrW2v2QSfUfLsOLHcQXFZZ0jlDCAztr1m/q+A==`。冻结候选、GitHub Release 与 npm Registry 制品逐字节一致；Node `24.19.0` / npm `11.5.1` 的 Registry 锁定隔离安装通过 Host `name`/`apply` 与 client `id`/factory smoke，生产依赖审计为 0 漏洞。`npm audit signatures` 确认安装图中 11 个包具有已验证 Registry 签名、2 个包具有已验证 attestations；本包公开 metadata 包含 1 个 Registry signature、2 个 attestations，SLSA provenance 精确绑定 `release.yml`、`refs/tags/v1.0.1`、release commit 与 publish run。
+- npm 页面文档提示：精确 `1.0.1` tarball 在发布前冻结，内嵌 README 仍是候选态文字；已发布字节不能覆盖。本 GitHub README 已在发布后修正，npm 页面将由后续递增版本随新制品纠正。
 - GitHub 社区发现：仓库已添加 DeepSeek Harness 官方推荐的 `dsh-plugin` 与 `dsh` Topics
 - YukiRyou 受管来源：[deepseek-yukiryou-plugin-catalog](https://github.com/yoshino-xiao7/deepseek-yukiryou-plugin-catalog)，当前仍锁定已完成真机验收的 `dsh-grok-provider@0.1.0`，且只标记 `darwin-arm64`
 
@@ -144,13 +145,13 @@ dsh web
 
 ## 兼容性与范围
 
-### `1.0.1` 候选修复边界
+### `1.0.1` 修复边界
 
 - 根因不是模型、账号、Search 响应形状或 42 项工具总数，而是启用 server Search 时，同名 Harness function definition 与 `{ type: "web_search" }` / `{ type: "x_search" }` 共存；固定 Proxy 对该组合返回 HTTP 400。
 - 编译器先完整验证 40 个源 functions，再仅过滤与已启用 server Search 同名的 wire definitions。关闭对应开关时，本地工具保持原样；已有会话中的历史 `function_call` / `function_call_output` 也不删除或改名。
 - 最终 request receipt 拒绝 function/server-tool 名称交集；SSE parser 保留 source transport error，HTTP 400 因而映射到 `PROVIDER_ERROR`，真正的 SSE/协议错误仍为 `INVALID_RESPONSE`。
 - 一次经明确授权的脱敏真实账号回放使用原失败 X 会话结构：8 条 messages、40 个 source functions、wire 38 functions + 2 server tools、保留 2 个历史 reserved-name calls；只执行 1 次 models GET 和 1 次 Responses POST，接收 314 events 并以 `response.completed` 闭合。未保存消息/回复正文、URL、身份或凭据。
-- 精确 Node `24.19.0` 本地全量门禁为 253 tests、251 pass、0 fail、2 platform skips；生产依赖审计为 0 漏洞，隔离 cache 的 dry-run pack 列出 73 个文件，秘密模式扫描只命中显式 fixture canary 及其检查表记录。代码 PR #31 的 push/PR CI、merge commit `0c60200e12c3b8455331f31a317ece9b1945c458` 及 main CI run `33312621786` 已在 macOS 14 / Windows 2022 全绿。上述证据仍不代表最终 release commit、冻结制品、隔离安装、发布、供应链回读或 Windows 真机浏览器登录已经完成。候选详情见 [`docs/releases/v1.0.1.md`](docs/releases/v1.0.1.md)。
+- 精确 Node `24.19.0` 本地全量门禁为 253 tests、251 pass、0 fail、2 platform skips；生产依赖审计为 0 漏洞，隔离 cache 的 dry-run pack 列出 73 个文件，秘密模式扫描只命中显式 fixture canary 及其检查表记录。代码 PR #31、main CI run `33312621786`、最终 release commit、双平台 final CI、唯一授权制品、隔离安装、Registry、签名、attestations 与 provenance 回读均已完成；这些证据仍不代表 Windows 真机浏览器登录已经完成。详情见 [`docs/releases/v1.0.1.md`](docs/releases/v1.0.1.md)。
 
 ### `1.0.0` 修复边界
 
@@ -161,12 +162,12 @@ dsh web
 - 最终源码完成两层脱敏真实账号复验：原始 Web/X 协议探针各 1 次请求、各 64 events，分别观察到对应 Search 且终态 `completed`；生产 adapter 共完成 5 次 Responses，direct Web/X 均为 `stop`，Harness 形状的本地 `x_search` call/result 续跑三轮依次为 `tool-calls`、`tool-calls`、`stop`，前两轮各 1 次本地调用。该续跑没有在同一 wire request 中同时放入 Harness `x_search` function definition 与 xAI `{ type: "x_search" }` server descriptor；`1.0.1` 后续才隔离出这一 HTTP 400 冲突。未保存结果、URL、prompt、身份或凭据；这些不是发布、OAuth 或 Windows 真机证据。
 - manifest/lock 已同步为 `1.0.0`；Node 24 全量测试为 245 项、243 pass、0 fail、2 项平台跳过，生产依赖审计为 0 漏洞，确定性 build/bundle、72 项 dry-run pack、秘密模式扫描与 diff 检查均通过。代码 PR #28、main CI run [`33308371009`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33308371009)、最终 release commit、双平台 final CI、唯一制品、精确授权及 Registry/signature/attestation/provenance 回读均已完成。
 
-| 项目 | `1.0.0` 已发布状态 |
+| 项目 | `1.0.1` 已发布状态 |
 | --- | --- |
 | DeepSeek Harness | 精确支持 `0.1.1-rc.2` |
 | Node.js | `>=24.19.0` |
-| macOS arm64 | 图片发送已完成真实 Harness 验证；`1.0.0` 聚焦回归、脱敏真实 Search 探针、final macOS 14 CI 与唯一制品验收均通过 |
-| Windows x64 | `1.0.0` final Windows 2022 CI 与现有 slow-fake 通过；网络可达时由官方 CLI 生成 URL 并打开浏览器，该路径仍未完成 Windows 真机验收 |
+| macOS arm64 | 图片发送已完成真实 Harness 验证；`1.0.1` 聚焦回归、脱敏真实 Search 回放、final macOS 14 CI 与唯一制品验收均通过 |
+| Windows x64 | `1.0.1` final Windows 2022 CI 与现有 slow-fake 通过；网络可达时由官方 CLI 生成 URL 并打开浏览器，该路径仍未完成 Windows 真机验收 |
 | macOS x64 / Linux | 不支持 |
 | Grok CLI | 不锁完整版本；严格校验官方路径、`login --oauth` 能力与生产 OIDC 凭据契约 |
 | 模型 | 当前账号目录中 backend 已被严格 codec 支持的全部模型 |
@@ -281,6 +282,7 @@ npm run pack:check
 - [x] 发布 `0.1.10`：`llm-grok` 注册、按调用读取设置、唯一制品、双平台 CI、签名与 provenance 已完成
 - [x] 发布 `0.1.11`：修复 High Effort + Web Search reasoning 生命周期兼容；唯一制品、双平台 final CI、精确授权、Registry、签名、attestations 与 provenance 回读均已完成
 - [x] 发布 `1.0.0`：修复多次严格空 reasoning ID 复用和完成态 Web Search `open_page` action；唯一制品、双平台 final CI、精确授权、Registry、签名、attestations 与 provenance 回读均已完成
+- [x] 发布 `1.0.1`：修复 server Search 与 Harness 同名 function definition 的 HTTP 400 冲突，并保留真实 transport error 分类；唯一制品、双平台 final CI、精确授权、Registry、签名、attestations 与 provenance 回读均已完成
 - [ ] 再后续独立切片：默认关闭的图片生成（只收内联结果，提交 Harness attachment）
 - [ ] 完成 Windows x64 独立真机验收并按需发布后续稳定修复版
 
