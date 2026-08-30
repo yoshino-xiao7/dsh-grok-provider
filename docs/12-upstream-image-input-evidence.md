@@ -95,4 +95,4 @@ Node 24 协议测试使用内存 attachment store 和合成 jpeg/png 字节，�
 
 `0.1.6` 已从 release commit `93519f77adc4ce2edfc1bbd27bce9e44d4805da6` 正式发布：唯一 tarball 为 60 个文件、145,620 bytes，SHA-256 `fd660d91216086496a4d189cb7e60b3445079913c97da41fccf805e3086c0347`，npm SRI `sha512-Vsmzm+8tgmHCuS8WKfzicjgauupY9FZ5B/V+55KbCTggBrThDDArjeS2bwHUVpjd92CvO47ya3SHELdWtTijAQ==`；Trusted Publisher run `33177647530` 完成，Registry 签名与 provenance 验证通过。发布后仓库所有者确认该精确版本的图片输入可用。
 
-当前 `0.1.7` 候选只增加 Windows 运行时诊断、登录失败可解释性与 `IconThinkOutline16` 设置导航图标维护，不修改上述图片能力边界、attachment 投影或 wire。Web/X Search 顺延到 `0.1.8`。
+已发布 `0.1.7` 只增加 Windows 运行时诊断、登录失败可解释性与 `IconThinkOutline16` 设置导航图标维护。曾发布后撤回的 sidebar quota `0.1.8` 同样不修改图片边界；该 npm 版本号已消耗且不承载 Search。当前 `0.1.9` 候选独立增加默认关闭的 Web/X Search，但不修改上述图片模型集合、attachment 投影、资源上限或图片 wire。

@@ -2,9 +2,9 @@
 
 [简体中文](README.md) | [English](README.en.md)
 
-让 DeepSeek Harness 使用你已登录的官方 Grok Build 账号：动态模型发现、流式推理、工具调用，以及账号额度与模型能力面板。
+让 DeepSeek Harness 使用你已登录的官方 Grok Build 账号：动态模型发现、流式推理、图片输入、可选 Web/X Search、工具调用，以及账号额度与模型能力面板。
 
-> 非官方社区项目，与 xAI 或 DeepSeek Harness 官方无隶属关系。当前源码候选版本为 `0.1.7`；npm Registry 的 `latest` 与最近发布的稳定版本均为 `0.1.6`。项目不再发行预发行版；正式版缺陷通过新的递增稳定版本修复。
+> 非官方社区项目，与 xAI 或 DeepSeek Harness 官方无隶属关系。当前源码候选版本为 `0.1.9`。`0.1.8` 曾发布后撤回，npm 版本号不可复用；npm Registry 的 `latest` 与当前可安装的稳定基线仍为 `0.1.7`。项目不再发行预发行版；正式版缺陷通过新的递增稳定版本修复。
 
 ## 它解决什么问题
 
@@ -15,6 +15,7 @@
 | 模型 | 运行时读取账号可见的全部 Grok Build 模型，不维护静态模型白名单 |
 | 对话 | Responses 流式文本、reasoning、加密 reasoning replay、usage 与 finish reason |
 | 图片 | 仅精确 `grok-4.6` 接收 Harness attachment 中有界的 JPEG/PNG 图片；`grok-4.5` 与其他模型保持 text-only |
+| 搜索 | `0.1.9` 候选为精确 `grok-4.6` 提供默认关闭、可分别开启的 Web Search / X Search；远端 lifecycle 不伪装成本地工具 |
 | 工具 | 将 function call 交回 Harness 权限层；Provider 本身不执行工具 |
 | 账户面板 | 登录状态、每周/月额度、重置时间、动态模型能力与 reasoning 档位 |
 | 界面 | Web 设置页中英文切换；TUI 提供闭合的 `/grok` 命令 |
@@ -35,14 +36,14 @@ grok --version
 grok models
 ```
 
-首次运行 Grok CLI 会打开浏览器登录。插件只支持官方默认的 `~/.grok`（Windows 为 `%USERPROFILE%\.grok`）目录。
+当网络可达且 OIDC discovery 成功时，首次运行 Grok CLI 会打开浏览器登录。插件只支持官方默认的 `~/.grok`（Windows 为 `%USERPROFILE%\.grok`）目录。
 
 ### 2. 安装 Provider
 
-`0.1.7` 发布后，从 npm 安装该精确版本：
+`0.1.9` 发布后，从 npm 安装该精确版本：
 
 ```sh
-dsh plugin --profile web add dsh-grok-provider@0.1.7
+dsh plugin --profile web add dsh-grok-provider@0.1.9
 dsh web
 ```
 
@@ -65,6 +66,7 @@ Web 设置页展示：
 - CLI 缺失或无效时的官方安装入口与“重新检测”操作；
 - 已使用/剩余额度和真实周期重置时间；
 - 当前账号可见模型、上下文窗口、reasoning 档位，以及图片输入、streaming 与 tool capability。
+- 默认关闭且相互独立的 Web Search / X Search 开关，以及远端检索、额外用量、citation 和 prompt injection 风险提示。
 
 当 protobuf-backed billing 返回完整的 weekly/monthly 周期但省略零值百分比时，页面会恢复为“已使用 0% / 剩余 100%”；其他不完整响应保持未知，不伪造额度。
 
@@ -128,8 +130,8 @@ dsh web
 
 ## 项目来源与发现
 
-- npm 当前稳定版：[dsh-grok-provider@0.1.6](https://www.npmjs.com/package/dsh-grok-provider/v/0.1.6)
-- GitHub 最近发行版与校验值：[v0.1.6](https://github.com/yoshino-xiao7/dsh-grok-provider/releases/tag/v0.1.6)
+- npm 当前稳定版：[dsh-grok-provider@0.1.7](https://www.npmjs.com/package/dsh-grok-provider/v/0.1.7)
+- GitHub 最近发行版与校验值：[v0.1.7](https://github.com/yoshino-xiao7/dsh-grok-provider/releases/tag/v0.1.7)
 - GitHub 社区发现：仓库已添加 DeepSeek Harness 官方推荐的 `dsh-plugin` 与 `dsh` Topics
 - YukiRyou 受管来源：[deepseek-yukiryou-plugin-catalog](https://github.com/yoshino-xiao7/deepseek-yukiryou-plugin-catalog)，当前仍锁定已完成真机验收的 `dsh-grok-provider@0.1.0`，且只标记 `darwin-arm64`
 
@@ -137,19 +139,21 @@ dsh web
 
 ## 兼容性与范围
 
-| 项目 | `0.1.7` 候选状态 |
+| 项目 | `0.1.9` 候选状态 |
 | --- | --- |
 | DeepSeek Harness | 精确支持 `0.1.1-rc.2` |
 | Node.js | `>=24.19.0` |
-| macOS arm64 | 已完成真实网络与隔离 Harness 验收 |
-| Windows x64 | 代码与 slow-fake 覆盖；正式候选仍需通过 Windows CI。网络可达时由官方 CLI 生成 URL 并打开浏览器，`0.1.7` 候选尚未完成该路径的 Windows 真机验收 |
+| macOS arm64 | 已发布的 `0.1.7` 基线已完成真实网络与隔离 Harness 验收；`0.1.9` Search 仍需完成隔离 Harness 验收 |
+| Windows x64 | 代码与 slow-fake 覆盖；`0.1.9` 正式候选仍需通过 Windows CI。网络可达时由官方 CLI 生成 URL 并打开浏览器，该路径仍未完成 Windows 真机验收 |
 | macOS x64 / Linux | 不支持 |
 | Grok CLI | 不锁完整版本；严格校验官方路径、`login --oauth` 能力与生产 OIDC 凭据契约 |
 | 模型 | 当前账号目录中 backend 已被严格 codec 支持的全部模型 |
 
-`0.1.7` 沿用已发布 `0.1.6` 的图片边界：只为精确的 `grok-4.6` 开启图片输入；`grok-4.5` 与其他动态发现的模型继续按 text-only 处理。`0.1.6` 的图片发送已在真实 Harness 对话中确认可用，`0.1.7` 不改变模型集合、图片投影或 Responses wire。账户面板从同一模型目录投影能力标签，因此只有图片模型显示“图片输入”。图片只能来自 Harness attachment service 的已验证 JPEG/PNG 投影，支持普通用户内容和一层工具结果中的图片，并按 xAI 官方 Responses 图片示例固定使用 `detail:"high"`；不接受 URL、文件路径、file ID 或调用方预制的 data URL。普通 user/system 历史中的私有 reasoning 会被省略并保留相邻可见文本，因此 `subagent-settled` 历史和同消息 reasoning 不再阻断图片请求。
+`0.1.9` 沿用已发布 `0.1.7` 的图片边界：只为精确的 `grok-4.6` 开启图片输入；`grok-4.5` 与其他动态发现的模型继续按 text-only 处理。图片发送已在真实 Harness 对话中确认可用。图片只能来自 Harness attachment service 的已验证 JPEG/PNG 投影，支持普通用户内容和一层工具结果中的图片，并固定使用 `detail:"high"`；不接受 URL、文件路径、file ID 或调用方预制的 data URL。普通 user/system 历史中的私有 reasoning 会被省略并保留相邻可见文本。
 
-每张投影图片最多 4 MiB、16,777,216 像素且任一边不超过 8192px；每次请求最多保留 8 张、投影字节合计最多 8 MiB。超限时按全局最旧优先移除图片并保留 Harness 的文本占位，最终 JSON 仍受 16 MiB 上限约束。Web/X Search、图片生成、任意文件下载、API Key 模式、多账号、企业 OIDC、ACP 与 Headless agent 封装仍不在本版本范围内；后续切片见[能力路线图](docs/11-capability-roadmap.md)。
+每张投影图片最多 4 MiB、16,777,216 像素且任一边不超过 8192px；每次请求最多保留 8 张、投影字节合计最多 8 MiB。超限时按全局最旧优先移除图片并保留 Harness 的文本占位，最终 JSON 仍受 16 MiB 上限约束。
+
+`0.1.9` 候选只为精确 `grok-4.6` 增加两个默认关闭的 Search 开关。开启后，普通对话内容以及模型据此生成的检索词会交给 xAI，并可能产生额外用量。Web/X 是服务端已执行的检索过程，不会变成 Harness 本地工具调用；回答中的 citation Markdown 保留为普通文本，结构化 URL 元数据有界校验后丢弃，插件不会打开或下载引用。搜索结果属于不可信远端数据，执行命令或修改文件前应核实来源。图片生成、任意文件下载、API Key 模式、多账号、企业 OIDC、ACP 与 Headless agent 封装仍不在本版本范围内；后续切片见[能力路线图](docs/11-capability-roadmap.md)。
 
 ## 工作原理
 
@@ -175,7 +179,7 @@ dsh-grok-provider Host
 - Host 必须有界读取官方 `auth.json`，其原始文件可能包含 refresh token；解析器不使用、不缓存、不持久化 refresh token，只保留闭合校验所需元数据与短期 access-token lease。
 - 插件不实现 refresh grant；凭据临近过期时，只能有界调用一次官方 `grok models`，再重新读取并验证官方文件。
 - 登录子进程使用固定 argv、过滤后的环境、输出上限、deadline 与取消处理，不通过 shell 启动。
-- 提示词、工具结果以及用户选择发送的图片投影会发往 xAI Grok Build 服务；插件本身不记录这些内容、原图或投影字节。
+- 提示词、工具结果、用户选择发送的图片投影，以及启用 Search 后的检索词会发往 xAI Grok Build 服务；插件本身不记录这些内容、原图、投影字节或 citation URL。
 
 完整边界见[威胁模型](docs/03-security-threat-model.md)。发现安全问题时，请阅读[安全策略](SECURITY.md)，不要在公开 Issue 中提交 token、`auth.json`、个人信息或完整诊断日志。
 
@@ -199,7 +203,7 @@ dsh-grok-provider Host
 
 如果它在 `auth.x.ai/.well-known/openid-configuration` 超时，失败发生在生成登录链接之前，不是 Provider 的浏览器按钮失效。请检查 Windows 的 DNS、HTTPS 出站、防火墙、VPN 与代理；尤其是浏览器使用 PAC/系统代理、CLI 进程却没有 `HTTPS_PROXY` 的情况。不要关闭 TLS 校验，也不要把代理凭据、登录 URL、授权码或 token 提交到 Issue。
 
-`0.1.7` 设置页会及时结算这个已知 discovery 超时并显示“浏览器登录尚未开始”；实际仍在运行的五分钟登录流程可以取消，未知 CLI 输出只显示脱敏的通用错误。这是对失败边界的准确诊断，不是插件自行打开浏览器，也不修复 Windows 的 DNS、代理、防火墙、VPN 或官方 CLI 行为。
+设置页会及时结算这个已知 discovery 超时并显示“浏览器登录尚未开始”；实际仍在运行的五分钟登录流程可以取消，未知 CLI 输出只显示脱敏的通用错误。这是对失败边界的准确诊断，不是插件自行打开浏览器，也不修复 Windows 的 DNS、代理、防火墙、VPN 或官方 CLI 行为。
 
 ### 没有看到某个模型
 
@@ -215,7 +219,7 @@ dsh-grok-provider Host
 
 ### Windows 能用吗
 
-代码与 slow-fake 已覆盖 Windows x64，正式候选仍需通过 Windows CI。官方 CLI 仍负责生成登录 URL 与打开外部浏览器；`0.1.7` 尚未在网络可达的 Windows 真机上确认浏览器弹出，因此不能表述为该问题已经修复或验证。
+代码与 slow-fake 已覆盖 Windows x64，正式候选仍需通过 Windows CI。官方 CLI 仍负责生成登录 URL 与打开外部浏览器；网络可达的 Windows 真机浏览器弹出尚未确认，因此不能表述为该问题已经修复或验证。
 
 ## 开发
 
@@ -250,8 +254,8 @@ npm run pack:check
 - [x] 发布 `0.1.4`：仅精确 `grok-4.6` 图片输入；user/tool-result 红蓝语义 Proxy 门禁与最终 Harness attachment 复验通过，`grok-4.5` 失败关闭为 text-only
 - [x] 发布 `0.1.5`：发布链路、账户面板能力标签与 Provider Runtime 安装回滚维护版；唯一制品、双平台 CI、签名与 SLSA provenance 均已验证
 - [x] 发布 `0.1.6`：图片历史 reasoning 兼容与 Windows 官方 CLI 分阶段 deadline 修复版；图片发送已完成真实 Harness 验证
-- [ ] 发布 `0.1.7`：Provider/CLI 双版本诊断、CLI 安装恢复、OIDC discovery 超时脱敏结算与 `IconThinkOutline16` 设置导航兼容层
-- [ ] `0.1.8` 独立切片：默认关闭、用户分别开启的 Web Search / X Search
+- [x] 发布 `0.1.7`：Provider/CLI 双版本诊断、CLI 安装恢复、OIDC discovery 超时脱敏结算与 `IconThinkOutline16` 设置导航兼容层
+- [ ] 发布 `0.1.9`：默认关闭、用户分别开启的 Web Search / X Search；`0.1.8` 已发布后撤回且 npm 版本号不可复用
 - [ ] 再后续独立切片：默认关闭的图片生成（只收内联结果，提交 Harness attachment）
 - [ ] 完成 Windows x64 独立真机验收并按需发布后续稳定修复版
 

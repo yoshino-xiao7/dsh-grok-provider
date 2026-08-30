@@ -32,6 +32,8 @@ test("the browser bundle registers one localized loopback-only Grok settings sec
   assert.match(source, /使用额度/u)
   assert.match(source, /当前账号可用的模型/u)
   assert.match(source, /call\("dashboard"\)/u)
+  assert.match(source, /settingsScope\.bind\(\{ namespace: "llm-grok", decode:/u)
+  assert.doesNotMatch(source, /localStorage/u)
   assert.doesNotMatch(source, /userId|user_id|subscriptionTier|prepaidBalance/u)
   vm.runInNewContext(source, {
     window: { __ModuleLoader__: { load(value) { definition = value } } },
@@ -54,10 +56,11 @@ test("the browser bundle registers one localized loopback-only Grok settings sec
     assert.equal(id, "react")
     return React
   })
-  assert.deepEqual(Array.from(plugin.inject), ["slots", "locale", "connection"])
+  assert.deepEqual(Array.from(plugin.inject), ["slots", "locale", "connection", "settingsScope"])
 
   const registrations = []
   const dictionaries = []
+  const searchHarness = createSearchSettingsHarness()
   const ctx = {
     connection: { isLoopback: true, rpc: { call() {} } },
     effect(callback) { callback() },
@@ -72,6 +75,7 @@ test("the browser bundle registers one localized loopback-only Grok settings sec
       },
       register(options, component) { registrations.push({ options, component }) },
     },
+    settingsScope: searchHarness.service,
   }
   plugin.apply(ctx)
 
@@ -82,6 +86,12 @@ test("the browser bundle registers one localized loopback-only Grok settings sec
   assert.equal(registrations[0].options.name, "settings.section")
   assert.equal(registrations[0].options.id, "grok-auth")
   assert.equal(typeof registrations[0].component, "function")
+  assert.equal(searchHarness.binding.namespace, "llm-grok")
+  const decoded = searchHarness.binding.decode({ webSearch: true, xSearch: false, futureSetting: true })
+  assert.deepEqual({ ...decoded }, { webSearch: true, xSearch: false })
+  assert.equal(Object.isFrozen(decoded), true)
+  assert.equal(searchHarness.binding.decode({ webSearch: true, xSearch: "false" }), undefined)
+  assert.equal(registrations[0].options.inject().searchSettings, searchHarness.scope)
 })
 
 test("the browser bundle replaces only the Grok settings nav gear and cleans up on unload", async () => {
@@ -183,6 +193,7 @@ test("the browser bundle replaces only the Grok settings nav gear and cleans up 
     assert.equal(id, "react")
     return React
   })
+  const searchHarness = createSearchSettingsHarness()
   const applyPlugin = () => {
     const effects = []
     plugin.apply({
@@ -198,6 +209,7 @@ test("the browser bundle replaces only the Grok settings nav gear and cleans up 
         inject(_name, callback) { callback() },
         register() { return () => {} },
       },
+      settingsScope: searchHarness.service,
     })
     return effects
   }
@@ -382,6 +394,7 @@ test("the model grid renders an image badge only for image-capable models", asyn
   })
   const plugin = definition.factory(() => React)
   const registrations = []
+  const searchHarness = createSearchSettingsHarness()
   plugin.apply({
     connection: { isLoopback: true, rpc: { call() {} } },
     effect(callback) { callback() },
@@ -390,11 +403,13 @@ test("the model grid renders an image badge only for image-capable models", asyn
       inject(_name, callback) { callback() },
       register(_options, component) { registrations.push(component) },
     },
+    settingsScope: searchHarness.service,
   })
 
   const tree = registrations[0]({
     connection: { isLoopback: true, rpc: { call() {} } },
     t: (key) => key,
+    searchSettings: searchHarness.scope,
   })
   const cards = findElements(tree, (node) => node.props.className === "dsh-grok-model")
   assert.equal(cards.length, 2)
@@ -404,6 +419,120 @@ test("the model grid renders an image badge only for image-capable models", asyn
   ).map(textContent)
   assert.equal(badges(cards[0]).includes("image"), true)
   assert.equal(badges(cards[1]).includes("image"), false)
+})
+
+test("the settings page gives bilingual near-use disclosure for both remote Search controls", async () => {
+  const cases = [
+    {
+      locale: "zh",
+      assertions: [/默认关闭/u, /xAI.*远端/u, /仅精确 grok-4\.6 支持，其他模型会失败关闭/u, /搜索词/u, /额外用量/u, /citation/u, /prompt injection/u, /不会打开或下载引用链接/u],
+    },
+    {
+      locale: "en",
+      assertions: [/off by default/iu, /xAI remote search/iu, /Only exact grok-4\.6 is supported; other models fail closed/iu, /search terms/iu, /additional usage/iu, /citations/iu, /prompt injection/iu, /does not open or download citation links/iu],
+    },
+  ]
+
+  for (const expectations of cases) {
+    const fixture = await renderSettingsPage({
+      locale: expectations.locale,
+      status: { generation: 1, available: false, driver: true },
+      diagnostics: { pluginVersion: "0.1.9", cli: { state: "ready", version: "1.0.5" } },
+    })
+    const content = textContent(fixture.tree)
+    for (const assertion of expectations.assertions) assert.match(content, assertion)
+
+    const switches = findElements(fixture.tree, (node) => node.props.role === "switch")
+    assert.equal(switches.length, 2)
+    assert.deepEqual(switches.map((control) => control.props["aria-checked"]), [false, false])
+    assert.deepEqual(switches.map((control) => control.props.disabled), [false, false])
+  }
+})
+
+test("Web Search and X Search persist independently and a failed write preserves the Host value", async () => {
+  const rpcCalls = []
+  const searchHarness = createSearchSettingsHarness({
+    async onSet(field) {
+      if (field === "xSearch") return false
+      return true
+    },
+  })
+  const harness = await createSettingsLifecycleHarness({
+    searchHarness,
+    async rpc(endpoint) {
+      rpcCalls.push(endpoint)
+      if (endpoint === "status") {
+        return { kind: "status", status: { generation: 1, available: false, driver: true } }
+      }
+      if (endpoint === "diagnostics") {
+        return { kind: "diagnostics", diagnostics: { pluginVersion: "0.1.9", cli: { state: "ready", version: "1.0.5" } } }
+      }
+      if (endpoint === "dashboard") return { kind: "dashboard", dashboard: undefined }
+      throw new Error(`Unexpected Grok auth RPC endpoint: ${endpoint}`)
+    },
+  })
+
+  const findSwitch = (label) => findElements(harness.tree(), (node) => (
+    node.props.role === "switch" && String(node.props["aria-label"]).startsWith(label)
+  ))[0]
+  const webSearch = findSwitch("Web Search")
+  const xSearch = findSwitch("X Search")
+  assert.ok(webSearch)
+  assert.ok(xSearch)
+  const initialRpcCount = rpcCalls.length
+
+  await webSearch.props.onClick()
+  await harness.flush()
+  assert.deepEqual(searchHarness.writes, [{ field: "webSearch", value: true }])
+  assert.equal(rpcCalls.length, initialRpcCount, "Search writes do not add an auth RPC")
+  assert.equal(findSwitch("Web Search").props["aria-checked"], true)
+  assert.equal(findSwitch("X Search").props["aria-checked"], false)
+
+  await findSwitch("X Search").props.onClick()
+  await harness.flush()
+  assert.deepEqual(searchHarness.writes, [
+    { field: "webSearch", value: true },
+    { field: "xSearch", value: true },
+  ])
+  assert.equal(rpcCalls.length, initialRpcCount, "a failed Search write does not fall back to an auth RPC")
+  assert.equal(findSwitch("Web Search").props["aria-checked"], true)
+  assert.equal(findSwitch("X Search").props["aria-checked"], false)
+  const alert = findElements(harness.tree(), (node) => node.props.role === "alert")[0]
+  assert.ok(alert)
+  assert.equal(textContent(alert), harness.dictionaries.en.searchSaveFailed)
+  harness.unmount()
+})
+
+test("Search controls fail closed while settings are loading, unavailable, or read-only", async () => {
+  const cases = [
+    { snapshot: { status: "loading" }, message: "searchLoading", checked: [false, false] },
+    { snapshot: { status: "unavailable" }, message: "searchUnavailable", checked: [false, false] },
+    {
+      snapshot: {
+        status: "ready",
+        value: Object.freeze({ webSearch: true, xSearch: false }),
+        writable: false,
+      },
+      message: "searchReadOnly",
+      checked: [true, false],
+    },
+  ]
+
+  for (const fixtureCase of cases) {
+    const fixture = await renderSettingsPage({
+      locale: "en",
+      status: { generation: 1, available: false, driver: true },
+      diagnostics: { pluginVersion: "0.1.9", cli: { state: "ready", version: "1.0.5" } },
+      searchSnapshot: fixtureCase.snapshot,
+    })
+    const switches = findElements(fixture.tree, (node) => node.props.role === "switch")
+    assert.equal(switches.length, 2)
+    assert.deepEqual(switches.map((control) => control.props["aria-checked"]), fixtureCase.checked)
+    assert.deepEqual(switches.map((control) => control.props.disabled), [true, true])
+    assert.equal(textContent(fixture.tree).includes(fixture.dictionaries.en[fixtureCase.message]), true)
+    await switches[0].props.onClick()
+    assert.deepEqual(fixture.searchHarness.writes, [])
+  }
 })
 
 test("the settings page gives bilingual install recovery when the official Grok CLI is missing", async () => {
@@ -786,7 +915,14 @@ test("a fresh ready CLI diagnostic supersedes a historical missing-CLI failure",
   assert.equal(login.props.disabled, false)
 })
 
-async function renderSettingsPage({ locale, status, diagnostics, diagnosticsError = false }) {
+async function renderSettingsPage({
+  locale,
+  status,
+  diagnostics,
+  diagnosticsError = false,
+  searchSnapshot,
+  searchOnSet,
+}) {
   let definition
   const source = await fs.readFile(path.join(root, "dist/client/client.js"), "utf8")
   const rpcCalls = []
@@ -827,6 +963,7 @@ async function renderSettingsPage({ locale, status, diagnostics, diagnosticsErro
   const plugin = definition.factory(() => React)
   const registrations = []
   const dictionaries = {}
+  const searchHarness = createSearchSettingsHarness({ snapshot: searchSnapshot, onSet: searchOnSet })
   const connection = {
     isLoopback: true,
     rpc: {
@@ -861,17 +998,22 @@ async function renderSettingsPage({ locale, status, diagnostics, diagnosticsErro
       inject(_name, callback) { callback() },
       register(_options, component) { registrations.push(component) },
     },
+    settingsScope: searchHarness.service,
   })
   const render = () => {
     hookIndex = 0
-    return registrations[0]({ connection, t: (key) => dictionaries[locale][key] })
+    return registrations[0]({
+      connection,
+      searchSettings: searchHarness.scope,
+      t: (key) => dictionaries[locale][key],
+    })
   }
   render()
   collectEffects = false
   for (const effect of effects) effect()
   await flushAsyncWork()
 
-  return { dictionaries, rpcCalls, tree: render() }
+  return { dictionaries, rpcCalls, searchHarness, tree: render() }
 }
 
 async function flushAsyncWork() {
@@ -880,7 +1022,7 @@ async function flushAsyncWork() {
   }
 }
 
-async function createSettingsLifecycleHarness({ rpc }) {
+async function createSettingsLifecycleHarness({ rpc, searchHarness = createSearchSettingsHarness() }) {
   let definition
   const source = await fs.readFile(path.join(root, "dist/client/client.js"), "utf8")
   const hookSlots = []
@@ -993,12 +1135,17 @@ async function createSettingsLifecycleHarness({ rpc }) {
       inject(_name, callback) { callback() },
       register(_options, component) { registrations.push(component) },
     },
+    settingsScope: searchHarness.service,
   })
 
   const render = () => {
     hookIndex = 0
     dirty = false
-    currentTree = registrations[0]({ connection, t: (key) => dictionaries.en[key] })
+    currentTree = registrations[0]({
+      connection,
+      searchSettings: searchHarness.scope,
+      t: (key) => dictionaries.en[key],
+    })
     const effects = pendingEffects.splice(0)
     for (const effect of effects) {
       const previous = hookSlots[effect.index]
@@ -1022,6 +1169,7 @@ async function createSettingsLifecycleHarness({ rpc }) {
   return {
     dictionaries,
     flush,
+    searchHarness,
     pendingTimerCount: () => timers.size,
     runNextTimer() {
       const entry = timers.entries().next().value
@@ -1036,6 +1184,53 @@ async function createSettingsLifecycleHarness({ rpc }) {
       for (const slot of hookSlots) slot?.cleanup?.()
       timers.clear()
     },
+  }
+}
+
+function createSearchSettingsHarness({
+  snapshot = {
+    status: "ready",
+    value: Object.freeze({ webSearch: false, xSearch: false }),
+    writable: true,
+  },
+  onSet,
+} = {}) {
+  let current = snapshot
+  let binding
+  const listeners = new Set()
+  const writes = []
+  const publish = (next) => {
+    current = next
+    for (const listener of listeners) listener()
+  }
+  const scope = {
+    getSnapshot() { return current },
+    subscribe(listener) {
+      listeners.add(listener)
+      return () => listeners.delete(listener)
+    },
+    async set(field, value) {
+      writes.push({ field, value })
+      const accepted = await onSet?.(field, value)
+      if (accepted === false) return
+      if (current.status !== "ready") return
+      publish({
+        ...current,
+        value: Object.freeze({ ...current.value, [field]: value }),
+      })
+    },
+  }
+  return {
+    get binding() { return binding },
+    publish,
+    scope,
+    service: {
+      bind(options) {
+        binding = options
+        return scope
+      },
+    },
+    writes,
   }
 }
 

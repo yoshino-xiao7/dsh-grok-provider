@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.1.9 - 2026-08-30
+
+- Add independent, default-off Web Search and X Search Provider settings for exact `grok-4.6`; keep every other dynamically discovered model Search-disabled until the same fixed-Proxy evidence exists.
+- Compile Harness function tools followed by `web_search` and `x_search` under one 128-tool and 16 MiB request budget, while preserving the byte-identical `0.1.7` request path when both settings are off and disabling Search for non-interactive `purpose` calls.
+- Bind each final request to a private response receipt so undeclared function names, disabled server tools, unknown events, malformed citations, and incomplete or out-of-order Search lifecycles fail closed before they can be projected into Harness.
+- Decode the fixed Proxy's standard Web Search lifecycle and its Grok-Build-specific four-name X Search `custom_tool_call` lifecycle as server-executed activity that emits no Harness tool-call chunks; observing either category suppresses encrypted reasoning replay for that response.
+- Preserve inline citation Markdown as assistant text while bounding and discarding structured citation metadata; never follow, preview, or download citation URLs.
+- Add bilingual Search risk disclosures to the existing Grok Build settings page through Harness `settingsScope`, without a second configuration RPC, renderer-local persistence, a production dependency, a new endpoint, or a new authentication mode.
+
+## 0.1.8 - 2026-08-30 (withdrawn)
+
+- Briefly published a Grok-only sidebar quota card that moved the sidebar's Grok quota querying and display ownership into the Provider, then withdrew the release by reverting that change.
+- The npm Registry version `dsh-grok-provider@0.1.8` remains permanently reserved and cannot be reused after unpublish; `latest` remains `0.1.7`, and the independent Search slice moves to `0.1.9`.
+
 ## 0.1.7 - 2026-08-29
 
 - Add a separate Host diagnostics RPC that reports the installed package version and a closed Grok Build CLI state/version without exposing executable paths, stderr, environment, proxy data, or OAuth URLs.
@@ -8,7 +22,7 @@
 - Keep runtime diagnostics single-flight and lifecycle-owned: capability teardown cancels and awaits inspection, cleanup failure latches the CLI instance and aborts its in-flight authentication actions, and serial authentication polling uses a request epoch to reject stale responses after user actions, settlement, or unmount.
 - Document the Windows pre-browser OIDC failure boundary and keep runtime diagnostics outside the authentication status polling path; the official CLI still owns sign-in URL generation and external-browser launch, so this release does not claim to repair Windows network/proxy conditions or to have verified network-reachable browser launch on a real Windows device.
 - Render the MIT-licensed `IconThinkOutline16` path geometry from `@deepseek-ai/dsh-client-ui-primitives@0.1.0-rc.7` for the one exact Grok Build settings navigation match through a scoped, lifecycle-owned compatibility layer; ambiguous labels or unexpected DOM structure retain the Host gear, unload removes every injected resource, and the bundled third-party notice preserves attribution.
-- Keep Web/X Search, image generation, new server-tool events, arbitrary URL downloads, API-key mode, and custom endpoints out of this maintenance release; the independent Search slice moves to `0.1.8`.
+- Keep Web/X Search, image generation, new server-tool events, arbitrary URL downloads, API-key mode, and custom endpoints out of this maintenance release; the independent Search slice moves to `0.1.9` because the sidebar-quota `0.1.8` release was withdrawn and its Registry version cannot be reused.
 
 ## 0.1.6 - 2026-08-28
 

@@ -28,13 +28,21 @@ import { createRuntimeDiagnostics } from "../internal/runtime-diagnostics.mjs"
 export const name = "llm-grok"
 export const inject = ["llm"]
 
-export const Config = Schema.object({})
+export const Config = Schema.object({
+  webSearch: Schema.boolean().default(false).description("Allow xAI Web Search for regular Grok requests"),
+  xSearch: Schema.boolean().default(false).description("Allow xAI X Search for regular Grok requests"),
+})
 
-export function apply(ctx) {
+export function apply(ctx, config) {
   const platform = process.platform
   if (platform !== "darwin" && platform !== "win32") {
     throw new TypeError("dsh-grok-provider supports macOS and Windows")
   }
+
+  const searchPolicy = Object.freeze({
+    webSearch: config.webSearch,
+    xSearch: config.xSearch,
+  })
 
   const homeDir = os.homedir()
   let refreshOfficialCredential
@@ -65,6 +73,7 @@ export function apply(ctx) {
       getGeneration,
       getAttachmentStore: () => ctx.get("attachments"),
       mapError: mapLlmError,
+      searchPolicy,
     }),
   })
   const authController = createAuthController({

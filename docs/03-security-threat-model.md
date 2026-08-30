@@ -9,7 +9,7 @@
 
 只有本文所有 P0 门禁和 [测试计划](./05-test-plan.md) 的安全用例通过，才允许发布。
 
-`0.1.6` 已从 release commit `93519f77adc4ce2edfc1bbd27bce9e44d4805da6` 正式发布；唯一 60 文件、145,620-byte 制品的 SHA-256 为 `fd660d91216086496a4d189cb7e60b3445079913c97da41fccf805e3086c0347`，npm SRI 为 `sha512-Vsmzm+8tgmHCuS8WKfzicjgauupY9FZ5B/V+55KbCTggBrThDDArjeS2bwHUVpjd92CvO47ya3SHELdWtTijAQ==`，Trusted Publisher run `33177647530`、Registry signature 与 provenance 已验证。当前 `0.1.7` 候选新增闭合运行时诊断与本地 UI 图标兼容层，不改变推理 token、固定 origin、官方 CLI OAuth 所有权或系统网络/代理边界。
+`0.1.7` 已从 release commit `68f6b474bd860b829f03e7712ec79e8afe2b9b8d` 正式发布；唯一 64 文件、167,970-byte 制品的 SHA-256 为 `fd4d2a77b70335cb71f950f299e3c6e0b57d3720de424d99343bd58921a40aaf`，npm SRI 为 `sha512-QhCvp/Y0vq1XHY7XQ+anUnv4sxHH4xxhDRPCzDvqCpXHRgc+IrzJS62bqf5ALGx6fRoKWchy/dbJ0n+LjmkS2w==`，Trusted Publisher run `33226665968`、Registry signature 与 provenance 已验证。sidebar quota 维护版 `0.1.8` 曾发布后撤回，npm Registry 已消耗该号码且不能复用；Search 从未作为 `0.1.8` 发布。当前 `0.1.9` 候选只为精确 `grok-4.6` 增加默认关闭、可独立启用的 Web/X Search；不改变推理 Bearer 的固定 origin、官方 CLI OAuth 所有权或系统网络/代理边界。
 
 ## 2. 信任边界
 
@@ -53,6 +53,8 @@ Host AuthCoordinator
 | external/企业/歧义凭据误送固定 xAI Proxy | token 泄漏或账号混淆 | 唯一候选；闭合 auth mode/issuer/scope/client/expiry 关系；schema 不符失败关闭；承认 metadata 未签名 | P0 |
 | token 被发往自定义或重定向 origin | 账号接管 | endpoint ID；固定 HTTPS origin/path；`redirect: "error"` | P0 |
 | Authorization 被继承到远端 URL | 账号接管 | 所有版本永久禁止任意图片 URL 下载；transport 不接受调用方 URL | P0 |
+| Search 远端内容含提示注入或错误信息 | 诱导本地工具、文件或命令操作 | 默认关闭；只接受闭合 server lifecycle；不投影成本地 tool-call；结构化 citation 有界校验后丢弃；Harness 权限层继续独立裁决本地工具 | P0 |
+| Search 设置误用于后台任务或不支持模型 | 隐私范围扩大、额外用量或协议漂移 | 只在普通 purpose 下启用；精确 `grok-4.6` allowlist；不支持 route 在 POST 前失败；不静默裁剪并重放 | P0 |
 | SSE/压缩响应无限增长 | 内存、CPU、磁盘 DoS | 解压后字节、行、事件、单事件与整体请求期限均有上限；当前没有独立 first-byte/idle timeout | P0 |
 | 原始远端错误返回 UI | token、账号或内部信息泄漏 | 只返回插件稳定错误码和安全文案；Harness RPC correlation 留在 carrier 内部 | P0 |
 | billing 响应或 credential metadata 越界进入 renderer | 身份、订阅或凭据泄漏 | Host 严格抽取百分比、周期与模型 capability；拒绝/忽略 identity、balance、history、headers、URL 和原始响应 | P0 |
@@ -239,7 +241,16 @@ TUI 通过 Harness 的 human-command registry 注册一个全局 `/grok`，只�
 - 最终 JSON 超限继续逐张淘汰最旧图片；缺服务、projection unsupported、源图片位置/引用/MIME 不支持在 Responses POST 前以 `UNSUPPORTED_CONTENT` 拒绝。store 返回损坏或不自洽的投影、超过含图编译 block 预算、更深 tool-result，以及图片全部淘汰后剩余非图片请求仍不合法，都保持通用 `INVALID_RESPONSE`。
 - AbortSignal 在查询服务前检查并传给所有投影读取；编译失败时 Responses POST 调用必须为 0，但模型目录 GET 可能已发生。
 
-公开 xAI 文档、离线测试与真机验证继续作为三类独立证据。[上游证据页](./12-upstream-image-input-evidence.md)记录的固定 Proxy 门禁已对 `grok-4.6` 的普通 user 与一层 tool-result 分别发送红/蓝合成图：4 次均为 HTTP 200、`text/event-stream`、completed，规范化整段回复只含正确颜色词和可选句末标点。`grok-4.5` 的受控红图结果语义不可靠，因此即使公开模型页声明图片能力也不进入本插件图片集合。图片固定使用 `detail:"high"`。Harness `0.1.1-rc.2` attachment-local/LlmRuntime 已复验 `grok-4.6` image、`grok-4.5`/未知模型 text-only，候选门禁随后关闭并完成 `0.1.4` 发布。已发布 `0.1.6` 只允许普通 user/system 历史省略通过闭合字符串/长度校验的私有 reasoning 并保留相邻可见 text/image；畸形或超限 reasoning 仍在 attachment I/O 和 Responses POST 前失败。该修复不改变 assistant 加密 reasoning replay 或一层 tool-result 的公开内容边界。`0.1.7` 候选同样不改变图片集合、投影、Responses wire 或固定 origin；任意 URL 下载与把 Authorization 带到第二个 origin 在所有后续版本仍永久禁止，Web/X Search 顺延至 `0.1.8`。
+`0.1.9` 按 [ADR-0010](./adr/0010-default-off-web-x-search.md) 独立增加 Search，且不扩大图片或 origin 边界：
+
+- Web Search 与 X Search 两个 Host Config 开关默认关闭并独立持久化；两项全关时不读取 `purpose`，最终 request wire 与 `0.1.7` 保持一致。
+- 只为固定 Proxy 已验证的精确 `grok-4.6` route 编译 `{type:"web_search"}` / `{type:"x_search"}`；不支持模型在 Responses POST 前返回 `UNSUPPORTED_CONTENT`。
+- 普通 Harness functions、Web、X 依次排序并共用 128 项和 16 MiB 请求上限。receipt 只从冻结后的最终 wire 派生并与 decoder 绑定，避免配置、route 与 response 允许集分离。
+- Web 与 X 都是 xAI 已执行的 server tool，产生零个 Harness `tool-call` chunk；X 只接受四个实测 custom-tool 名称。未启用类别、未知、重复、乱序或未闭合生命周期全部失败关闭。
+- citation URL 不被打开、下载或重新请求；结构化 annotation/citations 只做有界验证后丢弃。观察到任何 Search 后不保存本响应的 encrypted reasoning replay。
+- Search 关闭不代表服务商内部绝不检索；开启后提示词与模型生成的检索词会到达 xAI，且结果可能错误、含提示注入并产生额外用量。
+
+公开 xAI 文档、离线测试与真机验证继续作为三类独立证据。[图片证据页](./12-upstream-image-input-evidence.md)记录的固定 Proxy 门禁已对 `grok-4.6` 的普通 user 与一层 tool-result 分别发送红/蓝合成图：4 次均为 HTTP 200、`text/event-stream`、completed，规范化整段回复只含正确颜色词和可选句末标点。`grok-4.5` 的受控红图结果语义不可靠，因此即使公开模型页声明图片能力也不进入本插件图片集合。图片固定使用 `detail:"high"`。Harness `0.1.1-rc.2` attachment-local/LlmRuntime 已复验 `grok-4.6` image、`grok-4.5`/未知模型 text-only，候选门禁随后关闭并完成 `0.1.4` 发布。已发布 `0.1.6` 只允许普通 user/system 历史省略通过闭合字符串/长度校验的私有 reasoning 并保留相邻可见 text/image；畸形或超限 reasoning 仍在 attachment I/O 和 Responses POST 前失败。该修复不改变 assistant 加密 reasoning replay 或一层 tool-result 的公开内容边界。已发布 `0.1.7` 同样不改变图片集合、投影、Responses wire 或固定 origin。sidebar quota `0.1.8` 发布后已撤回，Search 的 Web、X、Web+X 与生产 function → `web_search` 顺序 Web+function 四组固定 Proxy 观察全部归属当前 `0.1.9` 候选，见 [Search 证据页](./13-upstream-search-evidence.md)。任意 URL 下载与把 Authorization 带到第二个 origin 在所有版本仍永久禁止。
 
 ## 9. 残余风险
 
