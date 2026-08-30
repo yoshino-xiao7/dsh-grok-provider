@@ -6,12 +6,12 @@ import test from "node:test"
 
 const root = path.resolve(import.meta.dirname, "..")
 
-test("the exact 0.1.8 manifest exports runtime artifacts and Web loader metadata", async () => {
+test("the exact 0.1.7 manifest exports runtime artifacts and Web loader metadata", async () => {
   const attributes = await fs.readFile(path.join(root, ".gitattributes"), "utf8")
   assert.match(attributes, /^\*\.yml text eol=lf$/mu)
   const manifest = JSON.parse(await fs.readFile(path.join(root, "package.json"), "utf8"))
   assert.equal(manifest.name, "dsh-grok-provider")
-  assert.equal(manifest.version, "0.1.8")
+  assert.equal(manifest.version, "0.1.7")
   const lockfile = JSON.parse(await fs.readFile(path.join(root, "package-lock.json"), "utf8"))
   assert.equal(lockfile.version, manifest.version)
   assert.equal(lockfile.packages[""].version, manifest.version)
@@ -111,24 +111,24 @@ test("the exact 0.1.8 manifest exports runtime artifacts and Web loader metadata
   assert.match(englishReadme, /\[简体中文\]\(README\.md\)/u)
   assert.match(chineseReadme, /## 快速开始/u)
   assert.match(chineseReadme, /## 安全与隐私/u)
-  assert.match(chineseReadme, /当前源码候选版本为 `0\.1\.8`/u)
-  assert.match(chineseReadme, /dsh-grok-provider@0\.1\.8/u)
+  assert.match(chineseReadme, /当前源码候选版本为 `0\.1\.7`/u)
+  assert.match(chineseReadme, /dsh-grok-provider@0\.1\.7/u)
   assert.match(chineseReadme, /\[`THIRD_PARTY_NOTICES\.md`\]\(THIRD_PARTY_NOTICES\.md\)/u)
   assert.match(englishReadme, /## Quick start/u)
   assert.match(englishReadme, /## Security and privacy/u)
-  assert.match(englishReadme, /current source candidate is `0\.1\.8`/u)
-  assert.match(englishReadme, /dsh-grok-provider@0\.1\.8/u)
+  assert.match(englishReadme, /current source candidate is `0\.1\.7`/u)
+  assert.match(englishReadme, /dsh-grok-provider@0\.1\.7/u)
   assert.match(englishReadme, /\[`THIRD_PARTY_NOTICES\.md`\]\(THIRD_PARTY_NOTICES\.md\)/u)
   const securityPolicy = await fs.readFile(path.join(root, "SECURITY.md"), "utf8")
-  assert.match(securityPolicy, /源码候选版本 `0\.1\.8`/u)
-  assert.match(securityPolicy, /source candidate is `0\.1\.8`/u)
+  assert.match(securityPolicy, /源码候选版本 `0\.1\.7`/u)
+  assert.match(securityPolicy, /source candidate is `0\.1\.7`/u)
   const releaseNotes = await fs.readFile(
-    path.join(root, "docs/releases/v0.1.8.md"),
+    path.join(root, "docs/releases/v0.1.7.md"),
     "utf8",
   )
   assert.equal(releaseNotes.startsWith("## 中文\n"), true)
   assert.match(releaseNotes, /\n## English\n/u)
-  assert.doesNotMatch(releaseNotes, /^# .*0\.1\.8/mu)
+  assert.doesNotMatch(releaseNotes, /^# .*0\.1\.7/mu)
   for (const filename of ["CONTRIBUTING.md", "SECURITY.md"]) {
     assert.match(chineseReadme, new RegExp(`\\(${filename.replace(".", "\\.")}\\)`, "u"))
     await fs.access(path.join(root, filename))

@@ -14,8 +14,6 @@ test("the browser bundle registers one localized loopback-only Grok settings sec
       "@deepseek-ai/dsh-client-connection",
       "@deepseek-ai/dsh-client-locale",
       "@deepseek-ai/dsh-client-runtime",
-      "@deepseek-ai/dsh-client-ui-model-selection",
-      "@deepseek-ai/dsh-client-ui-sidebar",
       "@deepseek-ai/dsh-client-ui-settings",
     ],
     platform: "web",
@@ -56,7 +54,7 @@ test("the browser bundle registers one localized loopback-only Grok settings sec
     assert.equal(id, "react")
     return React
   })
-  assert.deepEqual(Array.from(plugin.inject), ["slots", "locale", "connection", "sessions", "modelDirectories"])
+  assert.deepEqual(Array.from(plugin.inject), ["slots", "locale", "connection"])
 
   const registrations = []
   const dictionaries = []
@@ -69,28 +67,21 @@ test("the browser bundle registers one localized loopback-only Grok settings sec
     },
     slots: {
       inject(name, callback) {
+        assert.equal(name, "settings.section")
         callback()
       },
       register(options, component) { registrations.push({ options, component }) },
     },
-    sessions: {
-      list: { getSnapshot: () => ({ current: undefined }), subscribe: () => () => {} },
-    },
-    modelDirectories: { directoryFor: () => { throw new Error("no active session") } },
   }
   plugin.apply(ctx)
 
   assert.equal(dictionaries[0].namespace, "settings.grok")
   assert.equal(dictionaries[0].value.zh.image, "图片输入")
   assert.equal(dictionaries[0].value.en.image, "Image input")
-  assert.equal(registrations.length, 2)
-  const settings = registrations.find(({ options }) => options.name === "settings.section")
-  const sidebar = registrations.find(({ options }) => options.name === "sidebar.footer.action")
-  assert.equal(settings.options.id, "grok-auth")
-  assert.equal(typeof settings.component, "function")
-  assert.equal(sidebar.options.id, "grok-account-quota")
-  assert.equal(sidebar.options.order, 35)
-  assert.equal(typeof sidebar.component, "function")
+  assert.equal(registrations.length, 1)
+  assert.equal(registrations[0].options.name, "settings.section")
+  assert.equal(registrations[0].options.id, "grok-auth")
+  assert.equal(typeof registrations[0].component, "function")
 })
 
 test("the browser bundle replaces only the Grok settings nav gear and cleans up on unload", async () => {
