@@ -129,6 +129,14 @@ request 与 receipt 均复制并冻结。decoder 不从 Config、route 或原始
 
 经明确授权的脱敏真实账号验证精确回放原失败 X 会话结构：8 条 messages、40 个 source functions，最终 wire 为 38 个 function definitions + 2 个 server Search tools，同时保留 2 个历史 reserved-name calls；只执行 1 次 models GET 和 1 次 Responses POST，接收 314 个 events 并以 `response.completed` 闭合。验证不保存或输出消息/回复正文、URL、账号身份或凭据。该回放本身只验证最终源码与当前账号环境，不构成制品、CI、发布、供应链或 Windows 真机证据；发布证据另行独立关闭。
 
+## `1.0.2` 严格空 reasoning 的可见投影
+
+真实完成会话可包含多个完整闭合、但没有任何 summary/raw delta 的 reasoning lifecycle。协议上它们仍是需要校验的 output item；产品界面上把每个空 lifecycle 投影成一组 `block-start` / 空 `block-end` 会形成多行没有内容的 `Think`。
+
+`1.0.2` 将“协议生命周期”和“可见 Harness block”分离：reasoning item added 时只建立内部 FSM，不立即发送 block；首个非空 summary/raw delta 到来时才创建 block，并沿用原有 delta/end 顺序。item 完成时仍严格为空则只完成适用于该项的既有协议校验，产生零个可见 chunk。后续可见块在更早 reasoning 决议前按块缓存，不同非空 item 不合并，并按 output index 发射。
+
+这是投影修复而不是接受域扩展。普通空项保留既有 ID/type own-data、sequence/output index、status、summary/content 空性、encrypted-content 上限与 lifecycle 一致性校验；Search-backed ID reuse 保留更严格的精确 own-data 形状、未知键/accessor、terminal 与 incomplete 校验。可见非空 reasoning 的 replay 元数据继续与可见块对齐，观察到 Search 后的整响应 replay 抑制也不变；隐藏普通空项不占 replay 槽，其 encrypted content 校验后不持久化。旧会话中已持久化的空 block 不回写删除。
+
 - 不支持的精确模型能力：`UNSUPPORTED_CONTENT`。
 - 协议、receipt、未知事件、未声明 function 或不闭合 lifecycle：`INVALID_RESPONSE`。
 - Abort、认证、429 与其他 HTTP 错误沿用现有 `ABORTED`、`AUTH`、`RATE_LIMIT`、`PROVIDER_ERROR`；尤其 fixed-Proxy HTTP 400 不再由 SSE 层改写为 `INVALID_RESPONSE`。

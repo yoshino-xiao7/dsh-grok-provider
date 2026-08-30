@@ -2,6 +2,8 @@ const MAX_EVENTS = 100_000
 const MAX_BLOCK_TEXT_BYTES = 8 * 1024 * 1024
 const MAX_TOOL_ARGUMENT_BYTES = 2 * 1024 * 1024
 const MAX_ENCRYPTED_REASONING_BYTES = 8 * 1024 * 1024
+const MAX_PENDING_CHUNKS = 65_536
+const MAX_PENDING_CHUNK_BYTES = 4 * MAX_BLOCK_TEXT_BYTES
 const MAX_ANNOTATIONS = 1_024
 const MAX_CITATIONS = 1_024
 const MAX_CITATION_URL_BYTES = 16 * 1024
@@ -52,6 +54,8 @@ export function createResponsesEventDecoder(receipt) {
   const itemLifecycles = new Map()
   const callIds = new Set()
   const replayBlocks = []
+  const unresolvedReasoningIndexes = new Set()
+  const pendingBudget = { chunks: 0, bytes: 0 }
   let nextOutputIndex = 0
   let lastSequence = -1
   let responseId
@@ -104,6 +108,8 @@ export function createResponsesEventDecoder(receipt) {
             itemLifecycles,
             callIds,
             replayBlocks,
+            unresolvedReasoningIndexes,
+            pendingBudget,
             chunks,
             responsePolicy,
           )
@@ -138,8 +144,27 @@ export function createResponsesEventDecoder(receipt) {
             block.summaryDone
           ) fail()
           appendDelta(block, event.delta)
+          const becameVisible = revealReasoningBlock(
+            block,
+            event.output_index,
+            unresolvedReasoningIndexes,
+            replayBlocks,
+            chunks,
+          )
           sawVisibleOutput = true
-          chunks.push({ type: "reasoning-delta", index: event.output_index, text: event.delta })
+          emitBlockChunk(block, {
+            type: "reasoning-delta",
+            index: event.output_index,
+            text: event.delta,
+          }, chunks)
+          if (becameVisible) {
+            flushVisibleBlocks(
+              blocks,
+              unresolvedReasoningIndexes,
+              replayBlocks,
+              chunks,
+            )
+          }
           break
         }
 
@@ -201,8 +226,27 @@ export function createResponsesEventDecoder(receipt) {
           ) fail()
           requireRawContentLocation(event, block)
           appendDelta(block, event.delta)
+          const becameVisible = revealReasoningBlock(
+            block,
+            event.output_index,
+            unresolvedReasoningIndexes,
+            replayBlocks,
+            chunks,
+          )
           sawVisibleOutput = true
-          chunks.push({ type: "reasoning-delta", index: event.output_index, text: event.delta })
+          emitBlockChunk(block, {
+            type: "reasoning-delta",
+            index: event.output_index,
+            text: event.delta,
+          }, chunks)
+          if (becameVisible) {
+            flushVisibleBlocks(
+              blocks,
+              unresolvedReasoningIndexes,
+              replayBlocks,
+              chunks,
+            )
+          }
           break
         }
 
@@ -226,7 +270,11 @@ export function createResponsesEventDecoder(receipt) {
           requireContentIndex(event, block)
           appendDelta(block, event.delta)
           sawVisibleOutput = true
-          chunks.push({ type: "text-delta", index: event.output_index, text: event.delta })
+          emitBlockChunk(block, {
+            type: "text-delta",
+            index: event.output_index,
+            text: event.delta,
+          }, chunks)
           break
         }
 
@@ -269,13 +317,13 @@ export function createResponsesEventDecoder(receipt) {
           if (block.argumentsDone) fail()
           appendToolArguments(block, event.delta)
           sawVisibleOutput = true
-          chunks.push({
+          emitBlockChunk(block, {
             type: "tool-call-delta",
             index: event.output_index,
             id: block.callId,
             ...(block.nameEmitted ? {} : { name: block.name }),
             argumentsDelta: event.delta,
-          })
+          }, chunks)
           block.nameEmitted = true
           break
         }
@@ -338,6 +386,7 @@ export function createResponsesEventDecoder(receipt) {
             serverCalls,
             completedServerCalls,
             replayBlocks,
+            unresolvedReasoningIndexes,
             chunks,
           )
           markOutputItemClosed(event, itemLifecycles)
@@ -348,6 +397,7 @@ export function createResponsesEventDecoder(receipt) {
           if (
             !sawVisibleOutput ||
             blocks.size !== 0 ||
+            unresolvedReasoningIndexes.size !== 0 ||
             serverCalls.size !== 0 ||
             !isResponseStatus(event.response, "completed")
           ) fail()
@@ -393,16 +443,33 @@ export function createResponsesEventDecoder(receipt) {
             sawServerTool = true
           }
           if (sawServerTool && completedServerCalls.length === 0) fail()
-          for (const [index, block] of blocks) {
-            if (block.type === "tool-call" || block.reusedReasoning) fail()
+          for (const block of blocks.values()) {
+            if ((block.type === "tool-call" && !block.closed) || block.reusedReasoning) fail()
             if (block.type === "text") validateAnnotationPositions(block.annotations, block.text.length)
-            chunks.push({
+          }
+          for (const [index, block] of blocks) {
+            if (!block.visible) {
+              unresolvedReasoningIndexes.delete(index)
+              blocks.delete(index)
+            }
+          }
+          flushVisibleBlocks(
+            blocks,
+            unresolvedReasoningIndexes,
+            replayBlocks,
+            chunks,
+          )
+          for (const [index, block] of blocks) {
+            if (!block.started || !block.visible || block.closed) fail()
+            emitBlockChunk(block, {
               type: "block-end",
               index,
               block: { type: block.type, text: block.text },
-            })
+            }, chunks)
+            block.closed = true
+            blocks.delete(index)
           }
-          blocks.clear()
+          if (blocks.size !== 0 || unresolvedReasoningIndexes.size !== 0) fail()
           chunks.push({
             type: "usage",
             usage: parseUsage(captureOwnDataValue(event.response, "usage")),
@@ -418,7 +485,13 @@ export function createResponsesEventDecoder(receipt) {
     },
 
     finish() {
-      if (!completed || blocks.size !== 0 || serverCalls.size !== 0) fail()
+      if (
+        !completed ||
+        blocks.size !== 0 ||
+        serverCalls.size !== 0 ||
+        pendingBudget.chunks !== 0 ||
+        pendingBudget.bytes !== 0
+      ) fail()
     },
   })
 }
@@ -456,6 +529,8 @@ function addOutputItem(
   itemLifecycles,
   callIds,
   replayBlocks,
+  unresolvedReasoningIndexes,
+  pendingBudget,
   chunks,
   responsePolicy,
 ) {
@@ -560,11 +635,114 @@ function addOutputItem(
   }
   else fail()
 
-  block.replayPosition = replayBlocks.length
-  replayBlocks.push(null)
+  block.visible = type !== "reasoning"
+  block.started = false
+  block.closed = false
+  block.pendingChunks = []
+  block.pendingChunkBytes = 0
+  block.pendingBudget = pendingBudget
+  block.replayMetadata = undefined
   blocks.set(index, block)
-  chunks.push({ type: "block-start", index, blockType: type })
+  // Responses may complete strict-empty reasoning placeholders around Search calls.
+  // Keep validating them, and hold later blocks until their output order is known.
+  if (type === "reasoning") unresolvedReasoningIndexes.add(index)
+  else flushVisibleBlocks(blocks, unresolvedReasoningIndexes, replayBlocks, chunks)
   return type
+}
+
+function revealReasoningBlock(
+  block,
+  index,
+  unresolvedReasoningIndexes,
+  replayBlocks,
+  chunks,
+) {
+  if (block.visible) return false
+  block.visible = true
+  unresolvedReasoningIndexes.delete(index)
+  startBlockIfEligible(block, index, unresolvedReasoningIndexes, replayBlocks, chunks)
+  return true
+}
+
+function flushVisibleBlocks(
+  blocks,
+  unresolvedReasoningIndexes,
+  replayBlocks,
+  chunks,
+) {
+  for (const [index, block] of blocks) {
+    if (block.started) {
+      if (block.closed) blocks.delete(index)
+      continue
+    }
+    if (!startBlockIfEligible(
+      block,
+      index,
+      unresolvedReasoningIndexes,
+      replayBlocks,
+      chunks,
+    )) continue
+    if (block.closed) blocks.delete(index)
+  }
+}
+
+function startBlockIfEligible(
+  block,
+  index,
+  unresolvedReasoningIndexes,
+  replayBlocks,
+  chunks,
+) {
+  if (!block.visible || block.started) return false
+  const earliestUnresolved = unresolvedReasoningIndexes.values().next().value
+  if (earliestUnresolved !== undefined && earliestUnresolved < index) return false
+  block.started = true
+  block.replayPosition = replayBlocks.length
+  replayBlocks.push(block.replayMetadata ?? null)
+  chunks.push({ type: "block-start", index, blockType: block.type })
+  for (const chunk of takePendingChunks(block)) chunks.push(chunk)
+  return true
+}
+
+function emitBlockChunk(block, chunk, chunks) {
+  if (block.started) chunks.push(chunk)
+  else {
+    const bytes = pendingChunkUtf8Bytes(chunk)
+    const budget = block.pendingBudget
+    if (
+      budget.chunks >= MAX_PENDING_CHUNKS ||
+      bytes > MAX_PENDING_CHUNK_BYTES - budget.bytes
+    ) fail()
+    block.pendingChunks.push(chunk)
+    block.pendingChunkBytes += bytes
+    budget.chunks += 1
+    budget.bytes += bytes
+  }
+}
+
+function takePendingChunks(block) {
+  const pending = block.pendingChunks
+  const budget = block.pendingBudget
+  budget.chunks -= pending.length
+  budget.bytes -= block.pendingChunkBytes
+  if (budget.chunks < 0 || budget.bytes < 0) fail()
+  block.pendingChunks = []
+  block.pendingChunkBytes = 0
+  return pending
+}
+
+function pendingChunkUtf8Bytes(chunk) {
+  if (chunk.type === "reasoning-delta" || chunk.type === "text-delta") {
+    return Buffer.byteLength(chunk.text, "utf8")
+  }
+  if (chunk.type === "tool-call-delta") {
+    return Buffer.byteLength(chunk.argumentsDelta, "utf8")
+  }
+  if (chunk.type !== "block-end") fail()
+  if (chunk.block.type === "tool-call") {
+    return Buffer.byteLength(chunk.block.arguments, "utf8")
+  }
+  return Buffer.byteLength(chunk.block.text, "utf8")
 }
 
 function registerOutputItem(item, itemId, itemType, outputIndex, itemLifecycles, completedServerCalls) {
@@ -619,6 +797,7 @@ function closeOutputItem(
   serverCalls,
   completedServerCalls,
   replayBlocks,
+  unresolvedReasoningIndexes,
   chunks,
 ) {
   const index = parseIndex(event.output_index)
@@ -659,12 +838,14 @@ function closeOutputItem(
     } else fail()
     if (event.item.encrypted_content !== undefined) {
       if (!isBoundedUtf8String(event.item.encrypted_content, MAX_ENCRYPTED_REASONING_BYTES)) fail()
-      replayBlocks[block.replayPosition] = {
+      const replayMetadata = {
         type: "reasoning",
         id: block.id,
         encryptedContent: event.item.encrypted_content,
         ...(block.reasoningMode === "raw" ? { textType: "reasoning_text" } : {}),
       }
+      block.replayMetadata = replayMetadata
+      if (block.started) replayBlocks[block.replayPosition] = replayMetadata
     }
   }
   if (block.type === "text") {
@@ -680,14 +861,22 @@ function closeOutputItem(
     !isJsonObject(block.arguments)
   )) fail()
 
-  chunks.push({
+  if (!block.visible) {
+    unresolvedReasoningIndexes.delete(index)
+    blocks.delete(index)
+    flushVisibleBlocks(blocks, unresolvedReasoningIndexes, replayBlocks, chunks)
+    return
+  }
+
+  emitBlockChunk(block, {
     type: "block-end",
-    index: event.output_index,
+    index,
     block: block.type === "tool-call"
       ? { type: "tool-call", id: block.callId, name: block.name, arguments: block.arguments }
       : { type: block.type, text: block.text },
-  })
-  blocks.delete(event.output_index)
+  }, chunks)
+  block.closed = true
+  if (block.started) blocks.delete(index)
 }
 
 function closeServerCall(event, call) {

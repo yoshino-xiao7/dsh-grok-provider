@@ -1,12 +1,11 @@
 # 当前实现与发布状态
 
-`1.0.1` Search request 冲突与 transport error 分类修复已正式发布：解决启用 xAI server Search 时 Harness 同名 function definition 导致 fixed Proxy HTTP 400，并修正 SSE 层对 transport error 的错误归类。
+`1.0.2` 制品修复严格空 reasoning lifecycle 被投影成多行无内容 `Think` 的显示问题，同时保留普通项既有校验与 Search-backed 复用项的精确 own-data/accessor 校验。本文不在实际完成前预写该版本的发布或供应链事实。
 
 状态日期：2026-08-30
-当前 npm 发布线：`dsh-grok-provider@1.0.1`
-当前源码发布版：`dsh-grok-provider@1.0.1`
-已发布基线：`yukiryou/main@3c25a53571531e35ac888df16df4fe6c01849e85`
-内容类型路线：已冻结于 [能力路线图](./11-capability-roadmap.md)；`1.0.1` 只修复 Search request 冲突与错误归因，不新增内容类型、模型、认证方式、endpoint 或本地工具。
+本文对应制品版本：`dsh-grok-provider@1.0.2`
+上一已验证发布基线：`dsh-grok-provider@1.0.1` / `yukiryou/main@3c25a53571531e35ac888df16df4fe6c01849e85`
+内容类型路线：已冻结于 [能力路线图](./11-capability-roadmap.md)；`1.0.2` 只修复可见 reasoning 投影，不新增内容类型、模型、认证方式、endpoint 或本地工具。
 
 ## 已实现
 
@@ -24,6 +23,7 @@
 - 已发布的 `0.1.11` reasoning 兼容：允许已闭合 reasoning ID 以严格空项再出现一次，接受闭合空 reasoning，支持官方 raw `reasoning_text` 标准生命周期；raw 与 summary 互斥，raw replay 只携带 encrypted content 与空 summary。
 - 已发布 `1.0.0`：首次复用前仍要求一个完成的 Web/X server Search；一旦该 ID 已被 Search-backed，允许后续多个严格空占位 lifecycle，每个都必须独立 `output_item.done`。完成态 Web Search `open_page` 只接受精确有界 type/URL，并要求 streamed/final action 一致；URL 校验后丢弃，不产生本地工具调用或网络访问。
 - 已发布 `1.0.1`：全部 Harness functions 先完整验证，再从 wire definitions 精确过滤与本次已启用 server `web_search` / `x_search` 同名的定义；对应开关关闭时本地 function 保留，历史 function calls/results 原样保留。最终 receipt 拒绝 function/server-tool 交集。SSE source transport error 原样上抛，HTTP 400 进入 `PROVIDER_ERROR`，parser/协议错误仍为 `INVALID_RESPONSE`。
+- `1.0.2`：reasoning item added 只建立内部 FSM，首个非空 summary/raw delta 才开始 Harness block；始终严格空且完整闭合的 item 产生零可见 chunk。不同非空 item 仍分别闭合，旧会话不回写。
 
 ## 已验证
 
@@ -204,3 +204,12 @@ Windows x64 真机不再是 `0.1.0` 预发布阻断项。首次发布后必须�
 - 仓库所有者明确授权的唯一 73 文件制品为 240,904 bytes packed、748,888 bytes unpacked，SHA-1 `9e6449160947104e8dbb71b7201c53e81b073f83`、SHA-256 `e3e15646d38de23c32c71ed759f9c10be9b2d790d4b10b4b8dfe59a44fbfef9f`、SRI `sha512-Bm1qjJQ9i7CWT0oWah7QKDVBP8dR2YQtvEEZGE/BOSwZCo8sZbrW2v2QSfUfLsOLHcQXFZZ0jlDCAztr1m/q+A==`。
 - Trusted Publisher run `33313699790` attempt 1 已完成；npm `latest=1.0.1`，冻结候选、唯一 GitHub Release asset 与 Registry tarball 逐字节一致。Node `24.19.0` / npm `11.5.1` 锁定隔离安装、生产依赖审计、1 个 Registry signature、2 个 attestations、安装图 11 个 signed packages / 2 个 attested packages，以及精确绑定 `release.yml` / `refs/tags/v1.0.1` / release commit / publish run 的 SLSA provenance 均已验证。
 - 尚未完成且不得声称：网络可达 Windows 真机浏览器登录。真实会话回放、双平台 CI 与供应链证据均不替代该验收。
+
+## `1.0.2` 空 reasoning 投影修复
+
+- 用户可见症状是一次已成功完成的 Search 会话在正文后显示多行没有内容的 `Think`。这证明可见 chunk 投影存在噪音，不单独证明任何新的 raw SSE 形状。
+- 修复延迟 block 创建并保持 output-index 顺序：普通空项保留既有字段、状态、summary/content 空性、大小和闭合检查；Search-backed 同 ID 复用额外保留精确 own-data 键集/accessor 检查。严格空 item 闭合时不发 block；首个非空 delta 才开始可见块，后续可见块在更早 reasoning 决议前按块缓存。共享 pending 队列受 65,536 条与 32 MiB 动态 UTF-8 载荷总预算限制，防止未决 reasoning 聚合后续 block 造成内存放大。
+- 必须覆盖普通空项、多段 Search-backed 空复用、opaque encrypted content、summary/raw 首 delta、十空一非空、多个非空块、多个未决 reasoning、后块先完成和 incomplete 交错，以及非空复用、unknown/accessor 复用、乱序和未闭合失败。
+- 正文、工具调用、usage、finish、可见非空 replay、Search replay 抑制、request compiler、认证、模型、图片、endpoint、citation/URL 和工具权限不变。隐藏普通空项不占 replay 对齐槽，其 encrypted content 校验后不持久化；已持久化的旧空 `Think` 不删除。
+- 2026-08-30 真实账号对候选源码生产 Adapter 的 Web/X 各 1 次 `grok-4.6` High Effort 验收已完成：Search lifecycle 计数分别为 5/3，每次均投影 1 个非空 reasoning、0 个空 reasoning、1 个非空 text 和 1 个 finish；只输出计数，未保存正文、URL、身份、凭据或原始响应。
+- `1.0.2` 的 CI、冻结制品文件数/大小/摘要、隔离安装、精确授权、tag、Release、Registry、签名、attestations 与 provenance 只能在各步骤实际完成后补录；版本同步、本地 265 项全量测试（263 pass、0 fail、2 platform skips）、0 生产漏洞和 74 文件 dry-run pack 已按实际结果记录，dry-run 值不冒充冻结制品。

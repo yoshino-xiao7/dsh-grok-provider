@@ -6,15 +6,30 @@ import test from "node:test"
 
 const root = path.resolve(import.meta.dirname, "..")
 
-test("the exact 1.0.1 source release exports runtime artifacts and Web loader metadata", async () => {
+function markdownPreamble(markdown) {
+  const firstSection = markdown.indexOf("\n## ")
+  assert.notEqual(firstSection, -1, "README must contain a level-two section")
+  return markdown.slice(0, firstSection)
+}
+
+function markdownSection(markdown, heading) {
+  const marker = `${heading}\n`
+  const start = markdown.indexOf(marker)
+  assert.notEqual(start, -1, `README must contain ${heading}`)
+  const bodyStart = start + marker.length
+  const nextSection = markdown.indexOf("\n## ", bodyStart)
+  return markdown.slice(bodyStart, nextSection === -1 ? undefined : nextSection)
+}
+
+test("the exact 1.0.2 source release exports runtime artifacts and Web loader metadata", async () => {
   const attributes = await fs.readFile(path.join(root, ".gitattributes"), "utf8")
   assert.match(attributes, /^\*\.yml text eol=lf$/mu)
   const manifest = JSON.parse(await fs.readFile(path.join(root, "package.json"), "utf8"))
   assert.equal(manifest.name, "dsh-grok-provider")
-  assert.equal(manifest.version, "1.0.1")
+  assert.equal(manifest.version, "1.0.2")
   const lockfile = JSON.parse(await fs.readFile(path.join(root, "package-lock.json"), "utf8"))
-  assert.equal(lockfile.version, manifest.version)
-  assert.equal(lockfile.packages[""].version, manifest.version)
+  assert.equal(lockfile.version, "1.0.2")
+  assert.equal(lockfile.packages[""].version, "1.0.2")
   assert.deepEqual(manifest.repository, {
     type: "git",
     url: "git+https://github.com/yoshino-xiao7/dsh-grok-provider.git",
@@ -106,27 +121,102 @@ test("the exact 1.0.1 source release exports runtime artifacts and Web loader me
     /test "\$\(jq -r '\.assets\[0\]\.name'.*" = "\$ARTIFACT_NAME"/u,
   )
   assert.match(releaseWorkflow, /test "\$\{#downloaded\[@\]\}" -eq 1/u)
+  assert.match(
+    releaseWorkflow,
+    /readme_zh="\$\(tar -xOf "\$artifact" package\/README\.md\)"/u,
+  )
+  assert.match(
+    releaseWorkflow,
+    /readme_en="\$\(tar -xOf "\$artifact" package\/README\.en\.md\)"/u,
+  )
+  assert.match(releaseWorkflow, /extract_markdown_section '## 快速开始'/u)
+  assert.match(releaseWorkflow, /extract_markdown_section '## Quick start'/u)
+  assert.match(
+    releaseWorkflow,
+    /release_surface_zh="\$\(printf '%s\\n%s\\n' "\$preamble_zh" "\$quick_start_zh"\)"/u,
+  )
+  assert.match(
+    releaseWorkflow,
+    /release_surface_en="\$\(printf '%s\\n%s\\n' "\$preamble_en" "\$quick_start_en"\)"/u,
+  )
+  assert.match(
+    releaseWorkflow,
+    /grep -Eq '未发布\|候选\|继续安装' <<< "\$release_surface_zh"/u,
+  )
+  assert.match(
+    releaseWorkflow,
+    /grep -Eiq 'unpublished\|candidate\|continue installing' <<< "\$release_surface_en"/u,
+  )
+  assert.match(
+    releaseWorkflow,
+    /expected_install="dsh plugin --profile web add dsh-grok-provider@\$RELEASE_VERSION"/u,
+  )
+  assert.match(releaseWorkflow, /test "\$\{#install_commands_zh\[@\]\}" -eq 1/u)
+  assert.match(releaseWorkflow, /test "\$\{install_commands_zh\[0\]\}" = "\$expected_install"/u)
+  assert.match(releaseWorkflow, /test "\$\{#install_commands_en\[@\]\}" -eq 1/u)
+  assert.match(releaseWorkflow, /test "\$\{install_commands_en\[0\]\}" = "\$expected_install"/u)
   assert.match(releaseWorkflow, /^\s*node-version: 24\.19\.0$/mu)
 
   const chineseReadme = await fs.readFile(path.join(root, "README.md"), "utf8")
   const englishReadme = await fs.readFile(path.join(root, "README.en.md"), "utf8")
+  const chinesePreamble = markdownPreamble(chineseReadme)
+  const englishPreamble = markdownPreamble(englishReadme)
+  const chineseQuickStart = markdownSection(chineseReadme, "## 快速开始")
+  const englishQuickStart = markdownSection(englishReadme, "## Quick start")
+  const chineseReleaseSurface = `${chinesePreamble}\n${chineseQuickStart}`
+  const englishReleaseSurface = `${englishPreamble}\n${englishQuickStart}`
   assert.match(chineseReadme, /\[English\]\(README\.en\.md\)/u)
   assert.match(englishReadme, /\[简体中文\]\(README\.md\)/u)
   assert.match(chineseReadme, /## 快速开始/u)
   assert.match(chineseReadme, /## 安全与隐私/u)
-  assert.match(chineseReadme, /当前源码发布版为 `1\.0\.1`/u)
-  assert.match(chineseReadme, /npm Registry 的 `latest` 均为 `1\.0\.1`/u)
-  assert.match(chineseReadme, /dsh-grok-provider@1\.0\.1/u)
+  assert.match(
+    chinesePreamble,
+    /本说明对应 `dsh-grok-provider@1\.0\.2` 制品；`0\.1\.8` 曾发布后撤回且版本号不可复用。/u,
+  )
+  assert.match(
+    chinesePreamble,
+    /本 README 随 `1\.0\.2` 一起进入 npm tarball，下面的精确安装命令也固定为 `1\.0\.2`。/u,
+  )
+  assert.doesNotMatch(chineseReleaseSurface, /未发布|候选|继续安装/u)
+  assert.deepEqual(
+    chineseQuickStart.match(/dsh plugin --profile web add dsh-grok-provider@[0-9]+\.[0-9]+\.[0-9]+/gu),
+    ["dsh plugin --profile web add dsh-grok-provider@1.0.2"],
+  )
   assert.match(chineseReadme, /\[`THIRD_PARTY_NOTICES\.md`\]\(THIRD_PARTY_NOTICES\.md\)/u)
   assert.match(englishReadme, /## Quick start/u)
   assert.match(englishReadme, /## Security and privacy/u)
-  assert.match(englishReadme, /current source release is `1\.0\.1`/u)
-  assert.match(englishReadme, /npm Registry `latest` are all `1\.0\.1`/u)
-  assert.match(englishReadme, /dsh-grok-provider@1\.0\.1/u)
+  assert.match(
+    englishPreamble,
+    /This README describes the `dsh-grok-provider@1\.0\.2` artifact; version `0\.1\.8` was published and then withdrawn and cannot be reused\./u,
+  )
+  assert.match(
+    englishPreamble,
+    /This README is included in the `1\.0\.2` npm tarball, and the exact installation command below is pinned to `1\.0\.2`\./u,
+  )
+  assert.doesNotMatch(englishReleaseSurface, /unpublished|candidate|continue installing/iu)
+  assert.deepEqual(
+    englishQuickStart.match(/dsh plugin --profile web add dsh-grok-provider@[0-9]+\.[0-9]+\.[0-9]+/gu),
+    ["dsh plugin --profile web add dsh-grok-provider@1.0.2"],
+  )
   assert.match(englishReadme, /\[`THIRD_PARTY_NOTICES\.md`\]\(THIRD_PARTY_NOTICES\.md\)/u)
   const securityPolicy = await fs.readFile(path.join(root, "SECURITY.md"), "utf8")
-  assert.match(securityPolicy, /当前 npm Registry `latest`、稳定发布版与源码发布版均为 `1\.0\.1`/u)
-  assert.match(securityPolicy, /current stable release, source release, and npm Registry `latest` are all `1\.0\.1`/u)
+  assert.match(securityPolicy, /本安全策略对应 `dsh-grok-provider@1\.0\.2` 制品/u)
+  assert.match(
+    securityPolicy,
+    /Release security note: the `1\.0\.2` artifact changes visible reasoning projection and its aligned replay envelope/u,
+  )
+  const currentReleaseNotes = await fs.readFile(
+    path.join(root, "docs/releases/v1.0.2.md"),
+    "utf8",
+  )
+  assert.equal(currentReleaseNotes.startsWith("## 中文\n"), true)
+  assert.match(currentReleaseNotes, /多个完整闭合、但没有任何可见内容的 reasoning lifecycle/u)
+  assert.match(currentReleaseNotes, /10 个空 reasoning/u)
+  assert.match(currentReleaseNotes, /Web Search 实际完成 5 个 Search lifecycle/u)
+  assert.match(currentReleaseNotes, /X Search 实际完成 3 个 custom-tool Search lifecycle/u)
+  assert.match(currentReleaseNotes, /dsh-grok-provider@1\.0\.2/u)
+  assert.match(currentReleaseNotes, /\n<details>\n<summary>English release notes<\/summary>\n/u)
+  assert.doesNotMatch(currentReleaseNotes, /`1\.0\.2` (?:已正式发布|is published)/iu)
   const releaseNotes = await fs.readFile(
     path.join(root, "docs/releases/v1.0.1.md"),
     "utf8",

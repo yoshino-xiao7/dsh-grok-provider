@@ -2,11 +2,11 @@
 
 ## 0. 当前状态
 
-当前可用 npm 稳定基线为 `dsh-grok-provider@1.0.1`，npm `latest=1.0.1`。最终 release commit 为 `3c25a53571531e35ac888df16df4fe6c01849e85`；annotated tag object `ab79b1bb1e408a0112166cadc26761a327819c3f` peel 到该提交，final CI run [`33312946205`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33312946205) 双平台全绿。仓库所有者明确授权的唯一 tarball 含 73 个文件、240,904 bytes，unpacked size 为 748,888 bytes；SHA-1 为 `9e6449160947104e8dbb71b7201c53e81b073f83`，SHA-256 为 `e3e15646d38de23c32c71ed759f9c10be9b2d790d4b10b4b8dfe59a44fbfef9f`，npm SRI 为 `sha512-Bm1qjJQ9i7CWT0oWah7QKDVBP8dR2YQtvEEZGE/BOSwZCo8sZbrW2v2QSfUfLsOLHcQXFZZ0jlDCAztr1m/q+A==`。Trusted Publisher run [`33313699790` attempt 1](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33313699790/attempts/1) 已完成；冻结候选、GitHub Release 与 npm Registry tarball 逐字节一致。Node `24.19.0` / npm `11.5.1` 的锁定 Registry 安装通过 Host `name`/`apply` 与 client `id`/factory smoke，生产依赖审计为 0 漏洞；本包公开 metadata 包含 1 个 Registry signature、2 个 attestations，`npm audit signatures` 验证安装图中 11 个 signed packages 与 2 个 attested packages，SLSA provenance 精确绑定 `release.yml`、`refs/tags/v1.0.1`、release commit 与 publish run。
+`dsh-grok-provider@1.0.1` 的发布与供应链回读已经完成：最终 release commit `3c25a53571531e35ac888df16df4fe6c01849e85`、final CI、明确授权的唯一制品、Trusted Publisher、Registry 字节、签名、attestations 与 provenance 都有独立历史证据。`1.0.2` 制品只修复严格空 reasoning 被投影为空 `Think` 的显示问题；本文件不会在其实际完成前预写 CI、tag、摘要、发布或 Registry 事实。
 
-当前源码 manifest/lock 与已发布版本均为 `1.0.1`。该版本修复启用 xAI server Search 时，Harness 同名 `web_search` / `x_search` function definitions 与 server descriptors 共存导致的 fixed Proxy HTTP 400，并让 source transport error 保持为 `PROVIDER_ERROR`。本地精确 Node `24.19.0` 全量门禁为 253 tests、251 pass、0 fail、2 platform skips，生产依赖审计为 0 漏洞，73 文件 dry-run pack 与秘密模式扫描通过；一次授权的脱敏原失败 X 会话结构回放以 314 events 和 `response.completed` 结束。代码/main/final 双平台 CI、固定 release commit、候选 tarball 冻结与隔离安装、精确制品发布授权、tag/Release/Registry 及供应链回读均已完成。网络可达 Windows 真机浏览器弹出仍是独立未验收边界。
+`1.0.2` 的版本、代码、测试与发行事实按检查表逐项产生。目标行为是：空 reasoning 仍完整进入 decoder FSM，但仅在首个非空 summary/raw delta 到来时创建 Harness block；严格空生命周期产生零可见 chunk。request、Search、认证、图片、模型、endpoint、工具权限与 Windows 浏览器边界不变。
 
-发布后只读回查发现，精确授权并发布的 `1.0.1` tarball 内 README 仍保留发布前候选态文字，因此 npm 包页面也显示历史的 `latest=1.0.0` 与 `@1.0.0` 安装示例。npm 已发布版本不可覆盖，不能以“文档修正”为由替换已授权字节；GitHub 主分支文档由发布后证据提交修正，npm 页面须在后续递增版本中随新的、重新授权的制品纠正。后续版本冻结前必须增加“包内 README 已使用发布可用文案”的断言，避免依赖不可进入已发布 tarball 的 post-release commit。
+发布后只读回查发现，精确授权并发布的 `1.0.1` tarball 内 README 仍保留发布前候选态文字，因此 npm 包页面显示历史的 `latest=1.0.0` 与 `@1.0.0` 安装示例。已发布字节不可覆盖。`1.0.2` 通过两层门禁纠正：双语 README 使用发布前后均成立的制品措辞和精确 `@1.0.2` 命令；publish workflow 直接读取下载 tarball 内的两个 README，不能依赖不进入该 tarball 的 post-release commit。
 
 `1.0.0` 只修复剩余 Search response 形状：已完成 server Search 支撑的 reasoning ID 可以继续出现为多个严格空、逐次闭合的占位 lifecycle；完成态 Web Search 可以返回精确有界的 `open_page` type/URL，且 streamed/final action 必须一致。严格空要求 visible summary/content 与 summary/raw lifecycle 为空，允许有界 opaque `encrypted_content`；每次复用必须到达自己的 `response.output_item.done`，仅当 `response.incomplete` 到来时仍有复用段未闭合才失败关闭，所有复用段闭合后的 `max_output_tokens` 终态仍有效。Provider 校验 `open_page` 后立即丢弃 URL，不访问、不预览、不下载、不 replay；非空、跨类型、未知 terminal 或 accessor-backed 字段继续拒绝。
 
@@ -129,11 +129,13 @@ patch 路径必须为不含 `..`、绝对路径、反斜线或 NUL 的相对 `.y
 3. 构建 Host ESM/CJS 产物、类型声明和 lazy-CJS client。
 4. `npm pack --dry-run --json` 审查清单。
 5. 生成唯一候选 tarball并记录 SHA-512。
-6. 解包审查 identity、exports、peer、scripts、patch 和文件类型。
+6. 解包审查 identity、exports、peer、scripts、patch、文件类型及双语 README；前言/Quick Start 必须对应精确制品版本，且只能引导安装该版本。
 7. 从该 tarball 在临时 Harness profile 安装并执行 Web/TUI smoke。
 8. 同一个 tarball 在 macOS arm64 运行 verifier-equivalent 检查与安装 smoke；Windows x64 由 CI 完成自动化检查。首次 Windows 真机安装和 production inspector 在 `0.1.0` 发布后针对 Registry 精确版本执行。
 
 候选 tarball 只构建一次，并记录 npm SRI `sha512-<base64>`。预发布 macOS 验收、Windows CI 和 publish job 都必须先验证同一 digest；测试 job 和 publish job 不得重新构建或重新 `npm pack`。发布后的 Windows 首次真机验证必须下载 Registry 的精确 `0.1.0` 并核对同一 SRI。
+
+publish job 在校验 digest 与 manifest 的同一步直接从唯一 tarball 提取 `package/README.md` 和 `package/README.en.md`。只检查前言与 Quick Start：要求精确版本说明、唯一 `dsh plugin --profile web add dsh-grok-provider@<release-version>` 命令，并拒绝“尚未发布/源码候选/继续安装旧版”及英文等价措辞。检查范围不得覆盖后文历史说明，以免误伤合法的历史 candidate 记录。
 
 禁止为不同平台重新打两个内容不同但版本相同的 tarball。
 
@@ -213,7 +215,7 @@ catalog 条目只能记录实际验证完成的精确版本和平台。当前条
 - verification `installed`。
 - 仅 `darwin-arm64`。
 
-从 `0.1.1` 起，常规发版不再要求重复 macOS/Windows 真机 smoke。每次仍须通过两平台 CI、协议与安全测试、干净 profile 安装、确定性 tarball 和 Registry integrity/provenance 回读。涉及认证、官方 CLI、Harness subprocess seam、内容输入或平台安全策略的变更应安排定向真机复核；`0.1.4` 因新增图片输入，已完成精确 `grok-4.6` 的 Proxy 红蓝语义门禁和收窄后的 Harness modality 复验。`0.1.9` 因新增 Search，保留四组固定 Proxy 脱敏协议证据、默认关闭、独立开关、混合 function、citation/replay、双平台 CI 与隔离 Harness 验收；`0.1.11` 的 reasoning 响应兼容还必须覆盖空项、一次性 ID 复用、raw/summary 互斥、encrypted replay 与截断失败关闭，并明确脱敏真实 probe 未观察 raw reasoning。Windows discovery 可访问时由官方 CLI 弹出浏览器仍是独立未验证边界。
+从 `0.1.1` 起，常规发版不再要求重复 macOS/Windows 真机 smoke。每次仍须通过两平台 CI、协议与安全测试、干净 profile 安装、确定性 tarball 和 Registry integrity/provenance 回读。涉及认证、官方 CLI、Harness subprocess seam、内容输入或平台安全策略的变更应安排定向真机复核；`0.1.4` 因新增图片输入，已完成精确 `grok-4.6` 的 Proxy 红蓝语义门禁和收窄后的 Harness modality 复验。`0.1.9` 因新增 Search，保留四组固定 Proxy 脱敏协议证据、默认关闭、独立开关、混合 function、citation/replay、双平台 CI 与隔离 Harness 验收；`0.1.11` 的 reasoning 响应兼容覆盖空项、一次性 ID 复用、raw/summary 互斥、encrypted replay 与截断失败关闭。`1.0.2` 还必须覆盖空项零 block、非空项延迟启动、混合多项顺序、严格失败关闭和实际 tarball README。Windows discovery 可访问时由官方 CLI 弹出浏览器仍是独立未验证边界。
 
 macOS x64 不在当前官方 Grok CLI 支持矩阵，不进入 `0.1.0` catalog 或发布承诺。npm SHA-512 作为 release evidence 保存；它不是当前 curated schema 字段，市场会从 Registry `dist.integrity` 自行验证 SHA-512。
 

@@ -15,6 +15,8 @@
 
 `1.0.1` 已正式发布，npm `latest=1.0.1`。最终 release commit `3c25a53571531e35ac888df16df4fe6c01849e85`、双平台 final CI、仓库所有者明确授权的唯一 73 文件制品、Trusted Publisher run `33313699790` attempt 1、Registry 字节、锁定隔离安装、生产依赖审计、签名、attestations 与 SLSA provenance 回读均已关闭。该版本只在完整验证 source functions 后移除与已启用 server Search 精确同名的 wire callable definitions，并保留历史 calls/results；request/decoder receipt 拒绝名称交集，source transport error 不再被 parser 误标为 `INVALID_RESPONSE`。它不放宽固定 origin、凭据、设置、模型、图片、本地工具或 URL 边界；供应链证据仍不构成网络可达 Windows 真机浏览器弹出验收。
 
+`1.0.2` 制品只调整 decoder 到 Harness 的可见投影及其 replay 对齐槽。普通严格空 reasoning item 保留既有字段、顺序、状态、空性、大小和闭合校验；Search-backed 同 ID 复用额外保留精确 own-data 键集与 accessor 拒绝。只有首个非空 summary/raw delta 才按 output index 启动可见 block。该延迟投影不得吞掉未闭合复用段，也不改变普通非复用 partial item 的既有 max-token 处理、可见非空 replay 或 Search 后 replay 抑制；隐藏普通空项的 encrypted content 校验后不持久化。发布、CI、摘要、Registry 与供应链事实只在实际完成后另行记录。
+
 ## 2. 信任边界
 
 ```text
@@ -60,6 +62,7 @@ Host AuthCoordinator
 | Search 远端内容含提示注入或错误信息 | 诱导本地工具、文件或命令操作 | 默认关闭；只接受闭合 server lifecycle；不投影成本地 tool-call；结构化 citation 有界校验后丢弃；Harness 权限层继续独立裁决本地工具 | P0 |
 | Search 设置误用于后台任务或不支持模型 | 隐私范围扩大、额外用量或协议漂移 | 只在普通 purpose 下启用；精确 `grok-4.6` allowlist；不支持 route 在 POST 前失败；不静默裁剪并重放 | P0 |
 | Search namespace 缺失或热更新污染在途调用 | 控件永久不可用，或一次调用混用两组隐私/用量策略 | canonical `llm-grok` 注册；默认关闭；每次调用在首次 await 前读取并冻结一次；真实 SettingsProvider、页面写入和生命周期回归 | P0 |
+| 为隐藏空 `Think` 而提前丢弃 reasoning item | 非法或未闭合响应绕过验证，或后续 block 越过未决 reasoning；恶意流借未决项聚合后续 block 导致内存放大 | 保留完整 decoder FSM；普通项执行既有校验，Search-backed 复用执行精确 own-data/accessor 校验；后续可见 block 按 output index 缓冲到更早 reasoning 决议，且共享缓冲受条目数与 UTF-8 载荷双重总预算限制 | P0 |
 | SSE/压缩响应无限增长 | 内存、CPU、磁盘 DoS | 解压后字节、行、事件、单事件与整体请求期限均有上限；当前没有独立 first-byte/idle timeout | P0 |
 | 原始远端错误返回 UI | token、账号或内部信息泄漏 | 只返回插件稳定错误码和安全文案；Harness RPC correlation 留在 carrier 内部 | P0 |
 | billing 响应或 credential metadata 越界进入 renderer | 身份、订阅或凭据泄漏 | Host 严格抽取百分比、周期与模型 capability；拒绝/忽略 identity、balance、history、headers、URL 和原始响应 | P0 |
@@ -196,7 +199,7 @@ POST https://cli-chat-proxy.grok.com/v1/responses
 - Responses 请求：最多 10,000 条消息、128 个 function tools；每个 tool schema 的 JSON 最多 1 MiB；完整请求 JSON UTF-8 最多 16 MiB。
 - 文本或纯文本 tool-result 的单个累计段，以及被省略前的 request reasoning block，最多 8,388,608 个 JavaScript code units；function arguments 最多 2 MiB UTF-8。最终 16 MiB JSON 是独立硬门禁。
 - SSE：单事件/未切分 buffer 最多 2 MiB、解析事件最多 100,000、单次流实际读取字节最多 128 MiB。comment/heartbeat 不单独计数，但仍受流字节上限。
-- response block text 与 encrypted reasoning 各最多 8 MiB UTF-8；tool arguments 最多 2 MiB UTF-8。block 数量由事件数与总流字节间接约束，没有另行宣称 4,096 上限。
+- response block text 与 encrypted reasoning 各最多 8 MiB UTF-8；tool arguments 最多 2 MiB UTF-8。严格空 reasoning lifecycle 仍计入事件与流字节预算，但不创建可见 block。为等待更早 reasoning 决议而保留的后续 chunk 共享最多 65,536 条、32 MiB 动态 UTF-8 载荷的 decoder 级预算；flush 后释放计数，任一总预算超限即失败关闭。可见 block 数量仍由非空 reasoning/text/function 与总事件、流字节间接约束，没有另行宣称 4,096 上限。
 - models deadline 30 秒、billing deadline 15 秒、Responses 请求整体 deadline 10 分钟；当前没有独立首字节或 idle deadline。
 
 transport 对实际读取/发送字节做上限检查并拒绝重定向。当前实现没有基于声明 `Content-Length` 的独立门禁，也没有通用 schema 深度限制；不得在文档中把它们写成已实现防护。若后续风险评审要求这些边界，必须先补源码与回归测试。

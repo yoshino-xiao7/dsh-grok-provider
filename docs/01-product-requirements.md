@@ -20,7 +20,7 @@
 - 用户可从 Harness 发起官方 CLI 浏览器登录；插件能识别登录中、成功、取消、失败、凭据过期和未登录状态。
 - Web 设置页能区分官方 CLI 缺失、无效、检测不可用、OIDC discovery 网络超时与真人授权超时，并显示 Provider/已验证 CLI 版本；这些诊断不得暴露路径、stderr、代理配置或 OAuth URL。
 - 首版只接受与发布绑定 CLI 版本的 xAI 第一方 OIDC schema 相符的候选。CLI 有效配置若选择外部 auth provider、企业 OIDC、API key 或无法判定的凭据结构，插件必须显示“不受支持的认证配置”并拒绝由本插件把该 token 发给 xAI CLI Chat Proxy；这不把未签名 metadata 宣称成来源证明。
-- 支持多轮文本对话、reasoning 增量、流式文本、工具调用、usage 和明确 finish 原因。
+- 支持多轮文本对话、reasoning 增量、流式文本、工具调用、usage 和明确 finish 原因。只有首个非空 summary/raw delta 才创建可见 reasoning block；完整闭合但始终严格空的 lifecycle 仍被校验，却不显示空 `Think`。
 - `0.1.9` 引入精确 `grok-4.6` 的 Web/X Search 协议与页面，`0.1.10` 补齐可写 Host settings 集成，`0.1.11` 首次兼容 High Effort + Web Search 的 reasoning 续跑；已发布 `1.0.0` 继续兼容实测的 completed `open_page` 与同一 Search-backed reasoning ID 的多段严格空占位：两个开关仍独立、默认关闭，后台/派生 purpose 不启用 Search，远端 server-tool lifecycle 不得投影为 Harness 本地工具。
 - Harness 中止请求时，网络流和解析器都能及时终止。
 - 热更新设置或重新认证不会让同一调用混用两组路由或凭据。
@@ -125,6 +125,7 @@ Web 的“退出”或 TUI `/grok logout` 先中止本插件所有在途 Grok �
 - `1.0.0` 最终 release commit `c6548199582b122f1d285422eabea0205eaf602f` 的双平台 CI、唯一 72 文件制品、精确授权、Trusted Publisher run `33309083806` attempt 1、Registry 字节、签名、attestations 与 SLSA provenance 回读均已完成；npm `latest=1.0.0`。这些供应链证据不构成网络可达 Windows 真机浏览器弹出验收。
 - `1.0.1` 已证明：启用 server Search 时，全部 Harness functions 先完整验证，再只从 wire definitions 移除与已启用 `web_search` / `x_search` 精确同名的 callable definition；关闭对应开关时本地 function 保留，历史 calls/results 不删除、不改名。request/decoder receipts 拒绝名称交集；source transport error 保留既有 `AUTH`、`RATE_LIMIT`、`ABORTED` 与 `PROVIDER_ERROR` 映射，只有真实 framing/JSON/协议错误进入 `INVALID_RESPONSE`。
 - `1.0.1` 最终 release commit `3c25a53571531e35ac888df16df4fe6c01849e85` 的双平台 final CI、唯一 73 文件制品、精确授权、Trusted Publisher run `33313699790` attempt 1、Registry 字节、锁定隔离安装、生产依赖审计、签名、attestations 与 SLSA provenance 回读均已完成；npm `latest=1.0.1`。这些供应链证据不构成网络可达 Windows 真机浏览器弹出验收。
+- `1.0.2` 只改变严格空 reasoning 的 Harness 投影及其对齐槽：普通空项继续执行既有 ID/type、sequence、output index、状态、summary/content 空性、大小、可选 encrypted content 与闭合校验；Search-backed 同 ID 复用额外保留精确 own-data 键集/accessor 拒绝。生命周期最终为空时产生零个可见 block，首个非空 delta 才按 output index 开始 block。正文、工具、usage、finish、可见非空 replay 与 Search replay 抑制不变；隐藏的普通空项不占 replay 槽，其 encrypted content 校验后不持久化；旧会话不回写。
 
 ## 8. `0.1.0` 历史发布阻断项
 
