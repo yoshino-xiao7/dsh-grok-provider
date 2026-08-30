@@ -889,22 +889,80 @@ function webSearchResponseEvents() {
     start_index: 7,
     end_index: 13,
   }
+  const initialReasoningDone = {
+    id: "rs_search",
+    type: "reasoning",
+    status: "completed",
+    encrypted_content: "sealed-search-summary",
+    summary: [{ type: "summary_text", text: "Search reasoning." }],
+  }
+  const webDone = {
+    id: "ws_1",
+    type: "web_search_call",
+    status: "completed",
+    action: { type: "search", query: "official docs", sources: [] },
+  }
+  const emptyReasoning = {
+    id: "rs_empty_search",
+    type: "reasoning",
+    status: "completed",
+    encrypted_content: "sealed-search-empty",
+    summary: [],
+  }
+  const reusedReasoningAdded = {
+    id: "rs_search",
+    type: "reasoning",
+    status: "in_progress",
+    summary: [],
+  }
+  const reusedReasoningDone = {
+    ...reusedReasoningAdded,
+    status: "completed",
+    encrypted_content: "sealed-search-reused",
+  }
+  const messageDone = {
+    id: "msg_search",
+    type: "message",
+    role: "assistant",
+    status: "completed",
+    content: [{ type: "output_text", text, annotations: [annotation] }],
+  }
   return [
     { type: "response.created", sequence_number: 0, response: { status: "in_progress" } },
     { type: "response.in_progress", sequence_number: 1, response: { status: "in_progress" } },
-    { type: "response.output_item.added", sequence_number: 2, output_index: 0, item: { id: "ws_1", type: "web_search_call", status: "in_progress", action: { type: "search", query: "", sources: [] } } },
-    { type: "response.web_search_call.in_progress", sequence_number: 3, output_index: 0, item_id: "ws_1" },
-    { type: "response.web_search_call.searching", sequence_number: 4, output_index: 0, item_id: "ws_1" },
-    { type: "response.web_search_call.completed", sequence_number: 5, output_index: 0, item_id: "ws_1" },
-    { type: "response.output_item.done", sequence_number: 6, output_index: 0, item: { id: "ws_1", type: "web_search_call", status: "completed", action: { type: "search", query: "official docs", sources: [] } } },
-    { type: "response.output_item.added", sequence_number: 7, output_index: 1, item: { id: "msg_search", type: "message", role: "assistant", status: "in_progress", content: [] } },
-    { type: "response.content_part.added", sequence_number: 8, output_index: 1, item_id: "msg_search", content_index: 0, part: { type: "output_text", text: "", annotations: [] } },
-    { type: "response.output_text.delta", sequence_number: 9, output_index: 1, item_id: "msg_search", content_index: 0, delta: text },
-    { type: "response.output_text.annotation.added", sequence_number: 10, output_index: 1, item_id: "msg_search", content_index: 0, annotation_index: 0, annotation },
-    { type: "response.output_text.done", sequence_number: 11, output_index: 1, item_id: "msg_search", content_index: 0, text },
-    { type: "response.content_part.done", sequence_number: 12, output_index: 1, item_id: "msg_search", content_index: 0, part: { type: "output_text", text, annotations: [annotation] } },
-    { type: "response.output_item.done", sequence_number: 13, output_index: 1, item: { id: "msg_search", type: "message", role: "assistant", status: "completed", content: [{ type: "output_text", text, annotations: [annotation] }] } },
-    { type: "response.completed", sequence_number: 14, response: { status: "completed", citations: ["https://example.test"], usage: { input_tokens: 10, output_tokens: 4 } } },
+    { type: "response.output_item.added", sequence_number: 2, output_index: 0, item: { id: "rs_search", type: "reasoning", status: "in_progress", summary: [] } },
+    { type: "response.reasoning_summary_part.added", sequence_number: 3, output_index: 0, item_id: "rs_search", summary_index: 0, part: { type: "summary_text", text: "" } },
+    { type: "response.reasoning_summary_text.delta", sequence_number: 4, output_index: 0, item_id: "rs_search", summary_index: 0, delta: "Search reasoning." },
+    { type: "response.reasoning_summary_text.done", sequence_number: 5, output_index: 0, item_id: "rs_search", summary_index: 0, text: "Search reasoning." },
+    { type: "response.reasoning_summary_part.done", sequence_number: 6, output_index: 0, item_id: "rs_search", summary_index: 0, part: { type: "summary_text", text: "Search reasoning." } },
+    { type: "response.output_item.done", sequence_number: 7, output_index: 0, item: initialReasoningDone },
+    { type: "response.output_item.added", sequence_number: 8, output_index: 1, item: { id: "ws_1", type: "web_search_call", status: "in_progress", action: { type: "search", query: "", sources: [] } } },
+    { type: "response.web_search_call.in_progress", sequence_number: 9, output_index: 1, item_id: "ws_1" },
+    { type: "response.web_search_call.searching", sequence_number: 10, output_index: 1, item_id: "ws_1" },
+    { type: "response.web_search_call.completed", sequence_number: 11, output_index: 1, item_id: "ws_1" },
+    { type: "response.output_item.done", sequence_number: 12, output_index: 1, item: webDone },
+    { type: "response.output_item.added", sequence_number: 13, output_index: 2, item: emptyReasoning },
+    { type: "response.output_item.done", sequence_number: 14, output_index: 2, item: emptyReasoning },
+    { type: "response.output_item.added", sequence_number: 15, output_index: 3, item: reusedReasoningAdded },
+    { type: "response.output_item.done", sequence_number: 16, output_index: 3, item: reusedReasoningDone },
+    { type: "response.output_item.added", sequence_number: 17, output_index: 4, item: { id: "msg_search", type: "message", role: "assistant", status: "in_progress", content: [] } },
+    { type: "response.content_part.added", sequence_number: 18, output_index: 4, item_id: "msg_search", content_index: 0, part: { type: "output_text", text: "", annotations: [] } },
+    { type: "response.output_text.delta", sequence_number: 19, output_index: 4, item_id: "msg_search", content_index: 0, delta: text },
+    { type: "response.output_text.annotation.added", sequence_number: 20, output_index: 4, item_id: "msg_search", content_index: 0, annotation_index: 0, annotation },
+    { type: "response.output_text.done", sequence_number: 21, output_index: 4, item_id: "msg_search", content_index: 0, text },
+    { type: "response.content_part.done", sequence_number: 22, output_index: 4, item_id: "msg_search", content_index: 0, part: { type: "output_text", text, annotations: [annotation] } },
+    { type: "response.output_item.done", sequence_number: 23, output_index: 4, item: messageDone },
+    {
+      type: "response.completed",
+      sequence_number: 24,
+      response: {
+        status: "completed",
+        output: [initialReasoningDone, webDone, emptyReasoning, reusedReasoningDone, messageDone],
+        citations: ["https://example.test"],
+        server_side_tool_usage: { SERVER_SIDE_TOOL_WEB_SEARCH: 1 },
+        usage: { input_tokens: 10, output_tokens: 4 },
+      },
+    },
   ]
 }
 

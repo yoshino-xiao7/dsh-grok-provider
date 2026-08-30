@@ -2,7 +2,7 @@
 
 ## 0. 当前状态
 
-当前可用 npm 稳定基线为 `dsh-grok-provider@0.1.9`；其 release commit 为 `a0af7b74882546dc3d9477b8f6c1494935e6bfb4`，不可变 tag 为 `v0.1.9`，CI run `33295408650` 全绿。唯一 tarball 含 69 个文件、190,049 bytes，unpacked size 为 603,475 bytes，SHA-256 为 `78c73c95ea71d66cad6e6146fed41c281f1c8b29f60353e3f20247ec23833210`，npm SRI 为 `sha512-GeXQg3qedCGZz9D5MMaHd8Afe5Bn0nxjG+PQmKOB2AxB3m6IiGA07PMD77dEAOJVbAzKk0SnxAOKTZMTQFtuYg==`；Trusted Publisher run `33295761336` 已完成，Registry、GitHub Release 与本地制品逐字节一致，npm `latest=0.1.9`。精确 Registry 安装的 Host/client import/export smoke 通过；精确安装审计图汇总 71 个已验证签名与 3 个 attestations，本包 attestations endpoint 返回 2 项，SLSA provenance 精确绑定 `v0.1.9` tag、release workflow、release commit 与 release run。sidebar quota 维护版 `0.1.8` 曾发布后撤回；npm Registry 已永久消耗该版本号，禁止把 Search 制品重新标记或发布为 `0.1.8`。`0.1.9` 的 Search 开关因 Host settings namespace 遗漏而不可用；`0.1.10` 修复已由代码 PR #23 合入 `yukiryou/main` merge commit `6c3c5bfff8de4e8bc46074434aad7682b3509db3`，main CI run `33298895342` 的 macOS 14 / Windows 2022 全绿。当前 `yukiryou/v0.1.10-release-evidence` 只记录发布证据；该版不覆盖或重发 `0.1.9`，也不改变 Search wire、支持模型或认证边界。
+当前可用 npm 稳定基线为 `dsh-grok-provider@0.1.10`；其 release commit 为 `fe1e5a7d82defb17ab5bcbb0d9979c43cb48c028`，不可变 tag 为 `v0.1.10`，main CI run `33299116564` 全绿。唯一 tarball 含 70 个文件、197,620 bytes，unpacked size 为 628,836 bytes，SHA-256 为 `f9fe1dea743e86e2799a1073a93a8af91ad5bd389e14f4d2f0528428ada93c62`，npm SRI 为 `sha512-OnfG4diVqJdzYSwJKERNnaplYFbOvFICZP58E0f2Cdh+t7orlTL1DWokvzEHdJrw6HA+UMoKDZgJ6AMEVv4aUg==`；Trusted Publisher run `33299599113` 已完成，Registry、GitHub Release 与本地制品逐字节一致，npm `latest=0.1.10`，Registry signature 与 SLSA provenance 已回读。sidebar quota 维护版 `0.1.8` 曾发布后撤回且不能复用。真实使用随后发现精确 `grok-4.6` 在 High Effort + Web Search 续跑时，可能在一次已完成 Search 后复用已关闭 reasoning ID 作为空占位；当前 `yukiryou/v0.1.11-reasoning-stream` 候选只在已完成 server Search 位于两段 reasoning 之间时放行该严格空项，并加入官方 raw reasoning 支持，不改变认证、设置、Search descriptor、模型 route、图片或平台边界。
 
 首个 `dsh-grok-provider@0.1.0` 于 2026-08-26 从 GitHub Release 中唯一的候选 tarball 发布到 npm；Registry 回读的 SHA-512、重新下载文件的 SHA-256 和 GitHub Release 产物完全一致，并生成 npm provenance attestation。后续稳定版沿用由该流程建立的不可变制品与回读原则。
 
@@ -131,7 +131,7 @@ patch 路径必须为不含 `..`、绝对路径、反斜线或 NUL 的相对 `.y
 
 ## 7. Git 与版本
 
-- `0.1.0` 历史开发分支为 `yukiryou/v0.1.0`；`0.1.9` 代码分支 `yukiryou/v0.1.9-search` 与发布证据分支 `yukiryou/v0.1.9-release-evidence` 已分别经 PR #20、#21 合入受保护 `yukiryou/main`，最终 release commit 为 `a0af7b74882546dc3d9477b8f6c1494935e6bfb4`。`0.1.8` 已由撤回的 sidebar quota 发布消耗，不得复用；当前候选分支为 `yukiryou/v0.1.10-search-settings-fix`（目标版本 `0.1.10`），已发布 `0.1.9` 不可覆盖或重发。
+- `0.1.0` 历史开发分支为 `yukiryou/v0.1.0`；`0.1.10` 代码分支 `yukiryou/v0.1.10-search-settings-fix` 与发布证据分支 `yukiryou/v0.1.10-release-evidence` 已分别经 PR #23、#24 合入受保护 `yukiryou/main`，最终 release commit 为 `fe1e5a7d82defb17ab5bcbb0d9979c43cb48c028`。`0.1.8` 已由撤回的 sidebar quota 发布消耗，不得复用；当前候选分支为 `yukiryou/v0.1.11-reasoning-stream`（目标版本 `0.1.11`），已发布 `0.1.10` 不可覆盖或重发。
 - `package.json`、CHANGELOG、release notes、Git tag 和 tarball 必须使用同一个精确候选版本。
 - 发布提交必须干净且可复现。
 - tag 使用 `v<major>.<minor>.<patch>`，只在发布提交确定后创建。
@@ -194,9 +194,9 @@ scoped 包首次公开发布必须保留 `--access public`。
 npm 发布不会自动成为受管可安装项。当前发现状态：
 
 - GitHub 仓库已添加 DeepSeek Harness 官方推荐的 `dsh-plugin` 与 `dsh` Topics，可被 Topic 驱动来源发现。
-- YukiRyou curated catalog 当前仍是精确 `dsh-grok-provider@0.1.0`、verification `installed`、仅 `darwin-arm64`。`0.1.9` 已发布及其完整性/provenance 回读不等于从 catalog 安装该精确版本，因此不得据此升级条目或增加平台。
+- YukiRyou curated catalog 当前仍是精确 `dsh-grok-provider@0.1.0`、verification `installed`、仅 `darwin-arm64`。`0.1.10` 已发布及其完整性/provenance 回读不等于从 catalog 安装该精确版本，因此不得据此升级条目或增加平台。
 - 公共 `awesome-dsh-plugin` 的收录 PR #3415 已合并，项目已进入 `model` 分类。该列表不记录精确 npm 版本或平台验证字段，因此收录只代表发现入口，不证明任一后续制品的受管安装或平台验收。
-- Windows x64 仍未完成一条闭合的 Registry 精确版本 production inspector、安装、重启、浏览器登录、聊天、工具调用和重新认证链路。`0.1.6` 发布后已确认图片可用，并确认官方 CLI 可在生成登录 URL 前因 OIDC discovery timeout 退出；`0.1.7` 只增加闭合诊断，不是浏览器弹出已修复或已验证的证据。`0.1.9` 精确 Registry 安装的 Host/client import/export smoke 已通过，但未覆盖上述真实链路、OAuth、真实账号或真实 xAI 请求。
+- Windows x64 仍未完成一条闭合的 Registry 精确版本 production inspector、安装、重启、浏览器登录、聊天、工具调用和重新认证链路。`0.1.6` 发布后已确认图片可用，并确认官方 CLI 可在生成登录 URL 前因 OIDC discovery timeout 退出；`0.1.7` 只增加闭合诊断，不是浏览器弹出已修复或已验证的证据。`0.1.10` 的 Registry/制品回读也未覆盖上述真实链路、OAuth、完整真实账号会话或 Windows 浏览器弹出。
 
 catalog 条目只能记录实际验证完成的精确版本和平台。当前条目记录：
 
@@ -205,7 +205,7 @@ catalog 条目只能记录实际验证完成的精确版本和平台。当前条
 - verification `installed`。
 - 仅 `darwin-arm64`。
 
-从 `0.1.1` 起，常规发版不再要求重复 macOS/Windows 真机 smoke。每次仍须通过两平台 CI、协议与安全测试、干净 profile 安装、确定性 tarball 和 Registry integrity/provenance 回读。涉及认证、官方 CLI、Harness subprocess seam、内容输入或平台安全策略的变更应安排定向真机复核；`0.1.4` 因新增图片输入，已完成精确 `grok-4.6` 的 Proxy 红蓝语义门禁和收窄后的 Harness modality 复验，但不能替代最终制品安装与双平台 CI。`0.1.9` 因新增 Search，必须保留四组固定 Proxy 脱敏协议证据，并完成默认关闭、独立开关、混合 function、citation/replay、双平台 CI 与隔离 Harness 验收。Windows discovery 可访问时由官方 CLI 弹出浏览器仍是独立未验证边界。
+从 `0.1.1` 起，常规发版不再要求重复 macOS/Windows 真机 smoke。每次仍须通过两平台 CI、协议与安全测试、干净 profile 安装、确定性 tarball 和 Registry integrity/provenance 回读。涉及认证、官方 CLI、Harness subprocess seam、内容输入或平台安全策略的变更应安排定向真机复核；`0.1.4` 因新增图片输入，已完成精确 `grok-4.6` 的 Proxy 红蓝语义门禁和收窄后的 Harness modality 复验。`0.1.9` 因新增 Search，保留四组固定 Proxy 脱敏协议证据、默认关闭、独立开关、混合 function、citation/replay、双平台 CI 与隔离 Harness 验收；`0.1.11` 的 reasoning 响应兼容还必须覆盖空项、一次性 ID 复用、raw/summary 互斥、encrypted replay 与截断失败关闭，并明确脱敏真实 probe 未观察 raw reasoning。Windows discovery 可访问时由官方 CLI 弹出浏览器仍是独立未验证边界。
 
 macOS x64 不在当前官方 Grok CLI 支持矩阵，不进入 `0.1.0` catalog 或发布承诺。npm SHA-512 作为 release evidence 保存；它不是当前 curated schema 字段，市场会从 Registry `dist.integrity` 自行验证 SHA-512。
 

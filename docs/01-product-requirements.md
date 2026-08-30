@@ -21,7 +21,7 @@
 - Web 设置页能区分官方 CLI 缺失、无效、检测不可用、OIDC discovery 网络超时与真人授权超时，并显示 Provider/已验证 CLI 版本；这些诊断不得暴露路径、stderr、代理配置或 OAuth URL。
 - 首版只接受与发布绑定 CLI 版本的 xAI 第一方 OIDC schema 相符的候选。CLI 有效配置若选择外部 auth provider、企业 OIDC、API key 或无法判定的凭据结构，插件必须显示“不受支持的认证配置”并拒绝由本插件把该 token 发给 xAI CLI Chat Proxy；这不把未签名 metadata 宣称成来源证明。
 - 支持多轮文本对话、reasoning 增量、流式文本、工具调用、usage 和明确 finish 原因。
-- `0.1.9` 引入精确 `grok-4.6` 的 Web/X Search 协议与页面，`0.1.10` 补齐可写 Host settings 集成：两个开关独立、默认关闭，后台/派生 purpose 不启用 Search，远端 server-tool lifecycle 不得投影为 Harness 本地工具。
+- `0.1.9` 引入精确 `grok-4.6` 的 Web/X Search 协议与页面，`0.1.10` 补齐可写 Host settings 集成；`0.1.11` 修复 High Effort + Web Search 续跑的 reasoning lifecycle：两个开关独立、默认关闭，后台/派生 purpose 不启用 Search，远端 server-tool lifecycle 不得投影为 Harness 本地工具。
 - Harness 中止请求时，网络流和解析器都能及时终止。
 - 热更新设置或重新认证不会让同一调用混用两组路由或凭据。
 - 凭据不进入 renderer、RPC、settings、workspace、本插件日志、错误详情、诊断包或 npm tarball；官方 CLI 自身的日志、网络与遥测属于独立 vendor boundary。
@@ -71,7 +71,7 @@
 - Grok ACP 或 `grok -p` headless 代理。
 - 厂商侧 Web Search、X Search、远程抓取。
 - 图片生成、图片 URL 下载或文件落盘。
-- 图片输入（`0.1.0`–`0.1.3`）；已发布 `0.1.4` 按[能力路线图](./11-capability-roadmap.md)与 [ADR-0008](./adr/0008-image-input-request-compiler.md)只为精确 `grok-4.6` 独立引入，`grok-4.5` 与所有其他模型继续 text-only；维护版 `0.1.5`–`0.1.7`、发布后撤回的 sidebar quota `0.1.8`、已发布 `0.1.9` 与当前 `0.1.10` 候选均不扩大该图片集合。
+- 图片输入（`0.1.0`–`0.1.3`）；已发布 `0.1.4` 按[能力路线图](./11-capability-roadmap.md)与 [ADR-0008](./adr/0008-image-input-request-compiler.md)只为精确 `grok-4.6` 独立引入，`grok-4.5` 与所有其他模型继续 text-only；维护版 `0.1.5`–`0.1.7`、发布后撤回的 sidebar quota `0.1.8`、已发布 `0.1.9`–`0.1.10` 与当前 `0.1.11` 候选均不扩大该图片集合。
 - 自定义 endpoint、企业 OIDC、自定义代理或多账号。
 - 自动安装或更新 Grok CLI。
 - 在远程 Web/headless 主机自动打开浏览器或无人值守登录的承诺。
@@ -117,7 +117,8 @@ Web 的“退出”或 TUI `/grok logout` 先中止本插件所有在途 Grok �
 - canary secret 扫描确认日志、RPC、错误、临时文件和打包产物无泄漏。
 - 协议测试确认第二个测试 origin 永远收不到 Authorization。
 - `0.1.9` 的固定 Proxy 脱敏门禁分别覆盖 Web、X、Web+X、Web+Harness function；离线回归确认默认关闭 wire 不变、未支持 route 在 POST 前失败、Search 产生零本地 tool-call chunk，未知或未闭合 lifecycle 失败关闭。
-- `0.1.10` 的真实 SettingsProvider 与隔离 Web Harness 验收必须证明唯一可写 `llm-grok` namespace、两个开关默认关闭且可操作；设置更新只影响首次 await 之后尚未开始的新调用，已准备或在途调用保持原快照。
+- `0.1.10` 的真实 SettingsProvider 与隔离 Web Harness 验收已证明唯一可写 `llm-grok` namespace、两个开关默认关闭且可操作；设置更新只影响首次 await 之后尚未开始的新调用，已准备或在途调用保持原快照。
+- `0.1.11` 必须只在一个已完成 server Search 位于两段 reasoning 之间时允许已关闭 reasoning ID 一次性复用为严格空项；raw `reasoning_text` 与 summary lifecycle 必须互斥，replay 元数据不得保存 raw 明文，后续请求只发送 encrypted content 与空 summary，当前流中的 raw delta 仍作为 Harness 可见 reasoning 输出。
 
 ## 8. `0.1.0` 历史发布阻断项
 
@@ -143,7 +144,8 @@ Web 的“退出”或 TUI `/grok logout` 先中止本插件所有在途 Grok �
 - `0.1.7`：已发布 Windows 官方 CLI 安装/版本诊断、登录失败可解释性与 Web 设置导航 `IconThinkOutline16` 维护；不改变官方 CLI 网络/代理或 OAuth 流程，不新增模型能力。
 - `0.1.8`：sidebar quota 维护版曾发布后撤回；npm Registry 已消耗该版本号，不能把 Search 重新标记或发布为 `0.1.8`。
 - `0.1.9`：已为精确 `grok-4.6` 发布默认关闭、设计为可独立开启的 Web Search / X Search 协议与页面，但遗漏 Host `llm-grok` namespace，真实页面开关不可用。
-- `0.1.10` 当前候选：补齐 canonical settings namespace 与按调用动态快照，使 `0.1.9` 的两个开关真正可写；不改变 Search wire、支持模型或认证边界。
+- `0.1.10` 已发布：补齐 canonical settings namespace 与按调用动态快照，使 `0.1.9` 的两个开关真正可写。
+- `0.1.11` 当前候选：修复 High Effort + Web Search reasoning 生命周期兼容并支持官方 raw reasoning 事件；不改变 Search descriptor、支持模型、认证或图片边界。
 - 再后续独立切片：默认关闭的图片生成（内联结果 → Harness attachment）。
 
 `prompt_cache_key` 不与图片输入捆绑；若以后排期，需独立分析会话标识隐私和 POST 不自动重放边界。任意 URL 下载、API Key、企业 OIDC、ACP、Headless 和 Linux 仍不在路线内。公开协议可驱动隔离原型，但每个切片在声明能力、合并发布基线前必须有独立 ADR 与固定 CLI Chat Proxy spike；`0.1.4` 的 `grok-4.6` user/tool-result 红蓝语义门禁已于 2026-08-28 通过，`grok-4.5` 因语义不可靠失败关闭，最终 Harness attachment 复验见[上游证据页](./12-upstream-image-input-evidence.md)。

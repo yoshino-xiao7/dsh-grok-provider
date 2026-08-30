@@ -297,6 +297,39 @@ test("a same-provider replay envelope restores encrypted reasoning in block orde
   ])
 })
 
+test("a raw reasoning replay envelope is not mislabeled as a summary", () => {
+  const request = encodeResponsesRequest({
+    provider: "grok",
+    model: "grok-4.6",
+    messages: [{
+      id: "assistant-raw",
+      role: "assistant",
+      source: {
+        kind: "model",
+        provider: "grok",
+        model: "grok-4.6",
+        replayState: {
+          response: { version: 1 },
+          blocks: [{
+            type: "reasoning",
+            id: "rs_raw",
+            encryptedContent: "sealed-raw",
+            textType: "reasoning_text",
+          }],
+        },
+      },
+      content: [{ type: "reasoning", text: "Raw reasoning." }],
+    }],
+  })
+
+  assert.deepEqual(request.input, [{
+    type: "reasoning",
+    id: "rs_raw",
+    encrypted_content: "sealed-raw",
+    summary: [],
+  }])
+})
+
 test("foreign or misaligned replay metadata is never sent upstream", () => {
   const base = {
     id: "assistant-1",
