@@ -1,11 +1,11 @@
 # Grok Build Provider 文档索引
 
-- 状态：**`0.1.9` 已发布但 Search 设置链路存在缺陷；`0.1.10` 正在修复 Host namespace 与按调用配置快照**
-- 当前 npm 稳定版本：`0.1.9`
-- 最近发布版本：`0.1.9`
-- 当前开发分支：`yukiryou/v0.1.10-release-evidence`
-- 发布路径：`0.1.10` 代码 PR #23 已合入受保护 `yukiryou/main`；当前分支记录 release evidence
-- 发布状态：不可变 `v0.1.9` 精确指向 release commit `a0af7b74882546dc3d9477b8f6c1494935e6bfb4`；CI run `33295408650` 全绿。唯一 69 文件、190,049-byte tarball 的 unpacked size 为 603,475 bytes，SHA-256 为 `78c73c95ea71d66cad6e6146fed41c281f1c8b29f60353e3f20247ec23833210`，npm SRI 为 `sha512-GeXQg3qedCGZz9D5MMaHd8Afe5Bn0nxjG+PQmKOB2AxB3m6IiGA07PMD77dEAOJVbAzKk0SnxAOKTZMTQFtuYg==`；Trusted Publisher run `33295761336` 已完成，Registry、GitHub Release 与本地制品逐字节一致，npm `latest=0.1.9`。精确 Registry 安装的 Host/client import/export smoke 通过；精确安装审计图汇总 71 个已验证签名与 3 个 attestations，本包 attestations endpoint 返回 2 项，SLSA provenance 精确绑定 tag、workflow、commit 与 release run。该制品遗漏 `llm-grok` Host settings 注册，不能通过重启或重装修复
+- 状态：**`0.1.10` 已发布并修复 Search 设置链路；`0.1.11` 正在修复 High Effort + Web Search reasoning 生命周期兼容**
+- 当前 npm 稳定版本：`0.1.10`
+- 最近发布版本：`0.1.10`
+- 当前开发分支：`yukiryou/v0.1.11-reasoning-stream`
+- 发布路径：`0.1.11` 聚焦修复与发行文档正在版本分支准备；最终 PR、双平台 CI、唯一制品和精确发布授权待完成
+- 发布状态：不可变 `v0.1.10` 精确指向 release commit `fe1e5a7d82defb17ab5bcbb0d9979c43cb48c028`；main CI run `33299116564` 与 Trusted Publisher run `33299599113` 全绿。唯一 70 文件、197,620-byte tarball 的 unpacked size 为 628,836 bytes，SHA-256 为 `f9fe1dea743e86e2799a1073a93a8af91ad5bd389e14f4d2f0528428ada93c62`，npm SRI 为 `sha512-OnfG4diVqJdzYSwJKERNnaplYFbOvFICZP58E0f2Cdh+t7orlTL1DWokvzEHdJrw6HA+UMoKDZgJ6AMEVv4aUg==`；Registry、GitHub Release 与本地制品逐字节一致，npm `latest=0.1.10`，Registry signature 与 SLSA provenance 已回读。该版 Search 设置可写，但 High Effort + Web Search 续跑存在已知 reasoning lifecycle 兼容缺陷
 - 撤回状态：`0.1.8` 只对应 sidebar quota 维护发布，不包含 Search；撤回不会释放 npm semver，任何 Search 制品都不得复用 `0.1.8`
 - 兼容基线：DeepSeek Harness `0.1.1-rc.2`
 - 目标平台：macOS arm64、Windows x64
@@ -54,6 +54,7 @@
 - [v0.1.8 sidebar quota 撤回说明](./releases/v0.1.8.md)
 - [v0.1.9 中英双语发行说明](./releases/v0.1.9.md)
 - [v0.1.10 中英双语发行说明](./releases/v0.1.10.md)
+- [v0.1.11 中英双语发行说明](./releases/v0.1.11.md)
 - [v0.1.2-rc.1 中英双语预发行说明](./releases/v0.1.2-rc.1.md)
 - [ADR-0001：认证与传输路线](./adr/0001-auth-and-transport-route.md)
 - [ADR-0002：首版能力边界](./adr/0002-v0.1-scope.md)
@@ -70,7 +71,7 @@
 
 `0.1.2-rc.1` 是唯一一次预发行尝试。仓库所有者决定从稳定 `0.1.2` 起不再发行预发行版；正式版缺陷通过新的递增稳定版本修复。`0.1.4` 已发布：仅精确 `grok-4.6` 开启图片，普通 user 与一层 tool-result 的红/蓝合成图共四次脱敏 Proxy 请求均通过；`grok-4.5` 的红图语义结果不可靠，因此失败关闭并与其他模型保持 text-only。`0.1.5` 维护发布供应链、账户面板投影与 Provider Runtime 安装事务。`0.1.6` 已发布图片历史 reasoning 兼容与 Windows CLI 分阶段 deadline 修复，精确制品、Trusted Publisher、Registry signature 与 provenance 均已验证；发布后图片能力已由仓库所有者确认可用。Windows 真机同时确认官方 `grok login --oauth` 可在 xAI OIDC discovery 阶段超时，此时登录 URL 尚未生成，不能据此声称 Provider 已修复或验证浏览器弹出。
 
-`0.1.7` 已发布闭合 CLI 安装/版本诊断、登录失败可解释性，以及采用 MIT 许可的 Harness `IconThinkOutline16` 路径几何；它不接管官方 CLI 的网络、代理或 OAuth 流程。sidebar quota `0.1.8` 曾发布后撤回，且该 npm 号码不能复用；Search 从未作为 `0.1.8` 发布。`0.1.9` 已发布精确 `grok-4.6` 的 Search 协议和页面，但遗漏 Host namespace 注册并过早冻结组合配置；`0.1.10` 只补齐 canonical settings 注册与调用级快照，不改变固定 Proxy、citation 或不可信远端内容边界。`0.1.10` 的真实 SettingsProvider/LLM 回归、页面写入、候选隔离安装、代码 PR 与 main 双平台 CI 已完成，发布证据 PR 和最终唯一制品仍待关闭。隔离验收与精确 Registry Host/client import/export smoke 均不覆盖浏览器手工对话、Agent/session loop、OAuth、真实账号/真实 xAI 请求或 Windows 真机。完整门禁见[逐版发布检查表](./10-release-checklist.md)。
+`0.1.7` 已发布闭合 CLI 安装/版本诊断、登录失败可解释性，以及采用 MIT 许可的 Harness `IconThinkOutline16` 路径几何；它不接管官方 CLI 的网络、代理或 OAuth 流程。sidebar quota `0.1.8` 曾发布后撤回，且该 npm 号码不能复用；Search 从未作为 `0.1.8` 发布。`0.1.9` 发布精确 `grok-4.6` 的 Search 协议和页面，`0.1.10` 补齐 canonical settings 注册与调用级快照并完成正式发布。真实使用随后发现 High Effort + Web Search 续跑会出现一次已关闭 reasoning ID 的空占位复用；`0.1.11` 候选收窄地兼容该形状、接受空 reasoning，并加入与 summary 严格互斥的官方 raw `reasoning_text` 生命周期。脱敏真实探针只观察到 summary delta，不能作为 raw reasoning 真机证据。最终双平台 CI、唯一制品、精确授权与发布回读仍待关闭；浏览器手工对话、OAuth、完整真实会话和 Windows 真机继续属于独立边界。完整门禁见[逐版发布检查表](./10-release-checklist.md)。
 
 ## 官方依据
 

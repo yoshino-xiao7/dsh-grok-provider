@@ -927,6 +927,83 @@ test("an image request snapshots messages before awaiting attachment I/O", async
   assert.equal(request.input[0].content[0].text, "Before")
 })
 
+test("an image request snapshots the raw reasoning replay marker before attachment I/O", async () => {
+  const data = Buffer.from(
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
+    "base64",
+  )
+  const attachment = imageRef({ bytes: data.byteLength })
+  let markReadStarted
+  let releaseRead
+  const readStarted = new Promise((resolve) => { markReadStarted = resolve })
+  const readReleased = new Promise((resolve) => { releaseRead = resolve })
+  const compiler = createResponsesRequestCompiler({
+    getAttachmentStore: () => ({
+      async readImageRequest(ref) {
+        markReadStarted()
+        await readReleased
+        return {
+          variantId: `fixture:${ref.attachmentId}`,
+          attachment: ref,
+          data,
+          mediaType: "image/png",
+          bytes: data.byteLength,
+          width: 1,
+          height: 1,
+          depth: "uchar",
+          space: "srgb",
+          hasAlpha: true,
+        }
+      },
+    }),
+  })
+  const replayBlock = {
+    type: "reasoning",
+    id: "rs_raw_snapshot",
+    encryptedContent: "sealed-raw-snapshot",
+    textType: "reasoning_text",
+  }
+  const options = {
+    provider: "grok",
+    model: "grok-4.6",
+    messages: [
+      {
+        id: "assistant-raw-snapshot",
+        role: "assistant",
+        source: {
+          kind: "model",
+          provider: "grok",
+          model: "grok-4.6",
+          replayState: {
+            response: { version: 1 },
+            blocks: [replayBlock],
+          },
+        },
+        content: [{ type: "reasoning", text: "Raw reasoning." }],
+      },
+      {
+        id: "user-image-after-raw",
+        role: "user",
+        source: { kind: "user" },
+        content: [{ type: "image", attachment }],
+      },
+    ],
+  }
+
+  const compiled = compileRequest(compiler, options, imageRoute())
+  await readStarted
+  replayBlock.textType = "summary_text"
+  releaseRead()
+  const request = await compiled
+
+  assert.deepEqual(request.input[0], {
+    type: "reasoning",
+    id: "rs_raw_snapshot",
+    encrypted_content: "sealed-raw-snapshot",
+    summary: [],
+  })
+})
+
 test("an image request rejects custom-prototype attachment references before storage", async () => {
   class ImageAttachmentRef {
     constructor() {

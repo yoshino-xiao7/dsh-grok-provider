@@ -1,8 +1,8 @@
 # ADR-0010：默认关闭且独立配置的 Web/X Search
 
-- 状态：已接受；协议能力已在 `0.1.9` 正式发布，`0.1.10` 修正设置集成缺口
+- 状态：已接受；协议能力已在 `0.1.9` 正式发布，`0.1.10` 修正设置集成缺口，`0.1.11` 修正 reasoning 续跑兼容
 - 日期：2026-08-30
-- 适用版本：`0.1.9` 协议能力，`0.1.10` 可用设置链路
+- 适用版本：`0.1.9` 协议能力，`0.1.10` 可用设置链路，`0.1.11` reasoning 响应兼容
 - 取代：无
 
 ## 背景
@@ -85,6 +85,20 @@ request 与 receipt 均复制并冻结。decoder 不从 Config、route 或原始
 已发布的 `0.1.9` 完成了 Search request/response 协议和设置页面，但 Host 漏掉 `llm-grok` namespace 注册，并在插件启动时过早冻结组合配置。真实 Harness 因此把 settings scope 派生为 `unavailable`，两个开关保持禁用；即使只解除 UI 禁用，后续设置写入也不会进入请求。
 
 `0.1.10` 不改变 Search wire 或响应 allowlist，只补齐 canonical Host 注册和 Adapter 调用快照。回归测试必须同时证明：真实 SettingsProvider 可描述唯一 namespace、安全默认值与 `applies:"live"`；设置更新影响下一调用；更新前已准备的调用保留旧策略；无 settings service 时组合配置仍有效；插件卸载后 namespace 被清理。
+
+## `0.1.11` reasoning 响应兼容修正
+
+真实 `grok-4.6` High Effort + Web Search 续跑暴露了两种此前未冻结的合法形状：完整 `added → done` 但没有可见内容的 reasoning item；以及一次已闭合 reasoning item 的 ID，在中间完成 Search lifecycle 后，被新 output index 再使用一次作为严格空占位项。旧 decoder 的全局 item ID 唯一约束会把后一形状映射为 `INVALID_RESPONSE`。
+
+`0.1.11` 只扩展 decoder 内部状态机，不改变公开 Provider 接口、Search descriptor 或设置：
+
+- 普通闭合空 reasoning item 必须保持空 summary、无 content 或空 content，并通过既有状态、顺序、索引和 encrypted-content 上限校验。
+- reasoning ID 仅在旧 lifecycle 已闭合、两个 output index 之间存在已完成的 Web/X server-tool lifecycle、且新 item 是精确的 `in_progress + summary:[]` 空起始形状时允许复用；同一 ID 最多放行一次。
+- 复用后的 item 不得进入 summary 或 raw content lifecycle，只能以空 reasoning item 闭合。未闭合、跨类型、非空、无 Search 间隔或第二次复用继续失败关闭；message、function 与 server-tool ID 规则不放宽。
+- 同时接受官方 Responses 的 raw reasoning 标准 lifecycle：`reasoning_text` content part、`response.reasoning_text.delta` / `done`、content part done 与最终 item content 必须逐层一致。raw 与 summary 模式互斥，缺失的 `item_id` / `content_index`、混用、乱序、提前完成或文本不一致均失败关闭。
+- raw replay 元数据只保留 encrypted content 与 `reasoning_text` 类型标记；后续请求只发送 `encrypted_content` 和 `summary:[]`，不把 raw 明文重新发送或伪装成 summary。观察到 Search 时仍按既有规则抑制整个响应的 reasoning replay。
+
+脱敏真实 probe 对最终目标形状只发出一次 Responses POST，生产 decoder 接受 68 个事件、34 个 summary delta 与一个 finish；它没有产生 raw delta，因此只证明 summary/Search 续跑路径。raw reasoning 的接受域由官方事件契约和失败关闭 fixture 覆盖，不能描述为真机已验证。
 
 - 不支持的精确模型能力：`UNSUPPORTED_CONTENT`。
 - 协议、receipt、未知事件、未声明 function 或不闭合 lifecycle：`INVALID_RESPONSE`。

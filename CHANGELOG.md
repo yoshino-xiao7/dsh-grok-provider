@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.11 - 2026-08-30
+
+- Fix `INVALID_RESPONSE` failures when exact `grok-4.6` at High Effort continues after Web Search by accepting the observed one-time reuse of an already closed reasoning item ID as a new empty reasoning placeholder only after one completed Search, while rejecting open, cross-type, non-empty, or repeated reuse.
+- Accept closed empty reasoning output items without weakening sequence, output-index, item-status, or encrypted-replay validation.
+- Decode the official Responses raw-reasoning lifecycle (`reasoning_text` content parts plus `response.reasoning_text.delta` / `done`) and keep raw reasoning strictly mutually exclusive with the existing reasoning-summary lifecycle.
+- Keep raw plaintext out of replay metadata: subsequent requests send only `encrypted_content` with `summary: []` and never replay or relabel raw plaintext as a summary; live raw reasoning deltas remain visible to Harness like summary reasoning deltas.
+- Add focused regressions for valid empty/reused reasoning, raw reasoning streaming and replay, plus malformed reuse, mixed raw/summary, out-of-order, duplicate, and incomplete lifecycle rejection.
+- Re-run a redacted real `grok-4.6` Web Search probe through the production decoder: one POST yielded 68 events, 34 summary deltas, zero raw-reasoning deltas, one accepted finish, and no saved prompt, response text, query, citation URL, or credential. This verifies the observed summary/Search path only; raw reasoning remains fixture-verified rather than live-probe verified.
+- Keep authentication, settings, model routing, image input, Search descriptors, citations, fixed endpoints, and platform support unchanged.
+
 ## 0.1.10 - 2026-08-30
 
 - Register the `llm-grok` Host settings namespace through Harness's canonical settings module so the Web Search and X Search controls are writable instead of permanently `unavailable`.

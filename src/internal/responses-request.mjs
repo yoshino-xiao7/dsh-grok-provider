@@ -181,11 +181,12 @@ function encodeOrdinaryMessage(message, content, input, targetModel, requestImag
         const replay = replayBlocks?.[position]
         if (isReasoningReplay(replay)) {
           flushText()
+          const rawReasoning = replay.textType === "reasoning_text"
           input.push({
             type: "reasoning",
             id: replay.id,
             encrypted_content: replay.encryptedContent,
-            summary: reasoningText.length === 0
+            summary: rawReasoning || reasoningText.length === 0
               ? []
               : [{ type: "summary_text", text: reasoningText }],
           })
@@ -272,6 +273,11 @@ function isReasoningReplay(value) {
   return isPlainObject(value) &&
     value.type === "reasoning" &&
     isId(value.id) &&
+    (
+      value.textType === undefined ||
+      value.textType === "summary_text" ||
+      value.textType === "reasoning_text"
+    ) &&
     typeof value.encryptedContent === "string" &&
     value.encryptedContent.length > 0 &&
     Buffer.byteLength(value.encryptedContent, "utf8") <= MAX_TEXT_LENGTH
@@ -522,6 +528,7 @@ function captureReplayState(replayState, contentLength) {
       type: readOwnDataProperty(block, "type"),
       id: readOwnDataProperty(block, "id"),
       encryptedContent: readOwnDataProperty(block, "encryptedContent"),
+      textType: readOwnDataProperty(block, "textType"),
     })
   }
   return Object.freeze({

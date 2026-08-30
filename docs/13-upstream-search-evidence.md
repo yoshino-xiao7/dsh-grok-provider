@@ -1,10 +1,10 @@
 # `0.1.9` Web/X Search 上游与固定 Proxy 证据
 
-- 状态：`grok-4.6` 四组脱敏观察、生产顺序 mixed 复验、双平台 CI、隔离 Web Harness、最终制品与发布后回读门禁均已完成；`0.1.9` 已正式发布，发布后发现的 Host settings 集成缺口由 `0.1.10` 修复
+- 状态：`grok-4.6` 四组脱敏观察、生产顺序 mixed 复验、双平台 CI、隔离 Web Harness、最终制品与发布后回读门禁均已完成；`0.1.9` 发布协议、`0.1.10` 修复 Host settings，`0.1.11` 候选修复 High Effort + Web Search reasoning lifecycle
 - 观察日期：2026-08-30
 - 固定 origin/path：`https://cli-chat-proxy.grok.com/v1/responses`
 - Provider client identity：`dsh-grok-provider/1.0.5`
-- 协议目标版本：`0.1.9`；设置链路修正：`0.1.10`
+- 协议目标版本：`0.1.9`；设置链路修正：`0.1.10`；reasoning 响应兼容修正：`0.1.11`
 
 sidebar quota 维护版 `0.1.8` 曾发布后撤回，npm Registry 已消耗该版本号且不能复用；本页所有 Search 协议证据只属于已发布 `0.1.9`，不能据此把 Search 描述为 `0.1.8` 能力，也不能替代 `0.1.10` 的真实 settings 集成验收。
 
@@ -89,6 +89,10 @@ Web + X 观察共 68 个 SSE event、4 个 output item、8 个 citation annotati
 - [x] 发布证据 PR #21 合并后的最终 release commit 为 `a0af7b74882546dc3d9477b8f6c1494935e6bfb4`，CI run `33295408650` 全绿。唯一 `dsh-grok-provider-0.1.9.tgz` 含 69 个文件、190,049 bytes，unpacked size 为 603,475 bytes，SHA-256 为 `78c73c95ea71d66cad6e6146fed41c281f1c8b29f60353e3f20247ec23833210`，SRI 为 `sha512-GeXQg3qedCGZz9D5MMaHd8Afe5Bn0nxjG+PQmKOB2AxB3m6IiGA07PMD77dEAOJVbAzKk0SnxAOKTZMTQFtuYg==`。
 - [x] 不可变 `v0.1.9`、GitHub Release 与 Trusted Publisher run `33295761336` 已完成；npm `latest=0.1.9`，Registry、Release 与本地制品逐字节一致。精确 Registry 安装的 Host/client import/export smoke 通过；精确安装审计图汇总 71 个已验证签名与 3 个 attestations，本包 attestations endpoint 返回 2 项，SLSA provenance 精确绑定 tag、workflow、commit 与 release run。
 
-`0.1.9` 发布后的真实页面检查证明上述协议证据没有覆盖 Host namespace 注册：`settings.describe` 可写但不包含 `llm-grok`，客户端因此正确派生 `unavailable` 并禁用开关；Host 同时只在启动时读取一次组合配置。`0.1.10` 增加真实 SettingsProvider + LLM Runtime 回归和 Adapter 首次 await 前快照回归，只修复设置进入后续请求的链路，不改变本页任何固定 Proxy 结论。
+`0.1.9` 发布后的真实页面检查证明上述协议证据没有覆盖 Host namespace 注册：`settings.describe` 可写但不包含 `llm-grok`，客户端因此正确派生 `unavailable` 并禁用开关；Host 同时只在启动时读取一次组合配置。`0.1.10` 增加真实 SettingsProvider + LLM Runtime 回归和 Adapter 首次 await 前快照回归，只修复设置进入后续请求的链路，并已正式发布。
 
-这些自动化与脱敏证据仍不构成所有平台真实账户验收；真实 xAI Search、浏览器手工对话、OAuth 和网络可达 Windows 真机浏览器弹出保持独立边界。
+`0.1.10` 发布后的真实 High Effort + Web Search 使用暴露另一条响应兼容边界：一次已完成 server Search 可以位于已关闭 reasoning item 与复用同一 ID 的严格空 reasoning 占位之间。`0.1.11` 只在这个精确顺序下允许一次复用；无已完成 Search 间隔、未闭合、跨类型、非空或再次复用仍失败关闭。它同时接受完整闭合的空 reasoning，并支持与 summary 严格互斥的官方 raw `reasoning_text` lifecycle。replay 元数据不保存 raw 明文，后续请求只发送 encrypted content 与空 summary；当前流中的 raw delta 仍作为 Harness 可见 reasoning 输出。
+
+脱敏真实 `grok-4.6` Web Search probe 经生产 decoder 只发出 1 次 POST，观察 68 个事件、34 个 summary delta、0 个 raw delta、decoder accepted 与 1 个 finish；没有保存 prompt、回复正文、检索词、citation URL 或凭据。该结果验证当前 summary/Search 路径，不得描述为 raw reasoning 真机证据；raw reasoning 当前只有协议 fixture 回归。
+
+这些自动化与脱敏证据仍不构成所有平台完整真实账户验收；浏览器手工对话、OAuth、长会话 Agent loop 和网络可达 Windows 真机浏览器弹出保持独立边界。

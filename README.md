@@ -4,7 +4,7 @@
 
 让 DeepSeek Harness 使用你已登录的官方 Grok Build 账号：动态模型发现、流式推理、图片输入、可选 Web/X Search、工具调用，以及账号额度与模型能力面板。
 
-> 非官方社区项目，与 xAI 或 DeepSeek Harness 官方无隶属关系。当前源码候选版本为 `0.1.10`；当前稳定版及 npm Registry 的 `latest` 均为 `0.1.9`。已发布的 `0.1.9` 完成了唯一制品、双平台 CI、签名与 provenance 验证，但遗漏 Host 设置注册，因此 Web/X Search 开关会显示暂时不可用；尚未发布的 `0.1.10` 专门修复这条链路。`0.1.8` 曾发布后撤回且版本号不可复用。项目不再发行预发行版；正式版缺陷通过新的递增稳定版本修复。
+> 非官方社区项目，与 xAI 或 DeepSeek Harness 官方无隶属关系。当前源码候选版本为 `0.1.11`；当前稳定版及 npm Registry 的 `latest` 均为 `0.1.10`。已发布的 `0.1.10` 修复了 Web/X Search 设置注册，但真实使用随后发现 `grok-4.6` 在 High Effort + Web Search 续跑时可能因 reasoning 生命周期兼容缺口返回通用非法响应；尚未发布的 `0.1.11` 专门修复该协议兼容问题。`0.1.8` 曾发布后撤回且版本号不可复用。项目不再发行预发行版；正式版缺陷通过新的递增稳定版本修复。
 
 ## 它解决什么问题
 
@@ -15,7 +15,7 @@
 | 模型 | 运行时读取账号可见的全部 Grok Build 模型，不维护静态模型白名单 |
 | 对话 | Responses 流式文本、reasoning、加密 reasoning replay、usage 与 finish reason |
 | 图片 | 仅精确 `grok-4.6` 接收 Harness attachment 中有界的 JPEG/PNG 图片；`grok-4.5` 与其他模型保持 text-only |
-| 搜索 | `0.1.9` 已包含协议与设置页，但开关因缺少 `llm-grok` Host 注册而不可用；`0.1.10` 候选修复注册，使精确 `grok-4.6` 的 Web Search / X Search 可默认关闭、分别开启，远端 lifecycle 不伪装成本地工具 |
+| 搜索 | `0.1.10` 已让精确 `grok-4.6` 的 Web Search / X Search 可默认关闭、分别开启；`0.1.11` 候选修复 High Effort + Web Search 续跑的 reasoning 生命周期兼容，远端 lifecycle 仍不伪装成本地工具 |
 | 工具 | 将 function call 交回 Harness 权限层；Provider 本身不执行工具 |
 | 账户面板 | 登录状态、每周/月额度、重置时间、动态模型能力与 reasoning 档位 |
 | 界面 | Web 设置页中英文切换；TUI 提供闭合的 `/grok` 命令 |
@@ -40,10 +40,10 @@ grok models
 
 ### 2. 安装 Provider
 
-`0.1.10` 尚未发布；待它发布并完成 Registry 回读后，从 npm 安装该精确版本：
+`0.1.11` 尚未发布；待它发布并完成 Registry 回读后，从 npm 安装该精确版本：
 
 ```sh
-dsh plugin --profile web add dsh-grok-provider@0.1.10
+dsh plugin --profile web add dsh-grok-provider@0.1.11
 dsh web
 ```
 
@@ -130,8 +130,8 @@ dsh web
 
 ## 项目来源与发现
 
-- npm 当前稳定版：[dsh-grok-provider@0.1.9](https://www.npmjs.com/package/dsh-grok-provider/v/0.1.9)（发行制品已验证；Search 开关存在已知设置注册缺陷）
-- GitHub 最近发行版与校验值：[v0.1.9](https://github.com/yoshino-xiao7/dsh-grok-provider/releases/tag/v0.1.9)
+- npm 当前稳定版：[dsh-grok-provider@0.1.10](https://www.npmjs.com/package/dsh-grok-provider/v/0.1.10)（唯一制品、双平台 CI、签名与 provenance 已验证；High Effort + Web Search 续跑存在已知 reasoning 兼容缺陷）
+- GitHub 最近发行版与校验值：[v0.1.10](https://github.com/yoshino-xiao7/dsh-grok-provider/releases/tag/v0.1.10)
 - GitHub 社区发现：仓库已添加 DeepSeek Harness 官方推荐的 `dsh-plugin` 与 `dsh` Topics
 - YukiRyou 受管来源：[deepseek-yukiryou-plugin-catalog](https://github.com/yoshino-xiao7/deepseek-yukiryou-plugin-catalog)，当前仍锁定已完成真机验收的 `dsh-grok-provider@0.1.0`，且只标记 `darwin-arm64`
 
@@ -139,21 +139,21 @@ dsh web
 
 ## 兼容性与范围
 
-| 项目 | `0.1.9` 稳定版 / `0.1.10` 候选状态 |
+| 项目 | `0.1.10` 稳定版 / `0.1.11` 候选状态 |
 | --- | --- |
 | DeepSeek Harness | 精确支持 `0.1.1-rc.2` |
 | Node.js | `>=24.19.0` |
-| macOS arm64 | 图片发送已完成真实 Harness 验证；`0.1.10` Search 修复已通过真实 SettingsProvider/LLM 回归、候选 tarball 隔离安装、设置 API、浏览器开关写入与候选 macOS 14 CI |
-| Windows x64 | 代码、slow-fake 与 `0.1.10` 候选 Windows 2022 CI 已通过。网络可达时由官方 CLI 生成 URL 并打开浏览器，该路径仍未完成 Windows 真机验收 |
+| macOS arm64 | 图片发送已完成真实 Harness 验证；`0.1.11` reasoning 修复的聚焦回归与脱敏真实 summary/Search 探针通过，最终制品和候选 macOS 14 CI 待发布门禁关闭 |
+| Windows x64 | 现有代码、slow-fake 与 `0.1.10` Windows 2022 CI 已通过；`0.1.11` 最终候选 CI 待完成。网络可达时由官方 CLI 生成 URL 并打开浏览器，该路径仍未完成 Windows 真机验收 |
 | macOS x64 / Linux | 不支持 |
 | Grok CLI | 不锁完整版本；严格校验官方路径、`login --oauth` 能力与生产 OIDC 凭据契约 |
 | 模型 | 当前账号目录中 backend 已被严格 codec 支持的全部模型 |
 
-`0.1.10` 沿用已发布版本的图片边界：只为精确的 `grok-4.6` 开启图片输入；`grok-4.5` 与其他动态发现的模型继续按 text-only 处理。图片发送已在真实 Harness 对话中确认可用。图片只能来自 Harness attachment service 的已验证 JPEG/PNG 投影，支持普通用户内容和一层工具结果中的图片，并固定使用 `detail:"high"`；不接受 URL、文件路径、file ID 或调用方预制的 data URL。普通 user/system 历史中的私有 reasoning 会被省略并保留相邻可见文本。
+`0.1.11` 沿用已发布版本的图片边界：只为精确的 `grok-4.6` 开启图片输入；`grok-4.5` 与其他动态发现的模型继续按 text-only 处理。图片发送已在真实 Harness 对话中确认可用。图片只能来自 Harness attachment service 的已验证 JPEG/PNG 投影，支持普通用户内容和一层工具结果中的图片，并固定使用 `detail:"high"`；不接受 URL、文件路径、file ID 或调用方预制的 data URL。普通 user/system 历史中的私有 reasoning 会被省略并保留相邻可见文本。
 
 每张投影图片最多 4 MiB、16,777,216 像素且任一边不超过 8192px；每次请求最多保留 8 张、投影字节合计最多 8 MiB。超限时按全局最旧优先移除图片并保留 Harness 的文本占位，最终 JSON 仍受 16 MiB 上限约束。
 
-已发布的 `0.1.9` 包含 Search 协议实现和设置页面，但漏掉了 Host 侧 `llm-grok` namespace 注册，两个开关因此永久处于不可用状态。`0.1.10` 候选使用 Harness 官方 settings 模块注册并持久化这两个设置；每个新调用在模型发现前读取一次最新值，已准备和在途调用保持原快照。Search 仍只对精确 `grok-4.6` 开放并默认关闭。开启后，普通对话内容以及模型据此生成的检索词会交给 xAI，并可能产生额外用量。Web/X 是服务端已执行的检索过程，不会变成 Harness 本地工具调用；回答中的 citation Markdown 保留为普通文本，结构化 URL 元数据有界校验后丢弃，插件不会打开或下载引用。搜索结果属于不可信远端数据，执行命令或修改文件前应核实来源。图片生成、任意文件下载、API Key 模式、多账号、企业 OIDC、ACP 与 Headless agent 封装仍不在本版本范围内；后续切片见[能力路线图](docs/11-capability-roadmap.md)。
+已发布的 `0.1.10` 使用 Harness 官方 settings 模块注册并持久化两个 Search 设置；每个新调用在模型发现前读取一次最新值，已准备和在途调用保持原快照。真实使用随后发现精确 `grok-4.6` 在 High Effort + Web Search 续跑时，可能先关闭 reasoning 项，在一次 Search 完成后再把同一 ID 使用一次作为空占位，旧解码器会因此失败关闭。`0.1.11` 候选仅在已完成 Search 位于两段 reasoning 之间时允许该 ID 以严格空项再出现一次，并增加官方 raw `reasoning_text` 生命周期；raw 与 summary 互斥，replay 元数据不保存 raw 明文，后续请求只发送 `encrypted_content` 与空 summary，当前流中的 raw delta 仍会作为 Harness 可见 reasoning 输出。脱敏真实探针观察到 34 个 summary delta、0 个 raw delta，因此只验证 summary/Search 路径，raw reasoning 仍只有 fixture 回归。Search 继续只对精确 `grok-4.6` 默认关闭地开放；远端活动不变成本地工具，citation URL 不会被打开或下载。搜索结果属于不可信远端数据，执行命令或修改文件前应核实来源。图片生成、任意文件下载、API Key 模式、多账号、企业 OIDC、ACP 与 Headless agent 封装仍不在本版本范围内；后续切片见[能力路线图](docs/11-capability-roadmap.md)。
 
 ## 工作原理
 
@@ -256,7 +256,8 @@ npm run pack:check
 - [x] 发布 `0.1.6`：图片历史 reasoning 兼容与 Windows 官方 CLI 分阶段 deadline 修复版；图片发送已完成真实 Harness 验证
 - [x] 发布 `0.1.7`：Provider/CLI 双版本诊断、CLI 安装恢复、OIDC discovery 超时脱敏结算与 `IconThinkOutline16` 设置导航兼容层
 - [x] 发布 `0.1.9`：加入 Web/X Search 协议与设置页，唯一制品、双平台 CI、签名与 SLSA provenance 均已验证；发布后确认 Host 设置 namespace 遗漏，开关不可用
-- [ ] 发布 `0.1.10`：`llm-grok` 注册、按调用读取设置、隔离安装、代码 PR 与 main 双平台 CI 已完成；仍需合并发布证据、冻结唯一制品和精确发布授权
+- [x] 发布 `0.1.10`：`llm-grok` 注册、按调用读取设置、唯一制品、双平台 CI、签名与 provenance 已完成
+- [ ] 发布 `0.1.11`：修复 High Effort + Web Search reasoning 生命周期兼容；最终双平台 CI、唯一制品、精确授权、Registry 与 provenance 回读待完成
 - [ ] 再后续独立切片：默认关闭的图片生成（只收内联结果，提交 Harness attachment）
 - [ ] 完成 Windows x64 独立真机验收并按需发布后续稳定修复版
 

@@ -440,6 +440,7 @@ function snapshotReplayState(source, targetModel, contentLength) {
         type: block.type,
         id: block.id,
         encryptedContent: block.encryptedContent,
+        textType: block.textType,
       })
   }
   return Object.freeze({

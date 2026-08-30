@@ -49,7 +49,7 @@ export function createResponsesEventDecoder(receipt) {
   const serverCalls = new Map()
   const completedServerCalls = []
   const outputIndexes = new Set()
-  const itemIds = new Set()
+  const itemLifecycles = new Map()
   const callIds = new Set()
   const replayBlocks = []
   let nextOutputIndex = 0
@@ -100,7 +100,8 @@ export function createResponsesEventDecoder(receipt) {
             event,
             blocks,
             serverCalls,
-            itemIds,
+            completedServerCalls,
+            itemLifecycles,
             callIds,
             replayBlocks,
             chunks,
@@ -114,15 +115,28 @@ export function createResponsesEventDecoder(receipt) {
 
         case "response.reasoning_summary_part.added": {
           const block = requireBlock(event, blocks, "reasoning")
-          if (block.summaryStarted || block.summaryTextDone || block.summaryDone) fail()
+          if (
+            block.reusedReasoning ||
+            block.reasoningAddedStatus !== "in_progress" ||
+            block.reasoningMode !== undefined ||
+            block.summaryStarted ||
+            block.summaryTextDone ||
+            block.summaryDone
+          ) fail()
           if (!isPlainObject(event.part) || event.part.type !== "summary_text" || event.part.text !== "") fail()
+          block.reasoningMode = "summary"
           block.summaryStarted = true
           break
         }
 
         case "response.reasoning_summary_text.delta": {
           const block = requireBlock(event, blocks, "reasoning")
-          if (!block.summaryStarted || block.summaryTextDone || block.summaryDone) fail()
+          if (
+            block.reasoningMode !== "summary" ||
+            !block.summaryStarted ||
+            block.summaryTextDone ||
+            block.summaryDone
+          ) fail()
           appendDelta(block, event.delta)
           sawVisibleOutput = true
           chunks.push({ type: "reasoning-delta", index: event.output_index, text: event.delta })
@@ -132,6 +146,7 @@ export function createResponsesEventDecoder(receipt) {
         case "response.reasoning_summary_text.done": {
           const block = requireBlock(event, blocks, "reasoning")
           if (
+            block.reasoningMode !== "summary" ||
             !block.summaryStarted ||
             block.summaryTextDone ||
             block.summaryDone ||
@@ -144,6 +159,7 @@ export function createResponsesEventDecoder(receipt) {
         case "response.reasoning_summary_part.done": {
           const block = requireBlock(event, blocks, "reasoning")
           if (
+            block.reasoningMode !== "summary" ||
             !block.summaryStarted ||
             !block.summaryTextDone ||
             block.summaryDone ||
@@ -156,11 +172,51 @@ export function createResponsesEventDecoder(receipt) {
         }
 
         case "response.content_part.added": {
-          const block = requireBlock(event, blocks, "text")
+          const block = requireBlock(event, blocks)
           if (block.contentStarted) fail()
-          validateTextPart(event.part, "", [])
+          if (block.type === "reasoning") {
+            if (
+              block.reusedReasoning ||
+              block.reasoningAddedStatus !== "in_progress" ||
+              block.reasoningMode !== undefined
+            ) fail()
+            requireRawContentLocation(event, block)
+            validateReasoningTextPart(event.part, "")
+            block.reasoningMode = "raw"
+          } else if (block.type === "text") {
+            validateTextPart(event.part, "", [])
+          } else fail()
           block.contentStarted = true
           block.contentIndex = parseOptionalIndex(event.content_index, 0)
+          break
+        }
+
+        case "response.reasoning_text.delta": {
+          const block = requireBlock(event, blocks, "reasoning")
+          if (
+            block.reasoningMode !== "raw" ||
+            !block.contentStarted ||
+            block.textDone ||
+            block.contentDone
+          ) fail()
+          requireRawContentLocation(event, block)
+          appendDelta(block, event.delta)
+          sawVisibleOutput = true
+          chunks.push({ type: "reasoning-delta", index: event.output_index, text: event.delta })
+          break
+        }
+
+        case "response.reasoning_text.done": {
+          const block = requireBlock(event, blocks, "reasoning")
+          if (
+            block.reasoningMode !== "raw" ||
+            !block.contentStarted ||
+            block.textDone ||
+            block.contentDone
+          ) fail()
+          requireRawContentLocation(event, block)
+          if (event.text !== block.text) fail()
+          block.textDone = true
           break
         }
 
@@ -261,10 +317,16 @@ export function createResponsesEventDecoder(receipt) {
           break
 
         case "response.content_part.done": {
-          const block = requireBlock(event, blocks, "text")
+          const block = requireBlock(event, blocks)
           if (!block.textDone || block.contentDone) fail()
           requireContentIndex(event, block)
-          validateTextPart(event.part, block.text, block.annotations)
+          if (block.type === "reasoning") {
+            if (block.reasoningMode !== "raw") fail()
+            requireRawContentLocation(event, block)
+            validateReasoningTextPart(event.part, block.text)
+          } else if (block.type === "text") {
+            validateTextPart(event.part, block.text, block.annotations)
+          } else fail()
           block.contentDone = true
           break
         }
@@ -278,6 +340,7 @@ export function createResponsesEventDecoder(receipt) {
             replayBlocks,
             chunks,
           )
+          markOutputItemClosed(event, itemLifecycles)
           break
 
         case "response.completed":
@@ -378,7 +441,8 @@ function addOutputItem(
   event,
   blocks,
   serverCalls,
-  itemIds,
+  completedServerCalls,
+  itemLifecycles,
   callIds,
   replayBlocks,
   chunks,
@@ -391,8 +455,12 @@ function addOutputItem(
     !isPlainObject(event.item) ||
     !isBoundedString(event.item.id, 256)
   ) fail()
-  if (itemIds.has(event.item.id)) fail()
-  itemIds.add(event.item.id)
+  const reusedReasoning = registerOutputItem(
+    event.item,
+    index,
+    itemLifecycles,
+    completedServerCalls,
+  )
 
   if (event.item.type === "web_search_call") {
     if (!responsePolicy.serverTools.has("web_search")) fail()
@@ -425,14 +493,22 @@ function addOutputItem(
   let type
   let block
   if (event.item.type === "reasoning") {
+    validateReasoningItemStart(event.item)
     type = "reasoning"
     block = {
       id: event.item.id,
       type,
+      reusedReasoning,
+      reasoningAddedStatus: event.item.status,
       text: "",
+      reasoningMode: undefined,
       summaryStarted: false,
       summaryTextDone: false,
       summaryDone: false,
+      contentStarted: false,
+      contentIndex: 0,
+      textDone: false,
+      contentDone: false,
     }
   } else if (event.item.type === "message" && event.item.role === "assistant") {
     type = "text"
@@ -476,6 +552,51 @@ function addOutputItem(
   return type
 }
 
+function registerOutputItem(item, outputIndex, itemLifecycles, completedServerCalls) {
+  const previous = itemLifecycles.get(item.id)
+  if (previous === undefined) {
+    itemLifecycles.set(item.id, {
+      type: item.type,
+      outputIndex,
+      closed: false,
+      reused: false,
+    })
+    return false
+  }
+
+  // Output lifecycles may interleave, so bind this narrow exception to logical
+  // output order: a completed Search item must sit between the two reasoning items.
+  const completedSearchBetweenItems = completedServerCalls.some((call) => (
+    call.outputIndex > previous.outputIndex && call.outputIndex < outputIndex
+  ))
+  if (
+    previous.type !== "reasoning" ||
+    !previous.closed ||
+    previous.reused ||
+    !completedSearchBetweenItems ||
+    item.type !== "reasoning" ||
+    item.status !== "in_progress" ||
+    !Array.isArray(item.summary) ||
+    item.summary.length !== 0
+  ) fail()
+  requireExactDataKeys(item, ["id", "status", "summary", "type"])
+  itemLifecycles.set(item.id, {
+    type: "reasoning",
+    outputIndex,
+    closed: false,
+    reused: true,
+  })
+  return true
+}
+
+function markOutputItemClosed(event, itemLifecycles) {
+  const index = parseIndex(event.output_index)
+  if (!isPlainObject(event.item) || !isBoundedString(event.item.id, 256)) fail()
+  const lifecycle = itemLifecycles.get(event.item.id)
+  if (lifecycle === undefined || lifecycle.outputIndex !== index || lifecycle.closed) fail()
+  itemLifecycles.set(event.item.id, { ...lifecycle, closed: true })
+}
+
 function closeOutputItem(
   event,
   blocks,
@@ -502,21 +623,28 @@ function closeOutputItem(
     event.item.status !== "completed"
   ) fail()
   if (block.type === "reasoning") {
-    if (
-      event.item.type !== "reasoning" ||
-      !block.summaryDone ||
-      !Array.isArray(event.item.summary) ||
-      event.item.summary.length !== 1 ||
-      !isPlainObject(event.item.summary[0]) ||
-      event.item.summary[0].type !== "summary_text" ||
-      event.item.summary[0].text !== block.text
-    ) fail()
+    if (event.item.type !== "reasoning") fail()
+    if (block.reasoningMode === "summary") {
+      if (
+        !block.summaryDone ||
+        !Array.isArray(event.item.summary) ||
+        event.item.summary.length !== 1 ||
+        !isPlainObject(event.item.summary[0]) ||
+        event.item.summary[0].type !== "summary_text" ||
+        event.item.summary[0].text !== block.text
+      ) fail()
+    } else if (block.reasoningMode === "raw") {
+      validateCompletedReasoningContent(event.item, block)
+    } else if (block.reasoningMode === undefined) {
+      validateEmptyReasoningItem(event.item, block)
+    } else fail()
     if (event.item.encrypted_content !== undefined) {
       if (!isBoundedUtf8String(event.item.encrypted_content, MAX_ENCRYPTED_REASONING_BYTES)) fail()
       replayBlocks[block.replayPosition] = {
         type: "reasoning",
         id: block.id,
         encryptedContent: event.item.encrypted_content,
+        ...(block.reasoningMode === "raw" ? { textType: "reasoning_text" } : {}),
       }
     }
   }
@@ -673,6 +801,51 @@ function validateCompletedMessageContent(content, block) {
   const parts = captureDataArray(content, 1)
   if (parts.length !== 1) fail()
   validateTextPart(parts[0], block.text, block.annotations)
+}
+
+function validateReasoningTextPart(part, text) {
+  if (!isPlainObject(part) || part.type !== "reasoning_text" || part.text !== text) fail()
+}
+
+function validateReasoningItemStart(item) {
+  if (item.status !== "in_progress" && item.status !== "completed") fail()
+  const summary = captureDataArray(item.summary, 0)
+  if (summary.length !== 0) fail()
+  if (item.content !== undefined) {
+    const content = captureDataArray(item.content, 0)
+    if (content.length !== 0) fail()
+  }
+  if (
+    item.encrypted_content !== undefined &&
+    !isBoundedUtf8String(item.encrypted_content, MAX_ENCRYPTED_REASONING_BYTES)
+  ) fail()
+}
+
+function validateCompletedReasoningContent(item, block) {
+  if (!block.contentDone) fail()
+  const summary = captureDataArray(item.summary, 0)
+  if (summary.length !== 0) fail()
+  const content = captureDataArray(item.content, 1)
+  if (content.length !== 1) fail()
+  validateReasoningTextPart(content[0], block.text)
+}
+
+function validateEmptyReasoningItem(item, block) {
+  if (
+    block.text !== "" ||
+    block.summaryStarted ||
+    block.summaryTextDone ||
+    block.summaryDone ||
+    block.contentStarted ||
+    block.textDone ||
+    block.contentDone
+  ) fail()
+  const summary = captureDataArray(item.summary, 0)
+  if (summary.length !== 0) fail()
+  if (item.content !== undefined) {
+    const content = captureDataArray(item.content, 0)
+    if (content.length !== 0) fail()
+  }
 }
 
 function captureAnnotations(value) {
@@ -895,6 +1068,13 @@ function requireBlock(event, blocks, expectedType) {
 
 function requireContentIndex(event, block) {
   if (parseOptionalIndex(event.content_index, block.contentIndex) !== block.contentIndex) fail()
+}
+
+function requireRawContentLocation(event, block) {
+  if (
+    event.item_id !== block.id ||
+    parseIndex(event.content_index) !== block.contentIndex
+  ) fail()
 }
 
 function appendDelta(block, delta) {
