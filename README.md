@@ -150,6 +150,7 @@ dsh web
 - 普通严格空 reasoning item 继续执行既有 ID/type、sequence、output index、状态、summary/content 空性、大小、可选 encrypted content 与闭合校验；Search-backed 同 ID 复用项继续额外执行精确 own-data 键集与 accessor 拒绝。本版没有扩大协议接受域。
 - Provider 延迟创建 Harness reasoning block，只有收到首个非空 summary/raw delta 才发送 `block-start`，随后按原顺序发送 delta 和 `block-end`。完整生命周期最终为空时产生零个可见 reasoning chunk。
 - 多个非空 reasoning item 继续按 output index 保持独立块；正文、工具调用、usage、finish reason、可见非空 reasoning replay、Search 后 replay 抑制和失败关闭行为不变。被隐藏的普通空 item 不占可见 block/replay 对齐槽，其有界 encrypted content 通过校验后不持久化。
+- 精确 Node `24.19.0` 本地门禁为 265 tests、263 pass、0 fail、2 platform skips；生产依赖审计 0 漏洞，隔离 cache 的 dry-run pack 为 74 文件。代码分支 head `52359e691dfd1bbdb849362c9d1a461e4e693b83` 的 push/PR CI、代码 PR [#34](https://github.com/yoshino-xiao7/dsh-grok-provider/pull/34)、merge commit `47d688cc47bc9643f3477ee9333cfdf7788045cd` 及 main CI run [`33318245251`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33318245251) 已在 macOS 14 / Windows 2022 全绿；这仍不代表最终 release commit、冻结制品、发布或供应链回读已经完成。
 - 修复只影响升级后的新回复；旧会话中已经持久化的空 `Think` 行不会被回写删除。
 - 本版不改变 Search 开关、模型、认证、图片、固定 endpoint、citation/URL 或 Harness 工具权限边界，也不构成 Windows 真机浏览器登录验收。
 

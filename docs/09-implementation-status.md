@@ -212,4 +212,5 @@ Windows x64 真机不再是 `0.1.0` 预发布阻断项。首次发布后必须�
 - 必须覆盖普通空项、多段 Search-backed 空复用、opaque encrypted content、summary/raw 首 delta、十空一非空、多个非空块、多个未决 reasoning、后块先完成和 incomplete 交错，以及非空复用、unknown/accessor 复用、乱序和未闭合失败。
 - 正文、工具调用、usage、finish、可见非空 replay、Search replay 抑制、request compiler、认证、模型、图片、endpoint、citation/URL 和工具权限不变。隐藏普通空项不占 replay 对齐槽，其 encrypted content 校验后不持久化；已持久化的旧空 `Think` 不删除。
 - 2026-08-30 真实账号对候选源码生产 Adapter 的 Web/X 各 1 次 `grok-4.6` High Effort 验收已完成：Search lifecycle 计数分别为 5/3，每次均投影 1 个非空 reasoning、0 个空 reasoning、1 个非空 text 和 1 个 finish；只输出计数，未保存正文、URL、身份、凭据或原始响应。
-- `1.0.2` 的 CI、冻结制品文件数/大小/摘要、隔离安装、精确授权、tag、Release、Registry、签名、attestations 与 provenance 只能在各步骤实际完成后补录；版本同步、本地 265 项全量测试（263 pass、0 fail、2 platform skips）、0 生产漏洞和 74 文件 dry-run pack 已按实际结果记录，dry-run 值不冒充冻结制品。
+- 代码分支 head `52359e691dfd1bbdb849362c9d1a461e4e693b83` 的 push run `33318180580` 与 PR run `33318197083`、代码 PR #34、merge commit `47d688cc47bc9643f3477ee9333cfdf7788045cd` 及 main CI run `33318245251` 均已完成 macOS 14 / Windows 2022 全绿。
+- `1.0.2` 的固定 final release commit 及其 CI、冻结制品文件数/大小/摘要、隔离安装、精确授权、tag、Release、Registry、签名、attestations 与 provenance 只能在各步骤实际完成后补录；版本同步、本地 265 项全量测试（263 pass、0 fail、2 platform skips）、0 生产漏洞和 74 文件 dry-run pack 已按实际结果记录，dry-run 值不冒充冻结制品。
