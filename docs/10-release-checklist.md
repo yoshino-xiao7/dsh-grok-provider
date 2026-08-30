@@ -195,10 +195,11 @@ English summary: every release must close documentation, security, tests, determ
 - [x] 113/113 聚焦协议回归覆盖一次已完成 server Search 后的 reasoning ID 空占位复用、普通空 reasoning 项、官方 raw `reasoning_text` 标准生命周期和 raw encrypted replay；无 Search 间隔、未闭合、跨类型、非空、第二次复用、raw/summary 混用、乱序、重复和截断继续失败关闭。
 - [x] replay 元数据不保存 raw 明文；后续请求只回传 `encrypted_content` 与 `summary: []`，不会回传或把 raw 明文伪装为 summary，当前流中的 raw delta 仍作为 Harness 可见 reasoning 输出。
 - [x] 脱敏真实 `grok-4.6` Web Search probe 经生产 decoder 完成 1 次 POST：68 个事件、34 个 summary delta、0 个 raw delta、decoder accepted、1 个 finish。该结果只验证 summary/Search 续跑路径，不能描述为 raw reasoning 真机证据。
-- [x] `package.json`、lockfile、CHANGELOG、中英文 README、`SECURITY.md`、产品/威胁/测试/发布/状态文档、ADR/证据与折叠英文的双语 `docs/releases/v0.1.11.md` 同步为尚未发布的候选事实。
-- [x] 精确 Node `24.19.0` 全量测试通过：238 项、236 pass、0 fail、2 项 Windows-only skip；`npm audit --omit=dev` 为 0 漏洞，dry-run pack 为 71 个文件；生成 bundle 一致、`git diff --check` 通过，秘密模式扫描只命中既有测试 canary `Bearer fixture-access-token` 及记录该 canary 的历史检查表文本。最终制品字节与摘要等待 release commit 冻结。
+- [x] 发布前 `package.json`、lockfile、CHANGELOG、中英文 README、`SECURITY.md`、产品/威胁/测试/发布/状态文档、ADR/证据与折叠英文的双语 `docs/releases/v0.1.11.md` 均已同步为当时准确的发布前状态；发布后 P0 入口已继续同步为正式发布事实。
+- [x] 精确 Node `24.19.0` 全量测试通过：238 项、236 pass、0 fail、2 项 Windows-only skip；`npm audit --omit=dev` 为 0 漏洞，dry-run pack 为 71 个文件；生成 bundle 一致、`git diff --check` 通过，秘密模式扫描只命中既有测试 canary `Bearer fixture-access-token` 及记录该 canary 的历史检查表文本。
 - [x] 代码 PR #25 已合入受保护 `yukiryou/main`，merge commit 为 `307ae3ac83526f388c6b4a0d1e1346353bd5f4aa`；main CI run `33302830043` 的 macOS 14 / Windows 2022 均通过。
-- [ ] 发布证据 PR 合入后形成最终 release commit，并由该提交的 macOS 14 / Windows 2022 final CI 关闭最后代码门禁。
-- [ ] 从最终 release commit 只执行一次 `npm pack`，冻结唯一 `dsh-grok-provider-0.1.11.tgz`，完成清单、摘要、隔离安装与 Host/client export 验收。
-- [ ] 完整提交与唯一制品证据形成后，另行取得精确 `dsh-grok-provider@0.1.11` 制品授权；当前开发指令不得冒充该固定制品授权。
-- [ ] 不可变 tag、唯一 GitHub Release asset、Trusted Publisher、npm `latest`、Registry 字节、signature、attestation 与 provenance 回读全部关闭。
+- [x] 发布证据 PR #26 合入后形成最终 release commit `2e5c6dbc8bb83377a4db4d8e31452b3ce96500c5`；该提交的 final CI run [`33303080849`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33303080849) 在 macOS 14 / Windows 2022 全绿。
+- [x] 从最终 release commit 只生成唯一 `dsh-grok-provider-0.1.11.tgz`：71 个文件、207,022 bytes，unpacked size 656,139 bytes；SHA-256 为 `8fca0eca86769ee9febd35606cc8c944a0ae968cec2937a30ccaf68d36d42b2d`，SRI 为 `sha512-2qInRIq5Dkf7CqXq8z1mVvMelStg3nZ1wuWEqsExgfm7iXF0Jn5f7d11IAtHRxdKdJm/j0s8tYT1Dx6IdtGNqg==`。Registry 精确版本的隔离安装及 Host/client import/export smoke 通过。
+- [x] 完整提交与唯一制品证据形成后，仓库所有者明确授权发布上述精确 `dsh-grok-provider@0.1.11` 制品。
+- [x] Annotated tag object `353bcd3717d4440ab20a2b05a5e9d51eef22fa7f` peel 到 release commit；不可变 `v0.1.11`、唯一 GitHub Release asset 与 Trusted Publisher run [`33303631312`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33303631312) 已完成。npm `latest=0.1.11`，Registry、Release 与本地 tarball 逐字节一致；`npm audit signatures` 确认隔离安装图中 9 个包具有已验证 Registry 签名、3 个包具有已验证 attestations，本包公开 npm metadata 包含 1 个 Registry signature、2 个 attestations，SLSA provenance 精确绑定 `release.yml`、`v0.1.11`、release commit 与该 run。
+- [ ] 网络可达 Windows 真机的官方 CLI 外部浏览器弹出仍未完成验收；该独立边界不是 `0.1.11` 发布门禁，完成前不得声称已修复或已验证。

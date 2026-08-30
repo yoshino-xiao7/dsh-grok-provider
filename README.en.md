@@ -4,7 +4,7 @@
 
 Use an already authenticated official Grok Build account from DeepSeek Harness, with dynamic model discovery, streaming reasoning, image input, optional Web/X Search, tool calls, and an account quota/model capability dashboard.
 
-> Unofficial community project; not affiliated with xAI or DeepSeek Harness. The current source candidate is `0.1.11`; the current stable release and npm Registry `latest` are both `0.1.10`. Published `0.1.10` repaired Web/X Search settings registration, but real use later found that `grok-4.6` at High Effort can hit a generic invalid-response error while continuing after Web Search because of a reasoning-lifecycle compatibility gap; unpublished `0.1.11` is the focused protocol repair. Version `0.1.8` was published and then withdrawn and cannot be reused. The project no longer publishes prereleases; stable defects are fixed in a new incremented stable version.
+> Unofficial community project; not affiliated with xAI or DeepSeek Harness. The current stable release and npm Registry `latest` are both `0.1.11`. Building on the `0.1.10` Web/X Search settings-registration repair, this release focuses on the reasoning-lifecycle compatibility gap seen when `grok-4.6` continues after Web Search at High Effort. Version `0.1.8` was published and then withdrawn and cannot be reused. The project no longer publishes prereleases; stable defects are fixed in a new incremented stable version.
 
 ## What it provides
 
@@ -15,7 +15,7 @@ Use an already authenticated official Grok Build account from DeepSeek Harness, 
 | Models | Discovers every model visible to the account at runtime; no static model allowlist |
 | Conversations | Streaming Responses text, reasoning, encrypted reasoning replay, usage, and finish reasons |
 | Images | Only exact `grok-4.6` accepts bounded JPEG/PNG images from Harness attachments; `grok-4.5` and all other models remain text-only |
-| Search | `0.1.10` provides independent, default-off Web Search and X Search for exact `grok-4.6`; the `0.1.11` candidate repairs the High Effort + Web Search reasoning-continuation lifecycle, while remote lifecycles are never misrepresented as local tools |
+| Search | `0.1.10` provides independent, default-off Web Search and X Search for exact `grok-4.6`; published `0.1.11` repairs the High Effort + Web Search reasoning-continuation lifecycle, while remote lifecycles are never misrepresented as local tools |
 | Tools | Returns function calls to the Harness permission layer; the provider never executes tools |
 | Account dashboard | Login status, weekly/monthly quota, reset time, dynamic model capabilities and reasoning efforts |
 | Surfaces | Bilingual Web settings and a closed `/grok` TUI command set |
@@ -40,7 +40,7 @@ When the network is reachable and OIDC discovery succeeds, the official CLI open
 
 ### 2. Install the provider
 
-`0.1.11` is not published yet. After it is published and read back from the Registry, install that exact version from npm:
+Install the exact published version that has been read back from the Registry:
 
 ```sh
 dsh plugin --profile web add dsh-grok-provider@0.1.11
@@ -130,8 +130,9 @@ Uninstalling the provider does not remove the official Grok CLI or directly modi
 
 ## Sources and discovery
 
-- Current npm stable release: [dsh-grok-provider@0.1.10](https://www.npmjs.com/package/dsh-grok-provider/v/0.1.10) (unique artifact, dual-platform CI, signatures, and provenance verified; known High Effort + Web Search reasoning-compatibility defect)
-- Most recent GitHub release and integrity values: [v0.1.10](https://github.com/yoshino-xiao7/dsh-grok-provider/releases/tag/v0.1.10)
+- Current npm stable release: [dsh-grok-provider@0.1.11](https://www.npmjs.com/package/dsh-grok-provider/v/0.1.11) (unique artifact, dual-platform CI, signatures, attestations, and provenance verified)
+- Most recent GitHub release and integrity values: [v0.1.11](https://github.com/yoshino-xiao7/dsh-grok-provider/releases/tag/v0.1.11)
+- Release evidence: release commit `2e5c6dbc8bb83377a4db4d8e31452b3ce96500c5`, annotated tag object `353bcd3717d4440ab20a2b05a5e9d51eef22fa7f` peeling to that commit, final CI run [`33303080849`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33303080849), and Trusted Publisher run [`33303631312`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33303631312). The repository owner explicitly authorized the unique 71-file artifact, which is 207,022 bytes packed and 656,139 bytes unpacked; SHA-256 is `8fca0eca86769ee9febd35606cc8c944a0ae968cec2937a30ccaf68d36d42b2d` and SRI is `sha512-2qInRIq5Dkf7CqXq8z1mVvMelStg3nZ1wuWEqsExgfm7iXF0Jn5f7d11IAtHRxdKdJm/j0s8tYT1Dx6IdtGNqg==`. Registry, Release, and local copies are byte-identical, and an isolated Registry install passed Host/client smoke. `npm audit signatures` confirmed verified Registry signatures for 9 packages and verified attestations for 3 packages; this package's public metadata exposes 1 Registry signature and 2 attestations, and provenance binds `release.yml`, `v0.1.11`, the release commit, and publish run exactly.
 - GitHub community discovery: the repository carries the DeepSeek Harness-recommended `dsh-plugin` and `dsh` topics
 - YukiRyou managed source: [deepseek-yukiryou-plugin-catalog](https://github.com/yoshino-xiao7/deepseek-yukiryou-plugin-catalog), still pinned to the real-device-accepted `dsh-grok-provider@0.1.0` and marking only `darwin-arm64`
 
@@ -139,12 +140,12 @@ Directory inclusion is not an endorsement by xAI or DeepSeek Harness. [Listing P
 
 ## Compatibility and scope
 
-| Item | `0.1.10` stable / `0.1.11` candidate status |
+| Item | Published `0.1.11` status |
 | --- | --- |
 | DeepSeek Harness | Exact support for `0.1.1-rc.2` |
 | Node.js | `>=24.19.0` |
-| macOS arm64 | Image sending has real-Harness confirmation; focused `0.1.11` regressions, the redacted summary/Search probe, and the code merge commit's macOS 14 CI pass; the release-evidence commit's final CI and unique artifact remain pending |
-| Windows x64 | The `0.1.11` code merge commit's Windows 2022 CI and existing slow fakes pass; the release-evidence commit's final CI remains pending. On a reachable network the official CLI generates the URL and opens the browser, and that path still lacks real-device Windows acceptance |
+| macOS arm64 | Image sending has real-Harness confirmation; focused `0.1.11` regressions, the redacted summary/Search probe, final macOS 14 CI, and unique-artifact acceptance all pass |
+| Windows x64 | Final `0.1.11` Windows 2022 CI and existing slow fakes pass. On a reachable network the official CLI generates the URL and opens the browser, and that path still lacks real-device Windows acceptance |
 | macOS x64 / Linux | Unsupported |
 | Grok CLI | No full-version lock; official path, `login --oauth` capability, and production OIDC credential contract are enforced |
 | Models | Every account catalog model whose backend has a strict codec in this release |
@@ -153,7 +154,7 @@ Directory inclusion is not an endorsement by xAI or DeepSeek Harness. [Listing P
 
 Each projected image is limited to 4 MiB, 16,777,216 pixels, and 8192px per side. A request retains at most eight images and 8 MiB of projected image bytes. When a limit is exceeded, the globally oldest images are offloaded to Harness text placeholders; the final JSON remains capped at 16 MiB.
 
-Published `0.1.10` registers and persists both Search settings through the canonical Harness settings module; each new call reads the latest value once before model discovery, while prepared and in-flight calls keep their original snapshot. Real use later found that exact `grok-4.6` at High Effort may close a reasoning item, complete Search, and then reuse the same ID once as an empty placeholder, which the old decoder rejected. The `0.1.11` candidate permits that strictly empty one-time reuse only when a completed Search lies between the two reasoning lifecycles and adds the official raw `reasoning_text` lifecycle. Raw and summary modes are mutually exclusive; replay metadata does not retain raw plaintext, later requests send only `encrypted_content` with an empty summary, and live raw deltas remain visible to Harness as reasoning output. A redacted real probe observed 34 summary deltas and zero raw deltas, so it verifies only the summary/Search path; raw reasoning remains fixture-verified. Search stays default-off and limited to exact `grok-4.6`; remote activity is not projected as a local tool, and citation URLs are never opened or downloaded. Search results are untrusted remote data, so verify sources before commands or file changes. Image generation, arbitrary downloads, API-key mode, multiple accounts, enterprise OIDC, ACP, and Headless agent wrapping remain out of scope; see the [capability roadmap](docs/11-capability-roadmap.md).
+Published `0.1.10` registers and persists both Search settings through the canonical Harness settings module; each new call reads the latest value once before model discovery, while prepared and in-flight calls keep their original snapshot. Real use later found that exact `grok-4.6` at High Effort may close a reasoning item, complete Search, and then reuse the same ID once as an empty placeholder, which the old decoder rejected. Published `0.1.11` permits that strictly empty one-time reuse only when a completed Search lies between the two reasoning lifecycles and adds the official raw `reasoning_text` lifecycle. Raw and summary modes are mutually exclusive; replay metadata does not retain raw plaintext, later requests send only `encrypted_content` with an empty summary, and live raw deltas remain visible to Harness as reasoning output. A redacted real probe observed 34 summary deltas and zero raw deltas, so it verifies only the summary/Search path; raw reasoning remains fixture-verified. Search stays default-off and limited to exact `grok-4.6`; remote activity is not projected as a local tool, and citation URLs are never opened or downloaded. Search results are untrusted remote data, so verify sources before commands or file changes. Image generation, arbitrary downloads, API-key mode, multiple accounts, enterprise OIDC, ACP, and Headless agent wrapping remain out of scope; see the [capability roadmap](docs/11-capability-roadmap.md).
 
 ## How it works
 
@@ -257,7 +258,7 @@ Read the [contributing guide](CONTRIBUTING.md) before filing an issue or PR. Cha
 - [x] Publish `0.1.7`: Provider/CLI version diagnostics, CLI installation recovery, redacted OIDC discovery-timeout settlement, and the `IconThinkOutline16` settings-navigation compatibility layer
 - [x] Publish `0.1.9`: added the Web/X Search protocol and settings page; the unique artifact, dual-platform CI, signatures, and SLSA provenance are verified; post-release verification found the missing Host settings namespace and unusable controls
 - [x] Publish `0.1.10`: `llm-grok` registration, per-call capture, unique artifact, dual-platform CI, signatures, and provenance are complete
-- [ ] Publish `0.1.11`: repair High Effort + Web Search reasoning-lifecycle compatibility; the code PR and main dual-platform CI pass, while release-evidence final CI, the unique artifact, exact authorization, Registry, and provenance readback remain pending
+- [x] Publish `0.1.11`: repair High Effort + Web Search reasoning-lifecycle compatibility; the unique artifact, final dual-platform CI, exact authorization, Registry, signatures, attestations, and provenance readback are complete
 - [ ] A subsequent slice: opt-in image generation (inline results only, committed through Harness attachments)
 - [ ] Complete independent Windows x64 acceptance and publish a later stable fix if needed
 

@@ -1,10 +1,10 @@
 # 能力路线图
 
-- 状态：**`0.1.10` Search 设置链路已发布；`0.1.11` 正在修复 High Effort + Web Search reasoning 生命周期兼容（2026-08-30）**
-- 当前 npm 稳定版：`0.1.10`
-- 最近发布：`0.1.10`
+- 状态：**`0.1.11` High Effort + Web Search reasoning 生命周期兼容修复已发布（2026-08-30）**
+- 当前 npm 稳定版：`0.1.11`
+- 最近发布：`0.1.11`
 - 最近撤回：`0.1.8`（npm 版本号不可复用）
-- 当前开发分支：`yukiryou/v0.1.11-release-evidence`
+- 当前发布基线：`yukiryou/main@2e5c6dbc8bb83377a4db4d8e31452b3ce96500c5`
 
 本文是 `0.1.3` 之后内容类型迭代的单一事实来源。`0.1.0`–`0.1.3` 的历史范围仍以 [ADR-0002](./adr/0002-v0.1-scope.md) 和[产品需求](./01-product-requirements.md)为准。
 
@@ -31,7 +31,7 @@
 | `0.1.8`（已撤回） | sidebar quota 维护；不含 Search | 发布后撤回；npm 号码已消耗且不得复用 | 见 `0.1.8` 撤回说明 |
 | `0.1.9`（已发布） | 默认关闭的 Web Search / X Search 协议与页面；Host namespace 遗漏导致开关不可用 | 固定 Proxy、双平台 CI、隔离 Harness、唯一制品与 Registry 回读均已关闭；发布后确认功能集成缺口 | [ADR-0010](./adr/0010-default-off-web-x-search.md) 与固定 Proxy 证据 |
 | `0.1.10`（已发布） | 修复 `llm-grok` 注册与按调用读取 Search 设置 | 真实 SettingsProvider/LLM 回归、隔离安装、双平台 CI、唯一制品与 Registry 回读均已关闭 | [ADR-0010](./adr/0010-default-off-web-x-search.md) 的发布后修正 |
-| `0.1.11` 候选 | 修复 High Effort + Web Search reasoning ID 空占位复用，并支持官方 raw reasoning lifecycle | 闭合状态机回归、脱敏 summary/Search probe、双平台 CI、唯一制品 | [ADR-0010](./adr/0010-default-off-web-x-search.md) 的响应兼容修正 |
+| `0.1.11`（已发布） | 修复 High Effort + Web Search reasoning ID 空占位复用，并支持官方 raw reasoning lifecycle | 闭合状态机回归、脱敏 summary/Search probe、双平台 CI、唯一制品与 Registry 回读均已关闭 | [ADR-0010](./adr/0010-default-off-web-x-search.md) 的响应兼容修正 |
 | 再后续版本 | 默认关闭的图片生成 | Proxy 返回可有界提交到 Harness attachment 的内联结果 | ADR-0011 |
 
 版本号可因缺陷修复顺延。`prompt_cache_key` 与图片输入相互独立，不属于 `0.1.4`：它需要独立的会话标识隐私、路由稳定性和“不得自动重放已经发送的 POST”分析，不得作为图片请求失败后的重试/降级机制。
@@ -159,7 +159,8 @@ const request = await requestCompiler.compile(options, preparedRoute)
 - 接受完整闭合的空 reasoning item；事件序号、output index、状态、内容与 encrypted replay 仍受闭合校验。
 - 支持官方 raw `reasoning_text` content/delta/done 生命周期，并与 summary reasoning 严格互斥；replay 元数据不保存 raw 明文，后续请求只回传 `encrypted_content` 与 `summary: []`，当前流中的 raw delta 仍作为 Harness 可见 reasoning 输出。
 - 脱敏真实 `grok-4.6` Web Search probe 经生产 decoder 完成 1 次 POST、68 个事件、34 个 summary delta、0 个 raw delta与 1 个 finish。它只证明 summary/Search 路径，raw reasoning 仍只有 fixture 证据。
-- 不改变 Search descriptor、开关、模型 allowlist、citation、认证、图片或平台边界。代码 PR #25、merge commit `307ae3ac83526f388c6b4a0d1e1346353bd5f4aa` 与 main CI run `33302830043` 已通过；发布证据提交的 final CI、唯一制品与精确授权待完成。
+- 不改变 Search descriptor、开关、模型 allowlist、citation、认证、图片或平台边界。代码 PR #25、merge commit `307ae3ac83526f388c6b4a0d1e1346353bd5f4aa` 与 main CI run `33302830043` 已通过。
+- 最终 release commit `2e5c6dbc8bb83377a4db4d8e31452b3ce96500c5` 的 final CI run `33303080849` 在 macOS 14 / Windows 2022 全绿；唯一 71 文件 tarball 为 207,022 bytes packed、656,139 bytes unpacked，SHA-256 为 `8fca0eca86769ee9febd35606cc8c944a0ae968cec2937a30ccaf68d36d42b2d`，SRI 为 `sha512-2qInRIq5Dkf7CqXq8z1mVvMelStg3nZ1wuWEqsExgfm7iXF0Jn5f7d11IAtHRxdKdJm/j0s8tYT1Dx6IdtGNqg==`。Trusted Publisher run `33303631312` 已完成，npm `latest=0.1.11`；Registry、Release 与本地制品逐字节一致。本包公开 metadata 的 1 个 Registry signature 与 2 个 package attestations 已验证，SLSA provenance 精确绑定 `release.yml`、`v0.1.11`、release commit 与该发布 run。
 
 ## 8. 后续：默认关闭的图片生成
 
@@ -175,4 +176,4 @@ const request = await requestCompiler.compile(options, preparedRoute)
 - ACP、`grok -p` Headless、Linux / macOS x64 发布承诺。
 - 厂商 `code_execution`；Harness 已有本地工具权限层。
 
-English summary: `0.1.10` is the current stable npm release from commit `fe1e5a7d82defb17ab5bcbb0d9979c43cb48c028`; version `0.1.8` was briefly published for sidebar-quota maintenance and then withdrawn, and its npm version number remains unusable. The unique 70-file, 197,620-byte artifact has an unpacked size of 628,836 bytes, SHA-256 `f9fe1dea743e86e2799a1073a93a8af91ad5bd389e14f4d2f0528428ada93c62`, and SRI `sha512-OnfG4diVqJdzYSwJKERNnaplYFbOvFICZP58E0f2Cdh+t7orlTL1DWokvzEHdJrw6HA+UMoKDZgJ6AMEVv4aUg==`. Final main CI run `33299116564` and Trusted Publisher run `33299599113` passed; npm `latest=0.1.10`, Registry and Release bytes match, and the Registry signature plus SLSA provenance were read back. The `0.1.11` candidate is a focused reasoning-lifecycle repair for exact `grok-4.6` High Effort + Web Search continuation: one strictly empty reuse of a closed reasoning ID only across a completed server Search, closed empty items, and a mutually exclusive official raw `reasoning_text` lifecycle. Replay metadata does not retain raw plaintext; later requests send only encrypted content with an empty summary, while live raw deltas remain visible to Harness. A redacted real probe emitted 34 summary deltas and zero raw deltas, so raw reasoning remains fixture-verified rather than live-probe verified. Code PR #25 merged as `307ae3ac83526f388c6b4a0d1e1346353bd5f4aa`, and main CI run `33302830043` passed on macOS 14 and Windows 2022. The release-evidence commit's final CI, the unique artifact, exact authorization, and release readback remain pending. Authentication, Search descriptors, image input, and platform support are unchanged; network-reachable browser launch on a physical Windows device remains a separate acceptance boundary.
+English summary: `0.1.11` is the current stable npm release from commit `2e5c6dbc8bb83377a4db4d8e31452b3ce96500c5`; version `0.1.8` was briefly published for sidebar-quota maintenance and then withdrawn, and its npm version number remains unusable. Final CI run `33303080849` passed on macOS 14 and Windows 2022. The unique 71-file artifact is 207,022 bytes packed and 656,139 bytes unpacked, with SHA-256 `8fca0eca86769ee9febd35606cc8c944a0ae968cec2937a30ccaf68d36d42b2d` and SRI `sha512-2qInRIq5Dkf7CqXq8z1mVvMelStg3nZ1wuWEqsExgfm7iXF0Jn5f7d11IAtHRxdKdJm/j0s8tYT1Dx6IdtGNqg==`. Trusted Publisher run `33303631312` completed; npm reports `latest=0.1.11`, and the Registry, Release, and local bytes are identical. This package's one Registry signature and two package attestations verified, and SLSA provenance binds `release.yml`, `v0.1.11`, the release commit, and the publish run exactly. The release repairs exact `grok-4.6` High Effort + Web Search continuation: one strictly empty reuse of a closed reasoning ID only across a completed server Search, closed empty items, and a mutually exclusive official raw `reasoning_text` lifecycle. Replay metadata does not retain raw plaintext; later requests send only encrypted content with an empty summary, while live raw deltas remain visible to Harness. A redacted real probe emitted 34 summary deltas and zero raw deltas, so raw reasoning remains fixture-verified rather than live-probe verified. Authentication, Search descriptors, image input, and platform support are unchanged; network-reachable browser launch on a physical Windows device remains a separate acceptance boundary.
