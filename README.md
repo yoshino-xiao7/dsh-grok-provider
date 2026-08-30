@@ -4,11 +4,11 @@
 
 让 DeepSeek Harness 使用你已登录的官方 Grok Build 账号：动态模型发现、流式推理、图片输入、可选 Web/X Search、工具调用，以及账号额度与模型能力面板。
 
-> 非官方社区项目，与 xAI 或 DeepSeek Harness 官方无隶属关系。当前稳定版及 npm Registry 的 `latest` 均为 `1.0.0`。`0.1.8` 曾发布后撤回且版本号不可复用。项目不再发行预发行版；正式版缺陷通过新的递增稳定版本修复。
+> 非官方社区项目，与 xAI 或 DeepSeek Harness 官方无隶属关系。当前稳定版及 npm Registry 的 `latest` 均为 `1.0.0`。源码正在准备尚未发布的 `1.0.1` 修复候选；`0.1.8` 曾发布后撤回且版本号不可复用。
 
-当前源码发布版为 `1.0.0`；npm Registry 的 `latest` 为 `1.0.0`。
+当前源码候选版为 `1.0.1`；npm Registry 的 `latest` 为 `1.0.0`。在 `1.0.1` 制品冻结、另行获得精确发布授权并完成 Registry 回读前，请继续安装 `1.0.0`。
 
-`1.0.0` 解决两类真实上游形状：一次 Search 完成后，同一 reasoning ID 可能继续以多个严格空占位生命周期出现；已完成 Web Search 也可能返回 `open_page` action。本版只接受闭合、Search-backed、严格空的复用，以及精确且有界的 `{ type: "open_page", url }`，不会打开或下载 URL。
+`1.0.1` 候选修复另一类真实 Search 失败：启用 xAI server `web_search` / `x_search` 时，Harness 同名 function definitions 与 server tools 共存会被固定 Proxy 以 HTTP 400 拒绝。候选先完整验证全部 functions，再只过滤已启用的同名 wire definition；历史 function calls/results 保留。SSE 层也会透传 transport error，使 HTTP 400 显示为 `PROVIDER_ERROR`，而不是误报 `INVALID_RESPONSE`。
 
 ## 它解决什么问题
 
@@ -19,8 +19,8 @@
 | 模型 | 运行时读取账号可见的全部 Grok Build 模型，不维护静态模型白名单 |
 | 对话 | Responses 流式文本、reasoning、加密 reasoning replay、usage 与 finish reason |
 | 图片 | 仅精确 `grok-4.6` 接收 Harness attachment 中有界的 JPEG/PNG 图片；`grok-4.5` 与其他模型保持 text-only |
-| 搜索 | 已发布 `1.0.0` 为精确 `grok-4.6` 提供默认关闭的 Web/X Search，并补齐多次严格空 reasoning 复用与完成态 `open_page` action；远端 lifecycle 仍不伪装成本地工具 |
-| 工具 | 将 function call 交回 Harness 权限层；Provider 本身不执行工具 |
+| 搜索 | 已发布 `1.0.0` 为精确 `grok-4.6` 提供默认关闭的 Web/X Search；`1.0.1` 候选解决 server Search 与 Harness 同名 function definition 的 HTTP 400 冲突 |
+| 工具 | 将 function call 交回 Harness 权限层；Provider 本身不执行工具，关闭对应 Search 开关时保留本地 `web_search` / `x_search` |
 | 账户面板 | 登录状态、每周/月额度、重置时间、动态模型能力与 reasoning 档位 |
 | 界面 | Web 设置页中英文切换；TUI 提供闭合的 `/grok` 命令 |
 
@@ -144,13 +144,21 @@ dsh web
 
 ## 兼容性与范围
 
+### `1.0.1` 候选修复边界
+
+- 根因不是模型、账号、Search 响应形状或 42 项工具总数，而是启用 server Search 时，同名 Harness function definition 与 `{ type: "web_search" }` / `{ type: "x_search" }` 共存；固定 Proxy 对该组合返回 HTTP 400。
+- 编译器先完整验证 40 个源 functions，再仅过滤与已启用 server Search 同名的 wire definitions。关闭对应开关时，本地工具保持原样；已有会话中的历史 `function_call` / `function_call_output` 也不删除或改名。
+- 最终 request receipt 拒绝 function/server-tool 名称交集；SSE parser 保留 source transport error，HTTP 400 因而映射到 `PROVIDER_ERROR`，真正的 SSE/协议错误仍为 `INVALID_RESPONSE`。
+- 一次经明确授权的脱敏真实账号回放使用原失败 X 会话结构：8 条 messages、40 个 source functions、wire 38 functions + 2 server tools、保留 2 个历史 reserved-name calls；只执行 1 次 models GET 和 1 次 Responses POST，接收 314 events 并以 `response.completed` 闭合。未保存消息/回复正文、URL、身份或凭据。
+- 精确 Node `24.19.0` 本地全量门禁为 253 tests、251 pass、0 fail、2 platform skips；生产依赖审计为 0 漏洞，隔离 cache 的 dry-run pack 列出 73 个文件，秘密模式扫描只命中显式 fixture canary 及其检查表记录。上述证据只证明候选源码与本地门禁解决已知冲突；不代表双平台 CI、冻结制品、隔离安装、发布、供应链回读或 Windows 真机浏览器登录已经完成。候选详情见 [`docs/releases/v1.0.1.md`](docs/releases/v1.0.1.md)。
+
 ### `1.0.0` 修复边界
 
 - 一个 reasoning ID 的原始生命周期必须先闭合，并且首次复用前必须已有一个完成的 Web/X server Search；之后只允许它以严格空占位再次出现。
 - “严格空”是指可见 summary/content 为空，且没有 summary/raw lifecycle；允许有界、不透明的 `encrypted_content`，但不会把它当作可见 reasoning 或保存上游明文。
 - 每次复用都必须收到独立的 `response.output_item.done`；若 `response.incomplete` 到来时仍有复用段未闭合，则返回通用非法响应错误，所有复用段已闭合后的 `max_output_tokens` 终态仍有效。非空 summary/raw、跨类型、未知 terminal 字段或 accessor 字段继续拒绝。
 - 完成态 `open_page` 只接受精确 `type + url`，streamed/final action 的类型与 URL 必须一致；Provider 校验后丢弃 URL，不会访问、预览、下载或回放。
-- 最终源码完成两层脱敏真实账号复验：原始 Web/X 协议探针各 1 次请求、各 64 events，分别观察到对应 Search 且终态 `completed`；生产 adapter 共完成 5 次 Responses，direct Web/X 均为 `stop`，Harness 同名 `x_search` 三轮依次为 `tool-calls`、`tool-calls`、`stop`，前两轮各 1 次本地调用。未保存结果、URL、prompt、身份或凭据；这些不是发布、OAuth 或 Windows 真机证据。
+- 最终源码完成两层脱敏真实账号复验：原始 Web/X 协议探针各 1 次请求、各 64 events，分别观察到对应 Search 且终态 `completed`；生产 adapter 共完成 5 次 Responses，direct Web/X 均为 `stop`，Harness 形状的本地 `x_search` call/result 续跑三轮依次为 `tool-calls`、`tool-calls`、`stop`，前两轮各 1 次本地调用。该续跑没有在同一 wire request 中同时放入 Harness `x_search` function definition 与 xAI `{ type: "x_search" }` server descriptor；`1.0.1` 后续才隔离出这一 HTTP 400 冲突。未保存结果、URL、prompt、身份或凭据；这些不是发布、OAuth 或 Windows 真机证据。
 - manifest/lock 已同步为 `1.0.0`；Node 24 全量测试为 245 项、243 pass、0 fail、2 项平台跳过，生产依赖审计为 0 漏洞，确定性 build/bundle、72 项 dry-run pack、秘密模式扫描与 diff 检查均通过。代码 PR #28、main CI run [`33308371009`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33308371009)、最终 release commit、双平台 final CI、唯一制品、精确授权及 Registry/signature/attestation/provenance 回读均已完成。
 
 | 项目 | `1.0.0` 已发布状态 |

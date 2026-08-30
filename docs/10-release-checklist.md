@@ -210,7 +210,7 @@ English summary: every release must close documentation, security, tests, determ
 - [x] 根因范围冻结：一个完成的 Web/X server Search 后，同一 reasoning ID 可能继续出现为多个空占位 lifecycle；完成态 Web Search 可能返回精确 `open_page` action。范围不包含新认证方式、endpoint、模型、内容类型、图片生成或本地 URL 访问。
 - [x] 安全契约冻结：首次复用前原 reasoning 必须闭合并有完成 Search；之后每次复用都必须 visible summary/content 与 summary/raw lifecycle 为空，并有独立 `response.output_item.done`。有界 opaque `encrypted_content` 允许存在；`response.incomplete` 不能吞掉 open 复用段，但复用段全部闭合后的 max-token 终态有效；非空、跨类型、未知 terminal 或 accessor-backed Search item/response container 字段继续失败关闭。
 - [x] `open_page` 契约冻结：只接受完成态精确 `type + url`，streamed/final action type 与 URL 必须一致；校验后丢弃 URL，不访问、不预览、不下载、不 replay，也不投影为 Harness 本地工具。
-- [x] 最终源码的脱敏真实账号验证完成且只保留计数/终态：原始 Web/X 协议各完成 1 次、各 64 events，并观察到对应 Search；生产 adapter 共完成 5 次 Responses，direct Web/X 均为 `stop`，Harness 同名 `x_search` 三轮依次为 `tool-calls`、`tool-calls`、`stop`，前两轮各 1 次本地调用。未记录结果、URL、prompt、身份或凭据。
+- [x] 最终源码的脱敏真实账号验证完成且只保留计数/终态：原始 Web/X 协议各完成 1 次、各 64 events，并观察到对应 Search；生产 adapter 共完成 5 次 Responses，direct Web/X 均为 `stop`，Harness 形状的本地 `x_search` call/result 续跑三轮依次为 `tool-calls`、`tool-calls`、`stop`，前两轮各 1 次本地调用。该续跑没有在同一 wire request 中共置 Harness `x_search` function definition 与 xAI `{ type: "x_search" }` server descriptor；此冲突由 `1.0.1` 后续 A/B 确认。未记录结果、URL、prompt、身份或凭据。
 - [x] `package.json` 与 lockfile 已更新到精确 `1.0.0`；发行物契约、中英文 README、CHANGELOG、安全策略、设计/状态/测试/发布文档和 `docs/releases/v1.0.0.md` 对同一发布事实保持一致。
 - [x] 聚焦 codec 40/40 与完整 Node `24.19.0` 测试通过：共 245 项、243 pass、0 fail、2 项平台跳过；覆盖多次严格空复用、Web/X Search-backed 首次复用、opaque encrypted content、每次 `output_item.done`、open reuse + incomplete 拒绝、closed reuse + max-token 接受、非空/跨类型/terminal/accessor 拒绝，以及 `open_page` streamed/final 一致与边界错误。
 - [x] `npm audit --omit=dev` 为 0 漏洞；确定性 build 与生成 bundle 一致，`npm run pack:check` 为 72 项，秘密模式扫描和 `git diff --check` 通过。
@@ -220,3 +220,20 @@ English summary: every release must close documentation, security, tests, determ
 - [x] 仓库所有者已明确授权上述精确 `dsh-grok-provider@1.0.0` 制品。
 - [x] Annotated tag object `192561cda1ac58cbc4077f0de8fa614dff9a5557` peel 到 release commit；不可变 `v1.0.0`、唯一 GitHub Release asset 与 Trusted Publisher run [`33309083806` attempt 1](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33309083806/attempts/1) 已完成。npm `latest=1.0.0`，冻结候选、Release 与 Registry tarball 逐字节一致；本包 1 个 Registry signature、2 个 attestations，安装图 11 个 signed packages、2 个 attested packages，以及精确绑定 tag/workflow/commit/run 的 SLSA provenance 均已回读。
 - [ ] 网络可达 Windows 真机的官方 CLI 外部浏览器弹出仍需独立验收；它不是此 Search codec 修复的发布门禁，但完成前不得声称 Windows 登录已修复或验证。
+
+## `1.0.1` 同名 Search 工具冲突修复发布门禁
+
+- [x] 从当时的 `origin/yukiryou/main@6611eec5e16d879da8caecc2bdb7df048b4abf58` 创建隔离分支 `yukiryou/v1.0.1-search-tool-collision`；已发布 `1.0.0` 的 release commit 仍为 `c6548199582b122f1d285422eabea0205eaf602f`，原工作树保持未修改。
+- [x] 真实根因通过单变量 A/B 闭合：40 个 Harness functions 含 `web_search` / `x_search`，与同名 server Search descriptors 共存时 fixed Proxy 返回 HTTP 400；只过滤两个同名 wire definitions、保留其余 38 functions + 2 server tools 后请求完成。
+- [x] request compiler 先完整验证全部 source functions，再只过滤与已启用 server Search 精确同名的 wire definitions；关闭对应开关或后台 `purpose` 时保留本地 function，历史 `function_call` / `function_call_output` 不删除、不改名。
+- [x] request/decoder receipt 双侧拒绝 function/server-tool 名称交集；最终 128 项工具预算按过滤后的 wire functions 与 server tools 共同计算。
+- [x] SSE source transport error 原样上抛并进入既有 `PROVIDER_ERROR` 映射；framing、JSON 和协议错误仍归类为 `INVALID_RESPONSE`，失败后不自动降级或重放 POST。
+- [x] 精确 Node `24.19.0` 本地全量门禁通过：253 tests、251 pass、0 fail、2 platform skips；包含确定性 build、三项 smoke syntax 与全部协议/集成/发行契约测试。
+- [x] `npm audit --omit=dev` 为 0 漏洞；使用隔离 npm cache 完成 73 文件 dry-run pack。秘密模式扫描只命中显式测试 canary `Bearer fixture-access-token` 及记录该 canary 的本检查表文本。dry-run 清单不是冻结制品，其大小与摘要不得作为发布值。
+- [x] 一次经明确授权的真实账号最终验证只执行 1 次 models GET 与 1 次 Responses POST：8 messages、40 source functions 编译为 38 wire functions + 2 server tools，保留 2 个历史 reserved-name calls，314 events 后 `response.completed`；未保存正文、URL、身份、凭据或原始响应。
+- [x] manifest/lock、发行契约、中英文 README、CHANGELOG、SECURITY、ADR、测试/状态/证据/路线图与候选 Release Notes 已同步为未发布 `1.0.1` 源码候选。
+- [ ] 分支 push、代码 PR、受保护 main 合并及 macOS 14 / Windows 2022 CI 尚未完成。
+- [ ] 最终 release commit、唯一候选 tarball、文件数/大小、SHA-1/SHA-256/SRI 及 Node 24 隔离安装尚未冻结和验收。
+- [ ] 仓库所有者尚未基于完整制品证据授权发布精确 `dsh-grok-provider@1.0.1`；当前真实请求授权不是 npm 发布授权。
+- [ ] tag、GitHub Release、Trusted Publisher、npm Registry 字节回读、signature、attestations 与 provenance 尚未完成。
+- [ ] 网络可达 Windows 真机的官方 CLI 外部浏览器弹出仍需独立验收；不得从本修复、CI 或发布推断 Windows 登录已验证。

@@ -1,12 +1,12 @@
 # 当前实现与发布状态
 
-`1.0.0` Search 响应协议修复已正式发布；版本、本地自动化、脱敏真实协议验证、代码 PR #28、发布证据 PR #29、双平台 final CI、唯一制品、精确授权及发布回读均已完成。
+`1.0.0` Search 响应协议修复已正式发布。当前正在准备尚未发布的 `1.0.1` 源码候选：解决启用 xAI server Search 时 Harness 同名 function definition 导致 fixed Proxy HTTP 400，并修正 SSE 层对 transport error 的错误归类。
 
 状态日期：2026-08-30
 当前 npm 发布线：`dsh-grok-provider@1.0.0`
-当前源码发布版：`dsh-grok-provider@1.0.0`
-发布基线：`yukiryou/main@c6548199582b122f1d285422eabea0205eaf602f`
-内容类型路线：已冻结于 [能力路线图](./11-capability-roadmap.md)；`1.0.0` 继续修复 Search stream 兼容，不新增内容类型、模型、认证方式、endpoint 或本地工具。
+当前源码候选：`dsh-grok-provider@1.0.1`（未发布）
+开发分支：`yukiryou/v1.0.1-search-tool-collision`；已发布基线仍为 `yukiryou/main@c6548199582b122f1d285422eabea0205eaf602f`
+内容类型路线：已冻结于 [能力路线图](./11-capability-roadmap.md)；`1.0.1` 只修复 Search request 冲突与错误归因，不新增内容类型、模型、认证方式、endpoint 或本地工具。
 
 ## 已实现
 
@@ -23,6 +23,7 @@
 - 已发布 `0.1.10` Search 能力与可写设置链路：Web/X 默认关闭且可独立编译；request/receipt 同编译、调用级设置快照、精确 route、共享工具/字节预算、后台 purpose 关闭、Web 标准 lifecycle、四项 X custom-tool、function membership、citation 有界丢弃与 replay 抑制均失败关闭。
 - 已发布的 `0.1.11` reasoning 兼容：允许已闭合 reasoning ID 以严格空项再出现一次，接受闭合空 reasoning，支持官方 raw `reasoning_text` 标准生命周期；raw 与 summary 互斥，raw replay 只携带 encrypted content 与空 summary。
 - 已发布 `1.0.0`：首次复用前仍要求一个完成的 Web/X server Search；一旦该 ID 已被 Search-backed，允许后续多个严格空占位 lifecycle，每个都必须独立 `output_item.done`。完成态 Web Search `open_page` 只接受精确有界 type/URL，并要求 streamed/final action 一致；URL 校验后丢弃，不产生本地工具调用或网络访问。
+- `1.0.1` 源码候选：全部 Harness functions 先完整验证，再从 wire definitions 精确过滤与本次已启用 server `web_search` / `x_search` 同名的定义；对应开关关闭时本地 function 保留，历史 function calls/results 原样保留。最终 receipt 拒绝 function/server-tool 交集。SSE source transport error 原样上抛，HTTP 400 进入 `PROVIDER_ERROR`，parser/协议错误仍为 `INVALID_RESPONSE`。
 
 ## 已验证
 
@@ -37,6 +38,7 @@
 - `0.1.4` 固定 CLI Chat Proxy 的 `grok-4.6` 图片门禁已完成：普通 user 与一层 tool-result 分别使用红/蓝合成图，共 4 次 `POST /v1/responses`；全部返回 HTTP 200、`text/event-stream`、正常 completed，且规范化整段回复只含正确颜色词和可选句末标点。脚本只输出脱敏计数和闭合枚举，不保存图片、prompt、模型正文、凭据或身份数据。
 - `grok-4.5` 的受控红图 Proxy 结果语义不可靠，因此从图片 capability 集合移除并保持 text-only；HTTP/SSE 形状不能替代模型实际观察图片的语义断言。
 - Harness `0.1.1-rc.2` 的真实 `attachment-local`/`LlmRuntime` 最终集合 smoke 已通过：内容寻址与 299-byte PNG projection 有效，普通 user 与一层 tool-result 的有序 `text/image/text` 均保留精确图片 wire；仅 `grok-4.6` 保留 image，`grok-4.5`/`grok-future` 均为 text-only，共编译 4 个请求且本地受控 transport 的网络请求为 0。
+- `1.0.1` 候选已在明确授权的真实账号环境中回放原失败 X 会话结构一次：8 条 messages、40 个 source functions 编译为 38 个 wire functions + 2 个 server Search tools，保留 2 个历史 reserved-name calls；1 次 models GET、1 次 Responses POST、314 events，终态 `response.completed`。验证没有保存消息/回复正文、URL、身份或凭据；这不是制品、CI、发布或 Windows 真机证据。
 
 ## `0.1.0` 发布结果
 
@@ -183,8 +185,18 @@ Windows x64 真机不再是 `0.1.0` 预发布阻断项。首次发布后必须�
 - 根因已扩展为两个真实上游形状：一个完成的 Search 之后，同一 reasoning ID 不只可能复用一次，而可能继续出现为多个空占位；完成的 `web_search_call` 也可能以 `open_page` 而非 `search` 结束。`0.1.11` 对这两种形状都会把流映射为 `INVALID_RESPONSE`。
 - 候选继续失败关闭：原始 reasoning 必须先闭合，首次复用前必须有完成的 server Search；每次复用都必须严格空并收到独立 `response.output_item.done`。`response.incomplete` 不能吞掉尚未闭合的复用段；全部复用段闭合后，后续 max-token 终态仍有效。非空 summary/raw、跨类型、未知 terminal 字段以及 Search item/response container 的 accessor-backed 字段均拒绝。有界 opaque `encrypted_content` 被允许但不会暴露为可见 reasoning。
 - 完成态 `open_page` 只允许精确 `{ type: "open_page", url }` 及既有边界内的 URL；streamed 与 final action 的 type/URL 必须相同。Provider 校验后丢弃该 URL，不打开、不预览、不下载、不 replay。
-- 最终源码的脱敏真实账号复验已完成：原始 Web/X 协议各完成 1 次、各 64 events，并观察到对应 Search；生产 adapter 共完成 5 次 Responses，direct Web/X 均为 `stop`，Harness 同名 `x_search` 三轮依次为 `tool-calls`、`tool-calls`、`stop`，前两轮各 1 次本地调用。验证记录没有结果、URL、prompt、身份或凭据。
+- 最终源码的脱敏真实账号复验已完成：原始 Web/X 协议各完成 1 次、各 64 events，并观察到对应 Search；生产 adapter 共完成 5 次 Responses，direct Web/X 均为 `stop`，Harness 形状的本地 `x_search` call/result 续跑三轮依次为 `tool-calls`、`tool-calls`、`stop`，前两轮各 1 次本地调用。该续跑没有在同一 wire request 中同时放入 Harness `x_search` function definition 与 xAI `{ type: "x_search" }` server descriptor；`1.0.1` 后续才隔离出这一 HTTP 400 冲突。验证记录没有结果、URL、prompt、身份或凭据。
 - 上述真实协议复验不替代 OAuth 或 Windows 真机外部浏览器验收。
 - 已完成：manifest/lock 精确 `1.0.0`；聚焦 codec 40/40；Node 24 全量 245 项、243 pass、0 fail、2 项平台跳过；生产依赖审计 0 漏洞；确定性 build/bundle、72 项 dry-run pack、秘密模式扫描与 `git diff --check`。
 - 代码 PR #28 已合入受保护 `yukiryou/main`，merge commit 为 `7a6364dd58f3c7e9e1ad68a3d0197a14254bcb8c`；main CI run [`33308371009`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33308371009) 的 macOS 14 / Windows 2022 均通过。
 - 发布证据 PR #29 形成 release commit `c6548199582b122f1d285422eabea0205eaf602f`；final CI run `33308603394` 双平台全绿。唯一 72 文件 tarball 为 226,704 bytes packed、715,014 bytes unpacked，SHA-1 `50e5d898dba241d1e19def7705db216e3060b892`、SHA-256 `30cd83dad77f7d2611126b3c4737c8fabffeae79f385fa623e61dcecfe39f5e2`、SRI `sha512-WL2f6Kfg5yT5nNf1p4//mLSajCnZttL/pDR3BISrFgSGtZd9DEJlnibq08ETz503n1wHIdCBcU/ICMPG9K4vOw==`；tag、Trusted Publisher run `33309083806` attempt 1、npm `latest=1.0.0`、字节一致、隔离安装、signature/attestations 与 provenance 回读均完成。Windows 真机浏览器弹出仍未验收。
+
+## `1.0.1` 源码候选状态
+
+- 真实失败根因已通过单变量 A/B 确认：40 个 Harness functions 中已有 `web_search` / `x_search`，与两个同名 xAI server tools 共存时 fixed Proxy 返回 HTTP 400；只移除这两个 wire definitions、保留其余 38 + 2 server tools 时请求完成。
+- request compiler 先完整验证全部源 functions，再按冻结 server-tool 集合过滤精确同名 definitions；这不会隐藏无效源 function。对应开关关闭时不进行过滤，历史 reserved-name function call/result 保留。
+- request compiler 与 codec 双侧 receipt 校验均拒绝 function/server-tool 名称交集。SSE parser 将 source iterable 异常与自身 framing/JSON/协议异常分离，前者保留既有 transport 类型，后者继续闭合为 `INVALID_RESPONSE`。
+- 最终源码结构回放结果为 8 messages、40 source functions、38 wire functions + 2 server tools、2 historical reserved calls、1 models GET、1 Responses POST、314 events、`response.completed`。没有保存正文、URL、账号身份或凭据。
+- manifest 与 lockfile 已进入 `1.0.1` 源码候选；双语 README、CHANGELOG、ADR、测试计划、证据页及候选 Release Notes 同步描述未发布状态。
+- 本地精确 Node `24.19.0` 全量门禁已完成：253 tests、251 pass、0 fail、2 platform skips；生产依赖审计为 0 漏洞，确定性 build 与隔离 cache 的 73 文件 dry-run pack 通过；秘密模式扫描只命中显式 fixture canary 及其检查表记录。
+- 尚未完成或不得声称：双平台 CI、固定 release commit、候选制品冻结、隔离安装、tag/GitHub Release、精确制品发布授权、npm Registry、signature/attestations/provenance，以及网络可达 Windows 真机浏览器登录。

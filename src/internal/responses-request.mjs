@@ -409,11 +409,13 @@ function captureServerTools(serverTools) {
 
 function encodeWireTools(functionTools, serverTools) {
   const encodedFunctions = functionTools === undefined ? undefined : encodeTools(functionTools)
-  const functionCount = encodedFunctions?.length ?? 0
+  const enabledServerTools = new Set(serverTools)
+  const callableFunctions = encodedFunctions?.filter((tool) => !enabledServerTools.has(tool.name))
+  const functionCount = callableFunctions?.length ?? 0
   if (functionCount + serverTools.length > MAX_TOOLS) fail()
   if (encodedFunctions === undefined && serverTools.length === 0) return undefined
 
-  const encoded = encodedFunctions === undefined ? [] : encodedFunctions
+  const encoded = callableFunctions === undefined ? [] : callableFunctions
   for (let index = 0; index < serverTools.length; index += 1) {
     const kind = serverTools[index]
     if (kind === "web_search") encoded.push({ type: "web_search" })

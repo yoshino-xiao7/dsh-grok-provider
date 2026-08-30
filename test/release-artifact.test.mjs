@@ -6,12 +6,12 @@ import test from "node:test"
 
 const root = path.resolve(import.meta.dirname, "..")
 
-test("the exact 1.0.0 source release exports runtime artifacts and Web loader metadata", async () => {
+test("the exact 1.0.1 source candidate exports runtime artifacts and Web loader metadata", async () => {
   const attributes = await fs.readFile(path.join(root, ".gitattributes"), "utf8")
   assert.match(attributes, /^\*\.yml text eol=lf$/mu)
   const manifest = JSON.parse(await fs.readFile(path.join(root, "package.json"), "utf8"))
   assert.equal(manifest.name, "dsh-grok-provider")
-  assert.equal(manifest.version, "1.0.0")
+  assert.equal(manifest.version, "1.0.1")
   const lockfile = JSON.parse(await fs.readFile(path.join(root, "package-lock.json"), "utf8"))
   assert.equal(lockfile.version, manifest.version)
   assert.equal(lockfile.packages[""].version, manifest.version)
@@ -114,31 +114,36 @@ test("the exact 1.0.0 source release exports runtime artifacts and Web loader me
   assert.match(englishReadme, /\[简体中文\]\(README\.md\)/u)
   assert.match(chineseReadme, /## 快速开始/u)
   assert.match(chineseReadme, /## 安全与隐私/u)
-  assert.match(chineseReadme, /当前源码发布版为 `1\.0\.0`/u)
+  assert.match(chineseReadme, /当前源码候选版为 `1\.0\.1`/u)
   assert.match(chineseReadme, /npm Registry 的 `latest` 为 `1\.0\.0`/u)
   assert.match(chineseReadme, /dsh-grok-provider@1\.0\.0/u)
   assert.match(chineseReadme, /\[`THIRD_PARTY_NOTICES\.md`\]\(THIRD_PARTY_NOTICES\.md\)/u)
   assert.match(englishReadme, /## Quick start/u)
   assert.match(englishReadme, /## Security and privacy/u)
-  assert.match(englishReadme, /current source release is `1\.0\.0`/u)
+  assert.match(englishReadme, /current source candidate is `1\.0\.1`/u)
   assert.match(englishReadme, /npm Registry `latest` is `1\.0\.0`/u)
   assert.match(englishReadme, /dsh-grok-provider@1\.0\.0/u)
   assert.match(englishReadme, /\[`THIRD_PARTY_NOTICES\.md`\]\(THIRD_PARTY_NOTICES\.md\)/u)
   const securityPolicy = await fs.readFile(path.join(root, "SECURITY.md"), "utf8")
-  assert.match(securityPolicy, /当前源码发布版与 npm Registry `latest` 均为 `1\.0\.0`/u)
-  assert.match(securityPolicy, /current source release and npm Registry `latest` are both `1\.0\.0`/u)
+  assert.match(securityPolicy, /当前 npm Registry `latest` 与稳定发布版均为 `1\.0\.0`/u)
+  assert.match(securityPolicy, /源码 manifest\/lock 已进入尚未发布的 `1\.0\.1` 候选/u)
+  assert.match(securityPolicy, /current stable release and npm Registry `latest` are both `1\.0\.0`/u)
+  assert.match(securityPolicy, /source manifest and lockfile now describe an unpublished `1\.0\.1` candidate/u)
   const releaseNotes = await fs.readFile(
-    path.join(root, "docs/releases/v1.0.0.md"),
+    path.join(root, "docs/releases/v1.0.1.md"),
     "utf8",
   )
   assert.equal(releaseNotes.startsWith("## 中文\n"), true)
-  assert.match(releaseNotes, /`1\.0\.0` 已正式发布/u)
-  assert.doesNotMatch(releaseNotes, /尚未发布|unpublished.*candidate/iu)
-  assert.match(releaseNotes, /exact `open_page`|精确.*`open_page`/iu)
-  assert.match(releaseNotes, /(?:严格空.*reasoning|reasoning.*严格空|strictly empty.*reasoning|reasoning.*strictly empty)/iu)
+  assert.match(releaseNotes, /`1\.0\.1`.*源码候选/u)
+  assert.match(releaseNotes, /尚未发布|unpublished source candidate/iu)
+  assert.doesNotMatch(releaseNotes, /^`1\.0\.1` 已正式发布|^`1\.0\.1` is published/imu)
+  assert.match(releaseNotes, /HTTP 400/iu)
+  assert.match(releaseNotes, /40.*38.*2/su)
+  assert.match(releaseNotes, /PROVIDER_ERROR/u)
+  assert.doesNotMatch(releaseNotes, /dsh-grok-provider@1\.0\.1/u)
   assert.match(releaseNotes, /\n<details>\n<summary>English release notes<\/summary>\n/u)
   assert.doesNotMatch(releaseNotes, /\n## English\n/u)
-  assert.doesNotMatch(releaseNotes, /^# .*1\.0\.0/mu)
+  assert.doesNotMatch(releaseNotes, /^# .*1\.0\.1/mu)
 
   const publishedReleaseNotes = await fs.readFile(
     path.join(root, "docs/releases/v0.1.11.md"),

@@ -90,6 +90,138 @@ test("Search tools are independent, ordered after functions, and reflected by a 
   }
 })
 
+test("enabled server Search tools replace only exact same-name Harness functions", async () => {
+  const cases = [
+    [{ webSearch: false, xSearch: false }, ["web_search", "x_search", "web_search_extra", "WEB_SEARCH"], []],
+    [{ webSearch: true, xSearch: false }, ["x_search", "web_search_extra", "WEB_SEARCH"], ["web_search"]],
+    [{ webSearch: false, xSearch: true }, ["web_search", "web_search_extra", "WEB_SEARCH"], ["x_search"]],
+    [{ webSearch: true, xSearch: true }, ["web_search_extra", "WEB_SEARCH"], ["web_search", "x_search"]],
+  ]
+
+  for (const [searchPolicy, expectedFunctionNames, expectedServerTools] of cases) {
+    const compiler = createResponsesRequestCompiler({ searchPolicy })
+    const compiled = await compiler.compile(textOptions({
+      tools: ["web_search", "x_search", "web_search_extra", "WEB_SEARCH"].map(fixtureTool),
+    }), searchRoute())
+
+    assert.deepEqual(
+      compiled.request.tools?.filter((tool) => tool.type === "function").map((tool) => tool.name),
+      expectedFunctionNames,
+    )
+    assert.deepEqual(compiled.receipt, {
+      functionNames: expectedFunctionNames,
+      serverTools: expectedServerTools,
+    })
+  }
+})
+
+test("a filtered Search function remains in historical input but cannot be called again", async () => {
+  const compiler = createResponsesRequestCompiler({
+    searchPolicy: Object.freeze({ webSearch: true, xSearch: false }),
+  })
+  const compiled = await compiler.compile(textOptions({
+    tools: [fixtureTool("web_search"), fixtureTool("keep_tool")],
+    messages: [
+      {
+        id: "assistant-search-history",
+        role: "assistant",
+        source: { kind: "model", provider: "grok", model: "grok-4.6" },
+        content: [{
+          type: "tool-call",
+          id: "call-search-history",
+          name: "web_search",
+          arguments: '{"query":"public fixture"}',
+        }],
+      },
+      {
+        id: "tool-search-history",
+        role: "user",
+        source: { kind: "tool", callId: "call-search-history" },
+        content: [{
+          type: "tool-result",
+          toolCallId: "call-search-history",
+          isError: false,
+          content: [{ type: "text", text: "Historical result" }],
+        }],
+      },
+      {
+        id: "user-after-search-history",
+        role: "user",
+        source: { kind: "user" },
+        content: [{ type: "text", text: "Continue" }],
+      },
+    ],
+  }), searchRoute())
+
+  assert.deepEqual(compiled.request.input.slice(0, 2), [
+    {
+      type: "function_call",
+      call_id: "call-search-history",
+      name: "web_search",
+      arguments: '{"query":"public fixture"}',
+    },
+    {
+      type: "function_call_output",
+      call_id: "call-search-history",
+      output: "Historical result",
+    },
+  ])
+  assert.deepEqual(compiled.request.tools.map((tool) => [tool.type, tool.name]), [
+    ["function", "keep_tool"],
+    ["web_search", undefined],
+  ])
+  assert.deepEqual(compiled.receipt, {
+    functionNames: ["keep_tool"],
+    serverTools: ["web_search"],
+  })
+})
+
+test("same-name functions are fully validated before Search replacement", () => {
+  const compiler = createResponsesRequestCompiler({
+    searchPolicy: Object.freeze({ webSearch: true, xSearch: true }),
+  })
+  const accessorTool = fixtureTool("web_search")
+  let descriptionReads = 0
+  Object.defineProperty(accessorTool, "description", {
+    enumerable: true,
+    get() {
+      descriptionReads += 1
+      return "must not be read"
+    },
+  })
+
+  assert.throws(
+    () => compiler.prepare(textOptions({ tools: [accessorTool] })),
+    UnsupportedResponsesRequestError,
+  )
+  assert.equal(descriptionReads, 0)
+  assert.throws(
+    () => compiler.prepare(textOptions({
+      tools: [fixtureTool("x_search"), fixtureTool("x_search")],
+    })),
+    UnsupportedResponsesRequestError,
+  )
+})
+
+test("background purpose keeps same-name Harness functions because server Search is disabled", async () => {
+  const compiler = createResponsesRequestCompiler({
+    searchPolicy: Object.freeze({ webSearch: true, xSearch: true }),
+  })
+  const compiled = await compiler.compile(textOptions({
+    purpose: "session-title",
+    tools: [fixtureTool("web_search"), fixtureTool("x_search")],
+  }), searchRoute())
+
+  assert.deepEqual(compiled.request.tools.map((tool) => [tool.type, tool.name]), [
+    ["function", "web_search"],
+    ["function", "x_search"],
+  ])
+  assert.deepEqual(compiled.receipt, {
+    functionNames: ["web_search", "x_search"],
+    serverTools: [],
+  })
+})
+
 test("Search purpose capture is synchronous, closed, and disabled for every nonempty purpose", async () => {
   const compiler = createResponsesRequestCompiler({
     searchPolicy: Object.freeze({ webSearch: true, xSearch: true }),
@@ -161,6 +293,30 @@ test("Harness functions and Search tools share the closed 128-tool budget", asyn
   assert.deepEqual(withinBudget.receipt.serverTools, ["web_search", "x_search"])
   await assert.rejects(compiler.compile(textOptions({
     tools: Array.from({ length: 127 }, (_, index) => fixtureTool(`tool_${index}`)),
+  }), searchRoute()), UnsupportedResponsesRequestError)
+
+  const withCollisions = await compiler.compile(textOptions({
+    tools: [
+      fixtureTool("web_search"),
+      fixtureTool("x_search"),
+      ...Array.from({ length: 126 }, (_, index) => fixtureTool(`kept_${index}`)),
+    ],
+  }), searchRoute())
+  assert.equal(withCollisions.request.tools.length, 128)
+  assert.equal(withCollisions.receipt.functionNames.length, 126)
+
+  const webOnlyCompiler = createResponsesRequestCompiler({
+    searchPolicy: Object.freeze({ webSearch: true, xSearch: false }),
+  })
+  const webOnlyBoundary = await webOnlyCompiler.compile(textOptions({
+    tools: [
+      fixtureTool("web_search"),
+      ...Array.from({ length: 127 }, (_, index) => fixtureTool(`web_kept_${index}`)),
+    ],
+  }), searchRoute())
+  assert.equal(webOnlyBoundary.request.tools.length, 128)
+  await assert.rejects(webOnlyCompiler.compile(textOptions({
+    tools: Array.from({ length: 128 }, (_, index) => fixtureTool(`web_over_${index}`)),
   }), searchRoute()), UnsupportedResponsesRequestError)
 })
 

@@ -289,6 +289,7 @@ function deriveReceipt(request) {
       if (
         Reflect.ownKeys(tool).length !== 1 ||
         serverTools.includes(type) ||
+        functionNames.includes(type) ||
         (type === "web_search" && sawXSearch)
       ) throw new UnsupportedResponsesRequestError()
       sawServerTool = true

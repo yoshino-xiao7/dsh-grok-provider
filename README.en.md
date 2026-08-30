@@ -4,11 +4,11 @@
 
 Use an already authenticated official Grok Build account from DeepSeek Harness, with dynamic model discovery, streaming reasoning, image input, optional Web/X Search, tool calls, and an account quota/model capability dashboard.
 
-> Unofficial community project; not affiliated with xAI or DeepSeek Harness. The current stable release and npm Registry `latest` are both `1.0.0`. Version `0.1.8` was published and then withdrawn and cannot be reused. The project no longer publishes prereleases; stable defects are fixed in a new incremented stable version.
+> Unofficial community project; not affiliated with xAI or DeepSeek Harness. The current stable release and npm Registry `latest` are both `1.0.0`. Source is preparing an unpublished `1.0.1` repair candidate; version `0.1.8` was published and then withdrawn and cannot be reused.
 
-The current source release is `1.0.0`; npm Registry `latest` is `1.0.0`.
+The current source candidate is `1.0.1`; npm Registry `latest` is `1.0.0`. Continue installing `1.0.0` until a `1.0.1` artifact is frozen, receives separate exact publication authorization, and completes Registry readback.
 
-Version `1.0.0` addresses two real upstream shapes: after one completed Search, the same reasoning ID may continue through multiple strictly empty placeholder lifecycles; a completed Web Search may also return an `open_page` action. The release accepts only closed, Search-backed, strictly empty reuse and an exact bounded `{ type: "open_page", url }`; it never opens or downloads the URL.
+The `1.0.1` candidate fixes another real Search failure: when xAI server `web_search` / `x_search` is enabled, same-name Harness function definitions alongside those server tools cause fixed-Proxy HTTP 400. The candidate fully validates every function before omitting only enabled-name collisions from the wire definitions; historical function calls/results remain. The SSE layer also propagates transport errors, so HTTP 400 surfaces as `PROVIDER_ERROR` instead of a misleading `INVALID_RESPONSE`.
 
 ## What it provides
 
@@ -19,8 +19,8 @@ Version `1.0.0` addresses two real upstream shapes: after one completed Search, 
 | Models | Discovers every model visible to the account at runtime; no static model allowlist |
 | Conversations | Streaming Responses text, reasoning, encrypted reasoning replay, usage, and finish reasons |
 | Images | Only exact `grok-4.6` accepts bounded JPEG/PNG images from Harness attachments; `grok-4.5` and all other models remain text-only |
-| Search | Published `1.0.0` provides default-off Web/X Search for exact `grok-4.6`, including multiple strictly empty reasoning reuses and completed `open_page` actions; remote lifecycles are never misrepresented as local tools |
-| Tools | Returns function calls to the Harness permission layer; the provider never executes tools |
+| Search | Published `1.0.0` provides default-off Web/X Search for exact `grok-4.6`; the `1.0.1` candidate resolves HTTP 400 conflicts between server Search and same-name Harness function definitions |
+| Tools | Returns function calls to the Harness permission layer; the provider never executes tools, and local `web_search` / `x_search` remain when the corresponding Search setting is off |
 | Account dashboard | Login status, weekly/monthly quota, reset time, dynamic model capabilities and reasoning efforts |
 | Surfaces | Bilingual Web settings and a closed `/grok` TUI command set |
 
@@ -144,13 +144,21 @@ Directory inclusion is not an endorsement by xAI or DeepSeek Harness. [Listing P
 
 ## Compatibility and scope
 
+### `1.0.1` candidate repair boundary
+
+- The cause is not the model, account, Search response shape, or a 42-tool total. It is the coexistence of a same-name Harness function definition with `{ type: "web_search" }` / `{ type: "x_search" }` when server Search is enabled; the fixed Proxy returns HTTP 400 for that combination.
+- The compiler fully validates all 40 source functions before omitting only wire definitions that collide with an enabled server Search tool. Local tools remain unchanged when the corresponding setting is off, and historical `function_call` / `function_call_output` items are neither deleted nor renamed.
+- The final request receipt rejects every function/server-tool name intersection. The SSE parser preserves source transport errors, so HTTP 400 maps to `PROVIDER_ERROR` while genuine SSE/protocol faults remain `INVALID_RESPONSE`.
+- One explicitly authorized redacted real-account replay used the original failing X-session structure: 8 messages, 40 source functions, 38 wire functions + 2 server tools, with 2 historical reserved-name calls preserved. Exactly 1 models GET and 1 Responses POST yielded 314 events and `response.completed`. No message/response text, URL, identity, or credential was retained.
+- The exact Node `24.19.0` local suite reports 253 tests, 251 pass, 0 fail, and 2 platform skips; the production dependency audit reports zero vulnerabilities, an isolated-cache dry-run pack lists 73 files, and the secret-pattern scan finds only the explicit fixture canary and its checklist record. This evidence demonstrates the candidate source and local gates resolve the known conflict; it does not establish dual-platform CI, a frozen artifact, isolated installation, publication, supply-chain readback, or real-device Windows browser login. See [`docs/releases/v1.0.1.md`](docs/releases/v1.0.1.md) for candidate details.
+
 ### `1.0.0` repair boundary
 
 - The original reasoning lifecycle must close, and one completed Web/X server Search must precede the first reuse of that ID. Later appearances are accepted only as strictly empty placeholders.
 - "Strictly empty" means empty visible summary/content and no summary/raw lifecycle. A bounded opaque `encrypted_content` value is allowed, but it is not exposed as visible reasoning and upstream plaintext is not retained.
 - Every reuse must receive its own `response.output_item.done`. If `response.incomplete` arrives while a reused lifecycle is still open, the stream maps to the generic invalid-response error; a later `max_output_tokens` terminal remains valid after every reused lifecycle has closed. Non-empty summary/raw data, cross-type reuse, unknown terminal fields, and accessor-backed fields remain rejected.
 - A completed `open_page` action accepts only exact `type + url`; streamed and final action type/URL must agree. The Provider discards the URL after validation and never visits, previews, downloads, or replays it.
-- Two-layer redacted real-account verification passed against the final source: raw Web/X probes each completed one 64-event response, observed the requested Search kind, and reached `completed`; the production adapter completed 5 Responses calls, with direct Web/X both ending in `stop` and a same-name Harness `x_search` flow ending `tool-calls`, `tool-calls`, then `stop`, with one local call in each of the first two turns. No results, URLs, prompts, identity, or credentials were retained; this is not publication, OAuth, or real-device Windows evidence.
+- Two-layer redacted real-account verification passed against the final source: raw Web/X probes each completed one 64-event response, observed the requested Search kind, and reached `completed`; the production adapter completed 5 Responses calls, with direct Web/X both ending in `stop` and a Harness-shaped local `x_search` call/result continuation ending `tool-calls`, `tool-calls`, then `stop`, with one local call in each of the first two turns. That continuation did not place a Harness `x_search` function definition beside an xAI `{ type: "x_search" }` server descriptor in the same wire request; `1.0.1` later isolated that combination as an HTTP 400 conflict. No results, URLs, prompts, identity, or credentials were retained; this is not publication, OAuth, or real-device Windows evidence.
 - The manifest and lockfile are synchronized at `1.0.0`; the Node 24 suite reports 245 tests, 243 pass, 0 fail, and 2 platform skips. Production audit reports zero vulnerabilities, and the deterministic build/bundle comparison, 72-entry dry-run pack, secret scan, and diff check pass. Code PR #28, main CI run [`33308371009`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33308371009), the final release commit, dual-platform final CI, unique artifact, exact authorization, and Registry/signature/attestation/provenance readback are complete.
 
 | Item | Published `1.0.0` status |

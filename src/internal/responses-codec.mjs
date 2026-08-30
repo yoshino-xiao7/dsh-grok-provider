@@ -439,6 +439,7 @@ function captureResponseReceipt(receipt) {
     if (
       !SERVER_TOOL_NAMES.has(name) ||
       serverTools.has(name) ||
+      functionNames.has(name) ||
       (name === "web_search" && sawXSearch)
     ) fail()
     serverTools.add(name)

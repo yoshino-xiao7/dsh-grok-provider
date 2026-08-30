@@ -399,6 +399,14 @@ test("a response receipt is mandatory, exact, and detached from caller mutation"
     functionNames: [],
     serverTools: ["x_search", "web_search"],
   }), { name: "InvalidResponsesStreamError" })
+  assert.throws(() => createResponsesEventDecoder({
+    functionNames: ["web_search"],
+    serverTools: ["web_search"],
+  }), { name: "InvalidResponsesStreamError" })
+  assert.throws(() => createResponsesEventDecoder({
+    functionNames: ["x_search"],
+    serverTools: ["x_search"],
+  }), { name: "InvalidResponsesStreamError" })
 
   const functionNames = ["fixture_tool"]
   const decoder = createResponsesEventDecoder({ functionNames, serverTools: [] })
