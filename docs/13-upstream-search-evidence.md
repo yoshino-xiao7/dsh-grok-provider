@@ -108,6 +108,6 @@ Web + X 观察共 68 个 SSE event、4 个 output item、8 个 citation annotati
 
 `0.1.11` 发布后的补充脱敏诊断复现了两个独立拒绝点：同一已闭合 reasoning ID 在 completed Search 后再次作为严格空占位出现，以及 completed Web Search 返回 `open_page` action。最终 `1.0.0` 源码分两层复跑：原始 High Effort Web/X 协议各完成 1 次、各 64 个 SSE event，分别观察到对应 Search 且终态 `completed`；生产 adapter 共完成 5 次 Responses，direct Web/X 均为 `finish(stop)`，Harness 同名 `x_search` 三轮依次为 `tool-calls`、`tool-calls`、`stop`，前两轮各 1 次本地调用。这只是当前账号环境中的协议兼容观察，不是冻结制品或发布授权证据；记录未保存 URL、检索/回复内容、prompt、原始响应或任何凭据。
 
-`1.0.0` 的本地门禁已通过：新增 open-page/reasoning 聚焦回归 40/40、完整 Node 24 suite 245 项、生产依赖审计 0 漏洞、build/bundle、72 项 dry-run pack、秘密扫描与 diff 检查均完成。发布门禁仍未关闭：macOS/Windows CI、最终提交、唯一制品、精确发布授权、Registry/signature/provenance 回读必须各自完成后，才能把本页状态更新为已发布。
+`1.0.0` 的本地门禁已通过：新增 open-page/reasoning 聚焦回归 40/40、完整 Node 24 suite 245 项、生产依赖审计 0 漏洞、build/bundle、72 项 dry-run pack、秘密扫描与 diff 检查均完成。代码 PR #28 已合入 `yukiryou/main@7a6364dd58f3c7e9e1ad68a3d0197a14254bcb8c`，main CI run `33308371009` 的 macOS 14 / Windows 2022 均全绿。发布门禁仍未关闭：发布证据 final CI、最终提交、唯一制品、精确发布授权、Registry/signature/provenance 回读必须各自完成后，才能把本页状态更新为已发布。
 
 这些自动化与脱敏证据仍不构成所有平台完整真实账户验收；浏览器手工对话、OAuth、长会话 Agent loop 和网络可达 Windows 真机浏览器弹出保持独立边界。
