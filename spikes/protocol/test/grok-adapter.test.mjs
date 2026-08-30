@@ -746,37 +746,47 @@ test("an enabled Search setting fails unsupported routes before the Responses PO
   assert.equal(transportCalls, 0)
 })
 
-test("a Responses HTTP 400 remains a provider error instead of an invalid stream", async () => {
-  const sourceError = new GrokTransportError(400)
-  const adapter = createGrokAdapter({
-    getGeneration: () => ({
-      id: 1,
-      transport: {
-        async listModels() { return catalog },
-        async *streamResponses() { throw sourceError },
-      },
-    }),
-    mapError: mapLlmError,
-  })
-  const prepared = await adapter.prepareCall("grok", "grok-4.6")
+test("Responses source failures retain the established LLM error mapping", async () => {
+  const abortError = Object.assign(new Error("fixture abort"), { name: "AbortError" })
+  const cases = [
+    [new GrokTransportError(400), "PROVIDER_ERROR", 400],
+    [new GrokTransportError(401), "AUTH", 401],
+    [new GrokTransportError(403), "AUTH", 403],
+    [new GrokTransportError(429), "RATE_LIMIT", 429],
+    [abortError, "ABORTED", undefined],
+  ]
 
-  await assert.rejects(async () => {
-    for await (const _chunk of prepared.stream({
-      provider: "grok",
-      model: "grok-4.6",
-      messages: [{
-        id: "transport-400",
-        role: "user",
-        source: { kind: "user" },
-        content: [{ type: "text", text: "Hello" }],
-      }],
-    })) {}
-  }, (error) => {
-    assert.equal(error?.code, "PROVIDER_ERROR")
-    assert.equal(error?.failure?.status, 400)
-    assert.equal(error?.cause, sourceError)
-    return true
-  })
+  for (const [sourceError, expectedCode, expectedStatus] of cases) {
+    const adapter = createGrokAdapter({
+      getGeneration: () => ({
+        id: 1,
+        transport: {
+          async listModels() { return catalog },
+          async *streamResponses() { throw sourceError },
+        },
+      }),
+      mapError: mapLlmError,
+    })
+    const prepared = await adapter.prepareCall("grok", "grok-4.6")
+
+    await assert.rejects(async () => {
+      for await (const _chunk of prepared.stream({
+        provider: "grok",
+        model: "grok-4.6",
+        messages: [{
+          id: `transport-${expectedCode.toLowerCase()}`,
+          role: "user",
+          source: { kind: "user" },
+          content: [{ type: "text", text: "Hello" }],
+        }],
+      })) {}
+    }, (error) => {
+      assert.equal(error?.code, expectedCode)
+      assert.equal(error?.failure?.status, expectedStatus)
+      assert.equal(error?.cause, sourceError)
+      return true
+    })
+  }
 })
 
 test("a background call rejects Search output because its compiled receipt contains no server tools", async () => {

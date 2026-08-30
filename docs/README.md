@@ -77,7 +77,7 @@
 
 `1.0.0` 已发布真实 Search stream 的剩余两种兼容修复：Search-backed reasoning ID 可多次作为严格空占位重新出现；完成态 Web Search 可返回精确 `open_page` action。脱敏真实账号验证未记录结果、URL、prompt、身份或凭据；发布与供应链回读仍不构成 OAuth 或 Windows 真机浏览器验收证据。
 
-`1.0.1` 源码候选修复 request 侧同名冲突与错误归因：固定 Proxy 会拒绝同时存在 Harness `web_search` / `x_search` function definitions 和同名 xAI server Search descriptors 的请求。候选先完整验证所有 functions，再只过滤已启用的同名 wire definitions；关闭开关时保留本地工具，历史 calls/results 原样保留，receipt 拒绝交集。SSE source transport error 不再被包装成 parser error，因此 HTTP 400 映射为 `PROVIDER_ERROR` 而非 `INVALID_RESPONSE`。一次授权的脱敏原失败 X 会话结构回放以 8 messages、40 source functions、38 wire functions + 2 server tools、2 historical reserved calls、1 models GET、1 Responses POST、314 events 和 `response.completed` 结束；没有保存正文、URL、身份或凭据。精确 Node `24.19.0` 本地全量门禁为 253 tests、251 pass、0 fail、2 platform skips，生产依赖审计为 0 漏洞，隔离 cache 的 dry-run pack 列出 73 个文件。该候选尚无冻结制品、双平台 CI 或发布回读。
+`1.0.1` 源码候选修复 request 侧同名冲突与错误归因：固定 Proxy 会拒绝同时存在 Harness `web_search` / `x_search` function definitions 和同名 xAI server Search descriptors 的请求。候选先完整验证所有 functions，再只过滤已启用的同名 wire definitions；关闭开关时保留本地工具，历史 calls/results 原样保留，receipt 拒绝交集。SSE source transport error 不再被包装成 parser error，因此 HTTP 400 映射为 `PROVIDER_ERROR` 而非 `INVALID_RESPONSE`；401/403、429 与 abort 的既有映射也由 adapter 回归锁定。一次授权的脱敏原失败 X 会话结构回放以 8 messages、40 source functions、38 wire functions + 2 server tools、2 historical reserved calls、1 models GET、1 Responses POST、314 events 和 `response.completed` 结束；没有保存正文、URL、身份或凭据。精确 Node `24.19.0` 本地全量门禁为 253 tests、251 pass、0 fail、2 platform skips，生产依赖审计为 0 漏洞，隔离 cache 的 dry-run pack 列出 73 个文件。代码 PR #31 与 main CI run `33312621786` 双平台全绿；该候选仍无固定 final release commit、冻结制品或发布回读。
 
 ## 官方依据
 

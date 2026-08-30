@@ -149,4 +149,4 @@ request 与 receipt 均复制并冻结。decoder 不从 Config、route 或原始
 
 ## 验证
 
-协议证据与脱敏观察见 [`docs/13-upstream-search-evidence.md`](../13-upstream-search-evidence.md)。`1.0.1` 的 request/codec/Adapter/UI 聚焦回归、精确 Node `24.19.0` 本地全量测试、生产依赖审计、dry-run pack 与预期仅 fixture canary 的秘密模式扫描已通过；发布前尚须完成双平台 CI、固定 release commit、唯一制品冻结与隔离安装，并基于完整制品证据另行取得精确发布授权。
+协议证据与脱敏观察见 [`docs/13-upstream-search-evidence.md`](../13-upstream-search-evidence.md)。`1.0.1` 的 request/codec/Adapter/UI 聚焦回归、精确 Node `24.19.0` 本地全量测试、生产依赖审计、dry-run pack、预期仅 fixture canary 的秘密模式扫描，以及代码/main 双平台 CI 已通过；发布前尚须形成固定 final release commit，完成其双平台 CI、唯一制品冻结与隔离安装，并基于完整制品证据另行取得精确发布授权。

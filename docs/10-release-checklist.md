@@ -227,12 +227,12 @@ English summary: every release must close documentation, security, tests, determ
 - [x] 真实根因通过单变量 A/B 闭合：40 个 Harness functions 含 `web_search` / `x_search`，与同名 server Search descriptors 共存时 fixed Proxy 返回 HTTP 400；只过滤两个同名 wire definitions、保留其余 38 functions + 2 server tools 后请求完成。
 - [x] request compiler 先完整验证全部 source functions，再只过滤与已启用 server Search 精确同名的 wire definitions；关闭对应开关或后台 `purpose` 时保留本地 function，历史 `function_call` / `function_call_output` 不删除、不改名。
 - [x] request/decoder receipt 双侧拒绝 function/server-tool 名称交集；最终 128 项工具预算按过滤后的 wire functions 与 server tools 共同计算。
-- [x] SSE source transport error 原样上抛并进入既有 `PROVIDER_ERROR` 映射；framing、JSON 和协议错误仍归类为 `INVALID_RESPONSE`，失败后不自动降级或重放 POST。
+- [x] SSE source transport error 原样上抛；adapter 表驱动回归锁定 HTTP 400 → `PROVIDER_ERROR`、401/403 → `AUTH`、429 → `RATE_LIMIT`、`AbortError` → `ABORTED`。framing、JSON 和协议错误仍归类为 `INVALID_RESPONSE`，失败后不自动降级或重放 POST。
 - [x] 精确 Node `24.19.0` 本地全量门禁通过：253 tests、251 pass、0 fail、2 platform skips；包含确定性 build、三项 smoke syntax 与全部协议/集成/发行契约测试。
 - [x] `npm audit --omit=dev` 为 0 漏洞；使用隔离 npm cache 完成 73 文件 dry-run pack。秘密模式扫描只命中显式测试 canary `Bearer fixture-access-token` 及记录该 canary 的本检查表文本。dry-run 清单不是冻结制品，其大小与摘要不得作为发布值。
 - [x] 一次经明确授权的真实账号最终验证只执行 1 次 models GET 与 1 次 Responses POST：8 messages、40 source functions 编译为 38 wire functions + 2 server tools，保留 2 个历史 reserved-name calls，314 events 后 `response.completed`；未保存正文、URL、身份、凭据或原始响应。
 - [x] manifest/lock、发行契约、中英文 README、CHANGELOG、SECURITY、ADR、测试/状态/证据/路线图与候选 Release Notes 已同步为未发布 `1.0.1` 源码候选。
-- [ ] 分支 push、代码 PR、受保护 main 合并及 macOS 14 / Windows 2022 CI 尚未完成。
+- [x] 代码分支 head `125c3630908bddd625104949c0c887c9d8d265c9` 已推送；push run [`33312524048`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33312524048) 与 PR run [`33312541746`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33312541746) 双平台全绿。代码 PR [#31](https://github.com/yoshino-xiao7/dsh-grok-provider/pull/31) 已合入受保护 `yukiryou/main`，merge commit `0c60200e12c3b8455331f31a317ece9b1945c458` 的 main CI run [`33312621786`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33312621786) 也在 macOS 14 / Windows 2022 全绿。
 - [ ] 最终 release commit、唯一候选 tarball、文件数/大小、SHA-1/SHA-256/SRI 及 Node 24 隔离安装尚未冻结和验收。
 - [ ] 仓库所有者尚未基于完整制品证据授权发布精确 `dsh-grok-provider@1.0.1`；当前真实请求授权不是 npm 发布授权。
 - [ ] tag、GitHub Release、Trusted Publisher、npm Registry 字节回读、signature、attestations 与 provenance 尚未完成。

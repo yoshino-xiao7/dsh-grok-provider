@@ -1,6 +1,6 @@
 # `0.1.9`–`1.0.1` Web/X Search 上游与固定 Proxy 证据
 
-- 状态：`0.1.9`–`1.0.0` 的协议、集成、双平台 CI、最终制品与发布回读均已关闭；`1.0.1` 同名工具冲突修正仅为源码候选
+- 状态：`0.1.9`–`1.0.0` 的协议、集成、双平台 CI、最终制品与发布回读均已关闭；`1.0.1` 同名工具冲突修正的代码/main 双平台 CI 已完成，但仍只是无冻结制品的源码候选
 - 观察日期：2026-08-30
 - 固定 origin/path：`https://cli-chat-proxy.grok.com/v1/responses`
 - Provider client identity：`dsh-grok-provider/1.0.5`
@@ -132,6 +132,6 @@ Web + X 观察共 68 个 SSE event、4 个 output item、8 个 citation annotati
 
 候选规则是：先完整验证所有 40 个 source functions，再精确过滤与本次已启用 server Search 同名的 wire definitions；关闭开关时保留本地工具；历史 `function_call` / `function_call_output` 不删除、不改名；request receipt 与 decoder receipt 都拒绝 function/server-tool 名称交集。SSE parser 透传 source transport error，使 fixed Proxy HTTP 400 进入既有 `PROVIDER_ERROR` 映射，只有真正 framing/JSON/协议错误仍为 `INVALID_RESPONSE`。
 
-诊断与最终验证没有保存或输出消息正文、回复正文、URL、账号身份、凭据或原始响应。精确 Node `24.19.0` 本地全量门禁（253 tests、251 pass、0 fail、2 platform skips）、生产依赖审计（0 漏洞）、确定性 build、隔离 cache 的 73 文件 dry-run pack 与预期仅 fixture canary 的秘密模式扫描已完成。当前证据仍不包含冻结候选 tarball、双平台 CI、隔离安装、精确制品发布授权、Registry/signature/attestation/provenance 回读或 Windows 真机浏览器登录；`1.0.1` 仍未发布。
+诊断与最终验证没有保存或输出消息正文、回复正文、URL、账号身份、凭据或原始响应。精确 Node `24.19.0` 本地全量门禁（253 tests、251 pass、0 fail、2 platform skips）、生产依赖审计（0 漏洞）、确定性 build、隔离 cache 的 73 文件 dry-run pack 与预期仅 fixture canary 的秘密模式扫描已完成。代码 PR #31、merge commit `0c60200e12c3b8455331f31a317ece9b1945c458` 与 main CI run `33312621786` 的双平台门禁也已完成。当前证据仍不包含固定 final release commit 及其 CI、冻结候选 tarball、隔离安装、精确制品发布授权、Registry/signature/attestation/provenance 回读或 Windows 真机浏览器登录；`1.0.1` 仍未发布。
 
 这些自动化与脱敏证据仍不构成所有平台完整真实账户验收；浏览器手工对话、OAuth、长会话 Agent loop 和网络可达 Windows 真机浏览器弹出保持独立边界。
