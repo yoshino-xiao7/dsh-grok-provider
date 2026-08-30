@@ -256,7 +256,7 @@ Read the [contributing guide](CONTRIBUTING.md) before filing an issue or PR. Cha
 - [x] Publish `0.1.6`: image-history reasoning compatibility and per-stage official-CLI deadline repair for Windows; image sending is confirmed in a real Harness conversation
 - [x] Publish `0.1.7`: Provider/CLI version diagnostics, CLI installation recovery, redacted OIDC discovery-timeout settlement, and the `IconThinkOutline16` settings-navigation compatibility layer
 - [x] Publish `0.1.9`: added the Web/X Search protocol and settings page; the unique artifact, dual-platform CI, signatures, and SLSA provenance are verified; post-release verification found the missing Host settings namespace and unusable controls
-- [ ] Publish `0.1.10`: `llm-grok` registration, per-call capture, dual-platform candidate CI, and isolated-install acceptance are complete; merging to main, freezing the unique artifact, and exact release authorization remain
+- [ ] Publish `0.1.10`: `llm-grok` registration, per-call capture, isolated install, the code PR, and main dual-platform CI are complete; merging release evidence, freezing the unique artifact, and exact release authorization remain
 - [ ] A subsequent slice: opt-in image generation (inline results only, committed through Harness attachments)
 - [ ] Complete independent Windows x64 acceptance and publish a later stable fix if needed
 
