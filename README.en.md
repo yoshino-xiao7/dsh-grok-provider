@@ -4,7 +4,7 @@
 
 Use an already authenticated official Grok Build account from DeepSeek Harness, with dynamic model discovery, streaming reasoning, tool calls, and an account quota/model capability dashboard.
 
-> Unofficial community project; not affiliated with xAI or DeepSeek Harness. The current source candidate is `0.1.8`; npm Registry `latest` and the most recently published stable release are both `0.1.7`. The project no longer publishes prereleases; stable defects are fixed in a new incremented stable version.
+> Unofficial community project; not affiliated with xAI or DeepSeek Harness. The current source candidate is `0.1.7`; npm Registry `latest` and the most recently published stable release are both `0.1.6`. The project no longer publishes prereleases; stable defects are fixed in a new incremented stable version.
 
 ## What it provides
 
@@ -39,10 +39,10 @@ The official CLI opens a browser on first use. The provider supports only the of
 
 ### 2. Install the provider
 
-After `0.1.8` is published, install that exact version from npm:
+After `0.1.7` is published, install that exact version from npm:
 
 ```sh
-dsh plugin --profile web add dsh-grok-provider@0.1.8
+dsh plugin --profile web add dsh-grok-provider@0.1.7
 dsh web
 ```
 
@@ -137,7 +137,7 @@ Directory inclusion is not an endorsement by xAI or DeepSeek Harness. [Listing P
 
 ## Compatibility and scope
 
-| Item | `0.1.8` candidate status |
+| Item | `0.1.7` candidate status |
 | --- | --- |
 | DeepSeek Harness | Exact support for `0.1.1-rc.2` |
 | Node.js | `>=24.19.0` |
@@ -250,7 +250,7 @@ Read the [contributing guide](CONTRIBUTING.md) before filing an issue or PR. Cha
 - [x] Publish `0.1.4`: image input only for exact `grok-4.6`; red/blue user/tool-result Proxy gates and final Harness attachment revalidation passed, while `grok-4.5` fails closed as text-only
 - [x] Publish `0.1.5`: maintenance for release binding, dashboard capability badges, and transactional Provider Runtime installation; the unique artifact, dual-platform CI, signatures, and SLSA provenance are verified
 - [x] Publish `0.1.6`: image-history reasoning compatibility and per-stage official-CLI deadline repair for Windows; image sending is confirmed in a real Harness conversation
-- [ ] Publish `0.1.8`: a quota and reset-time sidebar card visible only for the current Grok conversation
+- [ ] Publish `0.1.7`: Provider/CLI version diagnostics, CLI installation recovery, redacted OIDC discovery-timeout settlement, and the `IconThinkOutline16` settings-navigation compatibility layer
 - [ ] Independent `0.1.8` slice: opt-in, default-off Web Search / X Search
 - [ ] A subsequent slice: opt-in image generation (inline results only, committed through Harness attachments)
 - [ ] Complete independent Windows x64 acceptance and publish a later stable fix if needed

@@ -32,7 +32,6 @@ window.__ModuleLoader__.load({
         modelsUnavailable: "暂时无法读取模型目录。", noModels: "当前账号没有返回可用模型。",
         context: "上下文", reasoning: "推理档位", defaultEffort: "默认", text: "文本输入", image: "图片输入", streaming: "流式输出", tools: "工具调用",
         lastUpdated: "数据更新时间",
-        sidebarQuota: "Grok 使用额度",
       },
       en: {
         nav: "Grok Build", title: "Grok Build",
@@ -59,7 +58,6 @@ window.__ModuleLoader__.load({
         modelsUnavailable: "The model catalog is temporarily unavailable.", noModels: "This account returned no available models.",
         context: "Context", reasoning: "Reasoning", defaultEffort: "default", text: "Text input", image: "Image input", streaming: "Streaming", tools: "Tool calling",
         lastUpdated: "Updated",
-        sidebarQuota: "Grok usage quota",
       },
     }
 
@@ -182,7 +180,6 @@ window.__ModuleLoader__.load({
       .dsh-grok-quota{margin-top:15px}.dsh-grok-quota-row{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:8px;color:var(--dsw-alias-label-secondary);font-size:13px}.dsh-grok-quota-name{color:var(--dsw-alias-label-primary);font-weight:600}.dsh-grok-progress{height:9px;overflow:hidden;border-radius:999px;background:rgb(190 93 138 / 13%)}.dsh-grok-progress-fill{height:100%;border-radius:inherit;background:linear-gradient(90deg,#d7448a,#ea1768);transition:width .25s ease}.dsh-grok-quota-meta{display:flex;flex-wrap:wrap;justify-content:space-between;gap:7px;margin-top:9px;color:var(--dsw-alias-label-secondary);font-size:12px;line-height:18px}.dsh-grok-muted{margin:12px 0 0;color:var(--dsw-alias-label-secondary);font-size:12px;line-height:19px}
       .dsh-grok-models-head{padding:20px 20px 0}.dsh-grok-models-head h3{margin:0;font-size:16px;line-height:24px}.dsh-grok-models-head p{margin:5px 0 0;color:var(--dsw-alias-label-secondary);font-size:12px;line-height:19px}.dsh-grok-model-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:16px 20px 20px}.dsh-grok-model{min-width:0;border:1px solid var(--dsw-alias-border-l2);border-radius:13px;padding:14px;background:var(--dsw-alias-bg-layer-1)}.dsh-grok-model-title{display:flex;align-items:baseline;justify-content:space-between;gap:8px}.dsh-grok-model-title strong{overflow-wrap:anywhere;font-size:14px}.dsh-grok-model-id{overflow-wrap:anywhere;color:var(--dsw-alias-label-tertiary,var(--dsw-alias-label-secondary));font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10px}.dsh-grok-model-description{margin:5px 0 10px;color:var(--dsw-alias-label-secondary);font-size:11px;line-height:17px}.dsh-grok-badges{display:flex;flex-wrap:wrap;gap:5px}.dsh-grok-badge{border-radius:999px;padding:2px 8px;color:var(--dsw-alias-label-secondary);background:var(--dsw-alias-interactive-bg-hover);font-size:10px;line-height:18px}.dsh-grok-badge[data-accent="true"]{color:#a9326b;background:rgb(215 68 138 / 11%)}.dsh-grok-efforts{margin-top:10px;color:var(--dsw-alias-label-secondary);font-size:10px;line-height:17px}.dsh-grok-footer{padding:0 20px 16px;color:var(--dsw-alias-label-tertiary,var(--dsw-alias-label-secondary));font-size:10px}
       .dsh-grok-notice{padding:13px 14px;border:1px solid rgb(229 72 77 / 28%);border-radius:11px;color:var(--dsw-alias-label-secondary);background:rgb(229 72 77 / 7%);font-size:12px;line-height:19px}.dsh-grok-error{margin:10px 0 0;color:var(--dsw-static-red-500,#e5484d);font-size:12px;line-height:19px}
-      .dsh-grok-sidebar{display:grid;width:100%;min-height:48px;margin:3px 0;padding:4px 3px;border:0;border-radius:8px;grid-template-columns:22px minmax(0,1fr) 16px;align-items:center;gap:10px;color:inherit;background:transparent;cursor:pointer;font:inherit;text-align:left}.dsh-grok-sidebar:hover,.dsh-grok-sidebar-rail:hover{background:var(--dsw-alias-interactive-bg-hover)}.dsh-grok-sidebar-mark{font-weight:700;text-align:center}.dsh-grok-sidebar-copy{display:flex;min-width:0;flex-direction:column}.dsh-grok-sidebar-copy small{overflow:hidden;color:var(--dsw-alias-label-tertiary);font-size:11px;text-overflow:ellipsis;white-space:nowrap}.dsh-grok-sidebar-rail{display:grid;width:36px;height:36px;margin:4px auto;border:0;border-radius:8px;place-items:center;color:inherit;background:transparent;cursor:pointer;font-size:10px;font-weight:700}
       @media(max-width:680px){.dsh-grok-panel-inner,.dsh-grok-models-head{padding:16px}.dsh-grok-model-grid{grid-template-columns:1fr;padding:14px 16px 16px}.dsh-grok-account-head{align-items:flex-start;flex-direction:column}.dsh-grok-quota-row{align-items:flex-start;flex-direction:column;gap:3px}}
     `
     if (!document.querySelector('style[data-plugin-css="dsh-grok-provider"]')) {
@@ -190,62 +187,6 @@ window.__ModuleLoader__.load({
       style.dataset.pluginCss = "dsh-grok-provider"
       style.textContent = css
       document.head.appendChild(style)
-    }
-
-    function useCurrentProvider(ctx) {
-      const [provider, setProvider] = React.useState()
-      React.useEffect(() => {
-        let stopDirectory = () => {}
-        let active = true
-        const bind = () => {
-          stopDirectory(); stopDirectory = () => {}
-          const sessionId = ctx.sessions.list.getSnapshot().current
-          if (sessionId === undefined) return
-          let directory
-          try { directory = ctx.modelDirectories.directoryFor(sessionId) } catch { return }
-          const publish = () => {
-            const selected = directory.store.getSnapshot().current?.provider
-            if (active && selected !== undefined) setProvider(selected)
-          }
-          publish()
-          stopDirectory = directory.store.subscribe(publish)
-          if (directory.store.getSnapshot().current === null) void directory.load().catch(() => {})
-        }
-        const stopSessions = ctx.sessions.list.subscribe(bind)
-        bind()
-        return () => { active = false; stopSessions(); stopDirectory() }
-      }, [ctx])
-      return provider
-    }
-
-    function GrokSidebarQuota({ wide, ctx, connection, t }) {
-      const provider = useCurrentProvider(ctx)
-      const [dashboard, setDashboard] = React.useState()
-      const [busy, setBusy] = React.useState(false)
-      const refresh = React.useCallback(async () => {
-        setBusy(true)
-        try {
-          const result = await connection.rpc.call("/grok-auth", "dashboard", {})
-          setDashboard(result?.ok === true ? result.value?.dashboard : undefined)
-        } catch { setDashboard(undefined) }
-        finally { setBusy(false) }
-      }, [connection])
-      React.useEffect(() => { if (provider === "grok") void refresh() }, [provider, refresh])
-      if (provider !== "grok") return null
-      const quota = dashboard?.quota
-      const remaining = quota?.state === "ready" && typeof quota.remainingPercent === "number"
-        ? formatPercent(quota.remainingPercent) : "—"
-      const reset = quota?.state === "ready" && quota.resetsAt ? formatDateTime(quota.resetsAt) : t("resetUnknown")
-      return React.createElement("button", {
-        type: "button", disabled: busy, onClick: () => void refresh(),
-        className: wide ? "dsh-grok-sidebar" : "dsh-grok-sidebar-rail",
-        "aria-label": `${t("sidebarQuota")} ${remaining}; ${t("resetTime")} ${reset}`,
-      }, wide
-        ? React.createElement(React.Fragment, null,
-          React.createElement("span", { className: "dsh-grok-sidebar-mark", "aria-hidden": "true" }, "G"),
-          React.createElement("span", { className: "dsh-grok-sidebar-copy" }, React.createElement("span", null, `${t("remaining")} ${remaining}`), React.createElement("small", null, `${t("resetTime")} ${reset}`)),
-          React.createElement("span", { "aria-hidden": "true" }, busy ? "…" : "↻"))
-        : React.createElement("span", null, remaining))
     }
 
     function GrokSettings({ connection, t }) {
@@ -491,7 +432,7 @@ window.__ModuleLoader__.load({
       return new Intl.NumberFormat().format(value)
     }
 
-    const inject = ["slots", "locale", "connection", "sessions", "modelDirectories"]
+    const inject = ["slots", "locale", "connection"]
     function apply(ctx) {
       ctx.effect(() => ctx.locale.register(namespace, dictionaries), "dsh-grok: dictionaries")
       ctx.effect(() => installSettingsNavIcon(), "dsh-grok: settings nav icon")
@@ -500,10 +441,6 @@ window.__ModuleLoader__.load({
         name: "settings.section", id: "grok-auth", order: 45, label: () => t("nav"), locale: namespace,
         inject: () => ({ connection: ctx.connection, t }),
       }, GrokSettings))
-      ctx.slots.inject("sidebar.footer.action", () => ctx.slots.register({
-        name: "sidebar.footer.action", id: "grok-account-quota", order: 35, label: t("sidebarQuota"),
-        inject: () => ({ ctx, connection: ctx.connection, t }),
-      }, GrokSidebarQuota))
     }
     module.exports.inject = inject
     module.exports.apply = apply
