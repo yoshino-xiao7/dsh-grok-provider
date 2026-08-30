@@ -7,13 +7,13 @@
 ## 每版发布前
 
 - [ ] 冻结精确稳定版本，并同步 `package.json`、CHANGELOG、中英文 README、release notes 和候选文件名。
-- [ ] 中英文 README 已互相链接、内容同步，不包含“尚未发布”等与候选状态冲突的文字。
+- [ ] 中英文 README 已互相链接、内容同步；前言与 Quick Start 使用发布前后均成立的制品措辞，不含旧版安装引导或“尚未发布/源码候选/继续安装旧版”及英文等价文字。
 - [ ] `SECURITY.md`、文档首页、实现状态、上游证据和发布计划反映当前事实。
 - [ ] GitHub About、Topics、npm repository/homepage/bugs 与 canonical repository 一致。
 - [ ] GitHub Private vulnerability reporting 已启用；`yukiryou/main` 禁止强推/删除，并要求 PR 与 macOS/Windows CI。
 - [ ] `npm test`、`npm audit --omit=dev`、`npm run pack:check` 和 macOS/Windows CI 全部通过。
 - [ ] 从干净 checkout 只生成一个候选 tarball；记录文件数、大小、SHA-256 和 base64 SHA-512。
-- [ ] 候选 tarball 内的 name、version、repository、exports、peer、patch、脚本和文件白名单通过审查。
+- [ ] 候选 tarball 内的 name、version、repository、exports、peer、patch、脚本和文件白名单通过审查；直接提取的双语 README 前言/Quick Start 只引导安装该精确版本。
 - [ ] 候选 tarball 内的 `LICENSE`、`THIRD_PARTY_NOTICES.md` 与实际内嵌第三方代码逐项一致，发行制品不遗漏归属、版本或许可证说明。
 - [ ] 从同一个 tarball 在隔离 Harness profile 完成安装、加载与必要 smoke；普通版本不重复要求跨平台真机，认证、CLI 或平台边界变化时另行指定。
 - [ ] GitHub Release 说明中文在前、英文在后，且正文不重复页面已有的版本标题。
@@ -236,5 +236,21 @@ English summary: every release must close documentation, security, tests, determ
 - [x] 发布证据 PR #32 形成最终 release commit `3c25a53571531e35ac888df16df4fe6c01849e85`；final CI run [`33312946205`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33312946205) 双平台全绿。唯一候选 tarball 含 73 个文件，为 240,904 bytes packed、748,888 bytes unpacked；SHA-1 `9e6449160947104e8dbb71b7201c53e81b073f83`、SHA-256 `e3e15646d38de23c32c71ed759f9c10be9b2d790d4b10b4b8dfe59a44fbfef9f`、SRI `sha512-Bm1qjJQ9i7CWT0oWah7QKDVBP8dR2YQtvEEZGE/BOSwZCo8sZbrW2v2QSfUfLsOLHcQXFZZ0jlDCAztr1m/q+A==`，Node 24 隔离安装已通过。
 - [x] 仓库所有者在看到完整 commit、制品、摘要与验证证据后，明确授权发布精确 `dsh-grok-provider@1.0.1`；没有重建或替换授权制品。
 - [x] Annotated tag object `ab79b1bb1e408a0112166cadc26761a327819c3f` peel 到 release commit；不可变 `v1.0.1`、唯一 GitHub Release asset 与 Trusted Publisher run [`33313699790` attempt 1](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33313699790/attempts/1) 已完成。npm `latest=1.0.1`，冻结候选、Release 与 Registry tarball 逐字节一致；本包 1 个 Registry signature、2 个 attestations，安装图 11 个 signed packages、2 个 attested packages，以及精确绑定 `release.yml` / `refs/tags/v1.0.1` / release commit / publish run 的 SLSA provenance 均已回读。
-- [ ] 发布后发现精确 `1.0.1` tarball 内 README 仍为候选态文案；npm 已发布版本不可覆盖。GitHub 主分支由 post-release evidence 修正，下一递增版本冻结前须新增包内 README 发布态断言，并通过新的精确制品授权纠正 npm 页面。
+- [ ] 发布后发现精确 `1.0.1` tarball 内 README 仍为候选态文案；npm 已发布版本不可覆盖。`1.0.2` 已承担源码文案纠正，仍须由 publish workflow 对实际 tarball 断言并在精确制品发布回读后才能关闭本项。
 - [ ] 网络可达 Windows 真机的官方 CLI 外部浏览器弹出仍需独立验收；不得从本修复、CI 或发布推断 Windows 登录已验证。
+
+## `1.0.2` 空 reasoning 投影修复发布门禁
+
+- [x] 修复范围冻结为可见投影及对齐槽：普通空 reasoning 保留既有校验，Search-backed 同 ID 复用保留精确 own-data/accessor 校验；严格空项产生零 block，首个非空 summary/raw delta 才按 output index 开始 block；隐藏普通空项不占 replay 槽，旧会话不回写。
+- [x] 中英文 README 使用耐久 `1.0.2` 制品措辞和精确 `dsh-grok-provider@1.0.2` 安装命令；Release Notes 不预写发布、CI、摘要、Registry 或供应链事实。
+- [x] 真实账号 Web/X 各 1 次 `grok-4.6` High Effort 验收通过：实际 Search lifecycle 分别为 5/3，每次均为 1 个非空 reasoning、0 个空 reasoning、1 个非空 text 和 1 个 finish；只输出计数，不保存正文、URL、身份、凭据或原始响应。
+- [x] manifest/lock 与发行契约同步为精确 `1.0.2`；Node `24.19.0` build 后源码与生成 bundle 由完整测试共同加载验证。
+- [x] codec 聚焦回归 52/52、release artifact 聚焦回归 1/1 通过；覆盖普通空项、多段 Search-backed 空复用、opaque encrypted content、summary/raw 首 delta、十空一非空、多个非空块、多未决项保序、后块先完成、延迟 text/tool-call 顺序、pending 条目数与 UTF-8 总预算分别超限、incomplete 先释放屏障、incomplete 交错及全部失败关闭负例。
+- [x] release workflow 契约从下载的唯一 tarball 直接读取双语 README 前言与 Quick Start，确认精确版本和唯一安装命令并拒绝旧版/候选态引导；聚焦测试锁定该契约，实际 workflow 运行仍须等待精确授权。
+- [x] 精确 Node `24.19.0` 全量测试共 265 项、263 pass、0 fail、2 项平台跳过；`npm audit --omit=dev` 为 0 漏洞，隔离 npm cache 的 dry-run pack 为 74 文件，`git diff --check` 通过。dry-run 大小与摘要不是冻结制品值。
+- [x] 对 dry-run pack 白名单执行私钥、GitHub/npm token、AWS key 与长 Bearer 模式扫描，零命中。
+- [ ] 完成 macOS 14 / Windows 2022 的 push、PR、main/final CI，并记录实际结果。
+- [ ] 最终 release commit、唯一 tarball、文件数、packed/unpacked size、SHA-1、SHA-256、SRI 与隔离安装完成；dry-run 值不得冒充冻结制品值。
+- [ ] 仓库所有者看到完整精确制品证据后明确授权发布 `dsh-grok-provider@1.0.2`；授权后不得重建或替换。
+- [ ] 不可变 tag、唯一 GitHub Release asset、Trusted Publisher、Registry 字节一致、`latest`、签名、attestations、provenance 与锁定 Registry 安装全部实际回读。
+- [ ] 网络可达 Windows 真机浏览器弹出仍是独立未验收边界，不阻断本显示修复，但不得写成已验证。

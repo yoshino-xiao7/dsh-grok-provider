@@ -4,11 +4,11 @@
 
 Use an already authenticated official Grok Build account from DeepSeek Harness, with dynamic model discovery, streaming reasoning, image input, optional Web/X Search, tool calls, and an account quota/model capability dashboard.
 
-> Unofficial community project; not affiliated with xAI or DeepSeek Harness. The current stable release, source release, and npm Registry `latest` are all `1.0.1`; version `0.1.8` was published and then withdrawn and cannot be reused.
+> Unofficial community project; not affiliated with xAI or DeepSeek Harness. This README describes the `dsh-grok-provider@1.0.2` artifact; version `0.1.8` was published and then withdrawn and cannot be reused.
 
-The current source release is `1.0.1`; the uniquely authorized artifact, GitHub Release, npm Registry, signatures, attestations, and SLSA provenance have all been read back.
+`1.0.2` fixes a presentation defect: an upstream Search stream may contain fully closed reasoning lifecycles with no visible text. The Provider continues to validate those lifecycles strictly but no longer projects them as empty Harness `Think` rows; reasoning with real summary/raw deltas remains visible as separate blocks.
 
-`1.0.1` fixes another real Search failure: when xAI server `web_search` / `x_search` is enabled, same-name Harness function definitions alongside those server tools cause fixed-Proxy HTTP 400. The Provider fully validates every function before omitting only enabled-name collisions from the wire definitions; historical function calls/results remain. The SSE layer also propagates transport errors, so HTTP 400 surfaces as `PROVIDER_ERROR` instead of a misleading `INVALID_RESPONSE`.
+This README is included in the `1.0.2` npm tarball, and the exact installation command below is pinned to `1.0.2`. Publication state, integrity digests, signatures, attestations, and provenance must come from actual npm Registry and GitHub Release readback rather than being predicted before artifact freeze.
 
 ## What it provides
 
@@ -19,7 +19,7 @@ The current source release is `1.0.1`; the uniquely authorized artifact, GitHub 
 | Models | Discovers every model visible to the account at runtime; no static model allowlist |
 | Conversations | Streaming Responses text, reasoning, encrypted reasoning replay, usage, and finish reasons |
 | Images | Only exact `grok-4.6` accepts bounded JPEG/PNG images from Harness attachments; `grok-4.5` and all other models remain text-only |
-| Search | Published `1.0.1` provides default-off Web/X Search for exact `grok-4.6` and resolves HTTP 400 conflicts between server Search and same-name Harness function definitions |
+| Search | Exact `grok-4.6` provides default-off Web/X Search; `1.0.1` resolves same-name function/server-tool conflicts and `1.0.2` hides contentless `Think` projections for strictly empty reasoning |
 | Tools | Returns function calls to the Harness permission layer; the provider never executes tools, and local `web_search` / `x_search` remain when the corresponding Search setting is off |
 | Account dashboard | Login status, weekly/monthly quota, reset time, dynamic model capabilities and reasoning efforts |
 | Surfaces | Bilingual Web settings and a closed `/grok` TUI command set |
@@ -44,10 +44,10 @@ When the network is reachable and OIDC discovery succeeds, the official CLI open
 
 ### 2. Install the provider
 
-Install the exact published version that has been read back from the Registry:
+Install the exact version described here after confirming that it is available from the npm Registry:
 
 ```sh
-dsh plugin --profile web add dsh-grok-provider@1.0.1
+dsh plugin --profile web add dsh-grok-provider@1.0.2
 dsh web
 ```
 
@@ -134,16 +134,24 @@ Uninstalling the provider does not remove the official Grok CLI or directly modi
 
 ## Sources and discovery
 
-- Current npm stable release: [dsh-grok-provider@1.0.1](https://www.npmjs.com/package/dsh-grok-provider/v/1.0.1) (unique artifact, dual-platform CI, signatures, attestations, and provenance verified)
-- Most recent GitHub release and integrity values: [v1.0.1](https://github.com/yoshino-xiao7/dsh-grok-provider/releases/tag/v1.0.1)
+- Exact npm version described by this README: [dsh-grok-provider@1.0.2](https://www.npmjs.com/package/dsh-grok-provider/v/1.0.2)
+- Previous GitHub release with completed readback: [v1.0.1](https://github.com/yoshino-xiao7/dsh-grok-provider/releases/tag/v1.0.1)
 - Release evidence: release commit `3c25a53571531e35ac888df16df4fe6c01849e85`, annotated tag object `ab79b1bb1e408a0112166cadc26761a327819c3f` peeling to that commit, final CI run [`33312946205`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33312946205), and Trusted Publisher run [`33313699790` attempt 1](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33313699790/attempts/1). The repository owner explicitly authorized the unique 73-file artifact, which is 240,904 bytes packed and 748,888 bytes unpacked; SHA-1 is `9e6449160947104e8dbb71b7201c53e81b073f83`, SHA-256 is `e3e15646d38de23c32c71ed759f9c10be9b2d790d4b10b4b8dfe59a44fbfef9f`, and SRI is `sha512-Bm1qjJQ9i7CWT0oWah7QKDVBP8dR2YQtvEEZGE/BOSwZCo8sZbrW2v2QSfUfLsOLHcQXFZZ0jlDCAztr1m/q+A==`. Frozen-candidate, GitHub Release, and npm Registry copies are byte-identical; a locked Registry install under Node `24.19.0` / npm `11.5.1` passed Host `name`/`apply` and client `id`/factory smoke checks with zero production vulnerabilities. `npm audit signatures` confirmed verified Registry signatures for 11 packages and verified attestations for 2 packages; this package's public metadata exposes 1 Registry signature and 2 attestations, while SLSA provenance exactly binds `release.yml`, `refs/tags/v1.0.1`, the release commit, and publish run.
-- npm page documentation note: the exact `1.0.1` tarball was frozen before publication, so its embedded README still uses candidate-state wording; published bytes cannot be replaced. This GitHub README is corrected post-release, while npm can only be corrected by a later incremented artifact.
+- npm page documentation correction: the `1.0.1` tarball retained an older installation example; the README embedded in the `1.0.2` artifact uses the exact `@1.0.2` command. Published `1.0.1` bytes are not replaced.
 - GitHub community discovery: the repository carries the DeepSeek Harness-recommended `dsh-plugin` and `dsh` topics
 - YukiRyou managed source: [deepseek-yukiryou-plugin-catalog](https://github.com/yoshino-xiao7/deepseek-yukiryou-plugin-catalog), still pinned to the real-device-accepted `dsh-grok-provider@0.1.0` and marking only `darwin-arm64`
 
 Directory inclusion is not an endorsement by xAI or DeepSeek Harness. [Listing PR #3415](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin/pull/3415) has added the project to the public `awesome-dsh-plugin` `model` category. That directory is repository-level discovery and carries no exact npm-version or platform-acceptance claim.
 
 ## Compatibility and scope
+
+### `1.0.2` repair boundary
+
+- An ordinary strictly empty reasoning item retains the existing ID/type, sequence, output-index, status, empty summary/content, size, optional encrypted-content, and closure checks. A same-ID Search-backed reuse additionally retains exact own-data key and accessor rejection. This release does not expand the accepted protocol domain.
+- The Provider delays creating a Harness reasoning block until the first non-empty summary/raw delta, then emits the existing delta and block-end sequence. A lifecycle that remains empty produces no visible reasoning chunk.
+- Multiple non-empty reasoning items remain separate in output-index order. Text, tool calls, usage, finish reasons, visible non-empty reasoning replay, Search replay suppression, and fail-closed behavior are unchanged. A hidden ordinary empty item occupies no visible block/replay alignment slot, so its validated bounded encrypted content is not persisted.
+- The repair affects new responses after upgrading; empty `Think` rows already persisted in older conversations are not rewritten.
+- Search settings, models, authentication, images, fixed endpoints, citation/URL handling, and the Harness tool-permission boundary are unchanged. This is not real-device Windows browser-login acceptance.
 
 ### `1.0.1` repair boundary
 
@@ -162,12 +170,12 @@ Directory inclusion is not an endorsement by xAI or DeepSeek Harness. [Listing P
 - Two-layer redacted real-account verification passed against the final source: raw Web/X probes each completed one 64-event response, observed the requested Search kind, and reached `completed`; the production adapter completed 5 Responses calls, with direct Web/X both ending in `stop` and a Harness-shaped local `x_search` call/result continuation ending `tool-calls`, `tool-calls`, then `stop`, with one local call in each of the first two turns. That continuation did not place a Harness `x_search` function definition beside an xAI `{ type: "x_search" }` server descriptor in the same wire request; `1.0.1` later isolated that combination as an HTTP 400 conflict. No results, URLs, prompts, identity, or credentials were retained; this is not publication, OAuth, or real-device Windows evidence.
 - The manifest and lockfile are synchronized at `1.0.0`; the Node 24 suite reports 245 tests, 243 pass, 0 fail, and 2 platform skips. Production audit reports zero vulnerabilities, and the deterministic build/bundle comparison, 72-entry dry-run pack, secret scan, and diff check pass. Code PR #28, main CI run [`33308371009`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33308371009), the final release commit, dual-platform final CI, unique artifact, exact authorization, and Registry/signature/attestation/provenance readback are complete.
 
-| Item | Published `1.0.1` status |
+| Item | `1.0.2` artifact boundary |
 | --- | --- |
 | DeepSeek Harness | Exact support for `0.1.1-rc.2` |
 | Node.js | `>=24.19.0` |
-| macOS arm64 | Image sending has real-Harness confirmation; focused `1.0.1` regressions, the redacted real Search replay, final macOS 14 CI, and unique-artifact acceptance all pass |
-| Windows x64 | Final `1.0.1` Windows 2022 CI and existing slow fakes pass. On a reachable network the official CLI generates the URL and opens the browser, and that path still lacks real-device Windows acceptance |
+| macOS arm64 | Image sending has real-Harness confirmation; `1.0.2` only changes the visible projection of strictly empty reasoning |
+| Windows x64 | The code path and existing slow fakes are unchanged. On a reachable network the official CLI generates the URL and opens the browser, and that path still lacks real-device Windows acceptance |
 | macOS x64 / Linux | Unsupported |
 | Grok CLI | No full-version lock; official path, `login --oauth` capability, and production OIDC credential contract are enforced |
 | Models | Every account catalog model whose backend has a strict codec in this release |

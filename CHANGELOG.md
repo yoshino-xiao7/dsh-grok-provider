@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.2 - 2026-08-30
+
+- Suppress contentless Harness reasoning blocks for upstream reasoning lifecycles that fully close without any visible summary or raw delta. The decoder now starts a visible block only when the first non-empty reasoning delta arrives; non-empty reasoning items remain separate blocks with their existing ordering.
+- Preserve the strict protocol boundary while changing the projection: ordinary empty items retain their existing ID/type, sequence, output-index, status, summary/content, size, optional encrypted-content, and closure checks; Search-backed same-ID reuse additionally retains exact own-data key/accessor validation. Invalid reuse, ordering violations, and incomplete responses with an open reused lifecycle continue to fail closed.
+- Preserve output-index order when a later visible block must wait for an earlier unresolved reasoning item. The shared delayed-chunk queue now fails closed above 65,536 chunks or 32 MiB of dynamic UTF-8 payload, preventing an unresolved item from amplifying memory across otherwise individually bounded blocks. Response text, tool calls, usage, finish reasons, visible non-empty replay, Search replay suppression, authentication, models, images, fixed endpoints, citation/URL handling, and Harness permissions remain unchanged. A hidden ordinary empty item has no replay-alignment slot, so validated encrypted content from that item is not persisted; existing empty `Think` rows stored in old conversations are not rewritten.
+- Package the bilingual README with durable `1.0.2` wording and an exact `dsh-grok-provider@1.0.2` installation command. Publication, CI, artifact digest, Registry, signature, attestation, and provenance facts are intentionally recorded only after they actually exist.
+
 ## 1.0.1 - 2026-08-30
 
 - Fix fixed-Proxy HTTP 400 failures when enabled xAI server `web_search` / `x_search` descriptors coexist with Harness function definitions using the same reserved names. Every source function is still fully validated first; only the definitions whose names collide with enabled server tools are omitted from the wire request. The same local functions remain available whenever the corresponding server Search setting is off.

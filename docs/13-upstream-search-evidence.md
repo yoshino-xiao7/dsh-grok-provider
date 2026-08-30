@@ -1,10 +1,10 @@
-# `0.1.9`–`1.0.1` Web/X Search 上游与固定 Proxy 证据
+# `0.1.9`–`1.0.2` Web/X Search 上游、协议与投影证据
 
-- 状态：`0.1.9`–`1.0.1` 的协议、集成、双平台 CI、最终制品与发布回读均已关闭
+- 状态：`0.1.9`–`1.0.1` 的协议、集成、最终制品与发布回读已关闭；`1.0.2` 只记录严格空 reasoning 的可见投影边界，发布证据尚未预写
 - 观察日期：2026-08-30
 - 固定 origin/path：`https://cli-chat-proxy.grok.com/v1/responses`
 - Provider client identity：`dsh-grok-provider/1.0.5`
-- 协议目标版本：`0.1.9`；设置链路修正：`0.1.10`；首次 reasoning 响应兼容修正：`0.1.11`；补充响应兼容发布：`1.0.0`；同名工具冲突与 transport 错误归因发布：`1.0.1`
+- 协议目标版本：`0.1.9`；设置链路修正：`0.1.10`；首次 reasoning 响应兼容修正：`0.1.11`；补充响应兼容发布：`1.0.0`；同名工具冲突与 transport 错误归因发布：`1.0.1`；空 reasoning 可见投影修复：`1.0.2`
 
 sidebar quota 维护版 `0.1.8` 曾发布后撤回，npm Registry 已消耗该版本号且不能复用；本页的 Search 能力基线始于已发布 `0.1.9`，并由已发布 `1.0.0` 补充响应兼容，不能据此把 Search 描述为 `0.1.8` 能力，也不能替代 `0.1.10` 的真实 settings 集成验收。
 
@@ -87,6 +87,7 @@ Web + X 观察共 68 个 SSE event、4 个 output item、8 个 citation annotati
 - Web/X lifecycle 产生零个 Harness tool-call chunk；function call 仍由 Harness 权限层处理。
 - 观察到任一 server-tool 后禁用本响应的 encrypted reasoning replay。
 - `1.0.0` 中，reasoning ID 的首次复用仍须由旧段闭合和位于两段之间的 completed Web/X Search 共同证明。建立 Search-backed 状态后，只允许相同 ID/type 继续出现逐段严格空 visible summary/content、无 summary/raw lifecycle 且收到 `output_item.done` 的占位；terminal 可选 `encrypted_content` 仅作为有界 opaque 字符串处理。未知键、accessor、任一非空内容、未闭合段，以及 `response.incomplete` 仍有 open 复用段时继续失败关闭；闭合复用段后的 max-token 终态保持有效。
+- `1.0.2` 不改变上述接受域。严格空 lifecycle 仍完整验证并闭合，但不再产生 Harness block；首个非空 summary/raw delta 才开始可见 block，多项非空 reasoning 仍分别闭合。
 
 ## 发布门禁与集成后记
 
@@ -135,3 +136,13 @@ Web + X 观察共 68 个 SSE event、4 个 output item、8 个 citation annotati
 诊断与最终验证没有保存或输出消息正文、回复正文、URL、账号身份、凭据或原始响应。精确 Node `24.19.0` 本地全量门禁（253 tests、251 pass、0 fail、2 platform skips）、生产依赖审计（0 漏洞）、确定性 build、隔离 cache 的 73 文件 dry-run pack 与预期仅 fixture canary 的秘密模式扫描已完成。代码 PR #31、merge commit `0c60200e12c3b8455331f31a317ece9b1945c458` 与 main CI run `33312621786` 的双平台门禁也已完成。最终 release commit `3c25a53571531e35ac888df16df4fe6c01849e85` 的 final CI run `33312946205` 双平台全绿；Trusted Publisher run `33313699790` attempt 1 发布明确授权的唯一 73 文件制品。冻结候选、GitHub Release 与 npm Registry tarball 逐字节一致，npm `latest=1.0.1`；锁定 Registry 安装、1 个 Registry signature、2 个 attestations、安装图 11 个 signed packages / 2 个 attested packages 及精确绑定 `release.yml` / `refs/tags/v1.0.1` / release commit / publish run 的 SLSA provenance 均已验证。当前证据仍不包含 Windows 真机浏览器登录。
 
 这些自动化与脱敏证据仍不构成所有平台完整真实账户验收；浏览器手工对话、OAuth、长会话 Agent loop 和网络可达 Windows 真机浏览器弹出保持独立边界。
+
+## `1.0.2` 空 reasoning 可见投影
+
+已完成的桌面 Search 会话暴露的是投影噪音：Provider/Harness chunk 结构可包含一个有内容 reasoning block 和多个严格空 block，界面因而显示连续的无内容 `Think`。该观察证明显示层症状；除既有脱敏协议证据外，不据此声称新的 raw SSE 字段、正文、URL、身份或凭据。
+
+`1.0.2` 延迟可见 block：item added 仅建立内部状态；首个非空 summary/raw delta 才输出 block start；item 完成时仍严格为空则输出零个 block chunk。普通空项保留既有 ID/type own-data、sequence/output index、status、summary/content 空性、encrypted-content 上限与 lifecycle 一致性校验；Search-backed 复用项继续采用更严格的精确 own-data 形状并拒绝未知键/accessor。Search 后整响应 replay 抑制不变；非 Search 响应中，被隐藏的普通空项不占 replay 对齐槽，其 encrypted content 校验后不持久化。
+
+聚焦证据必须覆盖普通空项的既有校验、多个 Search-backed 空复用的精确键/accessor 校验、有界 opaque encrypted content、summary/raw 首 delta、十空一非空、多个非空块、多未决项保序、后块先完成，以及非空复用、未知键/accessor 复用、乱序、未闭合 Search-backed 复用段和 incomplete + open reuse 负例；普通非复用 partial item 保持既有 max-token 正例。`1.0.2` 的 CI、冻结制品、摘要、授权、Release、Registry、签名、attestations 与 provenance 只在实际完成后记录。
+
+2026-08-30 使用真实 Grok 账号对候选源码的生产 Adapter 路径各发送一次 `grok-4.6` High Effort 请求：Web Search 实际观察到 5 个 completed Search lifecycle，X Search 实际观察到 3 个 completed custom-tool Search lifecycle。两次均只投影 1 个非空 reasoning block、0 个空 reasoning block、1 个非空 text block 和 1 个 finish。验收仅输出这些计数，没有保存或输出搜索/回复正文、URL、身份、凭据或原始响应；它不替代冻结制品、双平台 CI 或 Windows 浏览器登录验收。

@@ -103,6 +103,53 @@ jobs:
           test "$(tar -xOf "$artifact" package/package.json | jq -r .repository.url)" = \
             'git+https://github.com/yoshino-xiao7/dsh-grok-provider.git'
 
+          extract_markdown_section() {
+            local heading="$1"
+            awk -v heading="$heading" '
+              $0 == heading { found = 1; next }
+              found && /^## / { exit }
+              found { print }
+              END { if (!found) exit 1 }
+            '
+          }
+
+          readme_zh="$(tar -xOf "$artifact" package/README.md)"
+          readme_en="$(tar -xOf "$artifact" package/README.en.md)"
+          preamble_zh="$(awk '/^## / { exit } { print }' <<< "$readme_zh")"
+          preamble_en="$(awk '/^## / { exit } { print }' <<< "$readme_en")"
+          quick_start_zh="$(extract_markdown_section '## 快速开始' <<< "$readme_zh")"
+          quick_start_en="$(extract_markdown_section '## Quick start' <<< "$readme_en")"
+          release_surface_zh="$(printf '%s\n%s\n' "$preamble_zh" "$quick_start_zh")"
+          release_surface_en="$(printf '%s\n%s\n' "$preamble_en" "$quick_start_en")"
+
+          printf -v expected_zh_artifact '本说明对应 `dsh-grok-provider@%s` 制品' "$RELEASE_VERSION"
+          printf -v expected_zh_readme '本 README 随 `%s` 一起进入 npm tarball，下面的精确安装命令也固定为 `%s`。' \
+            "$RELEASE_VERSION" "$RELEASE_VERSION"
+          printf -v expected_en_artifact 'This README describes the `dsh-grok-provider@%s` artifact' "$RELEASE_VERSION"
+          printf -v expected_en_readme 'This README is included in the `%s` npm tarball, and the exact installation command below is pinned to `%s`.' \
+            "$RELEASE_VERSION" "$RELEASE_VERSION"
+          grep -Fq "$expected_zh_artifact" <<< "$preamble_zh"
+          grep -Fq "$expected_zh_readme" <<< "$preamble_zh"
+          grep -Fq "$expected_en_artifact" <<< "$preamble_en"
+          grep -Fq "$expected_en_readme" <<< "$preamble_en"
+
+          if grep -Eq '未发布|候选|继续安装' <<< "$release_surface_zh"; then
+            echo 'Chinese README preamble or Quick Start contains candidate-state guidance' >&2
+            exit 1
+          fi
+          if grep -Eiq 'unpublished|candidate|continue installing' <<< "$release_surface_en"; then
+            echo 'English README preamble or Quick Start contains candidate-state guidance' >&2
+            exit 1
+          fi
+
+          expected_install="dsh plugin --profile web add dsh-grok-provider@$RELEASE_VERSION"
+          mapfile -t install_commands_zh < <(grep -Eo 'dsh plugin --profile web add dsh-grok-provider@[0-9]+\.[0-9]+\.[0-9]+' <<< "$quick_start_zh")
+          mapfile -t install_commands_en < <(grep -Eo 'dsh plugin --profile web add dsh-grok-provider@[0-9]+\.[0-9]+\.[0-9]+' <<< "$quick_start_en")
+          test "${#install_commands_zh[@]}" -eq 1
+          test "${install_commands_zh[0]}" = "$expected_install"
+          test "${#install_commands_en[@]}" -eq 1
+          test "${install_commands_en[0]}" = "$expected_install"
+
       - name: Use supported Node.js
         uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444
         with:

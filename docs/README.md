@@ -1,8 +1,8 @@
 # Grok Build Provider 文档索引
 
-- 状态：**`1.0.1` 已正式发布**
-- 发布范围：启用 xAI server Search 时过滤已完整验证的同名 Harness wire definitions，保留历史 function calls/results，并透传 SSE source transport error
-- 当前 npm 稳定版本、最近发布版本及源码 manifest/lock：`1.0.1`
+- 状态：**本文对应 `1.0.2` 制品，不预写尚未发生的发布事实**
+- 制品范围：完整校验严格空 reasoning lifecycle，但不再投影无内容 `Think`；首个非空 delta 才开始可见 block
+- 上一已完成发布回读版本：`1.0.1`
 - `1.0.1` 已发布基线：`yukiryou/main@3c25a53571531e35ac888df16df4fe6c01849e85`
 - `1.0.1` 发布路径：代码 PR #31 与发布证据 PR #32 已合入；annotated tag object `ab79b1bb1e408a0112166cadc26761a327819c3f` peel 到最终 release commit。final CI run [`33312946205`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33312946205) 双平台全绿，Trusted Publisher run [`33313699790` attempt 1](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33313699790/attempts/1) 已完成
 - `1.0.1` 发布状态：仓库所有者明确授权的唯一 73 文件 tarball 为 240,904 bytes，unpacked size 748,888 bytes；SHA-1 `9e6449160947104e8dbb71b7201c53e81b073f83`、SHA-256 `e3e15646d38de23c32c71ed759f9c10be9b2d790d4b10b4b8dfe59a44fbfef9f`、npm SRI `sha512-Bm1qjJQ9i7CWT0oWah7QKDVBP8dR2YQtvEEZGE/BOSwZCo8sZbrW2v2QSfUfLsOLHcQXFZZ0jlDCAztr1m/q+A==`。冻结候选、GitHub Release 与 npm Registry 逐字节一致，npm `latest=1.0.1`；Node `24.19.0` / npm `11.5.1` 锁定隔离安装、生产依赖审计、1 个 Registry signature、2 个 attestations、安装图 11 个 signed packages / 2 个 attested packages 及 SLSA provenance 均已验证
@@ -57,6 +57,7 @@
 - [v0.1.11 中英双语发行说明](./releases/v0.1.11.md)
 - [v1.0.0 中英双语发行说明](./releases/v1.0.0.md)
 - [v1.0.1 中英双语发行说明](./releases/v1.0.1.md)
+- [v1.0.2 中英双语发行说明](./releases/v1.0.2.md)
 - [v0.1.2-rc.1 中英双语预发行说明](./releases/v0.1.2-rc.1.md)
 - [ADR-0001：认证与传输路线](./adr/0001-auth-and-transport-route.md)
 - [ADR-0002：首版能力边界](./adr/0002-v0.1-scope.md)
@@ -78,6 +79,8 @@
 `1.0.0` 已发布真实 Search stream 的剩余两种兼容修复：Search-backed reasoning ID 可多次作为严格空占位重新出现；完成态 Web Search 可返回精确 `open_page` action。脱敏真实账号验证未记录结果、URL、prompt、身份或凭据；发布与供应链回读仍不构成 OAuth 或 Windows 真机浏览器验收证据。
 
 `1.0.1` 已发布 request 侧同名冲突与错误归因修复：固定 Proxy 会拒绝同时存在 Harness `web_search` / `x_search` function definitions 和同名 xAI server Search descriptors 的请求。Provider 先完整验证所有 functions，再只过滤已启用的同名 wire definitions；关闭开关时保留本地工具，历史 calls/results 原样保留，receipt 拒绝交集。SSE source transport error 不再被包装成 parser error，因此 HTTP 400 映射为 `PROVIDER_ERROR` 而非 `INVALID_RESPONSE`；401/403、429 与 abort 的既有映射也由 adapter 回归锁定。一次授权的脱敏原失败 X 会话结构回放以 8 messages、40 source functions、38 wire functions + 2 server tools、2 historical reserved calls、1 models GET、1 Responses POST、314 events 和 `response.completed` 结束；没有保存正文、URL、身份或凭据。精确 Node `24.19.0` 本地全量门禁、代码/main/final 双平台 CI、唯一授权制品、隔离安装、Registry、签名、attestations 与 provenance 回读均已完成；这些证据不替代 Windows 真机浏览器登录验收。
+
+`1.0.2` 只修复可见 reasoning 投影及其对齐槽：普通空 item 保留既有校验，Search-backed 同 ID 复用保留精确 own-data/accessor 校验；空项产生零个 Harness block chunk，非空 summary/raw reasoning 在首个 delta 才按 output index 开始 block。可见非空 replay 与 Search 后整响应 replay 抑制不变；隐藏普通空项不占 replay 槽，其 encrypted content 校验后不持久化。旧会话不回写，认证、模型、图片、endpoint、URL、工具权限和 Windows 登录边界不变。版本发布、CI、制品摘要和供应链证据仅在实际完成后更新。
 
 ## 官方依据
 

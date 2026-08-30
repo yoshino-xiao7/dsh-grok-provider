@@ -192,7 +192,58 @@ test("a completed Responses stream accepts raw reasoning text events", () => {
   ])
 })
 
-test("a completed Responses stream accepts a closed empty reasoning item", () => {
+test("multiple non-empty reasoning items remain separate and keep replay alignment", () => {
+  const reasoningItems = [
+    { id: "rs_multiple_first", text: "First thought.", encryptedContent: "sealed-first" },
+    { id: "rs_multiple_second", text: "Second thought.", encryptedContent: "sealed-second" },
+  ]
+  let sequenceNumber = 0
+  const events = [
+    { type: "response.created", sequence_number: sequenceNumber++, response: { status: "in_progress" } },
+    { type: "response.in_progress", sequence_number: sequenceNumber++, response: { status: "in_progress" } },
+  ]
+  for (const [outputIndex, item] of reasoningItems.entries()) {
+    events.push(
+      { type: "response.output_item.added", sequence_number: sequenceNumber++, output_index: outputIndex, item: { id: item.id, type: "reasoning", status: "in_progress", summary: [] } },
+      { type: "response.reasoning_summary_part.added", sequence_number: sequenceNumber++, output_index: outputIndex, item_id: item.id, summary_index: 0, part: { type: "summary_text", text: "" } },
+      { type: "response.reasoning_summary_text.delta", sequence_number: sequenceNumber++, output_index: outputIndex, item_id: item.id, summary_index: 0, delta: item.text },
+      { type: "response.reasoning_summary_text.done", sequence_number: sequenceNumber++, output_index: outputIndex, item_id: item.id, summary_index: 0, text: item.text },
+      { type: "response.reasoning_summary_part.done", sequence_number: sequenceNumber++, output_index: outputIndex, item_id: item.id, summary_index: 0, part: { type: "summary_text", text: item.text } },
+      { type: "response.output_item.done", sequence_number: sequenceNumber++, output_index: outputIndex, item: { id: item.id, type: "reasoning", status: "completed", encrypted_content: item.encryptedContent, summary: [{ type: "summary_text", text: item.text }] } },
+    )
+  }
+  const messageIndex = reasoningItems.length
+  events.push(
+    { type: "response.output_item.added", sequence_number: sequenceNumber++, output_index: messageIndex, item: { id: "msg_multiple", type: "message", role: "assistant", status: "in_progress", content: [] } },
+    { type: "response.content_part.added", sequence_number: sequenceNumber++, output_index: messageIndex, item_id: "msg_multiple", content_index: 0, part: { type: "output_text", text: "", annotations: [] } },
+    { type: "response.output_text.delta", sequence_number: sequenceNumber++, output_index: messageIndex, item_id: "msg_multiple", content_index: 0, delta: "OK" },
+    { type: "response.output_text.done", sequence_number: sequenceNumber++, output_index: messageIndex, item_id: "msg_multiple", content_index: 0, text: "OK" },
+    { type: "response.content_part.done", sequence_number: sequenceNumber++, output_index: messageIndex, item_id: "msg_multiple", content_index: 0, part: { type: "output_text", text: "OK", annotations: [] } },
+    { type: "response.output_item.done", sequence_number: sequenceNumber++, output_index: messageIndex, item: { id: "msg_multiple", type: "message", role: "assistant", status: "completed", content: [{ type: "output_text", text: "OK", annotations: [] }] } },
+    { type: "response.completed", sequence_number: sequenceNumber++, response: { status: "completed", usage: { input_tokens: 6, output_tokens: 4 } } },
+  )
+
+  const chunks = decodeResponsesEvents(events, EMPTY_RECEIPT)
+  assert.deepEqual(chunks.filter((chunk) => (
+    (chunk.type === "block-start" && chunk.blockType === "reasoning") ||
+    chunk.type === "reasoning-delta" ||
+    (chunk.type === "block-end" && chunk.block.type === "reasoning")
+  )), [
+    { type: "block-start", index: 0, blockType: "reasoning" },
+    { type: "reasoning-delta", index: 0, text: "First thought." },
+    { type: "block-end", index: 0, block: { type: "reasoning", text: "First thought." } },
+    { type: "block-start", index: 1, blockType: "reasoning" },
+    { type: "reasoning-delta", index: 1, text: "Second thought." },
+    { type: "block-end", index: 1, block: { type: "reasoning", text: "Second thought." } },
+  ])
+  assert.deepEqual(chunks.at(-1).replayState.blocks, [
+    { type: "reasoning", id: "rs_multiple_first", encryptedContent: "sealed-first" },
+    { type: "reasoning", id: "rs_multiple_second", encryptedContent: "sealed-second" },
+    null,
+  ])
+})
+
+test("a completed Responses stream validates but does not project a closed empty reasoning item", () => {
   const emptyReasoning = {
     id: "rs_empty",
     type: "reasoning",
@@ -223,24 +274,362 @@ test("a completed Responses stream accepts a closed empty reasoning item", () =>
   ]
 
   assert.deepEqual(decodeResponsesEvents(events, EMPTY_RECEIPT), [
-    { type: "block-start", index: 0, blockType: "reasoning" },
-    { type: "block-end", index: 0, block: { type: "reasoning", text: "" } },
     { type: "block-start", index: 1, blockType: "text" },
     { type: "text-delta", index: 1, text: "OK" },
     { type: "block-end", index: 1, block: { type: "text", text: "OK" } },
     { type: "usage", usage: { inputTokens: 4, outputTokens: 2 } },
-    {
-      type: "finish",
-      reason: { kind: "stop" },
-      replayState: {
-        response: { version: 1 },
-        blocks: [
-          { type: "reasoning", id: "rs_empty", encryptedContent: "sealed-empty" },
-          null,
-        ],
-      },
-    },
+    { type: "finish", reason: { kind: "stop" } },
   ])
+})
+
+test("explicit empty summary and raw reasoning lifecycles stay invisible", () => {
+  const cases = [
+    {
+      label: "summary",
+      added: { id: "rs_empty_summary", type: "reasoning", status: "in_progress", summary: [] },
+      lifecycle: [
+        { type: "response.reasoning_summary_part.added", output_index: 0, item_id: "rs_empty_summary", summary_index: 0, part: { type: "summary_text", text: "" } },
+        { type: "response.reasoning_summary_text.done", output_index: 0, item_id: "rs_empty_summary", summary_index: 0, text: "" },
+        { type: "response.reasoning_summary_part.done", output_index: 0, item_id: "rs_empty_summary", summary_index: 0, part: { type: "summary_text", text: "" } },
+      ],
+      done: { id: "rs_empty_summary", type: "reasoning", status: "completed", encrypted_content: "sealed-empty-summary", summary: [{ type: "summary_text", text: "" }] },
+    },
+    {
+      label: "raw",
+      added: { id: "rs_empty_raw", type: "reasoning", status: "in_progress", content: [], summary: [] },
+      lifecycle: [
+        { type: "response.content_part.added", output_index: 0, item_id: "rs_empty_raw", content_index: 0, part: { type: "reasoning_text", text: "" } },
+        { type: "response.reasoning_text.done", output_index: 0, item_id: "rs_empty_raw", content_index: 0, text: "" },
+        { type: "response.content_part.done", output_index: 0, item_id: "rs_empty_raw", content_index: 0, part: { type: "reasoning_text", text: "" } },
+      ],
+      done: { id: "rs_empty_raw", type: "reasoning", status: "completed", content: [{ type: "reasoning_text", text: "" }], encrypted_content: "sealed-empty-raw", summary: [] },
+    },
+  ]
+
+  for (const fixture of cases) {
+    let sequenceNumber = 0
+    const events = [
+      { type: "response.created", sequence_number: sequenceNumber++, response: { status: "in_progress" } },
+      { type: "response.in_progress", sequence_number: sequenceNumber++, response: { status: "in_progress" } },
+      { type: "response.output_item.added", sequence_number: sequenceNumber++, output_index: 0, item: fixture.added },
+      ...fixture.lifecycle.map((event) => ({ ...event, sequence_number: sequenceNumber++ })),
+      { type: "response.output_item.done", sequence_number: sequenceNumber++, output_index: 0, item: fixture.done },
+      { type: "response.output_item.added", sequence_number: sequenceNumber++, output_index: 1, item: { id: `msg_empty_${fixture.label}`, type: "message", role: "assistant", status: "in_progress", content: [] } },
+      { type: "response.content_part.added", sequence_number: sequenceNumber++, output_index: 1, item_id: `msg_empty_${fixture.label}`, content_index: 0, part: { type: "output_text", text: "", annotations: [] } },
+      { type: "response.output_text.delta", sequence_number: sequenceNumber++, output_index: 1, item_id: `msg_empty_${fixture.label}`, content_index: 0, delta: "OK" },
+      { type: "response.output_text.done", sequence_number: sequenceNumber++, output_index: 1, item_id: `msg_empty_${fixture.label}`, content_index: 0, text: "OK" },
+      { type: "response.content_part.done", sequence_number: sequenceNumber++, output_index: 1, item_id: `msg_empty_${fixture.label}`, content_index: 0, part: { type: "output_text", text: "OK", annotations: [] } },
+      { type: "response.output_item.done", sequence_number: sequenceNumber++, output_index: 1, item: { id: `msg_empty_${fixture.label}`, type: "message", role: "assistant", status: "completed", content: [{ type: "output_text", text: "OK", annotations: [] }] } },
+      { type: "response.completed", sequence_number: sequenceNumber++, response: { status: "completed", usage: { input_tokens: 4, output_tokens: 2 } } },
+    ]
+
+    const chunks = decodeResponsesEvents(events, EMPTY_RECEIPT)
+    assert.equal(chunks.some((chunk) => (
+      chunk.type === "block-start" && chunk.blockType === "reasoning"
+    )), false, fixture.label)
+    assert.equal(chunks.some((chunk) => (
+      chunk.type === "block-end" && chunk.block.type === "reasoning"
+    )), false, fixture.label)
+    assert.deepEqual(chunks.at(-1), { type: "finish", reason: { kind: "stop" } }, fixture.label)
+  }
+})
+
+test("suppressed reasoning does not occupy non-Search replay positions", () => {
+  const emptyReasoning = {
+    id: "rs_replay_empty",
+    type: "reasoning",
+    status: "completed",
+    encrypted_content: "sealed-replay-empty",
+    summary: [],
+  }
+  const visibleReasoning = {
+    id: "rs_replay_visible",
+    type: "reasoning",
+    status: "completed",
+    encrypted_content: "sealed-replay-visible",
+    summary: [{ type: "summary_text", text: "Visible reasoning." }],
+  }
+  const messageDone = {
+    id: "msg_replay_alignment",
+    type: "message",
+    role: "assistant",
+    status: "completed",
+    content: [{ type: "output_text", text: "OK", annotations: [] }],
+  }
+  const events = [
+    { type: "response.created", sequence_number: 0, response: { status: "in_progress" } },
+    { type: "response.in_progress", sequence_number: 1, response: { status: "in_progress" } },
+    { type: "response.output_item.added", sequence_number: 2, output_index: 0, item: emptyReasoning },
+    { type: "response.output_item.done", sequence_number: 3, output_index: 0, item: emptyReasoning },
+    { type: "response.output_item.added", sequence_number: 4, output_index: 1, item: { id: "rs_replay_visible", type: "reasoning", status: "in_progress", summary: [] } },
+    { type: "response.reasoning_summary_part.added", sequence_number: 5, output_index: 1, item_id: "rs_replay_visible", summary_index: 0, part: { type: "summary_text", text: "" } },
+    { type: "response.reasoning_summary_text.delta", sequence_number: 6, output_index: 1, item_id: "rs_replay_visible", summary_index: 0, delta: "Visible reasoning." },
+    { type: "response.reasoning_summary_text.done", sequence_number: 7, output_index: 1, item_id: "rs_replay_visible", summary_index: 0, text: "Visible reasoning." },
+    { type: "response.reasoning_summary_part.done", sequence_number: 8, output_index: 1, item_id: "rs_replay_visible", summary_index: 0, part: { type: "summary_text", text: "Visible reasoning." } },
+    { type: "response.output_item.done", sequence_number: 9, output_index: 1, item: visibleReasoning },
+    { type: "response.output_item.added", sequence_number: 10, output_index: 2, item: { id: "msg_replay_alignment", type: "message", role: "assistant", status: "in_progress", content: [] } },
+    { type: "response.content_part.added", sequence_number: 11, output_index: 2, item_id: "msg_replay_alignment", content_index: 0, part: { type: "output_text", text: "", annotations: [] } },
+    { type: "response.output_text.delta", sequence_number: 12, output_index: 2, item_id: "msg_replay_alignment", content_index: 0, delta: "OK" },
+    { type: "response.output_text.done", sequence_number: 13, output_index: 2, item_id: "msg_replay_alignment", content_index: 0, text: "OK" },
+    { type: "response.content_part.done", sequence_number: 14, output_index: 2, item_id: "msg_replay_alignment", content_index: 0, part: { type: "output_text", text: "OK", annotations: [] } },
+    { type: "response.output_item.done", sequence_number: 15, output_index: 2, item: messageDone },
+    { type: "response.completed", sequence_number: 16, response: { status: "completed", usage: { input_tokens: 6, output_tokens: 3 } } },
+  ]
+
+  const chunks = decodeResponsesEvents(events, EMPTY_RECEIPT)
+  assert.deepEqual(chunks.filter((chunk) => chunk.type === "block-start").map((chunk) => chunk.index), [1, 2])
+  assert.deepEqual(chunks.at(-1), {
+    type: "finish",
+    reason: { kind: "stop" },
+    replayState: {
+      response: { version: 1 },
+      blocks: [
+        { type: "reasoning", id: "rs_replay_visible", encryptedContent: "sealed-replay-visible" },
+        null,
+      ],
+    },
+  })
+})
+
+test("a delayed reasoning start preserves output order and replay alignment", () => {
+  const reasoningDone = {
+    id: "rs_interleaved",
+    type: "reasoning",
+    status: "completed",
+    encrypted_content: "sealed-interleaved",
+    summary: [{ type: "summary_text", text: "Visible reasoning." }],
+  }
+  const messageDone = {
+    id: "msg_interleaved",
+    type: "message",
+    role: "assistant",
+    status: "completed",
+    content: [{ type: "output_text", text: "OK", annotations: [] }],
+  }
+  const events = [
+    { type: "response.created", sequence_number: 0, response: { status: "in_progress" } },
+    { type: "response.in_progress", sequence_number: 1, response: { status: "in_progress" } },
+    { type: "response.output_item.added", sequence_number: 2, output_index: 0, item: { id: "rs_interleaved", type: "reasoning", status: "in_progress", summary: [] } },
+    { type: "response.reasoning_summary_part.added", sequence_number: 3, output_index: 0, item_id: "rs_interleaved", summary_index: 0, part: { type: "summary_text", text: "" } },
+    { type: "response.output_item.added", sequence_number: 4, output_index: 1, item: { id: "msg_interleaved", type: "message", role: "assistant", status: "in_progress", content: [] } },
+    { type: "response.content_part.added", sequence_number: 5, output_index: 1, item_id: "msg_interleaved", content_index: 0, part: { type: "output_text", text: "", annotations: [] } },
+    { type: "response.reasoning_summary_text.delta", sequence_number: 6, output_index: 0, item_id: "rs_interleaved", summary_index: 0, delta: "Visible reasoning." },
+    { type: "response.reasoning_summary_text.done", sequence_number: 7, output_index: 0, item_id: "rs_interleaved", summary_index: 0, text: "Visible reasoning." },
+    { type: "response.reasoning_summary_part.done", sequence_number: 8, output_index: 0, item_id: "rs_interleaved", summary_index: 0, part: { type: "summary_text", text: "Visible reasoning." } },
+    { type: "response.output_item.done", sequence_number: 9, output_index: 0, item: reasoningDone },
+    { type: "response.output_text.delta", sequence_number: 10, output_index: 1, item_id: "msg_interleaved", content_index: 0, delta: "OK" },
+    { type: "response.output_text.done", sequence_number: 11, output_index: 1, item_id: "msg_interleaved", content_index: 0, text: "OK" },
+    { type: "response.content_part.done", sequence_number: 12, output_index: 1, item_id: "msg_interleaved", content_index: 0, part: { type: "output_text", text: "OK", annotations: [] } },
+    { type: "response.output_item.done", sequence_number: 13, output_index: 1, item: messageDone },
+    { type: "response.completed", sequence_number: 14, response: { status: "completed", usage: { input_tokens: 6, output_tokens: 3 } } },
+  ]
+
+  const chunks = decodeResponsesEvents(events, EMPTY_RECEIPT)
+  assert.deepEqual(chunks.filter((chunk) => chunk.type === "block-start"), [
+    { type: "block-start", index: 0, blockType: "reasoning" },
+    { type: "block-start", index: 1, blockType: "text" },
+  ])
+  assert.deepEqual(chunks.at(-1), {
+    type: "finish",
+    reason: { kind: "stop" },
+    replayState: {
+      response: { version: 1 },
+      blocks: [
+        { type: "reasoning", id: "rs_interleaved", encryptedContent: "sealed-interleaved" },
+        null,
+      ],
+    },
+  })
+})
+
+test("a later completed reasoning block waits for an earlier empty reasoning decision", () => {
+  const laterDone = {
+    id: "rs_later_visible",
+    type: "reasoning",
+    status: "completed",
+    encrypted_content: "sealed-later-visible",
+    summary: [{ type: "summary_text", text: "Later thought." }],
+  }
+  const events = [
+    { type: "response.created", sequence_number: 0, response: { status: "in_progress" } },
+    { type: "response.in_progress", sequence_number: 1, response: { status: "in_progress" } },
+    { type: "response.output_item.added", sequence_number: 2, output_index: 0, item: { id: "rs_earlier_empty", type: "reasoning", status: "in_progress", summary: [] } },
+    { type: "response.output_item.added", sequence_number: 3, output_index: 1, item: { id: "rs_later_visible", type: "reasoning", status: "in_progress", summary: [] } },
+    { type: "response.reasoning_summary_part.added", sequence_number: 4, output_index: 1, item_id: "rs_later_visible", summary_index: 0, part: { type: "summary_text", text: "" } },
+    { type: "response.reasoning_summary_text.delta", sequence_number: 5, output_index: 1, item_id: "rs_later_visible", summary_index: 0, delta: "Later thought." },
+    { type: "response.reasoning_summary_text.done", sequence_number: 6, output_index: 1, item_id: "rs_later_visible", summary_index: 0, text: "Later thought." },
+    { type: "response.reasoning_summary_part.done", sequence_number: 7, output_index: 1, item_id: "rs_later_visible", summary_index: 0, part: { type: "summary_text", text: "Later thought." } },
+    { type: "response.output_item.done", sequence_number: 8, output_index: 1, item: laterDone },
+    { type: "response.output_item.done", sequence_number: 9, output_index: 0, item: { id: "rs_earlier_empty", type: "reasoning", status: "completed", encrypted_content: "sealed-earlier-empty", summary: [] } },
+    { type: "response.output_item.added", sequence_number: 10, output_index: 2, item: { id: "msg_after_reasoning", type: "message", role: "assistant", status: "in_progress", content: [] } },
+    { type: "response.content_part.added", sequence_number: 11, output_index: 2, item_id: "msg_after_reasoning", content_index: 0, part: { type: "output_text", text: "", annotations: [] } },
+    { type: "response.output_text.delta", sequence_number: 12, output_index: 2, item_id: "msg_after_reasoning", content_index: 0, delta: "OK" },
+    { type: "response.output_text.done", sequence_number: 13, output_index: 2, item_id: "msg_after_reasoning", content_index: 0, text: "OK" },
+    { type: "response.content_part.done", sequence_number: 14, output_index: 2, item_id: "msg_after_reasoning", content_index: 0, part: { type: "output_text", text: "OK", annotations: [] } },
+    { type: "response.output_item.done", sequence_number: 15, output_index: 2, item: { id: "msg_after_reasoning", type: "message", role: "assistant", status: "completed", content: [{ type: "output_text", text: "OK", annotations: [] }] } },
+    { type: "response.completed", sequence_number: 16, response: { status: "completed", usage: { input_tokens: 7, output_tokens: 4 } } },
+  ]
+
+  const chunks = decodeResponsesEvents(events, EMPTY_RECEIPT)
+  assert.deepEqual(chunks.filter((chunk) => (
+    chunk.type === "block-start" ||
+    chunk.type === "reasoning-delta" ||
+    chunk.type === "block-end"
+  )), [
+    { type: "block-start", index: 1, blockType: "reasoning" },
+    { type: "reasoning-delta", index: 1, text: "Later thought." },
+    { type: "block-end", index: 1, block: { type: "reasoning", text: "Later thought." } },
+    { type: "block-start", index: 2, blockType: "text" },
+    { type: "block-end", index: 2, block: { type: "text", text: "OK" } },
+  ])
+  assert.deepEqual(chunks.at(-1).replayState.blocks, [
+    { type: "reasoning", id: "rs_later_visible", encryptedContent: "sealed-later-visible" },
+    null,
+  ])
+})
+
+test("delayed text and tool-call chunks flush in output order after an empty reasoning barrier", () => {
+  const decoder = createResponsesEventDecoder(FUNCTION_RECEIPT)
+  let sequenceNumber = 0
+  const push = (event) => decoder.push({ sequence_number: sequenceNumber++, ...event })
+  const beforeBarrierRelease = [
+    { type: "response.created", response: { status: "in_progress" } },
+    { type: "response.in_progress", response: { status: "in_progress" } },
+    { type: "response.output_item.added", output_index: 0, item: { id: "rs_order_barrier", type: "reasoning", status: "in_progress", summary: [] } },
+    { type: "response.output_item.added", output_index: 1, item: { id: "msg_order_delayed", type: "message", role: "assistant", status: "in_progress", content: [] } },
+    { type: "response.content_part.added", output_index: 1, item_id: "msg_order_delayed", content_index: 0, part: { type: "output_text", text: "", annotations: [] } },
+    { type: "response.output_text.delta", output_index: 1, item_id: "msg_order_delayed", content_index: 0, delta: "Delayed text." },
+    { type: "response.output_text.done", output_index: 1, item_id: "msg_order_delayed", content_index: 0, text: "Delayed text." },
+    { type: "response.content_part.done", output_index: 1, item_id: "msg_order_delayed", content_index: 0, part: { type: "output_text", text: "Delayed text.", annotations: [] } },
+    { type: "response.output_item.done", output_index: 1, item: { id: "msg_order_delayed", type: "message", role: "assistant", status: "completed", content: [{ type: "output_text", text: "Delayed text.", annotations: [] }] } },
+    { type: "response.output_item.added", output_index: 2, item: { id: "fc_order_delayed", type: "function_call", status: "in_progress", call_id: "call_order_delayed", name: "fixture_tool", arguments: "" } },
+    { type: "response.function_call_arguments.delta", output_index: 2, item_id: "fc_order_delayed", delta: "{\"value\":" },
+    { type: "response.function_call_arguments.delta", output_index: 2, item_id: "fc_order_delayed", delta: "1}" },
+    { type: "response.function_call_arguments.done", output_index: 2, item_id: "fc_order_delayed", name: "fixture_tool", arguments: "{\"value\":1}" },
+    { type: "response.output_item.done", output_index: 2, item: { id: "fc_order_delayed", type: "function_call", status: "completed", call_id: "call_order_delayed", name: "fixture_tool", arguments: "{\"value\":1}" } },
+  ]
+
+  for (const event of beforeBarrierRelease) assert.deepEqual(push(event), [])
+
+  assert.deepEqual(push({
+    type: "response.output_item.done",
+    output_index: 0,
+    item: { id: "rs_order_barrier", type: "reasoning", status: "completed", summary: [] },
+  }), [
+    { type: "block-start", index: 1, blockType: "text" },
+    { type: "text-delta", index: 1, text: "Delayed text." },
+    { type: "block-end", index: 1, block: { type: "text", text: "Delayed text." } },
+    { type: "block-start", index: 2, blockType: "tool-call" },
+    { type: "tool-call-delta", index: 2, id: "call_order_delayed", name: "fixture_tool", argumentsDelta: "{\"value\":" },
+    { type: "tool-call-delta", index: 2, id: "call_order_delayed", argumentsDelta: "1}" },
+    { type: "block-end", index: 2, block: { type: "tool-call", id: "call_order_delayed", name: "fixture_tool", arguments: "{\"value\":1}" } },
+  ])
+  assert.deepEqual(push({
+    type: "response.completed",
+    response: { status: "completed", usage: { input_tokens: 8, output_tokens: 4 } },
+  }), [
+    { type: "usage", usage: { inputTokens: 8, outputTokens: 4 } },
+    { type: "finish", reason: { kind: "tool-calls" } },
+  ])
+  decoder.finish()
+})
+
+test("aggregate pending UTF-8 bytes fail closed while an earlier reasoning item is unresolved", () => {
+  const decoder = createResponsesEventDecoder(EMPTY_RECEIPT)
+  let sequenceNumber = 0
+  const push = (event) => decoder.push({ sequence_number: sequenceNumber++, ...event })
+  const maximumText = "x".repeat(8 * 1024 * 1024)
+
+  push({ type: "response.created", response: { status: "in_progress" } })
+  push({ type: "response.in_progress", response: { status: "in_progress" } })
+  push({ type: "response.output_item.added", output_index: 0, item: { id: "rs_budget_barrier", type: "reasoning", status: "in_progress", summary: [] } })
+
+  for (const [outputIndex, itemId] of [[1, "msg_budget_first"], [2, "msg_budget_second"]]) {
+    push({ type: "response.output_item.added", output_index: outputIndex, item: { id: itemId, type: "message", role: "assistant", status: "in_progress", content: [] } })
+    push({ type: "response.content_part.added", output_index: outputIndex, item_id: itemId, content_index: 0, part: { type: "output_text", text: "", annotations: [] } })
+    push({ type: "response.output_text.delta", output_index: outputIndex, item_id: itemId, content_index: 0, delta: maximumText })
+    push({ type: "response.output_text.done", output_index: outputIndex, item_id: itemId, content_index: 0, text: maximumText })
+    push({ type: "response.content_part.done", output_index: outputIndex, item_id: itemId, content_index: 0, part: { type: "output_text", text: maximumText, annotations: [] } })
+    push({ type: "response.output_item.done", output_index: outputIndex, item: { id: itemId, type: "message", role: "assistant", status: "completed", content: [{ type: "output_text", text: maximumText, annotations: [] }] } })
+  }
+
+  push({ type: "response.output_item.added", output_index: 3, item: { id: "msg_budget_overflow", type: "message", role: "assistant", status: "in_progress", content: [] } })
+  push({ type: "response.content_part.added", output_index: 3, item_id: "msg_budget_overflow", content_index: 0, part: { type: "output_text", text: "", annotations: [] } })
+  assert.throws(() => push({
+    type: "response.output_text.delta",
+    output_index: 3,
+    item_id: "msg_budget_overflow",
+    content_index: 0,
+    delta: "x",
+  }), { name: "InvalidResponsesStreamError" })
+})
+
+test("aggregate pending chunk count fails closed while an earlier reasoning item is unresolved", () => {
+  const decoder = createResponsesEventDecoder(EMPTY_RECEIPT)
+  let sequenceNumber = 0
+  const push = (event) => decoder.push({ sequence_number: sequenceNumber++, ...event })
+
+  push({ type: "response.created", response: { status: "in_progress" } })
+  push({ type: "response.in_progress", response: { status: "in_progress" } })
+  push({ type: "response.output_item.added", output_index: 0, item: { id: "rs_chunk_budget_barrier", type: "reasoning", status: "in_progress", summary: [] } })
+  push({ type: "response.output_item.added", output_index: 1, item: { id: "msg_chunk_budget", type: "message", role: "assistant", status: "in_progress", content: [] } })
+  push({ type: "response.content_part.added", output_index: 1, item_id: "msg_chunk_budget", content_index: 0, part: { type: "output_text", text: "", annotations: [] } })
+  for (let index = 0; index < 65_536; index += 1) {
+    push({ type: "response.output_text.delta", output_index: 1, item_id: "msg_chunk_budget", content_index: 0, delta: "x" })
+  }
+  assert.throws(() => push({
+    type: "response.output_text.delta",
+    output_index: 1,
+    item_id: "msg_chunk_budget",
+    content_index: 0,
+    delta: "x",
+  }), { name: "InvalidResponsesStreamError" })
+})
+
+test("an incomplete response releases a reasoning barrier before closing large delayed blocks", () => {
+  const decoder = createResponsesEventDecoder(EMPTY_RECEIPT)
+  let sequenceNumber = 0
+  const push = (event) => decoder.push({ sequence_number: sequenceNumber++, ...event })
+  const delayedText = "x".repeat(6 * 1024 * 1024)
+
+  push({ type: "response.created", response: { status: "in_progress" } })
+  push({ type: "response.in_progress", response: { status: "in_progress" } })
+  push({ type: "response.output_item.added", output_index: 0, item: { id: "rs_incomplete_budget_barrier", type: "reasoning", status: "in_progress", summary: [] } })
+  for (const outputIndex of [1, 2, 3]) {
+    const itemId = `msg_incomplete_delayed_${outputIndex}`
+    assert.deepEqual(push({ type: "response.output_item.added", output_index: outputIndex, item: { id: itemId, type: "message", role: "assistant", status: "in_progress", content: [] } }), [])
+    assert.deepEqual(push({ type: "response.content_part.added", output_index: outputIndex, item_id: itemId, content_index: 0, part: { type: "output_text", text: "", annotations: [] } }), [])
+    assert.deepEqual(push({ type: "response.output_text.delta", output_index: outputIndex, item_id: itemId, content_index: 0, delta: delayedText }), [])
+  }
+
+  const chunks = push({
+    type: "response.incomplete",
+    response: {
+      status: "incomplete",
+      incomplete_details: { reason: "max_output_tokens" },
+      usage: { input_tokens: 12, output_tokens: 6 },
+    },
+  })
+  assert.deepEqual(chunks.map((chunk) => (
+    chunk.index === undefined ? chunk.type : `${chunk.type}:${chunk.index}`
+  )), [
+    "block-start:1",
+    "text-delta:1",
+    "block-start:2",
+    "text-delta:2",
+    "block-start:3",
+    "text-delta:3",
+    "block-end:1",
+    "block-end:2",
+    "block-end:3",
+    "usage",
+    "finish",
+  ])
+  for (const chunk of chunks.filter((entry) => entry.type === "block-end")) {
+    assert.equal(chunk.block.text.length, delayedText.length)
+  }
+  assert.deepEqual(chunks.at(-1), { type: "finish", reason: { kind: "max-tokens" } })
+  decoder.finish()
 })
 
 test("a reasoning item start cannot hide nonempty summary or content", () => {
@@ -826,6 +1215,62 @@ test("a max-output-token incomplete event closes partial raw reasoning without r
   ])
 })
 
+test("a max-output-token incomplete event omits an open empty reasoning item", () => {
+  const events = [
+    { type: "response.created", sequence_number: 0, response: { status: "in_progress" } },
+    { type: "response.in_progress", sequence_number: 1, response: { status: "in_progress" } },
+    { type: "response.output_item.added", sequence_number: 2, output_index: 0, item: { id: "rs_empty_incomplete", type: "reasoning", status: "in_progress", summary: [] } },
+    { type: "response.output_item.added", sequence_number: 3, output_index: 1, item: { id: "msg_empty_incomplete", type: "message", role: "assistant", status: "in_progress", content: [] } },
+    { type: "response.content_part.added", sequence_number: 4, output_index: 1, item_id: "msg_empty_incomplete", content_index: 0, part: { type: "output_text", text: "", annotations: [] } },
+    { type: "response.output_text.delta", sequence_number: 5, output_index: 1, item_id: "msg_empty_incomplete", content_index: 0, delta: "Partial" },
+    {
+      type: "response.incomplete",
+      sequence_number: 6,
+      response: {
+        status: "incomplete",
+        incomplete_details: { reason: "max_output_tokens" },
+        usage: { input_tokens: 4, output_tokens: 2 },
+      },
+    },
+  ]
+
+  assert.deepEqual(decodeResponsesEvents(events, EMPTY_RECEIPT), [
+    { type: "block-start", index: 1, blockType: "text" },
+    { type: "text-delta", index: 1, text: "Partial" },
+    { type: "block-end", index: 1, block: { type: "text", text: "Partial" } },
+    { type: "usage", usage: { inputTokens: 4, outputTokens: 2 } },
+    { type: "finish", reason: { kind: "max-tokens" } },
+  ])
+})
+
+test("an incomplete event preserves later partial reasoning after an earlier empty item", () => {
+  const events = [
+    { type: "response.created", sequence_number: 0, response: { status: "in_progress" } },
+    { type: "response.in_progress", sequence_number: 1, response: { status: "in_progress" } },
+    { type: "response.output_item.added", sequence_number: 2, output_index: 0, item: { id: "rs_incomplete_empty_first", type: "reasoning", status: "in_progress", summary: [] } },
+    { type: "response.output_item.added", sequence_number: 3, output_index: 1, item: { id: "rs_incomplete_visible_second", type: "reasoning", status: "in_progress", summary: [] } },
+    { type: "response.reasoning_summary_part.added", sequence_number: 4, output_index: 1, item_id: "rs_incomplete_visible_second", summary_index: 0, part: { type: "summary_text", text: "" } },
+    { type: "response.reasoning_summary_text.delta", sequence_number: 5, output_index: 1, item_id: "rs_incomplete_visible_second", summary_index: 0, delta: "Partial later thought." },
+    {
+      type: "response.incomplete",
+      sequence_number: 6,
+      response: {
+        status: "incomplete",
+        incomplete_details: { reason: "max_output_tokens" },
+        usage: { input_tokens: 5, output_tokens: 2 },
+      },
+    },
+  ]
+
+  assert.deepEqual(decodeResponsesEvents(events, EMPTY_RECEIPT), [
+    { type: "block-start", index: 1, blockType: "reasoning" },
+    { type: "reasoning-delta", index: 1, text: "Partial later thought." },
+    { type: "block-end", index: 1, block: { type: "reasoning", text: "Partial later thought." } },
+    { type: "usage", usage: { inputTokens: 5, outputTokens: 2 } },
+    { type: "finish", reason: { kind: "max-tokens" } },
+  ])
+})
+
 test("Web Search lifecycle emits no tool chunks, preserves cited text, and suppresses reasoning replay", () => {
   const text = "Web result"
   const annotation = citationAnnotation({ endIndex: text.length })
@@ -1214,10 +1659,6 @@ test("Web Search continuation accepts closed empty reasoning before the final me
   })
   assert.deepEqual(chunks.map((chunk) => chunk.type), [
     "block-start",
-    "block-end",
-    "block-start",
-    "block-end",
-    "block-start",
     "text-delta",
     "block-end",
     "usage",
@@ -1302,8 +1743,110 @@ test("Web Search continuation accepts consecutive closed empty reuse of a reason
     serverTools: ["web_search"],
   })
   assert.equal(chunks.some((chunk) => chunk.type.includes("tool-call")), false)
+  assert.deepEqual(chunks.filter((chunk) => (
+    (chunk.type === "block-start" && chunk.blockType === "reasoning") ||
+    chunk.type === "reasoning-delta" ||
+    (chunk.type === "block-end" && chunk.block.type === "reasoning")
+  )), [
+    { type: "block-start", index: 0, blockType: "reasoning" },
+    { type: "reasoning-delta", index: 0, text: "Search reasoning." },
+    { type: "block-end", index: 0, block: { type: "reasoning", text: "Search reasoning." } },
+  ])
   assert.deepEqual(chunks.at(-1), { type: "finish", reason: { kind: "stop" } })
   assert.equal("replayState" in chunks.at(-1), false)
+})
+
+test("ten empty Search reasoning lifecycles do not create empty Think blocks", () => {
+  const reasoningId = "rs_search_ten_empty"
+  const visibleReasoning = {
+    id: reasoningId,
+    type: "reasoning",
+    status: "completed",
+    encrypted_content: "sealed-search-visible",
+    summary: [{ type: "summary_text", text: "One visible thought." }],
+  }
+  const emptyReasoning = {
+    id: reasoningId,
+    type: "reasoning",
+    status: "completed",
+    encrypted_content: "sealed-search-empty",
+    summary: [],
+  }
+  const webDone = webSearchItem("completed", "xAI", [])
+  const messageDone = {
+    id: "msg_search_ten_empty",
+    type: "message",
+    role: "assistant",
+    status: "completed",
+    content: [{ type: "output_text", text: "Done", annotations: [] }],
+  }
+  let sequenceNumber = 0
+  const events = [
+    { type: "response.created", sequence_number: sequenceNumber++, response: { status: "in_progress" } },
+    { type: "response.in_progress", sequence_number: sequenceNumber++, response: { status: "in_progress" } },
+    { type: "response.output_item.added", sequence_number: sequenceNumber++, output_index: 0, item: { id: reasoningId, type: "reasoning", status: "in_progress", summary: [] } },
+    { type: "response.reasoning_summary_part.added", sequence_number: sequenceNumber++, output_index: 0, item_id: reasoningId, summary_index: 0, part: { type: "summary_text", text: "" } },
+    { type: "response.reasoning_summary_text.delta", sequence_number: sequenceNumber++, output_index: 0, item_id: reasoningId, summary_index: 0, delta: "One visible thought." },
+    { type: "response.reasoning_summary_text.done", sequence_number: sequenceNumber++, output_index: 0, item_id: reasoningId, summary_index: 0, text: "One visible thought." },
+    { type: "response.reasoning_summary_part.done", sequence_number: sequenceNumber++, output_index: 0, item_id: reasoningId, summary_index: 0, part: { type: "summary_text", text: "One visible thought." } },
+    { type: "response.output_item.done", sequence_number: sequenceNumber++, output_index: 0, item: visibleReasoning },
+    { type: "response.output_item.added", sequence_number: sequenceNumber++, output_index: 1, item: webSearchItem("in_progress", "", []) },
+    { type: "response.web_search_call.in_progress", sequence_number: sequenceNumber++, output_index: 1, item_id: "ws_fixture" },
+    { type: "response.web_search_call.searching", sequence_number: sequenceNumber++, output_index: 1, item_id: "ws_fixture" },
+    { type: "response.web_search_call.completed", sequence_number: sequenceNumber++, output_index: 1, item_id: "ws_fixture" },
+    { type: "response.output_item.done", sequence_number: sequenceNumber++, output_index: 1, item: webDone },
+  ]
+  const terminalOutput = [visibleReasoning, webDone]
+  for (let offset = 0; offset < 10; offset += 1) {
+    const outputIndex = offset + 2
+    events.push({
+      type: "response.output_item.added",
+      sequence_number: sequenceNumber++,
+      output_index: outputIndex,
+      item: { id: reasoningId, type: "reasoning", status: "in_progress", summary: [] },
+    })
+    events.push({
+      type: "response.output_item.done",
+      sequence_number: sequenceNumber++,
+      output_index: outputIndex,
+      item: emptyReasoning,
+    })
+    terminalOutput.push(emptyReasoning)
+  }
+  const messageIndex = terminalOutput.length
+  events.push(
+    { type: "response.output_item.added", sequence_number: sequenceNumber++, output_index: messageIndex, item: { id: messageDone.id, type: "message", role: "assistant", status: "in_progress", content: [] } },
+    { type: "response.content_part.added", sequence_number: sequenceNumber++, output_index: messageIndex, item_id: messageDone.id, content_index: 0, part: { type: "output_text", text: "", annotations: [] } },
+    { type: "response.output_text.delta", sequence_number: sequenceNumber++, output_index: messageIndex, item_id: messageDone.id, content_index: 0, delta: "Done" },
+    { type: "response.output_text.done", sequence_number: sequenceNumber++, output_index: messageIndex, item_id: messageDone.id, content_index: 0, text: "Done" },
+    { type: "response.content_part.done", sequence_number: sequenceNumber++, output_index: messageIndex, item_id: messageDone.id, content_index: 0, part: { type: "output_text", text: "Done", annotations: [] } },
+    { type: "response.output_item.done", sequence_number: sequenceNumber++, output_index: messageIndex, item: messageDone },
+    {
+      type: "response.completed",
+      sequence_number: sequenceNumber++,
+      response: {
+        status: "completed",
+        output: [...terminalOutput, messageDone],
+        server_side_tool_usage: { SERVER_SIDE_TOOL_WEB_SEARCH: 1 },
+        usage: { input_tokens: 12, output_tokens: 4 },
+      },
+    },
+  )
+
+  const chunks = decodeResponsesEvents(events, {
+    functionNames: [],
+    serverTools: ["web_search"],
+  })
+  assert.deepEqual(chunks.filter((chunk) => (
+    (chunk.type === "block-start" && chunk.blockType === "reasoning") ||
+    chunk.type === "reasoning-delta" ||
+    (chunk.type === "block-end" && chunk.block.type === "reasoning")
+  )), [
+    { type: "block-start", index: 0, blockType: "reasoning" },
+    { type: "reasoning-delta", index: 0, text: "One visible thought." },
+    { type: "block-end", index: 0, block: { type: "reasoning", text: "One visible thought." } },
+  ])
+  assert.deepEqual(chunks.at(-1), { type: "finish", reason: { kind: "stop" } })
 })
 
 test("reasoning item id reuse remains strict and Search-backed", () => {
@@ -1477,6 +2020,15 @@ test("X Search also proves consecutive closed empty reasoning-id reuse", () => {
 
   const chunks = decodeResponsesEvents(events, { functionNames: [], serverTools: ["x_search"] })
   assert.equal(chunks.some((chunk) => chunk.type.includes("tool-call")), false)
+  assert.deepEqual(chunks.filter((chunk) => (
+    (chunk.type === "block-start" && chunk.blockType === "reasoning") ||
+    chunk.type === "reasoning-delta" ||
+    (chunk.type === "block-end" && chunk.block.type === "reasoning")
+  )), [
+    { type: "block-start", index: 0, blockType: "reasoning" },
+    { type: "reasoning-delta", index: 0, text: "X reasoning." },
+    { type: "block-end", index: 0, block: { type: "reasoning", text: "X reasoning." } },
+  ])
   assert.deepEqual(chunks.at(-1), { type: "finish", reason: { kind: "stop" } })
   assert.equal("replayState" in chunks.at(-1), false)
 })
