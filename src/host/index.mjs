@@ -4,6 +4,10 @@ import { randomUUID } from "node:crypto"
 import packageJson from "../../package.json" with { type: "json" }
 
 import { attributionHeaders } from "@deepseek-ai/dsh-llm"
+import {
+  installSettingsSection,
+  settingsNamespace,
+} from "@deepseek-ai/dsh-settings"
 import Schema from "@deepseek-ai/schemastery"
 
 import {
@@ -27,6 +31,7 @@ import { createRuntimeDiagnostics } from "../internal/runtime-diagnostics.mjs"
 
 export const name = "llm-grok"
 export const inject = ["llm"]
+const SETTINGS_NAMESPACE = settingsNamespace(name)
 
 export const Config = Schema.object({
   webSearch: Schema.boolean().default(false).description("Allow xAI Web Search for regular Grok requests"),
@@ -39,10 +44,7 @@ export function apply(ctx, config) {
     throw new TypeError("dsh-grok-provider supports macOS and Windows")
   }
 
-  const searchPolicy = Object.freeze({
-    webSearch: config.webSearch,
-    xSearch: config.xSearch,
-  })
+  let currentConfig = () => config
 
   const homeDir = os.homedir()
   let refreshOfficialCredential
@@ -72,9 +74,21 @@ export function apply(ctx, config) {
     createAdapter: ({ getGeneration }) => createGrokAdapter({
       getGeneration,
       getAttachmentStore: () => ctx.get("attachments"),
+      getSearchPolicy: () => {
+        const current = currentConfig()
+        return {
+          webSearch: current.webSearch,
+          xSearch: current.xSearch,
+        }
+      },
       mapError: mapLlmError,
-      searchPolicy,
     }),
+  })
+  installSettingsSection(ctx, SETTINGS_NAMESPACE, Config, config, {
+    setSource(source) {
+      currentConfig = source
+    },
+    onChange() {},
   })
   const authController = createAuthController({
     registry: runtime.auth,

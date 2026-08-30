@@ -1,8 +1,8 @@
 # ADR-0010：默认关闭且独立配置的 Web/X Search
 
-- 状态：已接受，已在 `0.1.9` 正式发布
+- 状态：已接受；协议能力已在 `0.1.9` 正式发布，`0.1.10` 修正设置集成缺口
 - 日期：2026-08-30
-- 适用版本：`0.1.9`
+- 适用版本：`0.1.9` 协议能力，`0.1.10` 可用设置链路
 - 取代：无
 
 ## 背景
@@ -25,6 +25,8 @@ Provider Host Config 增加两个独立 boolean：
 ```
 
 两项默认关闭。现有 Grok Build 设置页通过 Harness `settingsScope` 写入同一个 `llm-grok` 配置 namespace；不新增 Search RPC，不使用 `localStorage`，不维护第二份 renderer 状态。
+
+Host 必须通过 `@deepseek-ai/dsh-settings` 的 canonical `installSettingsSection` 注册同名 namespace。解析顺序为 schema 默认值、组合 entry config、持久化用户层；settings service 缺失或重载时回退组合配置。动态设置停留在 Adapter seam：Adapter 在每次调用开始、首次模型目录异步等待前读取一次，底层 request compiler 继续只接收该调用的冻结策略。
 
 设置页必须就近说明远端检索、额外用量、citation 与 prompt injection 风险。插件不会打开、下载或预览 citation，也不会把 Search 结果直接执行为命令或文件操作。
 
@@ -77,6 +79,12 @@ request 与 receipt 均复制并冻结。decoder 不从 Config、route 或原始
 ### 5. 并发与错误
 
 每个 call 持有独立、冻结的 receipt 与 decoder FSM。设置更新只影响后续创建的 call，不改变在途请求。
+
+## `0.1.9` 发布后修正
+
+已发布的 `0.1.9` 完成了 Search request/response 协议和设置页面，但 Host 漏掉 `llm-grok` namespace 注册，并在插件启动时过早冻结组合配置。真实 Harness 因此把 settings scope 派生为 `unavailable`，两个开关保持禁用；即使只解除 UI 禁用，后续设置写入也不会进入请求。
+
+`0.1.10` 不改变 Search wire 或响应 allowlist，只补齐 canonical Host 注册和 Adapter 调用快照。回归测试必须同时证明：真实 SettingsProvider 可描述唯一 namespace、安全默认值与 `applies:"live"`；设置更新影响下一调用；更新前已准备的调用保留旧策略；无 settings service 时组合配置仍有效；插件卸载后 namespace 被清理。
 
 - 不支持的精确模型能力：`UNSUPPORTED_CONTENT`。
 - 协议、receipt、未知事件、未声明 function 或不闭合 lifecycle：`INVALID_RESPONSE`。

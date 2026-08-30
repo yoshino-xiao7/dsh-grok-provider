@@ -2,7 +2,7 @@
 
 ## 0. 当前状态
 
-当前可用 npm 稳定基线为 `dsh-grok-provider@0.1.9`；其 release commit 为 `a0af7b74882546dc3d9477b8f6c1494935e6bfb4`，不可变 tag 为 `v0.1.9`，CI run `33295408650` 全绿。唯一 tarball 含 69 个文件、190,049 bytes，unpacked size 为 603,475 bytes，SHA-256 为 `78c73c95ea71d66cad6e6146fed41c281f1c8b29f60353e3f20247ec23833210`，npm SRI 为 `sha512-GeXQg3qedCGZz9D5MMaHd8Afe5Bn0nxjG+PQmKOB2AxB3m6IiGA07PMD77dEAOJVbAzKk0SnxAOKTZMTQFtuYg==`；Trusted Publisher run `33295761336` 已完成，Registry、GitHub Release 与本地制品逐字节一致，npm `latest=0.1.9`。精确 Registry 安装的 Host/client import/export smoke 通过；精确安装审计图汇总 71 个已验证签名与 3 个 attestations，本包 attestations endpoint 返回 2 项，SLSA provenance 精确绑定 `v0.1.9` tag、release workflow、release commit 与 release run。sidebar quota 维护版 `0.1.8` 曾发布后撤回；npm Registry 已永久消耗该版本号，禁止把 Search 制品重新标记或发布为 `0.1.8`。
+当前可用 npm 稳定基线为 `dsh-grok-provider@0.1.9`；其 release commit 为 `a0af7b74882546dc3d9477b8f6c1494935e6bfb4`，不可变 tag 为 `v0.1.9`，CI run `33295408650` 全绿。唯一 tarball 含 69 个文件、190,049 bytes，unpacked size 为 603,475 bytes，SHA-256 为 `78c73c95ea71d66cad6e6146fed41c281f1c8b29f60353e3f20247ec23833210`，npm SRI 为 `sha512-GeXQg3qedCGZz9D5MMaHd8Afe5Bn0nxjG+PQmKOB2AxB3m6IiGA07PMD77dEAOJVbAzKk0SnxAOKTZMTQFtuYg==`；Trusted Publisher run `33295761336` 已完成，Registry、GitHub Release 与本地制品逐字节一致，npm `latest=0.1.9`。精确 Registry 安装的 Host/client import/export smoke 通过；精确安装审计图汇总 71 个已验证签名与 3 个 attestations，本包 attestations endpoint 返回 2 项，SLSA provenance 精确绑定 `v0.1.9` tag、release workflow、release commit 与 release run。sidebar quota 维护版 `0.1.8` 曾发布后撤回；npm Registry 已永久消耗该版本号，禁止把 Search 制品重新标记或发布为 `0.1.8`。`0.1.9` 的 Search 开关因 Host settings namespace 遗漏而不可用；当前 `0.1.10` 在 `yukiryou/v0.1.10-search-settings-fix` 修复 canonical settings namespace 与按调用快照，不覆盖或重发 `0.1.9`，也不改变 Search wire、支持模型或认证边界。
 
 首个 `dsh-grok-provider@0.1.0` 于 2026-08-26 从 GitHub Release 中唯一的候选 tarball 发布到 npm；Registry 回读的 SHA-512、重新下载文件的 SHA-256 和 GitHub Release 产物完全一致，并生成 npm provenance attestation。后续稳定版沿用由该流程建立的不可变制品与回读原则。
 
@@ -66,7 +66,7 @@ CHANGELOG.md
 
 `docs/` 与根目录中相互链接的中文默认页 `README.md`、英文版 `README.en.md`、`CONTRIBUTING.md`、`SECURITY.md` 和 `THIRD_PARTY_NOTICES.md` 一起进入 tarball，使安装后的架构、安全边界、第三方许可、社区维护方式和发布门禁链接保持可读。发布前的证据文档只记录脱敏事实、hash 与固定公开地址，不得包含 token、真实 prompt/响应或用户身份数据。
 
-目标为零普通 runtime dependencies。DSH peer 精确使用 `0.1.1-rc.2`；Cordis `4.0.1`、Schemastery `3.18.1` 由目标桌面 Runtime snapshot 满足。`@deepseek-ai/dsh-subprocess`、settings、commands、connection 和 client UI/locale 等 profile-specific peer 通过 `peerDependenciesMeta.optional: true` 标注，并有 Web/TUI/headless 缺失-peer 测试。插件不打包本地 subprocess 实现。
+目标为零普通 runtime dependencies。DSH peer 精确使用 `0.1.1-rc.2`；Cordis `4.0.1`、Schemastery `3.18.1` 由目标桌面 Runtime snapshot 满足。`@deepseek-ai/dsh-settings` 是 Host Search 设置链路的直接、非 optional peer；`@deepseek-ai/dsh-subprocess`、commands、connection 和 client UI/locale 等 profile-specific peer 保持 optional，并有 Web/TUI/headless 缺失-peer测试。插件不打包 settings provider 或本地 subprocess 实现。
 
 `package.json` 同时固定公开 Registry：
 
@@ -131,7 +131,7 @@ patch 路径必须为不含 `..`、绝对路径、反斜线或 NUL 的相对 `.y
 
 ## 7. Git 与版本
 
-- `0.1.0` 历史开发分支为 `yukiryou/v0.1.0`；`0.1.9` 代码分支 `yukiryou/v0.1.9-search` 与发布证据分支 `yukiryou/v0.1.9-release-evidence` 已分别经 PR #20、#21 合入受保护 `yukiryou/main`，最终 release commit 为 `a0af7b74882546dc3d9477b8f6c1494935e6bfb4`。`0.1.8` 已由撤回的 sidebar quota 发布消耗，不得复用。
+- `0.1.0` 历史开发分支为 `yukiryou/v0.1.0`；`0.1.9` 代码分支 `yukiryou/v0.1.9-search` 与发布证据分支 `yukiryou/v0.1.9-release-evidence` 已分别经 PR #20、#21 合入受保护 `yukiryou/main`，最终 release commit 为 `a0af7b74882546dc3d9477b8f6c1494935e6bfb4`。`0.1.8` 已由撤回的 sidebar quota 发布消耗，不得复用；当前候选分支为 `yukiryou/v0.1.10-search-settings-fix`（目标版本 `0.1.10`），已发布 `0.1.9` 不可覆盖或重发。
 - `package.json`、CHANGELOG、release notes、Git tag 和 tarball 必须使用同一个精确候选版本。
 - 发布提交必须干净且可复现。
 - tag 使用 `v<major>.<minor>.<patch>`，只在发布提交确定后创建。

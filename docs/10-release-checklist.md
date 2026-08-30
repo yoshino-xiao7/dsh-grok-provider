@@ -173,3 +173,18 @@ English summary: every release must close documentation, security, tests, determ
 - [x] 发布证据 PR [#21](https://github.com/yoshino-xiao7/dsh-grok-provider/pull/21) 合并后的最终 release commit 为 `a0af7b74882546dc3d9477b8f6c1494935e6bfb4`，其 CI run [33295408650](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33295408650) 全绿。从该 commit 唯一生成的 `dsh-grok-provider-0.1.9.tgz` 含 69 个文件、190,049 bytes，unpacked size 为 603,475 bytes，SHA-256 为 `78c73c95ea71d66cad6e6146fed41c281f1c8b29f60353e3f20247ec23833210`，SRI 为 `sha512-GeXQg3qedCGZz9D5MMaHd8Afe5Bn0nxjG+PQmKOB2AxB3m6IiGA07PMD77dEAOJVbAzKk0SnxAOKTZMTQFtuYg==`；预验收 tarball 未冒充或替代最终制品。
 - [x] 仓库所有者在完整提交与唯一制品证据后明确授权发布精确 `dsh-grok-provider@0.1.9`；任何既有 `0.1.8` 授权均未复用。
 - [x] 不可变 `v0.1.9`、唯一 GitHub Release asset 与 Trusted Publisher run [33295761336](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33295761336) 已完成；npm `latest=0.1.9`，Registry、Release 与本地 tarball 逐字节一致。精确 Registry 安装的 Host/client import/export smoke 通过；精确安装审计图汇总 71 个已验证签名与 3 个 attestations，本包 attestations endpoint 返回 2 项，SLSA provenance 精确绑定 tag、workflow、release commit 与 release run。
+- [x] 发布后真实页面验证发现功能验收缺口：Host 未注册 `llm-grok`，两个 Search 开关失败关闭为 `unavailable`。该缺陷不覆盖或重发 `0.1.9`，使用递增稳定版 `0.1.10` 修复。
+
+## `0.1.10` Search settings 集成修复门禁
+
+- [x] 从 `origin/yukiryou/main@a0af7b74882546dc3d9477b8f6c1494935e6bfb4` 创建隔离分支 `yukiryou/v0.1.10-search-settings-fix`；原工作树两个未跟踪文件保持未修改。
+- [x] 建立快速红测：真实 Host namespace 缺失、设置更新未进入请求、Adapter 两次调用都无 Search tools；当前实现修复后三项转绿。
+- [x] 使用 canonical `@deepseek-ai/dsh-settings@0.1.1-rc.2` 注册 `llm-grok`，并在 Adapter 调用开始、首次 await 前冻结策略；compiler/receipt 静态不变量不变。
+- [x] 真实 SettingsProvider + LLM Runtime 覆盖安全默认值、`applies:"live"`、组合回退、用户更新、prepared-call 隔离和 namespace 生命周期；client ready/write 与 unavailable fail-closed 测试同时保留。
+- [x] 精确 Node `24.19.0` 全量测试通过：224 项、222 pass、0 fail、2 项 Windows-only skip；生产依赖审计为 0 漏洞。收尾后的 dry-run pack 为 70 个文件；生成 bundle 一致、`git diff --check` 通过，秘密模式扫描仅命中显式测试 canary `Bearer fixture-access-token`。最终字节数与摘要等待合并后的 release commit 冻结。
+- [x] 从预验收候选 tarball 完成隔离 profile 安装：实际 `settings.describe` 包含可写、`applies:"live"` 的唯一 `llm-grok`；浏览器页面两个开关 enabled 且 unavailable 提示消失。浏览器写入由服务端 revision 递增确认并恢复默认关闭；延迟目录与 Host/Adapter fixture 回归分别证明旧调用保持快照、后续请求工具随设置变化。该验收未访问真实 xAI。
+- [x] 候选 head `95afb22aa6ba6e881594efd3e533c66e51d3a3ac` 的 push CI run [33298737955](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33298737955) 与 PR [#23](https://github.com/yoshino-xiao7/dsh-grok-provider/pull/23) CI run [33298739236](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33298739236) 均完成 macOS 14 / Windows 2022 全绿。
+- [ ] 代码 PR #23 合入受保护 `yukiryou/main`，并确认 main merge commit CI 全绿。
+- [ ] 版本分支合并后，从最终 release commit 唯一生成 `dsh-grok-provider-0.1.10.tgz`，记录文件数、大小、SHA-256 与 SRI；预验收 tarball 不得进入 Release。
+- [ ] 完整提交和唯一制品证据形成后，另行取得精确 `dsh-grok-provider@0.1.10` 发布授权。
+- [ ] 不可变 tag、唯一 GitHub Release asset、Trusted Publisher、npm `latest`、Registry 字节、签名与 provenance 回读全部关闭。

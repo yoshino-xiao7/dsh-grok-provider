@@ -11,14 +11,23 @@ export class GrokAdapterError extends Error {
 export function createGrokAdapter({
   getGeneration,
   getAttachmentStore = () => undefined,
-  searchPolicy,
+  getSearchPolicy = () => undefined,
   mapError = (error) => error,
 }) {
   if (typeof getGeneration !== "function") {
     throw new TypeError("A Grok adapter generation source is required")
   }
   if (typeof mapError !== "function") throw new TypeError("Invalid Grok adapter error mapper")
-  const callProtocol = createResponsesCallProtocol({ getAttachmentStore, searchPolicy })
+  if (typeof getAttachmentStore !== "function") {
+    throw new TypeError("Invalid Grok attachment store source")
+  }
+  if (typeof getSearchPolicy !== "function") {
+    throw new TypeError("Invalid Grok Search policy source")
+  }
+  const captureCallProtocol = () => createResponsesCallProtocol({
+    getAttachmentStore,
+    searchPolicy: getSearchPolicy(),
+  })
 
   const captureGeneration = () => {
     const generation = getGeneration()
@@ -75,6 +84,7 @@ export function createGrokAdapter({
     async prepareCall(provider, model, signal) {
       try {
         const generation = captureGeneration()
+        const callProtocol = captureCallProtocol()
         const route = await resolveRouteWithGeneration(generation, provider, model, signal)
         return Object.freeze({
           model: route.resolvedModelInfo,
@@ -97,6 +107,7 @@ export function createGrokAdapter({
     stream(options) {
       let requestPlan
       try {
+        const callProtocol = captureCallProtocol()
         requestPlan = callProtocol.prepare(options)
         return streamWithGeneration(captureGeneration(), undefined, requestPlan, mapError)
       } catch (error) {

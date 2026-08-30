@@ -437,7 +437,7 @@ test("the settings page gives bilingual near-use disclosure for both remote Sear
     const fixture = await renderSettingsPage({
       locale: expectations.locale,
       status: { generation: 1, available: false, driver: true },
-      diagnostics: { pluginVersion: "0.1.9", cli: { state: "ready", version: "1.0.5" } },
+      diagnostics: { pluginVersion: "0.1.10", cli: { state: "ready", version: "1.0.5" } },
     })
     const content = textContent(fixture.tree)
     for (const assertion of expectations.assertions) assert.match(content, assertion)
@@ -465,7 +465,7 @@ test("Web Search and X Search persist independently and a failed write preserves
         return { kind: "status", status: { generation: 1, available: false, driver: true } }
       }
       if (endpoint === "diagnostics") {
-        return { kind: "diagnostics", diagnostics: { pluginVersion: "0.1.9", cli: { state: "ready", version: "1.0.5" } } }
+        return { kind: "diagnostics", diagnostics: { pluginVersion: "0.1.10", cli: { state: "ready", version: "1.0.5" } } }
       }
       if (endpoint === "dashboard") return { kind: "dashboard", dashboard: undefined }
       throw new Error(`Unexpected Grok auth RPC endpoint: ${endpoint}`)
@@ -522,7 +522,7 @@ test("Search controls fail closed while settings are loading, unavailable, or re
     const fixture = await renderSettingsPage({
       locale: "en",
       status: { generation: 1, available: false, driver: true },
-      diagnostics: { pluginVersion: "0.1.9", cli: { state: "ready", version: "1.0.5" } },
+      diagnostics: { pluginVersion: "0.1.10", cli: { state: "ready", version: "1.0.5" } },
       searchSnapshot: fixtureCase.snapshot,
     })
     const switches = findElements(fixture.tree, (node) => node.props.role === "switch")

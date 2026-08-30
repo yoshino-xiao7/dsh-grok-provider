@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.10 - 2026-08-30
+
+- Register the `llm-grok` Host settings namespace through Harness's canonical settings module so the Web Search and X Search controls are writable instead of permanently `unavailable`.
+- Resolve Search settings from schema defaults, composition config, and the persisted user layer, while retaining the composition config when no settings provider is mounted.
+- Snapshot the current Search policy once at each adapter-call boundary before model discovery awaits; later calls observe committed setting changes while prepared and in-flight calls keep their original policy.
+- Add real `SettingsProvider` integration coverage for namespace defaults, lifecycle cleanup, persisted updates, composition fallback, and prepared-call isolation, plus a deferred-discovery adapter regression.
+- Keep authentication, credentials, endpoints, Search protocol allowlists, citation handling, image input, and platform support unchanged.
+
 ## 0.1.9 - 2026-08-30
 
 - Add independent, default-off Web Search and X Search Provider settings for exact `grok-4.6`; keep every other dynamically discovered model Search-disabled until the same fixed-Proxy evidence exists.
@@ -8,6 +16,7 @@
 - Decode the fixed Proxy's standard Web Search lifecycle and its Grok-Build-specific four-name X Search `custom_tool_call` lifecycle as server-executed activity that emits no Harness tool-call chunks; observing either category suppresses encrypted reasoning replay for that response.
 - Preserve inline citation Markdown as assistant text while bounding and discarding structured citation metadata; never follow, preview, or download citation URLs.
 - Add bilingual Search risk disclosures to the existing Grok Build settings page through Harness `settingsScope`, without a second configuration RPC, renderer-local persistence, a production dependency, a new endpoint, or a new authentication mode.
+- Known issue: the published Host omitted the matching `llm-grok` settings registration, leaving both user-facing Search controls disabled. `0.1.10` repairs this integration and the missing live-setting consumption path.
 
 ## 0.1.8 - 2026-08-30 (withdrawn)
 
