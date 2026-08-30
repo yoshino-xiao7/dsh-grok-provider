@@ -1,8 +1,8 @@
 # ADR-0010：默认关闭且独立配置的 Web/X Search
 
-- 状态：已接受；`0.1.9`–`0.1.11` 历史已发布，`1.0.0` completed `open_page` 与多段 Search-backed reasoning 增量为未发布候选
+- 状态：已接受；`0.1.9`–`1.0.0` 均已发布
 - 日期：2026-08-30
-- 适用版本：`0.1.9` 协议能力，`0.1.10` 可用设置链路，`0.1.11` 首次 reasoning 响应兼容，`1.0.0` 补充响应兼容候选
+- 适用版本：`0.1.9` 协议能力，`0.1.10` 可用设置链路，`0.1.11` 首次 reasoning 响应兼容，`1.0.0` 补充响应兼容
 - 取代：无
 
 ## 背景
@@ -100,7 +100,7 @@ request 与 receipt 均复制并冻结。decoder 不从 Config、route 或原始
 
 脱敏真实 probe 对最终目标形状只发出一次 Responses POST，生产 decoder 接受 68 个事件、34 个 summary delta 与一个 finish；它没有产生 raw delta，因此只证明 summary/Search 续跑路径。raw reasoning 的接受域由官方事件契约和失败关闭 fixture 覆盖，不能描述为真机已验证。
 
-## `1.0.0` Search 响应兼容增量（候选）
+## `1.0.0` Search 响应兼容增量（已发布）
 
 `0.1.11` 发布后的真实 High Effort Web/X 使用继续暴露两个 fixed Proxy 合法形状：completed `web_search_call` 的 action 可能是 `open_page`；同一已闭合 reasoning ID 在一次 completed Search 证明后，可能不止一次以新的 output index 继续出现严格空占位。`0.1.11` 的“一次复用”与仅 `search` action allowlist 因此仍会产生 `INVALID_RESPONSE`。
 

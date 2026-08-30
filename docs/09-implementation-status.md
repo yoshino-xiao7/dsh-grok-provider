@@ -1,12 +1,11 @@
 # 当前实现与发布状态
 
-`1.0.0` Search 响应协议修复候选已完成版本更新、本地自动化、脱敏真实协议验证、代码 PR #28 与 main 双平台 CI；当前可安装、受支持的稳定版和 npm `latest` 仍是 `0.1.11`。候选尚未完成发布证据 final CI、最终 release commit、唯一制品冻结、精确制品授权或发布回读。
+`1.0.0` Search 响应协议修复已正式发布；版本、本地自动化、脱敏真实协议验证、代码 PR #28、发布证据 PR #29、双平台 final CI、唯一制品、精确授权及发布回读均已完成。
 
 状态日期：2026-08-30
-当前 npm 发布线：`dsh-grok-provider@0.1.11`
-当前源码发布版：`dsh-grok-provider@0.1.11`
-当前候选目标：`dsh-grok-provider@1.0.0`（未发布）
-发布基线：`yukiryou/main@2e5c6dbc8bb83377a4db4d8e31452b3ce96500c5`
+当前 npm 发布线：`dsh-grok-provider@1.0.0`
+当前源码发布版：`dsh-grok-provider@1.0.0`
+发布基线：`yukiryou/main@c6548199582b122f1d285422eabea0205eaf602f`
 内容类型路线：已冻结于 [能力路线图](./11-capability-roadmap.md)；`1.0.0` 继续修复 Search stream 兼容，不新增内容类型、模型、认证方式、endpoint 或本地工具。
 
 ## 已实现
@@ -23,7 +22,7 @@
 - `0.1.7` 维护：独立只读 diagnostics RPC 投影插件版本与官方 CLI 的 `ready|missing|invalid|unavailable` 闭合集合；登录失败只投影白名单 reason 并及时结束 spinner。设置导航在 Harness 当前无原生 icon slot 时，以精确标签匹配、冲突失败关闭和可回收 lifecycle 应用 MIT 许可的 `IconThinkOutline16` 几何。
 - 已发布 `0.1.10` Search 能力与可写设置链路：Web/X 默认关闭且可独立编译；request/receipt 同编译、调用级设置快照、精确 route、共享工具/字节预算、后台 purpose 关闭、Web 标准 lifecycle、四项 X custom-tool、function membership、citation 有界丢弃与 replay 抑制均失败关闭。
 - 已发布的 `0.1.11` reasoning 兼容：允许已闭合 reasoning ID 以严格空项再出现一次，接受闭合空 reasoning，支持官方 raw `reasoning_text` 标准生命周期；raw 与 summary 互斥，raw replay 只携带 encrypted content 与空 summary。
-- `1.0.0` 候选：首次复用前仍要求一个完成的 Web/X server Search；一旦该 ID 已被 Search-backed，允许后续多个严格空占位 lifecycle，每个都必须独立 `output_item.done`。visible summary/content 与 summary/raw lifecycle 必须为空，但允许有界 opaque `encrypted_content`。完成态 Web Search `open_page` 只接受精确有界 type/URL，并要求 streamed/final action 一致；URL 校验后丢弃，不产生本地工具调用或网络访问。
+- 已发布 `1.0.0`：首次复用前仍要求一个完成的 Web/X server Search；一旦该 ID 已被 Search-backed，允许后续多个严格空占位 lifecycle，每个都必须独立 `output_item.done`。完成态 Web Search `open_page` 只接受精确有界 type/URL，并要求 streamed/final action 一致；URL 校验后丢弃，不产生本地工具调用或网络访问。
 
 ## 已验证
 
@@ -179,13 +178,13 @@ Windows x64 真机不再是 `0.1.0` 预发布阻断项。首次发布后必须�
 - GitHub Release 与 Trusted Publisher run [`33303631312`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33303631312) 已完成；npm `latest=0.1.11`，Registry、Release 与本地 tarball 逐字节一致。Registry 精确版本的隔离安装及 Host/client import/export smoke 通过。
 - `npm audit signatures` 确认隔离安装图中 9 个包具有已验证 Registry 签名、3 个包具有已验证 attestations；本包公开 npm metadata 包含 1 个 Registry signature、2 个 attestations。SLSA provenance 精确绑定 `release.yml`、`v0.1.11`、release commit 与 Trusted Publisher run。网络可达 Windows 真机外部浏览器弹出仍未完成验收，发布不改变该边界。
 
-## `1.0.0` 候选状态
+## `1.0.0` 发布状态
 
 - 根因已扩展为两个真实上游形状：一个完成的 Search 之后，同一 reasoning ID 不只可能复用一次，而可能继续出现为多个空占位；完成的 `web_search_call` 也可能以 `open_page` 而非 `search` 结束。`0.1.11` 对这两种形状都会把流映射为 `INVALID_RESPONSE`。
 - 候选继续失败关闭：原始 reasoning 必须先闭合，首次复用前必须有完成的 server Search；每次复用都必须严格空并收到独立 `response.output_item.done`。`response.incomplete` 不能吞掉尚未闭合的复用段；全部复用段闭合后，后续 max-token 终态仍有效。非空 summary/raw、跨类型、未知 terminal 字段以及 Search item/response container 的 accessor-backed 字段均拒绝。有界 opaque `encrypted_content` 被允许但不会暴露为可见 reasoning。
 - 完成态 `open_page` 只允许精确 `{ type: "open_page", url }` 及既有边界内的 URL；streamed 与 final action 的 type/URL 必须相同。Provider 校验后丢弃该 URL，不打开、不预览、不下载、不 replay。
 - 最终源码的脱敏真实账号复验已完成：原始 Web/X 协议各完成 1 次、各 64 events，并观察到对应 Search；生产 adapter 共完成 5 次 Responses，direct Web/X 均为 `stop`，Harness 同名 `x_search` 三轮依次为 `tool-calls`、`tool-calls`、`stop`，前两轮各 1 次本地调用。验证记录没有结果、URL、prompt、身份或凭据。
-- 上述只证明候选协议方向能完成三类真实流程，不证明 `1.0.0` 已发布，也不替代双平台 CI、OAuth 或 Windows 真机外部浏览器验收。
+- 上述真实协议复验不替代 OAuth 或 Windows 真机外部浏览器验收。
 - 已完成：manifest/lock 精确 `1.0.0`；聚焦 codec 40/40；Node 24 全量 245 项、243 pass、0 fail、2 项平台跳过；生产依赖审计 0 漏洞；确定性 build/bundle、72 项 dry-run pack、秘密模式扫描与 `git diff --check`。
 - 代码 PR #28 已合入受保护 `yukiryou/main`，merge commit 为 `7a6364dd58f3c7e9e1ad68a3d0197a14254bcb8c`；main CI run [`33308371009`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33308371009) 的 macOS 14 / Windows 2022 均通过。
-- 待完成：发布证据 PR 与其 final CI、最终 release commit、唯一 tarball 与摘要/SRI、隔离安装/exports smoke、仓库所有者对该精确制品的明确授权、tag/GitHub Release/Trusted Publisher，以及 Registry 字节/signature/attestation/provenance 回读。
+- 发布证据 PR #29 形成 release commit `c6548199582b122f1d285422eabea0205eaf602f`；final CI run `33308603394` 双平台全绿。唯一 72 文件 tarball 为 226,704 bytes packed、715,014 bytes unpacked，SHA-1 `50e5d898dba241d1e19def7705db216e3060b892`、SHA-256 `30cd83dad77f7d2611126b3c4737c8fabffeae79f385fa623e61dcecfe39f5e2`、SRI `sha512-WL2f6Kfg5yT5nNf1p4//mLSajCnZttL/pDR3BISrFgSGtZd9DEJlnibq08ETz503n1wHIdCBcU/ICMPG9K4vOw==`；tag、Trusted Publisher run `33309083806` attempt 1、npm `latest=1.0.0`、字节一致、隔离安装、signature/attestations 与 provenance 回读均完成。Windows 真机浏览器弹出仍未验收。

@@ -204,19 +204,19 @@ English summary: every release must close documentation, security, tests, determ
 - [x] Annotated tag object `353bcd3717d4440ab20a2b05a5e9d51eef22fa7f` peel 到 release commit；不可变 `v0.1.11`、唯一 GitHub Release asset 与 Trusted Publisher run [`33303631312`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33303631312) 已完成。npm `latest=0.1.11`，Registry、Release 与本地 tarball 逐字节一致；`npm audit signatures` 确认隔离安装图中 9 个包具有已验证 Registry 签名、3 个包具有已验证 attestations，本包公开 npm metadata 包含 1 个 Registry signature、2 个 attestations，SLSA provenance 精确绑定 `release.yml`、`v0.1.11`、release commit 与该 run。
 - [ ] 网络可达 Windows 真机的官方 CLI 外部浏览器弹出仍未完成验收；该独立边界不是 `0.1.11` 发布门禁，完成前不得声称已修复或已验证。
 
-## `1.0.0` Search 响应协议修复候选门禁
+## `1.0.0` Search 响应协议修复发布门禁
 
-- [x] 版本目标明确为新的稳定版 `1.0.0`；不得覆盖或重发已发布 `0.1.11`，npm `latest` 在 Registry 正式回读前继续保持 `0.1.11`。
+- [x] 新稳定版 `1.0.0` 已发布；不得覆盖或重发已发布 `0.1.11`，npm Registry 回读为 `latest=1.0.0`。
 - [x] 根因范围冻结：一个完成的 Web/X server Search 后，同一 reasoning ID 可能继续出现为多个空占位 lifecycle；完成态 Web Search 可能返回精确 `open_page` action。范围不包含新认证方式、endpoint、模型、内容类型、图片生成或本地 URL 访问。
 - [x] 安全契约冻结：首次复用前原 reasoning 必须闭合并有完成 Search；之后每次复用都必须 visible summary/content 与 summary/raw lifecycle 为空，并有独立 `response.output_item.done`。有界 opaque `encrypted_content` 允许存在；`response.incomplete` 不能吞掉 open 复用段，但复用段全部闭合后的 max-token 终态有效；非空、跨类型、未知 terminal 或 accessor-backed Search item/response container 字段继续失败关闭。
 - [x] `open_page` 契约冻结：只接受完成态精确 `type + url`，streamed/final action type 与 URL 必须一致；校验后丢弃 URL，不访问、不预览、不下载、不 replay，也不投影为 Harness 本地工具。
 - [x] 最终源码的脱敏真实账号验证完成且只保留计数/终态：原始 Web/X 协议各完成 1 次、各 64 events，并观察到对应 Search；生产 adapter 共完成 5 次 Responses，direct Web/X 均为 `stop`，Harness 同名 `x_search` 三轮依次为 `tool-calls`、`tool-calls`、`stop`，前两轮各 1 次本地调用。未记录结果、URL、prompt、身份或凭据。
-- [x] `package.json` 与 lockfile 已更新到精确 `1.0.0`；发行物契约、中英文 README、CHANGELOG、安全策略、设计/状态/测试/发布文档和 `docs/releases/v1.0.0.md` 对同一候选事实保持一致。
+- [x] `package.json` 与 lockfile 已更新到精确 `1.0.0`；发行物契约、中英文 README、CHANGELOG、安全策略、设计/状态/测试/发布文档和 `docs/releases/v1.0.0.md` 对同一发布事实保持一致。
 - [x] 聚焦 codec 40/40 与完整 Node `24.19.0` 测试通过：共 245 项、243 pass、0 fail、2 项平台跳过；覆盖多次严格空复用、Web/X Search-backed 首次复用、opaque encrypted content、每次 `output_item.done`、open reuse + incomplete 拒绝、closed reuse + max-token 接受、非空/跨类型/terminal/accessor 拒绝，以及 `open_page` streamed/final 一致与边界错误。
-- [x] `npm audit --omit=dev` 为 0 漏洞；确定性 build 与生成 bundle 一致，`npm run pack:check` 为 72 项，秘密模式扫描和 `git diff --check` 通过。该 dry-run 尚不是冻结制品，大小与摘要不得作为发布授权依据。
+- [x] `npm audit --omit=dev` 为 0 漏洞；确定性 build 与生成 bundle 一致，`npm run pack:check` 为 72 项，秘密模式扫描和 `git diff --check` 通过。
 - [x] 代码 PR #28 已合入受保护 `yukiryou/main`，merge commit 为 `7a6364dd58f3c7e9e1ad68a3d0197a14254bcb8c`；main CI run [`33308371009`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33308371009) 的 macOS 14 / Windows 2022 均通过。该 CI 不代表网络可达真机浏览器弹出验收。
-- [ ] 发布证据 PR 合入后形成最终 release commit，并由该提交的 macOS 14 / Windows 2022 final CI 关闭最后代码门禁。
-- [ ] 从最终 release commit 只生成并冻结一份 `dsh-grok-provider-1.0.0.tgz`；记录 packed/unpacked size、文件数、SHA-256、base64 SHA-512/npm SRI、manifest/exports 与隔离安装 smoke，禁止 publish job 重建或重新 pack。
-- [ ] 在上述提交与唯一制品证据形成后，取得仓库所有者对该精确 `dsh-grok-provider@1.0.0` 制品的明确授权；现有开发请求及任何旧版本授权不得复用。
-- [ ] 创建精确 peel 到 release commit 的不可变 `v1.0.0` tag 和只含该 tarball 的 GitHub Release，由 Trusted Publisher 使用同一 SHA-512 发布；完成 npm `latest=1.0.0`、Registry/Release/本地逐字节一致、隔离安装、Registry signature、attestations 与 SLSA provenance 回读后，才把候选文档更新为正式发布事实。
+- [x] 发布证据 PR #29 合入形成最终 release commit `c6548199582b122f1d285422eabea0205eaf602f`；final CI run [`33308603394`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33308603394) 的 macOS 14 / Windows 2022 均通过。
+- [x] 从最终 release commit 冻结唯一 `dsh-grok-provider-1.0.0.tgz`：72 files、226,704 bytes packed、715,014 bytes unpacked；SHA-1 `50e5d898dba241d1e19def7705db216e3060b892`、SHA-256 `30cd83dad77f7d2611126b3c4737c8fabffeae79f385fa623e61dcecfe39f5e2`、npm SRI `sha512-WL2f6Kfg5yT5nNf1p4//mLSajCnZttL/pDR3BISrFgSGtZd9DEJlnibq08ETz503n1wHIdCBcU/ICMPG9K4vOw==`；Node 24 隔离安装的 Host `name`/`apply` 与 client `id` smoke 通过。
+- [x] 仓库所有者已明确授权上述精确 `dsh-grok-provider@1.0.0` 制品。
+- [x] Annotated tag object `192561cda1ac58cbc4077f0de8fa614dff9a5557` peel 到 release commit；不可变 `v1.0.0`、唯一 GitHub Release asset 与 Trusted Publisher run [`33309083806` attempt 1](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33309083806/attempts/1) 已完成。npm `latest=1.0.0`，冻结候选、Release 与 Registry tarball 逐字节一致；本包 1 个 Registry signature、2 个 attestations，安装图 11 个 signed packages、2 个 attested packages，以及精确绑定 tag/workflow/commit/run 的 SLSA provenance 均已回读。
 - [ ] 网络可达 Windows 真机的官方 CLI 外部浏览器弹出仍需独立验收；它不是此 Search codec 修复的发布门禁，但完成前不得声称 Windows 登录已修复或验证。
