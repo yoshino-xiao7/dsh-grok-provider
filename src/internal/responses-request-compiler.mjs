@@ -9,8 +9,15 @@ import {
 } from "./responses-request.mjs"
 
 const MAX_CONTENT_BLOCKS = 20_000
+const FUNCTION_NAME_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/
+const SEARCH_MODEL_ID = "grok-4.6"
 const CAPTURE_IMAGE_POLICY = Object.freeze({
   mediaTypes: Object.freeze(["image/jpeg", "image/png"]),
+})
+const EMPTY_SERVER_TOOLS = Object.freeze([])
+const DEFAULT_SEARCH_POLICY = Object.freeze({
+  webSearch: false,
+  xSearch: false,
 })
 const EMPTY_REQUEST_IMAGE = new Uint8Array(0)
 const TYPED_ARRAY_PROTOTYPE = Object.getPrototypeOf(Uint8Array.prototype)
@@ -25,6 +32,13 @@ export class UnsupportedImageInputError extends UnsupportedResponsesRequestError
   }
 }
 
+export class UnsupportedSearchCapabilityError extends UnsupportedResponsesRequestError {
+  constructor() {
+    super()
+    this.name = "UnsupportedSearchCapabilityError"
+  }
+}
+
 export class InvalidRequestImageProjectionError extends Error {
   constructor() {
     super("The attachment service returned an invalid request image projection")
@@ -32,13 +46,18 @@ export class InvalidRequestImageProjectionError extends Error {
   }
 }
 
-export function createResponsesRequestCompiler({ getAttachmentStore = () => undefined } = {}) {
+export function createResponsesRequestCompiler({
+  getAttachmentStore = () => undefined,
+  searchPolicy,
+} = {}) {
   if (typeof getAttachmentStore !== "function") {
     throw new TypeError("Invalid Grok attachment store source")
   }
+  const capturedSearchPolicy = captureSearchPolicy(searchPolicy)
 
   const prepare = (options) => {
     const captured = captureResponsesRequestOptions(options)
+    const serverTools = captureCallServerTools(options, capturedSearchPolicy)
     const signal = captured.signal
     signal?.throwIfAborted()
     const provider = captured.provider
@@ -50,7 +69,10 @@ export function createResponsesRequestCompiler({ getAttachmentStore = () => unde
       model,
       hasImage ? MAX_CONTENT_BLOCKS : undefined,
     )
-    const encodeRequest = createResponsesRequestEncoder({ ...captured, messages })
+    const encodeRequest = createResponsesRequestEncoder(
+      { ...captured, messages },
+      { serverTools },
+    )
 
     if (!hasImage) {
       const request = encodeRequest()
@@ -63,7 +85,8 @@ export function createResponsesRequestCompiler({ getAttachmentStore = () => unde
           if (!isMatchingRoute({ model, provider }, route)) {
             throw new UnsupportedResponsesRequestError()
           }
-          return request
+          validateSearchRoute(route, serverTools, model)
+          return createCompiledRequest(request)
         },
       })
     }
@@ -88,6 +111,7 @@ export function createResponsesRequestCompiler({ getAttachmentStore = () => unde
         provider,
         refs,
         route,
+        serverTools,
         signal,
       }),
     })
@@ -109,9 +133,11 @@ async function compileImageRequest({
   provider,
   refs: capturedRefs,
   route,
+  serverTools,
   signal,
 }) {
   if (!isMatchingRoute({ model, provider }, route)) throw new UnsupportedResponsesRequestError()
+  validateSearchRoute(route, serverTools, model)
   signal?.throwIfAborted()
   const policy = parseImagePolicy(route)
   for (const ref of capturedRefs.values()) validateImageRef(ref, policy)
@@ -147,7 +173,7 @@ async function compileImageRequest({
 
   while (true) {
     try {
-      return encodeRequest({ messages, requestImages })
+      return createCompiledRequest(encodeRequest({ messages, requestImages }))
     } catch (error) {
       if (!(error instanceof ResponsesRequestTooLargeError)) throw error
       const imageCount = collectImageBlocks(messages).length
@@ -158,6 +184,135 @@ async function compileImageRequest({
       })
     }
   }
+}
+
+function captureSearchPolicy(searchPolicy) {
+  if (searchPolicy === undefined) return DEFAULT_SEARCH_POLICY
+  if (!isPlainObject(searchPolicy)) throw new TypeError("Invalid Grok Search policy")
+  const keys = Reflect.ownKeys(searchPolicy)
+  if (
+    keys.length !== 2 ||
+    !keys.includes("webSearch") ||
+    !keys.includes("xSearch")
+  ) throw new TypeError("Invalid Grok Search policy")
+
+  const webSearch = readSearchPolicyProperty(searchPolicy, "webSearch")
+  const xSearch = readSearchPolicyProperty(searchPolicy, "xSearch")
+  if (typeof webSearch !== "boolean" || typeof xSearch !== "boolean") {
+    throw new TypeError("Invalid Grok Search policy")
+  }
+  return Object.freeze({ webSearch, xSearch })
+}
+
+function readSearchPolicyProperty(searchPolicy, key) {
+  const descriptor = Object.getOwnPropertyDescriptor(searchPolicy, key)
+  if (descriptor === undefined || !("value" in descriptor)) {
+    throw new TypeError("Invalid Grok Search policy")
+  }
+  return descriptor.value
+}
+
+function captureCallServerTools(options, searchPolicy) {
+  if (!searchPolicy.webSearch && !searchPolicy.xSearch) return EMPTY_SERVER_TOOLS
+  const purpose = readOwnRequestProperty(options, "purpose")
+  if (purpose !== undefined) {
+    if (typeof purpose !== "string" || purpose.length === 0) {
+      throw new UnsupportedResponsesRequestError()
+    }
+    return EMPTY_SERVER_TOOLS
+  }
+
+  return Object.freeze([
+    ...(searchPolicy.webSearch ? ["web_search"] : []),
+    ...(searchPolicy.xSearch ? ["x_search"] : []),
+  ])
+}
+
+function validateSearchRoute(route, requestedServerTools, model) {
+  if (requestedServerTools.length === 0) return
+  if (model !== SEARCH_MODEL_ID) throw new UnsupportedSearchCapabilityError()
+  const descriptor = Object.getOwnPropertyDescriptor(route, "serverTools")
+  if (descriptor === undefined || ("value" in descriptor && descriptor.value === undefined)) {
+    throw new UnsupportedSearchCapabilityError()
+  }
+  if (!("value" in descriptor)) throw new UnsupportedResponsesRequestError()
+
+  const supportedServerTools = captureDataArray(descriptor.value)
+  const seen = new Set()
+  let sawXSearch = false
+  for (let index = 0; index < supportedServerTools.length; index += 1) {
+    const kind = supportedServerTools[index]
+    if (
+      (kind !== "web_search" && kind !== "x_search") ||
+      seen.has(kind) ||
+      (kind === "web_search" && sawXSearch)
+    ) throw new UnsupportedResponsesRequestError()
+    seen.add(kind)
+    if (kind === "x_search") sawXSearch = true
+  }
+  if (!requestedServerTools.every((kind) => seen.has(kind))) {
+    throw new UnsupportedSearchCapabilityError()
+  }
+}
+
+function createCompiledRequest(request) {
+  freezeTree(request)
+  return Object.freeze({
+    request,
+    receipt: deriveReceipt(request),
+  })
+}
+
+function deriveReceipt(request) {
+  const tools = readOwnRequestProperty(request, "tools")
+  const functionNames = []
+  const serverTools = []
+  if (tools !== undefined) {
+    const toolValues = captureDataArray(tools)
+    let sawServerTool = false
+    let sawXSearch = false
+    for (let index = 0; index < toolValues.length; index += 1) {
+      const tool = toolValues[index]
+      if (!isPlainObject(tool)) throw new UnsupportedResponsesRequestError()
+      const type = readOwnRequestProperty(tool, "type")
+      if (type === "function") {
+        const name = readOwnRequestProperty(tool, "name")
+        if (sawServerTool || typeof name !== "string" || !FUNCTION_NAME_PATTERN.test(name)) {
+          throw new UnsupportedResponsesRequestError()
+        }
+        functionNames.push(name)
+        continue
+      }
+      if (type !== "web_search" && type !== "x_search") {
+        throw new UnsupportedResponsesRequestError()
+      }
+      if (
+        Reflect.ownKeys(tool).length !== 1 ||
+        serverTools.includes(type) ||
+        (type === "web_search" && sawXSearch)
+      ) throw new UnsupportedResponsesRequestError()
+      sawServerTool = true
+      if (type === "x_search") sawXSearch = true
+      serverTools.push(type)
+    }
+  }
+  return Object.freeze({
+    functionNames: Object.freeze(functionNames),
+    serverTools: Object.freeze(serverTools),
+  })
+}
+
+function freezeTree(value) {
+  const pending = [value]
+  const seen = new WeakSet()
+  while (pending.length > 0) {
+    const current = pending.pop()
+    if (current === null || typeof current !== "object" || seen.has(current)) continue
+    seen.add(current)
+    for (const nested of Object.values(current)) pending.push(nested)
+    Object.freeze(current)
+  }
+  return value
 }
 
 function snapshotImageRequestMessages(messages, targetModel) {

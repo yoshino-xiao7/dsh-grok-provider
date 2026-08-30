@@ -1,7 +1,5 @@
 import { parseModelCatalogResponse } from "./model-catalog.mjs"
-import { createResponsesEventDecoder } from "./responses-codec.mjs"
-import { createResponsesRequestCompiler } from "./responses-request-compiler.mjs"
-import { parseResponsesSse } from "./responses-sse.mjs"
+import { createResponsesCallProtocol } from "./responses-call.mjs"
 
 export class GrokAdapterError extends Error {
   constructor() {
@@ -13,13 +11,14 @@ export class GrokAdapterError extends Error {
 export function createGrokAdapter({
   getGeneration,
   getAttachmentStore = () => undefined,
+  searchPolicy,
   mapError = (error) => error,
 }) {
   if (typeof getGeneration !== "function") {
     throw new TypeError("A Grok adapter generation source is required")
   }
   if (typeof mapError !== "function") throw new TypeError("Invalid Grok adapter error mapper")
-  const requestCompiler = createResponsesRequestCompiler({ getAttachmentStore })
+  const callProtocol = createResponsesCallProtocol({ getAttachmentStore, searchPolicy })
 
   const captureGeneration = () => {
     const generation = getGeneration()
@@ -82,7 +81,7 @@ export function createGrokAdapter({
           stream(options) {
             let requestPlan
             try {
-              requestPlan = requestCompiler.prepare(options)
+              requestPlan = callProtocol.prepare(options)
               validatePreparedRequestPlan(requestPlan, route.resolvedModelInfo)
               return streamWithGeneration(generation, route, requestPlan, mapError)
             } catch (error) {
@@ -98,7 +97,7 @@ export function createGrokAdapter({
     stream(options) {
       let requestPlan
       try {
-        requestPlan = requestCompiler.prepare(options)
+        requestPlan = callProtocol.prepare(options)
         return streamWithGeneration(captureGeneration(), undefined, requestPlan, mapError)
       } catch (error) {
         throw mapError(error, requestPlan?.signal ?? readOwnDataSignal(options))
@@ -113,6 +112,7 @@ async function discover(generation, provider, signal) {
     backend: entry.backend,
     resolvedModelInfo: freezeModel(entry.resolvedModelInfo),
     ...(entry.imageInput === undefined ? {} : { imageInput: entry.imageInput }),
+    ...(entry.serverTools === undefined ? {} : { serverTools: entry.serverTools }),
   }))
 }
 
@@ -120,14 +120,10 @@ async function* streamWithGeneration(generation, preparedRoute, requestPlan, map
   try {
     requireProvider(requestPlan.provider)
     const route = preparedRoute ?? await resolveRoute(generation, requestPlan)
-    const request = await requestPlan.compile(route)
-    const decoder = createResponsesEventDecoder()
-    for await (const event of parseResponsesSse(
-      generation.transport.streamResponses(request, { signal: requestPlan.signal }),
-    )) {
-      for (const chunk of decoder.push(event)) yield chunk
-    }
-    decoder.finish()
+    for await (const chunk of requestPlan.stream({
+      route,
+      transport: generation.transport,
+    })) yield chunk
   } catch (error) {
     throw mapError(error, requestPlan.signal)
   }

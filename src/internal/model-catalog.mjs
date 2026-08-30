@@ -3,6 +3,8 @@ const MAX_CATALOG_BYTES = 256 * 1024
 const MAX_MODELS = 256
 const MAX_REASONING_EFFORTS = 16
 const IMAGE_INPUT_MODEL_IDS = new Set(["grok-4.6"])
+const SERVER_TOOL_MODEL_IDS = new Set(["grok-4.6"])
+const SEARCH_SERVER_TOOLS = Object.freeze(["web_search", "x_search"])
 const IMAGE_INPUT_PROFILE = Object.freeze({
   readPolicy: Object.freeze({
     maxBytes: 4 * 1024 * 1024,
@@ -71,6 +73,7 @@ function parseModel(model, provider) {
   }
 
   const imageInput = IMAGE_INPUT_MODEL_IDS.has(model.id) ? IMAGE_INPUT_PROFILE : undefined
+  const serverTools = SERVER_TOOL_MODEL_IDS.has(model.id) ? SEARCH_SERVER_TOOLS : undefined
   const resolvedModelInfo = {
     provider,
     id: model.id,
@@ -85,6 +88,7 @@ function parseModel(model, provider) {
     backend: model.api_backend,
     resolvedModelInfo,
     ...(imageInput === undefined ? {} : { imageInput }),
+    ...(serverTools === undefined ? {} : { serverTools }),
   }
 }
 

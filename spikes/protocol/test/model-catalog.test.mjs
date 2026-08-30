@@ -73,7 +73,7 @@ test("every valid model in a Grok catalog response is mapped with its declared c
   assert.equal(catalog[1].resolvedModelInfo.reasoning.defaultEffort, "medium")
 })
 
-test("only the exact verified Grok model advertises image input", () => {
+test("only the exact verified Grok model receives private image and Search routes", () => {
   const model = (id) => ({
     id,
     name: id,
@@ -98,4 +98,8 @@ test("only the exact verified Grok model advertises image input", () => {
   })
   assert.equal(catalog[1].imageInput, undefined)
   assert.equal(catalog[2].imageInput, undefined)
+  assert.deepEqual(catalog[0].serverTools, ["web_search", "x_search"])
+  assert.equal(Object.isFrozen(catalog[0].serverTools), true)
+  assert.equal(catalog[1].serverTools, undefined)
+  assert.equal(catalog[2].serverTools, undefined)
 })

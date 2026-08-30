@@ -495,6 +495,194 @@ test("a custom abort reason during attachment I/O maps to ABORTED before the Res
   assert.equal(transportCalls, 0)
 })
 
+test("the adapter compiles Web Search and decodes its server lifecycle through the final receipt", async () => {
+  let capturedRequest
+  const adapter = createGrokAdapter({
+    getGeneration: () => ({
+      id: 1,
+      transport: {
+        async listModels() { return catalog },
+        async *streamResponses(request) {
+          capturedRequest = request
+          yield * encodeResponseEvents(webSearchResponseEvents())
+        },
+      },
+    }),
+    searchPolicy: Object.freeze({ webSearch: true, xSearch: false }),
+    mapError: mapLlmError,
+  })
+  const prepared = await adapter.prepareCall("grok", "grok-4.6")
+  const chunks = []
+  for await (const chunk of prepared.stream({
+    provider: "grok",
+    model: "grok-4.6",
+    messages: [{
+      id: "search-user",
+      role: "user",
+      source: { kind: "user" },
+      content: [{ type: "text", text: "Search official docs" }],
+    }],
+  })) chunks.push(chunk)
+
+  assert.deepEqual(capturedRequest.tools, [{ type: "web_search" }])
+  assert.equal(chunks.some((chunk) => chunk.type.startsWith("tool-call")), false)
+  assert.equal(chunks.some((chunk) => chunk.type === "text-delta"), true)
+  assert.deepEqual(chunks.at(-1), { type: "finish", reason: { kind: "stop" } })
+})
+
+test("the adapter compiles X Search and decodes its custom lifecycle through the final receipt", async () => {
+  let capturedRequest
+  const adapter = createGrokAdapter({
+    getGeneration: () => ({
+      id: 1,
+      transport: {
+        async listModels() { return catalog },
+        async *streamResponses(request) {
+          capturedRequest = request
+          yield * encodeResponseEvents(xSearchResponseEvents())
+        },
+      },
+    }),
+    searchPolicy: Object.freeze({ webSearch: false, xSearch: true }),
+    mapError: mapLlmError,
+  })
+  const prepared = await adapter.prepareCall("grok", "grok-4.6")
+  const chunks = []
+  for await (const chunk of prepared.stream({
+    provider: "grok",
+    model: "grok-4.6",
+    messages: [{
+      id: "x-search-user",
+      role: "user",
+      source: { kind: "user" },
+      content: [{ type: "text", text: "Search X" }],
+    }],
+  })) chunks.push(chunk)
+
+  assert.deepEqual(capturedRequest.tools, [{ type: "x_search" }])
+  assert.equal(chunks.some((chunk) => chunk.type.startsWith("tool-call")), false)
+  assert.equal(chunks.some((chunk) => chunk.type === "text-delta"), true)
+  assert.deepEqual(chunks.at(-1), { type: "finish", reason: { kind: "stop" } })
+})
+
+test("the adapter binds Web Search and Harness functions in one final receipt", async () => {
+  let capturedRequest
+  const adapter = createGrokAdapter({
+    getGeneration: () => ({
+      id: 1,
+      transport: {
+        async listModels() { return catalog },
+        async *streamResponses(request) {
+          capturedRequest = request
+          yield * encodeResponseEvents(webAndFunctionResponseEvents())
+        },
+      },
+    }),
+    searchPolicy: Object.freeze({ webSearch: true, xSearch: false }),
+    mapError: mapLlmError,
+  })
+  const prepared = await adapter.prepareCall("grok", "grok-4.6")
+  const chunks = []
+  for await (const chunk of prepared.stream({
+    provider: "grok",
+    model: "grok-4.6",
+    tools: [{
+      name: "fixture_tool",
+      description: "Fixture function",
+      parameters: { type: "object", properties: { query: { type: "string" } } },
+    }],
+    messages: [{
+      id: "mixed-search-user",
+      role: "user",
+      source: { kind: "user" },
+      content: [{ type: "text", text: "Search and call the fixture" }],
+    }],
+  })) chunks.push(chunk)
+
+  assert.deepEqual(capturedRequest.tools.map((tool) => tool.type), ["function", "web_search"])
+  assert.deepEqual(capturedRequest.tools[0], {
+    type: "function",
+    name: "fixture_tool",
+    description: "Fixture function",
+    parameters: { type: "object", properties: { query: { type: "string" } } },
+  })
+  assert.equal(chunks.filter((chunk) => chunk.type === "tool-call-delta").length, 2)
+  assert.deepEqual(chunks.find((chunk) => chunk.type === "block-end")?.block, {
+    type: "tool-call",
+    id: "call_fixture",
+    name: "fixture_tool",
+    arguments: '{"query":"docs"}',
+  })
+  assert.deepEqual(chunks.at(-1), { type: "finish", reason: { kind: "tool-calls" } })
+})
+
+test("an enabled Search setting fails unsupported routes before the Responses POST", async () => {
+  let transportCalls = 0
+  const adapter = createGrokAdapter({
+    getGeneration: () => ({
+      id: 1,
+      transport: {
+        async listModels() { return catalog },
+        streamResponses() {
+          transportCalls += 1
+          return (async function* emptyResponseStream() {})()
+        },
+      },
+    }),
+    searchPolicy: Object.freeze({ webSearch: true, xSearch: false }),
+    mapError: mapLlmError,
+  })
+  const prepared = await adapter.prepareCall("grok", "grok-4.5")
+
+  await assert.rejects(async () => {
+    for await (const _chunk of prepared.stream({
+      provider: "grok",
+      model: "grok-4.5",
+      messages: [{
+        id: "unsupported-search",
+        role: "user",
+        source: { kind: "user" },
+        content: [{ type: "text", text: "Hello" }],
+      }],
+    })) {}
+  }, (error) => error?.code === "UNSUPPORTED_CONTENT")
+  assert.equal(transportCalls, 0)
+})
+
+test("a background call rejects Search output because its compiled receipt contains no server tools", async () => {
+  let capturedRequest
+  const adapter = createGrokAdapter({
+    getGeneration: () => ({
+      id: 1,
+      transport: {
+        async listModels() { return catalog },
+        async *streamResponses(request) {
+          capturedRequest = request
+          yield * encodeResponseEvents(webSearchResponseEvents())
+        },
+      },
+    }),
+    searchPolicy: Object.freeze({ webSearch: true, xSearch: true }),
+    mapError: mapLlmError,
+  })
+  const prepared = await adapter.prepareCall("grok", "grok-4.6")
+
+  await assert.rejects(async () => {
+    for await (const _chunk of prepared.stream({
+      provider: "grok",
+      model: "grok-4.6",
+      purpose: "session-title",
+      messages: [{
+        id: "background-search",
+        role: "user",
+        source: { kind: "user" },
+        content: [{ type: "text", text: "Title this conversation" }],
+      }],
+    })) {}
+  }, (error) => error?.code === "INVALID_RESPONSE")
+  assert.equal(capturedRequest.tools, undefined)
+})
+
 test("the real LLM runtime preserves images only for the exact verified image route", async () => {
   const runtimeCatalog = JSON.stringify({
     ...JSON.parse(catalog),
@@ -591,6 +779,81 @@ async function* completedResponseEvents() {
     { type: "response.output_item.done", sequence_number: 7, output_index: 0, item: { id: "msg_1", type: "message", role: "assistant", status: "completed" } },
     { type: "response.completed", sequence_number: 8, response: { status: "completed", usage: { input_tokens: 1, output_tokens: 1 } } },
   ]
+  for (const event of events) {
+    yield encoder.encode(`event: ${event.type}\ndata: ${JSON.stringify(event)}\n\n`)
+  }
+}
+
+function webSearchResponseEvents() {
+  const text = "Result [source](https://example.test)"
+  const annotation = {
+    type: "url_citation",
+    url: "https://example.test",
+    title: "Example",
+    start_index: 7,
+    end_index: 13,
+  }
+  return [
+    { type: "response.created", sequence_number: 0, response: { status: "in_progress" } },
+    { type: "response.in_progress", sequence_number: 1, response: { status: "in_progress" } },
+    { type: "response.output_item.added", sequence_number: 2, output_index: 0, item: { id: "ws_1", type: "web_search_call", status: "in_progress", action: { type: "search", query: "", sources: [] } } },
+    { type: "response.web_search_call.in_progress", sequence_number: 3, output_index: 0, item_id: "ws_1" },
+    { type: "response.web_search_call.searching", sequence_number: 4, output_index: 0, item_id: "ws_1" },
+    { type: "response.web_search_call.completed", sequence_number: 5, output_index: 0, item_id: "ws_1" },
+    { type: "response.output_item.done", sequence_number: 6, output_index: 0, item: { id: "ws_1", type: "web_search_call", status: "completed", action: { type: "search", query: "official docs", sources: [] } } },
+    { type: "response.output_item.added", sequence_number: 7, output_index: 1, item: { id: "msg_search", type: "message", role: "assistant", status: "in_progress", content: [] } },
+    { type: "response.content_part.added", sequence_number: 8, output_index: 1, item_id: "msg_search", content_index: 0, part: { type: "output_text", text: "", annotations: [] } },
+    { type: "response.output_text.delta", sequence_number: 9, output_index: 1, item_id: "msg_search", content_index: 0, delta: text },
+    { type: "response.output_text.annotation.added", sequence_number: 10, output_index: 1, item_id: "msg_search", content_index: 0, annotation_index: 0, annotation },
+    { type: "response.output_text.done", sequence_number: 11, output_index: 1, item_id: "msg_search", content_index: 0, text },
+    { type: "response.content_part.done", sequence_number: 12, output_index: 1, item_id: "msg_search", content_index: 0, part: { type: "output_text", text, annotations: [annotation] } },
+    { type: "response.output_item.done", sequence_number: 13, output_index: 1, item: { id: "msg_search", type: "message", role: "assistant", status: "completed", content: [{ type: "output_text", text, annotations: [annotation] }] } },
+    { type: "response.completed", sequence_number: 14, response: { status: "completed", citations: ["https://example.test"], usage: { input_tokens: 10, output_tokens: 4 } } },
+  ]
+}
+
+function xSearchResponseEvents() {
+  const input = '{"query":"official"}'
+  const text = "X result"
+  return [
+    { type: "response.created", sequence_number: 0, response: { status: "in_progress" } },
+    { type: "response.in_progress", sequence_number: 1, response: { status: "in_progress" } },
+    { type: "response.output_item.added", sequence_number: 2, output_index: 0, item: { id: "x_1", type: "custom_tool_call", status: "in_progress", call_id: "x_call_1", name: "x_keyword_search", input: "" } },
+    { type: "response.custom_tool_call_input.delta", sequence_number: 3, output_index: 0, item_id: "x_1", delta: '{"query":' },
+    { type: "response.custom_tool_call_input.delta", sequence_number: 4, output_index: 0, item_id: "x_1", delta: '"official"}' },
+    { type: "response.custom_tool_call_input.done", sequence_number: 5, output_index: 0, item_id: "x_1", input },
+    { type: "response.output_item.done", sequence_number: 6, output_index: 0, item: { id: "x_1", type: "custom_tool_call", status: "completed", call_id: "x_call_1", name: "x_keyword_search", input } },
+    { type: "response.output_item.added", sequence_number: 7, output_index: 1, item: { id: "msg_x", type: "message", role: "assistant", status: "in_progress", content: [] } },
+    { type: "response.content_part.added", sequence_number: 8, output_index: 1, item_id: "msg_x", content_index: 0, part: { type: "output_text", text: "", annotations: [] } },
+    { type: "response.output_text.delta", sequence_number: 9, output_index: 1, item_id: "msg_x", content_index: 0, delta: text },
+    { type: "response.output_text.done", sequence_number: 10, output_index: 1, item_id: "msg_x", content_index: 0, text },
+    { type: "response.content_part.done", sequence_number: 11, output_index: 1, item_id: "msg_x", content_index: 0, part: { type: "output_text", text, annotations: [] } },
+    { type: "response.output_item.done", sequence_number: 12, output_index: 1, item: { id: "msg_x", type: "message", role: "assistant", status: "completed", content: [{ type: "output_text", text, annotations: [] }] } },
+    { type: "response.completed", sequence_number: 13, response: { status: "completed", server_side_tool_usage: { SERVER_SIDE_TOOL_X_SEARCH: 1 }, usage: { input_tokens: 8, output_tokens: 2 } } },
+  ]
+}
+
+function webAndFunctionResponseEvents() {
+  const argumentsJson = '{"query":"docs"}'
+  return [
+    { type: "response.created", sequence_number: 0, response: { status: "in_progress" } },
+    { type: "response.in_progress", sequence_number: 1, response: { status: "in_progress" } },
+    { type: "response.output_item.added", sequence_number: 2, output_index: 0, item: { id: "ws_mixed", type: "web_search_call", status: "in_progress", action: { type: "search", query: "", sources: [] } } },
+    { type: "response.web_search_call.in_progress", sequence_number: 3, output_index: 0, item_id: "ws_mixed" },
+    { type: "response.web_search_call.searching", sequence_number: 4, output_index: 0, item_id: "ws_mixed" },
+    { type: "response.web_search_call.completed", sequence_number: 5, output_index: 0, item_id: "ws_mixed" },
+    { type: "response.output_item.done", sequence_number: 6, output_index: 0, item: { id: "ws_mixed", type: "web_search_call", status: "completed", action: { type: "search", query: "official docs", sources: [] } } },
+    { type: "response.output_item.added", sequence_number: 7, output_index: 1, item: { id: "fc_mixed", type: "function_call", status: "in_progress", call_id: "call_fixture", name: "fixture_tool", arguments: "" } },
+    { type: "response.function_call_arguments.delta", sequence_number: 8, output_index: 1, item_id: "fc_mixed", delta: '{"query":' },
+    { type: "response.function_call_arguments.delta", sequence_number: 9, output_index: 1, item_id: "fc_mixed", delta: '"docs"}' },
+    { type: "response.function_call_arguments.done", sequence_number: 10, output_index: 1, item_id: "fc_mixed", name: "fixture_tool", arguments: argumentsJson },
+    { type: "response.output_item.done", sequence_number: 11, output_index: 1, item: { id: "fc_mixed", type: "function_call", status: "completed", call_id: "call_fixture", name: "fixture_tool", arguments: argumentsJson } },
+    { type: "response.completed", sequence_number: 12, response: { status: "completed", server_side_tool_usage: { SERVER_SIDE_TOOL_WEB_SEARCH: 1 }, usage: { input_tokens: 12, output_tokens: 4 } } },
+  ]
+}
+
+async function* encodeResponseEvents(events) {
+  const encoder = new TextEncoder()
   for (const event of events) {
     yield encoder.encode(`event: ${event.type}\ndata: ${JSON.stringify(event)}\n\n`)
   }

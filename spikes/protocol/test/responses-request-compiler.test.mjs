@@ -4,10 +4,12 @@ import test from "node:test"
 import {
   InvalidRequestImageProjectionError,
   UnsupportedImageInputError,
+  UnsupportedSearchCapabilityError,
   createResponsesRequestCompiler,
 } from "../../../src/internal/responses-request-compiler.mjs"
 import {
   ResponsesRequestTooLargeError,
+  UnsupportedResponsesRequestError,
   encodeResponsesRequest,
 } from "../../../src/internal/responses-request.mjs"
 
@@ -29,6 +31,14 @@ test("the request compiler preserves the legacy text wire request without consul
       content: [{ type: "text", text: "Hello" }],
     }],
   }
+  let purposeReads = 0
+  Object.defineProperty(options, "purpose", {
+    enumerable: true,
+    get() {
+      purposeReads += 1
+      throw new Error("disabled Search must not read purpose")
+    },
+  })
   const route = {
     backend: "responses",
     resolvedModelInfo: {
@@ -40,10 +50,128 @@ test("the request compiler preserves the legacy text wire request without consul
   }
 
   const expected = JSON.stringify(encodeResponsesRequest(options))
-  const actual = JSON.stringify(await compiler.compile(options, route))
+  const compiled = await compiler.compile(options, route)
+  const actual = JSON.stringify(compiled.request)
 
   assert.equal(actual, expected)
+  assert.deepEqual(compiled.receipt, { functionNames: [], serverTools: [] })
+  assert.equal(Object.isFrozen(compiled), true)
+  assert.equal(Object.isFrozen(compiled.request), true)
+  assert.equal(Object.isFrozen(compiled.receipt), true)
+  assert.equal(Object.isFrozen(compiled.receipt.functionNames), true)
+  assert.equal(Object.isFrozen(compiled.receipt.serverTools), true)
   assert.equal(attachmentLookups, 0)
+  assert.equal(purposeReads, 0)
+})
+
+test("Search tools are independent, ordered after functions, and reflected by a frozen receipt", async () => {
+  const cases = [
+    [{ webSearch: true, xSearch: false }, ["function", "web_search"]],
+    [{ webSearch: false, xSearch: true }, ["function", "x_search"]],
+    [{ webSearch: true, xSearch: true }, ["function", "web_search", "x_search"]],
+  ]
+
+  for (const [searchPolicy, expectedTypes] of cases) {
+    const compiler = createResponsesRequestCompiler({
+      searchPolicy: Object.freeze(searchPolicy),
+    })
+    const compiled = await compiler.compile(textOptions({
+      tools: [fixtureTool("lookup")],
+    }), searchRoute())
+
+    assert.deepEqual(compiled.request.tools.map((tool) => tool.type), expectedTypes)
+    assert.deepEqual(compiled.receipt, {
+      functionNames: ["lookup"],
+      serverTools: expectedTypes.filter((type) => type !== "function"),
+    })
+    assert.equal(Object.isFrozen(compiled.request.tools), true)
+    assert.throws(() => compiled.receipt.serverTools.push("web_search"), TypeError)
+    assert.throws(() => { compiled.request.tools[0].name = "forged" }, TypeError)
+  }
+})
+
+test("Search purpose capture is synchronous, closed, and disabled for every nonempty purpose", async () => {
+  const compiler = createResponsesRequestCompiler({
+    searchPolicy: Object.freeze({ webSearch: true, xSearch: true }),
+  })
+
+  for (const purpose of ["compaction", "session-title", "future-background-purpose"]) {
+    const compiled = await compiler.compile(textOptions({ purpose }), searchRoute())
+    assert.equal(compiled.request.tools, undefined)
+    assert.deepEqual(compiled.receipt, { functionNames: [], serverTools: [] })
+  }
+
+  for (const purpose of ["", null, false, 1, {}]) {
+    assert.throws(
+      () => compiler.prepare(textOptions({ purpose })),
+      UnsupportedResponsesRequestError,
+    )
+  }
+
+  let purposeReads = 0
+  const accessorOptions = textOptions()
+  Object.defineProperty(accessorOptions, "purpose", {
+    enumerable: true,
+    get() {
+      purposeReads += 1
+      return undefined
+    },
+  })
+  assert.throws(() => compiler.prepare(accessorOptions), UnsupportedResponsesRequestError)
+  assert.equal(purposeReads, 0)
+})
+
+test("Search capability is exact-route and distinguishes unsupported from malformed policy", async () => {
+  const compiler = createResponsesRequestCompiler({
+    searchPolicy: Object.freeze({ webSearch: true, xSearch: true }),
+  })
+
+  await assert.rejects(
+    compiler.compile(textOptions({ model: "grok-4.5" }), textRoute("grok-4.5")),
+    UnsupportedSearchCapabilityError,
+  )
+  await assert.rejects(
+    compiler.compile(textOptions({ model: "grok-4.5" }), {
+      ...textRoute("grok-4.5"),
+      serverTools: ["web_search", "x_search"],
+    }),
+    UnsupportedSearchCapabilityError,
+  )
+  await assert.rejects(
+    compiler.compile(textOptions(), searchRoute({ serverTools: ["web_search"] })),
+    UnsupportedSearchCapabilityError,
+  )
+  await assert.rejects(
+    compiler.compile(textOptions(), searchRoute({ serverTools: ["web_search", "future_tool"] })),
+    (error) => error instanceof UnsupportedResponsesRequestError &&
+      !(error instanceof UnsupportedSearchCapabilityError),
+  )
+})
+
+test("Harness functions and Search tools share the closed 128-tool budget", async () => {
+  const compiler = createResponsesRequestCompiler({
+    searchPolicy: Object.freeze({ webSearch: true, xSearch: true }),
+  })
+  const withinBudget = await compiler.compile(textOptions({
+    tools: Array.from({ length: 126 }, (_, index) => fixtureTool(`tool_${index}`)),
+  }), searchRoute())
+
+  assert.equal(withinBudget.request.tools.length, 128)
+  assert.equal(withinBudget.receipt.functionNames.length, 126)
+  assert.deepEqual(withinBudget.receipt.serverTools, ["web_search", "x_search"])
+  await assert.rejects(compiler.compile(textOptions({
+    tools: Array.from({ length: 127 }, (_, index) => fixtureTool(`tool_${index}`)),
+  }), searchRoute()), UnsupportedResponsesRequestError)
+})
+
+test("Search policy is snapshotted when the compiler module is created", async () => {
+  const searchPolicy = { webSearch: true, xSearch: false }
+  const compiler = createResponsesRequestCompiler({ searchPolicy })
+  searchPolicy.webSearch = false
+  searchPolicy.xSearch = true
+
+  const compiled = await compiler.compile(textOptions(), searchRoute())
+  assert.deepEqual(compiled.receipt.serverTools, ["web_search"])
 })
 
 test("the text-only fast path keeps the legacy acceptance domain outside the image block budget", async () => {
@@ -66,13 +194,13 @@ test("the text-only fast path keeps the legacy acceptance domain outside the ima
   }
 
   const expected = JSON.stringify(encodeResponsesRequest(options))
-  const actual = JSON.stringify(await compiler.compile(options, imageRoute()))
+  const actual = JSON.stringify(await compileRequest(compiler, options, imageRoute()))
 
   assert.equal(actual, expected)
   assert.equal(attachmentLookups, 0)
 })
 
-test("the request compiler preserves an ordered user image while omitting private user reasoning", async () => {
+test("the request compiler combines Search with an ordered image while omitting private reasoning", async () => {
   const data = Buffer.from(
     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
     "base64",
@@ -81,6 +209,7 @@ test("the request compiler preserves an ordered user image while omitting privat
   const signal = new AbortController().signal
   const reads = []
   const compiler = createResponsesRequestCompiler({
+    searchPolicy: Object.freeze({ webSearch: true, xSearch: true }),
     getAttachmentStore: () => ({
       async readImageRequest(ref, policy, receivedSignal) {
         reads.push({ ref, policy, signal: receivedSignal })
@@ -117,7 +246,8 @@ test("the request compiler preserves an ordered user image while omitting privat
     }],
   }
 
-  const request = await compiler.compile(options, imageRoute())
+  const compiled = await compiler.compile(options, imageRoute())
+  const request = compiled.request
 
   assert.deepEqual(reads, [{
     ref: attachment,
@@ -136,6 +266,10 @@ test("the request compiler preserves an ordered user image while omitting privat
       { type: "input_text", text: "After" },
     ],
   }])
+  assert.deepEqual(compiled.receipt, {
+    functionNames: [],
+    serverTools: ["web_search", "x_search"],
+  })
 })
 
 test("subagent settlement reasoning does not block a later image request", async () => {
@@ -163,7 +297,7 @@ test("subagent settlement reasoning does not block a later image request", async
     }),
   })
 
-  const request = await compiler.compile({
+  const request = await compileRequest(compiler, {
     provider: "grok",
     model: "grok-4.6",
     messages: [
@@ -236,7 +370,7 @@ test("image compilation replays only assistant reasoning and never user reasonin
     }),
   })
 
-  const request = await compiler.compile({
+  const request = await compileRequest(compiler, {
     provider: "grok",
     model: "grok-4.6",
     messages: [
@@ -311,7 +445,7 @@ test("invalid omitted user reasoning fails before attachment storage", async () 
     },
   })
 
-  await assert.rejects(compiler.compile({
+  await assert.rejects(compileRequest(compiler, {
     provider: "grok",
     model: "grok-4.6",
     messages: [{
@@ -352,7 +486,7 @@ test("a verified JPEG projection is encoded as a JPEG data URL", async () => {
     }),
   })
 
-  const request = await compiler.compile({
+  const request = await compileRequest(compiler, {
     provider: "grok",
     model: "grok-4.6",
     messages: [{
@@ -391,7 +525,7 @@ test("the request compiler preserves text and images nested in one tool result",
     }),
   })
 
-  const request = await compiler.compile({
+  const request = await compileRequest(compiler, {
     provider: "grok",
     model: "grok-4.6",
     messages: [{
@@ -435,7 +569,7 @@ test("tool-result reasoning with an image remains a generic invalid request", as
     },
   })
 
-  await assert.rejects(compiler.compile({
+  await assert.rejects(compileRequest(compiler, {
     provider: "grok",
     model: "grok-4.6",
     messages: [{
@@ -494,7 +628,7 @@ test("the request compiler removes the oldest image until the final JSON fits 16
     }),
   })
 
-  const request = await compiler.compile({
+  const request = await compileRequest(compiler, {
     provider: "grok",
     model: "grok-4.6",
     messages: [
@@ -543,7 +677,7 @@ test("an already-aborted image request stops before resolving attachment storage
     },
   })
 
-  await assert.rejects(compiler.compile({
+  await assert.rejects(compileRequest(compiler, {
     provider: "grok",
     model: "grok-4.6",
     signal: controller.signal,
@@ -566,7 +700,7 @@ test("an invalid image request envelope fails before resolving attachment storag
     },
   })
 
-  await assert.rejects(compiler.compile({
+  await assert.rejects(compileRequest(compiler, {
     provider: "grok",
     model: "grok-4.6",
     temperature: 3,
@@ -604,7 +738,7 @@ test("the message-count bound fails before scanning or snapshotting image conten
     },
   })
 
-  await assert.rejects(compiler.compile({
+  await assert.rejects(compileRequest(compiler, {
     provider: "grok",
     model: "grok-4.6",
     messages: Array.from({ length: 10_001 }, () => message),
@@ -639,7 +773,7 @@ test("an accessor-backed model is rejected without splitting route and wire iden
     },
   })
 
-  await assert.rejects(compiler.compile(options, imageRoute()), (error) => (
+  await assert.rejects(compileRequest(compiler, options, imageRoute()), (error) => (
     error?.name === "UnsupportedResponsesRequestError"
   ))
   assert.equal(modelReads, 0)
@@ -664,7 +798,7 @@ test("accessor-backed image block fields are rejected without route detection re
     },
   })
 
-  await assert.rejects(compiler.compile({
+  await assert.rejects(compileRequest(compiler, {
     provider: "grok",
     model: "grok-4.6",
     messages: [{
@@ -704,7 +838,7 @@ test("caller-owned message array methods cannot replace the captured image graph
     },
   })
 
-  await assert.rejects(compiler.compile({
+  await assert.rejects(compileRequest(compiler, {
     provider: "grok",
     model: "grok-4.6",
     messages,
@@ -724,7 +858,7 @@ test("a malformed image reference fails as unsupported before offloading or reso
         },
       })
 
-      await assert.rejects(compiler.compile({
+      await assert.rejects(compileRequest(compiler, {
         provider: "grok",
         model: "grok-4.6",
         messages: [{
@@ -783,7 +917,7 @@ test("an image request snapshots messages before awaiting attachment I/O", async
     }],
   }
 
-  const compiled = compiler.compile(options, imageRoute())
+  const compiled = compileRequest(compiler, options, imageRoute())
   await readStarted
   options.messages[0].content[0].text = "After"
   options.signal = AbortSignal.abort()
@@ -808,7 +942,7 @@ test("an image request rejects custom-prototype attachment references before sto
     },
   })
 
-  await assert.rejects(compiler.compile({
+  await assert.rejects(compileRequest(compiler, {
     provider: "grok",
     model: "grok-4.6",
     messages: [{
@@ -839,7 +973,7 @@ test("an image request rejects attachment reference accessors without invocation
     },
   })
 
-  await assert.rejects(compiler.compile({
+  await assert.rejects(compileRequest(compiler, {
     provider: "grok",
     model: "grok-4.6",
     messages: [{
@@ -889,7 +1023,7 @@ test("an image request does not activate replay from a custom-prototype source",
     }),
   })
 
-  const request = await compiler.compile({
+  const request = await compileRequest(compiler, {
     provider: "grok",
     model: "grok-4.6",
     messages: [
@@ -921,7 +1055,7 @@ test("an oversized static request envelope fails before resolving attachment sto
     },
   })
 
-  await assert.rejects(compiler.compile({
+  await assert.rejects(compileRequest(compiler, {
     provider: "grok",
     model: "grok-4.6",
     system: "s".repeat(8 * 1024 * 1024),
@@ -967,7 +1101,7 @@ test("duplicate attachment references are read once but remain separate image oc
     }),
   })
 
-  const request = await compiler.compile({
+  const request = await compileRequest(compiler, {
     provider: "grok",
     model: "grok-4.6",
     messages: [{
@@ -998,7 +1132,7 @@ test("conflicting metadata for one attachment id fails before resolving storage"
   })
   const attachment = imageRef()
 
-  await assert.rejects(compiler.compile({
+  await assert.rejects(compileRequest(compiler, {
     provider: "grok",
     model: "grok-4.6",
     messages: [{
@@ -1044,7 +1178,7 @@ test("a ninth image offloads the oldest occurrence before attachment reads", asy
     }),
   })
 
-  const request = await compiler.compile({
+  const request = await compileRequest(compiler, {
     provider: "grok",
     model: "grok-4.6",
     messages: [{
@@ -1089,7 +1223,7 @@ test("aggregate projected bytes offload the oldest image after bounded reads", a
     }),
   })
 
-  const request = await compiler.compile({
+  const request = await compileRequest(compiler, {
     provider: "grok",
     model: "grok-4.6",
     messages: [{
@@ -1114,7 +1248,7 @@ test("unsupported nested tool-result structure fails before reading attachments"
     }),
   })
 
-  await assert.rejects(compiler.compile({
+  await assert.rejects(compileRequest(compiler, {
     provider: "grok",
     model: "grok-4.6",
     messages: [{
@@ -1144,7 +1278,7 @@ test("an over-wide image content tree fails before resolving attachment storage"
     },
   })
 
-  await assert.rejects(compiler.compile({
+  await assert.rejects(compileRequest(compiler, {
     provider: "grok",
     model: "grok-4.6",
     messages: [{
@@ -1178,7 +1312,7 @@ test("an over-wide image array fails before enumerating or copying its keys", as
     },
   })
 
-  await assert.rejects(compiler.compile({
+  await assert.rejects(compileRequest(compiler, {
     provider: "grok",
     model: "grok-4.6",
     messages: [{
@@ -1200,7 +1334,7 @@ test("unsupported source MIME fails before resolving attachment storage", async 
     },
   })
 
-  await assert.rejects(compiler.compile({
+  await assert.rejects(compileRequest(compiler, {
     provider: "grok",
     model: "grok-4.6",
     messages: [{
@@ -1257,7 +1391,7 @@ test("validated request image bytes are isolated from later store mutation", asy
     }),
   })
 
-  const compiled = compiler.compile({
+  const compiled = compileRequest(compiler, {
     provider: "grok",
     model: "grok-4.6",
     messages: [{
@@ -1315,7 +1449,7 @@ test("request image projection accessors are rejected without invocation", async
     }),
   })
 
-  await assert.rejects(compiler.compile({
+  await assert.rejects(compileRequest(compiler, {
     provider: "grok",
     model: "grok-4.6",
     messages: [{
@@ -1371,7 +1505,7 @@ test("invalid attachment projections are internal contract errors", async (conte
         }),
       })
 
-      await assert.rejects(compiler.compile({
+      await assert.rejects(compileRequest(compiler, {
         provider: "grok",
         model: "grok-4.6",
         messages: [{
@@ -1388,7 +1522,7 @@ test("invalid attachment projections are internal contract errors", async (conte
 
 test("image policy failures use a dedicated error type", async () => {
   const compiler = createResponsesRequestCompiler()
-  await assert.rejects(compiler.compile({
+  await assert.rejects(compileRequest(compiler, {
     provider: "grok",
     model: "grok-4.6",
     messages: [{
@@ -1399,6 +1533,51 @@ test("image policy failures use a dedicated error type", async () => {
     }],
   }, imageRoute()), UnsupportedImageInputError)
 })
+
+async function compileRequest(compiler, options, route) {
+  return (await compiler.compile(options, route)).request
+}
+
+function textOptions(overrides = {}) {
+  return {
+    provider: "grok",
+    model: "grok-4.6",
+    messages: [{
+      id: "user-search",
+      role: "user",
+      source: { kind: "user" },
+      content: [{ type: "text", text: "Hello" }],
+    }],
+    ...overrides,
+  }
+}
+
+function fixtureTool(name) {
+  return {
+    name,
+    description: `Fixture tool ${name}`,
+    parameters: { type: "object", properties: {} },
+  }
+}
+
+function textRoute(model = "grok-4.6") {
+  return {
+    backend: "responses",
+    resolvedModelInfo: {
+      provider: "grok",
+      id: model,
+      name: model,
+      inputModalities: ["text"],
+    },
+  }
+}
+
+function searchRoute({ serverTools = ["web_search", "x_search"] } = {}) {
+  return {
+    ...textRoute(),
+    serverTools,
+  }
+}
 
 function imageRoute() {
   return {
@@ -1416,6 +1595,7 @@ function imageRoute() {
       maxTotalBytes: 8 * 1024 * 1024,
       mediaTypes: ["image/jpeg", "image/png"],
     },
+    serverTools: ["web_search", "x_search"],
   }
 }
 

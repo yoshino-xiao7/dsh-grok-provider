@@ -28,6 +28,13 @@ window.__ModuleLoader__.load({
         weekly: "每周额度", monthly: "每月额度", currentPeriod: "当前额度周期",
         remaining: "剩余", used: "已使用", resetTime: "重置时间", resetUnknown: "上游未提供重置时间",
         usageUnknown: "上游未提供使用比例", quotaUnavailable: "暂时无法读取 Grok Build 额度。",
+        searchTitle: "在线搜索", searchDescription: "默认关闭，并分别控制普通 Grok 请求是否可调用 xAI 的远端搜索；当前仅精确 grok-4.6 支持，其他模型会失败关闭；后台摘要与会话标题不会启用搜索。",
+        webSearch: "Web Search", webSearchDescription: "允许 xAI 根据对话和生成的搜索词远端查询公开网页，可能产生额外用量。",
+        xSearch: "X Search", xSearchDescription: "允许 xAI 根据对话和生成的搜索词远端查询 X 帖子、用户与线程，可能产生额外用量。",
+        searchRisk: "搜索结果和 citation 是不可信的远端内容，可能包含错误或 prompt injection。执行敏感操作前请核实来源；插件不会打开或下载引用链接。",
+        searchEnabled: "已开启", searchDisabled: "已关闭", searchLoading: "正在读取搜索设置…",
+        searchUnavailable: "搜索设置暂时不可用；开关不可操作，也不会写入未知值。", searchReadOnly: "当前搜索设置不可写。",
+        searchSaveFailed: "搜索设置保存失败，已保留 Host 当前值。",
         modelsTitle: "当前账号可用的模型", modelsDescription: "模型来自 Grok Build 动态目录；Harness 模型选择器会显示这里列出的全部模型。",
         modelsUnavailable: "暂时无法读取模型目录。", noModels: "当前账号没有返回可用模型。",
         context: "上下文", reasoning: "推理档位", defaultEffort: "默认", text: "文本输入", image: "图片输入", streaming: "流式输出", tools: "工具调用",
@@ -54,11 +61,29 @@ window.__ModuleLoader__.load({
         weekly: "Weekly quota", monthly: "Monthly quota", currentPeriod: "Current quota period",
         remaining: "remaining", used: "Used", resetTime: "Resets", resetUnknown: "Reset time was not provided",
         usageUnknown: "Usage percentage was not provided", quotaUnavailable: "Grok Build quota is temporarily unavailable.",
+        searchTitle: "Online Search", searchDescription: "Off by default. These settings independently allow regular Grok requests to use xAI remote search. Only exact grok-4.6 is supported; other models fail closed. Background summaries and conversation titles do not use Search.",
+        webSearch: "Web Search", webSearchDescription: "Allows xAI to remotely query public web pages from the conversation and generated search terms, which may incur additional usage.",
+        xSearch: "X Search", xSearchDescription: "Allows xAI to remotely query X posts, users, and threads from the conversation and generated search terms, which may incur additional usage.",
+        searchRisk: "Search results and citations are untrusted remote content and may contain errors or prompt injection. Verify sources before sensitive actions; the plugin does not open or download citation links.",
+        searchEnabled: "On", searchDisabled: "Off", searchLoading: "Reading Search settings…",
+        searchUnavailable: "Search settings are temporarily unavailable. Controls are disabled and no unknown value will be written.", searchReadOnly: "Search settings are currently read-only.",
+        searchSaveFailed: "Search settings could not be saved. The current Host value was preserved.",
         modelsTitle: "Models available to this account", modelsDescription: "Models come from the live Grok Build catalog; every model listed here remains visible in the Harness model selector.",
         modelsUnavailable: "The model catalog is temporarily unavailable.", noModels: "This account returned no available models.",
         context: "Context", reasoning: "Reasoning", defaultEffort: "default", text: "Text input", image: "Image input", streaming: "Streaming", tools: "Tool calling",
         lastUpdated: "Updated",
       },
+    }
+
+    function decodeSearchConfig(value) {
+      if (value === null || typeof value !== "object" || Array.isArray(value)) return undefined
+      const webSearch = Object.getOwnPropertyDescriptor(value, "webSearch")
+      const xSearch = Object.getOwnPropertyDescriptor(value, "xSearch")
+      if (
+        !webSearch || !("value" in webSearch) || typeof webSearch.value !== "boolean"
+        || !xSearch || !("value" in xSearch) || typeof xSearch.value !== "boolean"
+      ) return undefined
+      return Object.freeze({ webSearch: webSearch.value, xSearch: xSearch.value })
     }
 
     const navIconMarker = "data-dsh-grok-provider-nav-icon"
@@ -178,6 +203,7 @@ window.__ModuleLoader__.load({
       .dsh-grok-runtime{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:10px;color:var(--dsw-alias-label-tertiary,var(--dsw-alias-label-secondary));font-size:11px;line-height:18px}.dsh-grok-runtime strong{color:var(--dsw-alias-label-secondary);font-weight:600}.dsh-grok-install{margin-top:13px;padding:12px 13px;border:1px solid rgb(217 155 43 / 30%);border-radius:11px;background:rgb(217 155 43 / 8%)}.dsh-grok-install strong{display:block;font-size:12px}.dsh-grok-install p{margin:4px 0 10px;color:var(--dsw-alias-label-secondary);font-size:11px;line-height:18px}.dsh-grok-link{display:inline-flex;align-items:center;height:32px;border-radius:999px;padding:0 12px;color:var(--dsw-static-deepseek-500,#4d6bfe);text-decoration:none;background:rgb(77 107 254 / 8%);font-size:11px}.dsh-grok-link:hover{text-decoration:underline}
       .dsh-grok-divider{height:1px;margin:18px 0;background:rgb(190 93 138 / 20%)}.dsh-grok-section-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.dsh-grok-section-head h3{margin:0;font-size:15px;line-height:23px}.dsh-grok-section-head .dsh-grok-button{height:30px;padding:0 11px}
       .dsh-grok-quota{margin-top:15px}.dsh-grok-quota-row{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:8px;color:var(--dsw-alias-label-secondary);font-size:13px}.dsh-grok-quota-name{color:var(--dsw-alias-label-primary);font-weight:600}.dsh-grok-progress{height:9px;overflow:hidden;border-radius:999px;background:rgb(190 93 138 / 13%)}.dsh-grok-progress-fill{height:100%;border-radius:inherit;background:linear-gradient(90deg,#d7448a,#ea1768);transition:width .25s ease}.dsh-grok-quota-meta{display:flex;flex-wrap:wrap;justify-content:space-between;gap:7px;margin-top:9px;color:var(--dsw-alias-label-secondary);font-size:12px;line-height:18px}.dsh-grok-muted{margin:12px 0 0;color:var(--dsw-alias-label-secondary);font-size:12px;line-height:19px}
+      .dsh-grok-search-head h3{margin:0;font-size:16px;line-height:24px}.dsh-grok-search-head p{margin:5px 0 0;color:var(--dsw-alias-label-secondary);font-size:12px;line-height:19px}.dsh-grok-search-list{margin-top:14px;border-top:1px solid rgb(190 93 138 / 18%)}.dsh-grok-search-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:18px;padding:14px 0;border-bottom:1px solid rgb(190 93 138 / 18%)}.dsh-grok-search-copy strong{display:block;font-size:13px;line-height:20px}.dsh-grok-search-copy p{margin:3px 0 0;color:var(--dsw-alias-label-secondary);font-size:11px;line-height:18px}.dsh-grok-switch{position:relative;width:44px;height:25px;flex:none;border:0;border-radius:999px;padding:0;background:var(--dsw-alias-interactive-bg-hover);cursor:pointer;transition:background .18s ease}.dsh-grok-switch::after{content:"";position:absolute;top:3px;left:3px;width:19px;height:19px;border-radius:50%;background:var(--dsw-alias-bg-layer-1);box-shadow:0 1px 3px rgb(0 0 0 / 18%);transition:transform .18s ease}.dsh-grok-switch[data-checked="true"]{background:var(--dsw-static-deepseek-500,#4d6bfe)}.dsh-grok-switch[data-checked="true"]::after{transform:translateX(19px)}.dsh-grok-switch:disabled{cursor:default;opacity:.48}.dsh-grok-search-risk{margin:13px 0 0;padding:11px 12px;border-radius:10px;color:var(--dsw-alias-label-secondary);background:rgb(217 155 43 / 8%);font-size:11px;line-height:18px}.dsh-grok-search-status{margin:11px 0 0;color:var(--dsw-alias-label-secondary);font-size:11px;line-height:18px}.dsh-grok-visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;clip-path:inset(50%)}
       .dsh-grok-models-head{padding:20px 20px 0}.dsh-grok-models-head h3{margin:0;font-size:16px;line-height:24px}.dsh-grok-models-head p{margin:5px 0 0;color:var(--dsw-alias-label-secondary);font-size:12px;line-height:19px}.dsh-grok-model-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:16px 20px 20px}.dsh-grok-model{min-width:0;border:1px solid var(--dsw-alias-border-l2);border-radius:13px;padding:14px;background:var(--dsw-alias-bg-layer-1)}.dsh-grok-model-title{display:flex;align-items:baseline;justify-content:space-between;gap:8px}.dsh-grok-model-title strong{overflow-wrap:anywhere;font-size:14px}.dsh-grok-model-id{overflow-wrap:anywhere;color:var(--dsw-alias-label-tertiary,var(--dsw-alias-label-secondary));font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10px}.dsh-grok-model-description{margin:5px 0 10px;color:var(--dsw-alias-label-secondary);font-size:11px;line-height:17px}.dsh-grok-badges{display:flex;flex-wrap:wrap;gap:5px}.dsh-grok-badge{border-radius:999px;padding:2px 8px;color:var(--dsw-alias-label-secondary);background:var(--dsw-alias-interactive-bg-hover);font-size:10px;line-height:18px}.dsh-grok-badge[data-accent="true"]{color:#a9326b;background:rgb(215 68 138 / 11%)}.dsh-grok-efforts{margin-top:10px;color:var(--dsw-alias-label-secondary);font-size:10px;line-height:17px}.dsh-grok-footer{padding:0 20px 16px;color:var(--dsw-alias-label-tertiary,var(--dsw-alias-label-secondary));font-size:10px}
       .dsh-grok-notice{padding:13px 14px;border:1px solid rgb(229 72 77 / 28%);border-radius:11px;color:var(--dsw-alias-label-secondary);background:rgb(229 72 77 / 7%);font-size:12px;line-height:19px}.dsh-grok-error{margin:10px 0 0;color:var(--dsw-static-red-500,#e5484d);font-size:12px;line-height:19px}
       @media(max-width:680px){.dsh-grok-panel-inner,.dsh-grok-models-head{padding:16px}.dsh-grok-model-grid{grid-template-columns:1fr;padding:14px 16px 16px}.dsh-grok-account-head{align-items:flex-start;flex-direction:column}.dsh-grok-quota-row{align-items:flex-start;flex-direction:column;gap:3px}}
@@ -189,7 +215,7 @@ window.__ModuleLoader__.load({
       document.head.appendChild(style)
     }
 
-    function GrokSettings({ connection, t }) {
+    function GrokSettings({ connection, t, searchSettings }) {
       const [status, setStatus] = React.useState()
       const [dashboard, setDashboard] = React.useState()
       const [busy, setBusy] = React.useState(false)
@@ -200,6 +226,22 @@ window.__ModuleLoader__.load({
       const [diagnosticsError, setDiagnosticsError] = React.useState(false)
       const [statusEpoch] = React.useState(() => ({ value: 0 }))
       const [diagnosticsEpoch] = React.useState(() => ({ value: 0 }))
+      const [searchSnapshot, setSearchSnapshot] = React.useState(() => searchSettings.getSnapshot())
+      const [searchSaving, setSearchSaving] = React.useState()
+      const [searchSaveError, setSearchSaveError] = React.useState(false)
+      const [searchWrite] = React.useState(() => ({ field: undefined }))
+      React.useEffect(() => {
+        let active = true
+        const publish = () => {
+          if (active) setSearchSnapshot(searchSettings.getSnapshot())
+        }
+        const unsubscribe = searchSettings.subscribe(publish)
+        publish()
+        return () => {
+          active = false
+          unsubscribe()
+        }
+      }, [searchSettings])
       const call = React.useCallback(async (endpoint, payload = {}) => {
         const result = await connection.rpc.call("/grok-auth", endpoint, payload)
         if (!result || result.ok !== true) throw new Error("Grok account RPC failed")
@@ -314,6 +356,31 @@ window.__ModuleLoader__.load({
         statusEpoch.value += 1
         await Promise.all([refreshStatus({ includeDashboard: true }), refreshDiagnostics()])
       })
+      const updateSearchSetting = async (field, enabled) => {
+        const current = searchSettings.getSnapshot()
+        if (
+          current.status !== "ready" || current.writable !== true
+          || typeof current.value?.[field] !== "boolean" || current.value[field] === enabled
+          || searchWrite.field !== undefined
+        ) return
+        searchWrite.field = field
+        setSearchSaving(field)
+        setSearchSaveError(false)
+        try {
+          await searchSettings.set(field, enabled)
+          const settled = searchSettings.getSnapshot()
+          if (
+            settled.status !== "ready"
+            || typeof settled.value?.[field] !== "boolean"
+            || settled.value[field] !== enabled
+          ) setSearchSaveError(true)
+        } catch {
+          setSearchSaveError(true)
+        } finally {
+          searchWrite.field = undefined
+          setSearchSaving(undefined)
+        }
+      }
 
       if (!connection.isLoopback) return React.createElement("section", { className: "dsh-grok-page" },
         React.createElement("h2", null, t("title")), React.createElement("p", { className: "dsh-grok-notice" }, t("loopback")))
@@ -380,6 +447,25 @@ window.__ModuleLoader__.load({
           effortText && React.createElement("div", { className: "dsh-grok-efforts" }, `${t("reasoning")}：${effortText}`))
       }
 
+      const searchReady = searchSnapshot.status === "ready"
+      const searchWritable = searchReady && searchSnapshot.writable === true
+      const searchStatus = searchSnapshot.status === "loading" ? t("searchLoading")
+        : searchSnapshot.status !== "ready" ? t("searchUnavailable")
+          : !searchWritable ? t("searchReadOnly") : undefined
+      const renderSearchSetting = (field, labelKey, descriptionKey) => {
+        const enabled = searchReady && searchSnapshot.value?.[field] === true
+        const disabled = !searchWritable || searchSaving !== undefined
+        return React.createElement("div", { className: "dsh-grok-search-row", key: field },
+          React.createElement("div", { className: "dsh-grok-search-copy" },
+            React.createElement("strong", null, t(labelKey)),
+            React.createElement("p", null, t(descriptionKey))),
+          React.createElement("button", {
+            className: "dsh-grok-switch", type: "button", role: "switch",
+            "aria-checked": enabled, "aria-label": `${t(labelKey)}：${t(enabled ? "searchEnabled" : "searchDisabled")}`,
+            "data-checked": enabled, disabled, onClick: () => updateSearchSetting(field, !enabled),
+          }, React.createElement("span", { className: "dsh-grok-visually-hidden" }, t(enabled ? "searchEnabled" : "searchDisabled"))))
+      }
+
       const models = dashboard?.models
       return React.createElement("section", { className: "dsh-grok-page" },
         React.createElement("h2", null, t("title")), React.createElement("p", { className: "dsh-grok-description" }, t("description")),
@@ -413,6 +499,15 @@ window.__ModuleLoader__.load({
             React.createElement("div", { className: "dsh-grok-section-head" }, React.createElement("h3", null, t("usage")),
               React.createElement("button", { className: "dsh-grok-button", type: "button", disabled: busy || !available, onClick: manualRefresh }, busy ? t("refreshing") : t("refresh"))),
             renderQuota(), error && React.createElement("p", { className: "dsh-grok-error" }, t("unavailable")))),
+          React.createElement("article", { className: "dsh-grok-panel" }, React.createElement("div", { className: "dsh-grok-panel-inner" },
+            React.createElement("div", { className: "dsh-grok-search-head" },
+              React.createElement("h3", null, t("searchTitle")), React.createElement("p", null, t("searchDescription"))),
+            React.createElement("div", { className: "dsh-grok-search-list" },
+              renderSearchSetting("webSearch", "webSearch", "webSearchDescription"),
+              renderSearchSetting("xSearch", "xSearch", "xSearchDescription")),
+            React.createElement("p", { className: "dsh-grok-search-risk" }, t("searchRisk")),
+            searchStatus && React.createElement("p", { className: "dsh-grok-search-status", role: "status", "aria-live": "polite" }, searchStatus),
+            searchSaveError && React.createElement("p", { className: "dsh-grok-error", role: "alert" }, t("searchSaveFailed")))),
           React.createElement("article", { className: "dsh-grok-panel" },
             React.createElement("div", { className: "dsh-grok-models-head" }, React.createElement("h3", null, t("modelsTitle")), React.createElement("p", null, t("modelsDescription"))),
             React.createElement("div", { className: "dsh-grok-model-grid" },
@@ -432,14 +527,15 @@ window.__ModuleLoader__.load({
       return new Intl.NumberFormat().format(value)
     }
 
-    const inject = ["slots", "locale", "connection"]
+    const inject = ["slots", "locale", "connection", "settingsScope"]
     function apply(ctx) {
       ctx.effect(() => ctx.locale.register(namespace, dictionaries), "dsh-grok: dictionaries")
       ctx.effect(() => installSettingsNavIcon(), "dsh-grok: settings nav icon")
       const t = ctx.locale.bind(namespace)
+      const searchSettings = ctx.settingsScope.bind({ namespace: "llm-grok", decode: decodeSearchConfig })
       ctx.slots.inject("settings.section", () => ctx.slots.register({
         name: "settings.section", id: "grok-auth", order: 45, label: () => t("nav"), locale: namespace,
-        inject: () => ({ connection: ctx.connection, t }),
+        inject: () => ({ connection: ctx.connection, t, searchSettings }),
       }, GrokSettings))
     }
     module.exports.inject = inject

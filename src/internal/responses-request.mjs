@@ -6,6 +6,7 @@ const MAX_TEXT_LENGTH = 8 * 1024 * 1024
 const MAX_REQUEST_BYTES = 16 * 1024 * 1024
 const MAX_MESSAGES = 10_000
 const MAX_TOOLS = 128
+const EMPTY_SERVER_TOOLS = Object.freeze([])
 
 export class UnsupportedResponsesRequestError extends Error {
   constructor() {
@@ -21,8 +22,9 @@ export class ResponsesRequestTooLargeError extends UnsupportedResponsesRequestEr
   }
 }
 
-export function createResponsesRequestEncoder(options) {
+export function createResponsesRequestEncoder(options, { serverTools } = {}) {
   const captured = captureResponsesRequestOptions(options)
+  const capturedServerTools = captureServerTools(serverTools)
   if (
     captured.provider !== "grok" ||
     !isId(captured.model) ||
@@ -36,9 +38,10 @@ export function createResponsesRequestEncoder(options) {
   }
   const messages = captureMessages(captured.messages, captured.model)
 
+  const wireTools = encodeWireTools(captured.tools, capturedServerTools)
   const fields = freezeTree({
     ...(captured.system === undefined ? {} : { instructions: parseText(captured.system) }),
-    ...(captured.tools === undefined ? {} : { tools: encodeTools(captured.tools) }),
+    ...(wireTools === undefined ? {} : { tools: wireTools }),
     ...(captured.reasoningEffort === undefined
       ? {}
       : { reasoning: { effort: parseId(captured.reasoningEffort) } }),
@@ -376,6 +379,40 @@ function encodeTools(tools) {
       description,
       parameters: cloneJsonObject(parameters),
     })
+  }
+  return encoded
+}
+
+function captureServerTools(serverTools) {
+  if (serverTools === undefined) return EMPTY_SERVER_TOOLS
+  const values = captureDataArray(serverTools, 2)
+  const seen = new Set()
+  let sawXSearch = false
+  for (let index = 0; index < values.length; index += 1) {
+    const kind = values[index]
+    if (
+      (kind !== "web_search" && kind !== "x_search") ||
+      seen.has(kind) ||
+      (kind === "web_search" && sawXSearch)
+    ) fail()
+    seen.add(kind)
+    if (kind === "x_search") sawXSearch = true
+  }
+  return values
+}
+
+function encodeWireTools(functionTools, serverTools) {
+  const encodedFunctions = functionTools === undefined ? undefined : encodeTools(functionTools)
+  const functionCount = encodedFunctions?.length ?? 0
+  if (functionCount + serverTools.length > MAX_TOOLS) fail()
+  if (encodedFunctions === undefined && serverTools.length === 0) return undefined
+
+  const encoded = encodedFunctions === undefined ? [] : encodedFunctions
+  for (let index = 0; index < serverTools.length; index += 1) {
+    const kind = serverTools[index]
+    if (kind === "web_search") encoded.push({ type: "web_search" })
+    else if (kind === "x_search") encoded.push({ type: "x_search" })
+    else fail()
   }
   return encoded
 }

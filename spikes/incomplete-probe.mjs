@@ -31,7 +31,7 @@ const request = {
   store: false,
 }
 
-const decoder = createResponsesEventDecoder()
+const decoder = createResponsesEventDecoder({ functionNames: [], serverTools: [] })
 let finishKind
 for await (const event of parseResponsesSse(transport.streamResponses(request))) {
   console.log(JSON.stringify({

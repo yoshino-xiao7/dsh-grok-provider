@@ -1,4 +1,7 @@
 import assert from "node:assert/strict"
+import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises"
+import { tmpdir } from "node:os"
+import { join } from "node:path"
 import test from "node:test"
 
 import { Context } from "@deepseek-ai/cordis"
@@ -9,6 +12,7 @@ import { mapLlmError } from "../src/internal/llm-error.mjs"
 import {
   InvalidRequestImageProjectionError,
   UnsupportedImageInputError,
+  UnsupportedSearchCapabilityError,
 } from "../src/internal/responses-request-compiler.mjs"
 import { UnsupportedResponsesRequestError } from "../src/internal/responses-request.mjs"
 
@@ -26,13 +30,90 @@ test("the Host plugin registers and cleanly removes the Grok provider in the rea
   await llmFiber.dispose()
 })
 
-test("the Host exposes no selectable authentication mode", () => {
-  assert.equal(String(grokPlugin.Config), "{}")
+test("the Host exposes opt-in Search policy without a selectable authentication mode", () => {
+  assert.deepEqual(grokPlugin.Config({}), { webSearch: false, xSearch: false })
+  assert.deepEqual(grokPlugin.Config({ webSearch: true, xSearch: false }), {
+    webSearch: true,
+    xSearch: false,
+  })
+  assert.throws(() => grokPlugin.Config({ webSearch: "true" }), TypeError)
+  assert.doesNotMatch(String(grokPlugin.Config), /authMode/u)
   assert.deepEqual(Object.keys(grokPlugin).sort(), ["Config", "apply", "inject", "name"])
 })
 
-test("the Host distinguishes image policy failures from invalid generic requests", () => {
+test("the Host wires webSearch Config through the real LLM runtime into the Grok request", async () => {
+  const originalFetch = globalThis.fetch
+  const originalHome = process.env.HOME
+  const originalUserProfile = process.env.USERPROFILE
+  const fixtureHome = await mkdtemp(join(tmpdir(), "dsh-grok-host-config-"))
+  const authDir = join(fixtureHome, ".grok")
+  let grokFiber
+  let llmFiber
+  let capturedRequest
+
+  try {
+    await mkdir(authDir)
+    await writeFile(join(authDir, "auth.json"), JSON.stringify(officialCredentialFixture()), {
+      mode: 0o600,
+    })
+    process.env.HOME = fixtureHome
+    process.env.USERPROFILE = fixtureHome
+    globalThis.fetch = async (url, init = {}) => {
+      if (url === "https://cli-chat-proxy.grok.com/v1/models") {
+        return new Response(modelCatalogFixture(), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        })
+      }
+      if (url === "https://cli-chat-proxy.grok.com/v1/responses") {
+        capturedRequest = JSON.parse(init.body)
+        return new Response(completedResponseFixture(), {
+          status: 200,
+          headers: { "content-type": "text/event-stream" },
+        })
+      }
+      throw new Error(`Unexpected fixture URL: ${url}`)
+    }
+
+    const ctx = new Context()
+    llmFiber = ctx.plugin(LlmRuntime)
+    await llmFiber
+    grokFiber = ctx.plugin(grokPlugin, { webSearch: true })
+    await grokFiber
+
+    for await (const _chunk of ctx.llm.stream({
+      provider: "grok",
+      model: "grok-4.6",
+      messages: [{
+        id: "host-config-search",
+        role: "user",
+        source: { kind: "user" },
+        content: [{ type: "text", text: "Find the official documentation" }],
+      }],
+    })) {}
+
+    assert.deepEqual(capturedRequest.tools, [{ type: "web_search" }])
+  } finally {
+    globalThis.fetch = originalFetch
+    if (originalHome === undefined) delete process.env.HOME
+    else process.env.HOME = originalHome
+    if (originalUserProfile === undefined) delete process.env.USERPROFILE
+    else process.env.USERPROFILE = originalUserProfile
+    try {
+      await grokFiber?.dispose()
+    } finally {
+      try {
+        await llmFiber?.dispose()
+      } finally {
+        await rm(fixtureHome, { recursive: true, force: true })
+      }
+    }
+  }
+})
+
+test("the Host distinguishes image and Search policy failures from invalid generic requests", () => {
   assert.equal(mapLlmError(new UnsupportedImageInputError()).code, "UNSUPPORTED_CONTENT")
+  assert.equal(mapLlmError(new UnsupportedSearchCapabilityError()).code, "UNSUPPORTED_CONTENT")
   assert.equal(mapLlmError(Object.assign(new Error("unsupported projection"), {
     code: "ATTACHMENT_PROJECTION_UNSUPPORTED",
   })).code, "UNSUPPORTED_CONTENT")
@@ -51,3 +132,44 @@ test("an aborted request maps an existing LLM error to ABORTED", () => {
   assert.notEqual(mapped, reason)
   assert.equal(mapped.cause, reason)
 })
+
+function officialCredentialFixture() {
+  const clientId = "b1a00492-073a-47ea-816f-4c329264a828"
+  return {
+    [`https://auth.x.ai::${clientId}`]: {
+      auth_mode: "oidc",
+      oidc_issuer: "https://auth.x.ai",
+      oidc_client_id: clientId,
+      key: "fixture-access-token",
+      expires_at: "2999-01-01T00:00:00.000Z",
+    },
+  }
+}
+
+function modelCatalogFixture() {
+  return JSON.stringify({
+    object: "list",
+    data: [{
+      id: "grok-4.6",
+      name: "Grok 4.6",
+      context_window: 500000,
+      api_backend: "responses",
+      supports_reasoning_effort: false,
+    }],
+  })
+}
+
+function completedResponseFixture() {
+  const events = [
+    { type: "response.created", sequence_number: 0, response: { status: "in_progress" } },
+    { type: "response.in_progress", sequence_number: 1, response: { status: "in_progress" } },
+    { type: "response.output_item.added", sequence_number: 2, output_index: 0, item: { id: "msg_1", type: "message", role: "assistant", status: "in_progress", content: [] } },
+    { type: "response.content_part.added", sequence_number: 3, output_index: 0, item_id: "msg_1", part: { type: "output_text", text: "" } },
+    { type: "response.output_text.delta", sequence_number: 4, output_index: 0, item_id: "msg_1", delta: "OK" },
+    { type: "response.output_text.done", sequence_number: 5, output_index: 0, item_id: "msg_1", text: "OK" },
+    { type: "response.content_part.done", sequence_number: 6, output_index: 0, item_id: "msg_1", part: { type: "output_text", text: "OK" } },
+    { type: "response.output_item.done", sequence_number: 7, output_index: 0, item: { id: "msg_1", type: "message", role: "assistant", status: "completed" } },
+    { type: "response.completed", sequence_number: 8, response: { status: "completed", usage: { input_tokens: 1, output_tokens: 1 } } },
+  ]
+  return events.map((event) => `event: ${event.type}\ndata: ${JSON.stringify(event)}\n\n`).join("")
+}

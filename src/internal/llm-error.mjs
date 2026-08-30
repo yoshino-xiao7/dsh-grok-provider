@@ -7,7 +7,10 @@ import {
 } from "./credential-source.mjs"
 import { GrokTransportError } from "./grok-transport.mjs"
 import { OfficialCredentialFileError } from "./official-credential-loader.mjs"
-import { UnsupportedImageInputError } from "./responses-request-compiler.mjs"
+import {
+  UnsupportedImageInputError,
+  UnsupportedSearchCapabilityError,
+} from "./responses-request-compiler.mjs"
 
 export function mapLlmError(error, signal) {
   if (signal?.aborted || error?.name === "AbortError") {
@@ -37,6 +40,11 @@ export function mapLlmError(error, signal) {
     isUnsupportedAttachmentError(error)
   ) {
     return new LlmError("The Grok model cannot accept this image input", "UNSUPPORTED_CONTENT", {
+      cause: error,
+    })
+  }
+  if (error instanceof UnsupportedSearchCapabilityError) {
+    return new LlmError("The Grok model cannot use the requested Search capability", "UNSUPPORTED_CONTENT", {
       cause: error,
     })
   }
