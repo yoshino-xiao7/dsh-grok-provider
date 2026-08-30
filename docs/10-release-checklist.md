@@ -211,9 +211,9 @@ English summary: every release must close documentation, security, tests, determ
 - [x] 安全契约冻结：首次复用前原 reasoning 必须闭合并有完成 Search；之后每次复用都必须 visible summary/content 与 summary/raw lifecycle 为空，并有独立 `response.output_item.done`。有界 opaque `encrypted_content` 允许存在；incomplete、非空、跨类型、未知 terminal 或 accessor-backed 字段继续失败关闭。
 - [x] `open_page` 契约冻结：只接受完成态精确 `type + url`，streamed/final action type 与 URL 必须一致；校验后丢弃 URL，不访问、不预览、不下载、不 replay，也不投影为 Harness 本地工具。
 - [x] 最终源码的脱敏真实账号协议验证完成且只保留计数/终态：Web 5 个完成 Search、206 events、`stop`；direct X 1 个官方 custom call、91 events、`stop`；Harness 形状的两次 `x_search` 加第三次续写共 3 个完成 Responses。未记录结果、URL、prompt、身份或凭据。
-- [ ] 更新 `package.json` 与 lockfile 到精确 `1.0.0`，并让发行物契约、中英文 README、CHANGELOG、安全策略、设计/状态/测试/发布文档和 `docs/releases/v1.0.0.md` 对同一候选事实保持一致。
-- [ ] 完成聚焦 codec 回归与完整 Node `24.19.0` 测试；明确覆盖多次严格空复用、Web/X Search-backed 首次复用、opaque encrypted content、每次 `output_item.done`、incomplete/非空/跨类型/terminal/accessor 拒绝，以及 `open_page` streamed/final 一致与边界错误。
-- [ ] 完成 `npm audit --omit=dev`、确定性 build、生成 bundle 一致性、`npm run pack:check`、秘密模式扫描与 `git diff --check`；记录真实而非预估的测试数、文件数与清单。
+- [x] `package.json` 与 lockfile 已更新到精确 `1.0.0`；发行物契约、中英文 README、CHANGELOG、安全策略、设计/状态/测试/发布文档和 `docs/releases/v1.0.0.md` 对同一候选事实保持一致。
+- [x] 聚焦 codec 38/38 与完整 Node `24.19.0` 测试通过：共 243 项、241 pass、0 fail、2 项平台跳过；覆盖多次严格空复用、Web/X Search-backed 首次复用、opaque encrypted content、每次 `output_item.done`、incomplete/非空/跨类型/terminal/accessor 拒绝，以及 `open_page` streamed/final 一致与边界错误。
+- [x] `npm audit --omit=dev` 为 0 漏洞；确定性 build 与生成 bundle 一致，`npm run pack:check` 为 72 项，秘密模式扫描和 `git diff --check` 通过。该 dry-run 尚不是冻结制品，大小与摘要不得作为发布授权依据。
 - [ ] 候选分支经受保护 PR 合入 `yukiryou/main`，并记录 macOS 14 / Windows 2022 CI 均全绿的精确 commit 与 run。Windows CI 不得表述为网络可达真机浏览器弹出验收。
 - [ ] 从最终 release commit 只生成并冻结一份 `dsh-grok-provider-1.0.0.tgz`；记录 packed/unpacked size、文件数、SHA-256、base64 SHA-512/npm SRI、manifest/exports 与隔离安装 smoke，禁止 publish job 重建或重新 pack。
 - [ ] 在上述提交与唯一制品证据形成后，取得仓库所有者对该精确 `dsh-grok-provider@1.0.0` 制品的明确授权；现有开发请求及任何旧版本授权不得复用。

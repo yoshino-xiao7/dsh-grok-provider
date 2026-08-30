@@ -160,7 +160,7 @@ dsh web
 - 每次复用都必须收到独立的 `response.output_item.done`。截断、非空 summary/raw、跨类型、未知 terminal 字段或 accessor 字段继续返回通用非法响应错误。
 - 完成态 `open_page` 只接受精确 `type + url`，streamed/final action 的类型与 URL 必须一致；Provider 校验后丢弃 URL，不会访问、预览、下载或回放。
 - 最终源码的脱敏真实账号探针已完成 Web 5 次 Search / 206 events / `stop`、direct X 1 次官方 custom call / 91 events / `stop`，以及两次 Harness `x_search` 后第三次续写的 3 Responses 闭环；未保存结果、URL、prompt、身份或凭据。这些是协议验证，不是发布、OAuth 或 Windows 真机证据。
-- 版本号、全量测试、双平台 CI、冻结制品、摘要/SRI、精确授权、发布、Registry/signature/attestation/provenance 回读均仍待完成。
+- manifest/lock 已同步为 `1.0.0`；Node 24 全量测试为 243 项、241 pass、0 fail、2 项平台跳过，生产依赖审计为 0 漏洞，确定性 build/bundle、72 项 dry-run pack、秘密模式扫描与 diff 检查均通过。仍待双平台 CI、最终 release commit、冻结制品、摘要/SRI、精确授权、发布及 Registry/signature/attestation/provenance 回读。
 
 | 项目 | `0.1.11` 已发布状态 |
 | --- | --- |
@@ -281,7 +281,7 @@ npm run pack:check
 - [x] 发布 `0.1.9`：加入 Web/X Search 协议与设置页，唯一制品、双平台 CI、签名与 SLSA provenance 均已验证；发布后确认 Host 设置 namespace 遗漏，开关不可用
 - [x] 发布 `0.1.10`：`llm-grok` 注册、按调用读取设置、唯一制品、双平台 CI、签名与 provenance 已完成
 - [x] 发布 `0.1.11`：修复 High Effort + Web Search reasoning 生命周期兼容；唯一制品、双平台 final CI、精确授权、Registry、签名、attestations 与 provenance 回读均已完成
-- [ ] 发布 `1.0.0`：修复多次严格空 reasoning ID 复用和完成态 Web Search `open_page` action；候选协议探针已通过，版本、自动化、CI、唯一制品与精确授权仍待完成
+- [ ] 发布 `1.0.0`：修复多次严格空 reasoning ID 复用和完成态 Web Search `open_page` action；版本、本地自动化与真实协议探针已通过，双平台 CI、最终提交、唯一制品与精确授权仍待完成
 - [ ] 再后续独立切片：默认关闭的图片生成（只收内联结果，提交 Harness attachment）
 - [ ] 完成 Windows x64 独立真机验收并按需发布后续稳定修复版
 

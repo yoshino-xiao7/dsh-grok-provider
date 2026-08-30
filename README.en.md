@@ -160,7 +160,7 @@ Directory inclusion is not an endorsement by xAI or DeepSeek Harness. [Listing P
 - Every reuse must receive its own `response.output_item.done`. Truncation, non-empty summary/raw data, cross-type reuse, unknown terminal fields, and accessor-backed terminal fields still map to the generic invalid-response error.
 - A completed `open_page` action accepts only exact `type + url`; streamed and final action type/URL must agree. The Provider discards the URL after validation and never visits, previews, downloads, or replays it.
 - Redacted real-account probes against the final source completed Web Search with 5 server calls / 206 events / `stop`, direct X Search with 1 official custom call / 91 events / `stop`, and a Harness-shaped three-Responses flow containing two `x_search` calls followed by a third continuation. No results, URLs, prompts, identity, or credentials were retained. This is protocol evidence, not publication, OAuth, or real-device Windows evidence.
-- Versioning, the full test suite, dual-platform CI, frozen artifact, digest/SRI, exact authorization, publication, and Registry/signature/attestation/provenance readback remain pending.
+- The manifest and lockfile are synchronized at `1.0.0`; the Node 24 suite reports 243 tests, 241 pass, 0 fail, and 2 platform skips. Production audit reports zero vulnerabilities, and the deterministic build/bundle comparison, 72-entry dry-run pack, secret scan, and diff check pass. Dual-platform CI, the final release commit, frozen artifact, digest/SRI, exact authorization, publication, and Registry/signature/attestation/provenance readback remain pending.
 
 | Item | Published `0.1.11` status |
 | --- | --- |
@@ -281,7 +281,7 @@ Read the [contributing guide](CONTRIBUTING.md) before filing an issue or PR. Cha
 - [x] Publish `0.1.9`: added the Web/X Search protocol and settings page; the unique artifact, dual-platform CI, signatures, and SLSA provenance are verified; post-release verification found the missing Host settings namespace and unusable controls
 - [x] Publish `0.1.10`: `llm-grok` registration, per-call capture, unique artifact, dual-platform CI, signatures, and provenance are complete
 - [x] Publish `0.1.11`: repair High Effort + Web Search reasoning-lifecycle compatibility; the unique artifact, final dual-platform CI, exact authorization, Registry, signatures, attestations, and provenance readback are complete
-- [ ] Publish `1.0.0`: repair multiple strictly empty reasoning-ID reuses and completed Web Search `open_page` actions; candidate protocol probes pass, while versioning, automation, CI, the unique artifact, and exact authorization remain pending
+- [ ] Publish `1.0.0`: repair multiple strictly empty reasoning-ID reuses and completed Web Search `open_page` actions; versioning, local automation, and real protocol probes pass, while dual-platform CI, the final commit, unique artifact, and exact authorization remain pending
 - [ ] A subsequent slice: opt-in image generation (inline results only, committed through Harness attachments)
 - [ ] Complete independent Windows x64 acceptance and publish a later stable fix if needed
 

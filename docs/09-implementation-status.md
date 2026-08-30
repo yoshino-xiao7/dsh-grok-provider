@@ -1,6 +1,6 @@
 # 当前实现与发布状态
 
-`1.0.0` Search 响应协议修复候选正在开发；当前可安装、受支持的稳定版和 npm `latest` 仍是 `0.1.11`。候选尚未完成版本更新、全量测试、双平台 CI、唯一制品冻结、精确制品授权或发布回读。
+`1.0.0` Search 响应协议修复候选已完成版本更新、本地自动化与脱敏真实协议验证；当前可安装、受支持的稳定版和 npm `latest` 仍是 `0.1.11`。候选尚未完成双平台 CI、最终提交、唯一制品冻结、精确制品授权或发布回读。
 
 状态日期：2026-08-30
 当前 npm 发布线：`dsh-grok-provider@0.1.11`
@@ -185,5 +185,6 @@ Windows x64 真机不再是 `0.1.0` 预发布阻断项。首次发布后必须�
 - 候选继续失败关闭：原始 reasoning 必须先闭合，首次复用前必须有完成的 server Search；每次复用都必须严格空并收到独立 `response.output_item.done`。incomplete、非空 summary/raw、跨类型、未知 terminal 字段和 accessor-backed 字段均拒绝。有界 opaque `encrypted_content` 被允许但不会暴露为可见 reasoning。
 - 完成态 `open_page` 只允许精确 `{ type: "open_page", url }` 及既有边界内的 URL；streamed 与 final action 的 type/URL 必须相同。Provider 校验后丢弃该 URL，不打开、不预览、不下载、不 replay。
 - 最终源码的脱敏真实账号生产 codec 探针已完成：Web 为 5 个完成 Search / 206 events / `stop`；direct X 为 1 个官方 custom call / 91 events / `stop`；Harness 形状的两次 `x_search` 与第三次续写在 3 个 Responses 调用中全部完成。验证记录没有结果、URL、prompt、身份或凭据。
-- 上述只证明候选协议方向能完成三类真实流程，不证明 `1.0.0` 已发布，也不替代自动化、双平台 CI、OAuth 或 Windows 真机外部浏览器验收。
-- 待完成：manifest/lock 版本、聚焦与全量自动化、构建与 pack、生产依赖审计、macOS/Windows CI、最终 release commit、唯一 tarball 与摘要/SRI、隔离安装/exports smoke、仓库所有者对该精确制品的明确授权、tag/GitHub Release/Trusted Publisher，以及 Registry 字节/signature/attestation/provenance 回读。
+- 上述只证明候选协议方向能完成三类真实流程，不证明 `1.0.0` 已发布，也不替代双平台 CI、OAuth 或 Windows 真机外部浏览器验收。
+- 已完成：manifest/lock 精确 `1.0.0`；聚焦 codec 38/38；Node 24 全量 243 项、241 pass、0 fail、2 项平台跳过；生产依赖审计 0 漏洞；确定性 build/bundle、72 项 dry-run pack、秘密模式扫描与 `git diff --check`。
+- 待完成：macOS/Windows CI、最终 release commit、唯一 tarball 与摘要/SRI、隔离安装/exports smoke、仓库所有者对该精确制品的明确授权、tag/GitHub Release/Trusted Publisher，以及 Registry 字节/signature/attestation/provenance 回读。
