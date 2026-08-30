@@ -143,8 +143,8 @@ dsh web
 | --- | --- |
 | DeepSeek Harness | 精确支持 `0.1.1-rc.2` |
 | Node.js | `>=24.19.0` |
-| macOS arm64 | 图片发送已完成真实 Harness 验证；`0.1.9` 已完成固定 Proxy 协议证据、失败关闭 fixture 下的隔离 Web Harness 四场景验收及 macOS 14 CI；`0.1.10` Search 修复已通过真实 SettingsProvider/LLM 回归、候选 tarball 隔离安装、设置 API 与浏览器开关写入验收，仍需候选 CI |
-| Windows x64 | 代码、slow-fake 与 `0.1.9` Windows 2022 CI 已通过；`0.1.10` 最终候选仍需通过 Windows CI。网络可达时由官方 CLI 生成 URL 并打开浏览器，该路径仍未完成 Windows 真机验收 |
+| macOS arm64 | 图片发送已完成真实 Harness 验证；`0.1.10` Search 修复已通过真实 SettingsProvider/LLM 回归、候选 tarball 隔离安装、设置 API、浏览器开关写入与候选 macOS 14 CI |
+| Windows x64 | 代码、slow-fake 与 `0.1.10` 候选 Windows 2022 CI 已通过。网络可达时由官方 CLI 生成 URL 并打开浏览器，该路径仍未完成 Windows 真机验收 |
 | macOS x64 / Linux | 不支持 |
 | Grok CLI | 不锁完整版本；严格校验官方路径、`login --oauth` 能力与生产 OIDC 凭据契约 |
 | 模型 | 当前账号目录中 backend 已被严格 codec 支持的全部模型 |
@@ -256,7 +256,7 @@ npm run pack:check
 - [x] 发布 `0.1.6`：图片历史 reasoning 兼容与 Windows 官方 CLI 分阶段 deadline 修复版；图片发送已完成真实 Harness 验证
 - [x] 发布 `0.1.7`：Provider/CLI 双版本诊断、CLI 安装恢复、OIDC discovery 超时脱敏结算与 `IconThinkOutline16` 设置导航兼容层
 - [x] 发布 `0.1.9`：加入 Web/X Search 协议与设置页，唯一制品、双平台 CI、签名与 SLSA provenance 均已验证；发布后确认 Host 设置 namespace 遗漏，开关不可用
-- [ ] 发布 `0.1.10`：修复 `llm-grok` 注册与按调用读取设置，并完成唯一制品、双平台 CI 与隔离安装验收
+- [ ] 发布 `0.1.10`：`llm-grok` 注册、按调用读取设置、双平台候选 CI 与隔离安装验收已完成；仍需合并 main、冻结唯一制品和精确发布授权
 - [ ] 再后续独立切片：默认关闭的图片生成（只收内联结果，提交 Harness attachment）
 - [ ] 完成 Windows x64 独立真机验收并按需发布后续稳定修复版
 

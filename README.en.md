@@ -143,8 +143,8 @@ Directory inclusion is not an endorsement by xAI or DeepSeek Harness. [Listing P
 | --- | --- |
 | DeepSeek Harness | Exact support for `0.1.1-rc.2` |
 | Node.js | `>=24.19.0` |
-| macOS arm64 | Image sending has real-Harness confirmation; `0.1.9` completed fixed-Proxy protocol evidence, four isolated Web Harness cases under fail-closed fixtures, and macOS 14 CI; the `0.1.10` Search repair passes real SettingsProvider/LLM tests, candidate-tarball isolated install, settings API, and browser switch-write acceptance, while candidate CI remains pending |
-| Windows x64 | Covered by code, slow fakes, and passing `0.1.9` Windows 2022 CI; the `0.1.10` final candidate must still pass Windows CI. On a reachable network the official CLI generates the URL and opens the browser, and that path still lacks real-device Windows acceptance |
+| macOS arm64 | Image sending has real-Harness confirmation; the `0.1.10` Search repair passes real SettingsProvider/LLM tests, candidate-tarball isolated install, settings API, browser switch-write acceptance, and candidate macOS 14 CI |
+| Windows x64 | Code, slow fakes, and `0.1.10` candidate Windows 2022 CI pass. On a reachable network the official CLI generates the URL and opens the browser, and that path still lacks real-device Windows acceptance |
 | macOS x64 / Linux | Unsupported |
 | Grok CLI | No full-version lock; official path, `login --oauth` capability, and production OIDC credential contract are enforced |
 | Models | Every account catalog model whose backend has a strict codec in this release |
@@ -256,7 +256,7 @@ Read the [contributing guide](CONTRIBUTING.md) before filing an issue or PR. Cha
 - [x] Publish `0.1.6`: image-history reasoning compatibility and per-stage official-CLI deadline repair for Windows; image sending is confirmed in a real Harness conversation
 - [x] Publish `0.1.7`: Provider/CLI version diagnostics, CLI installation recovery, redacted OIDC discovery-timeout settlement, and the `IconThinkOutline16` settings-navigation compatibility layer
 - [x] Publish `0.1.9`: added the Web/X Search protocol and settings page; the unique artifact, dual-platform CI, signatures, and SLSA provenance are verified; post-release verification found the missing Host settings namespace and unusable controls
-- [ ] Publish `0.1.10`: repair `llm-grok` registration and per-call settings capture, then close exact-artifact, dual-platform CI, and isolated-install gates
+- [ ] Publish `0.1.10`: `llm-grok` registration, per-call capture, dual-platform candidate CI, and isolated-install acceptance are complete; merging to main, freezing the unique artifact, and exact release authorization remain
 - [ ] A subsequent slice: opt-in image generation (inline results only, committed through Harness attachments)
 - [ ] Complete independent Windows x64 acceptance and publish a later stable fix if needed
 

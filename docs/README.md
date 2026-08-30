@@ -70,7 +70,7 @@
 
 `0.1.2-rc.1` 是唯一一次预发行尝试。仓库所有者决定从稳定 `0.1.2` 起不再发行预发行版；正式版缺陷通过新的递增稳定版本修复。`0.1.4` 已发布：仅精确 `grok-4.6` 开启图片，普通 user 与一层 tool-result 的红/蓝合成图共四次脱敏 Proxy 请求均通过；`grok-4.5` 的红图语义结果不可靠，因此失败关闭并与其他模型保持 text-only。`0.1.5` 维护发布供应链、账户面板投影与 Provider Runtime 安装事务。`0.1.6` 已发布图片历史 reasoning 兼容与 Windows CLI 分阶段 deadline 修复，精确制品、Trusted Publisher、Registry signature 与 provenance 均已验证；发布后图片能力已由仓库所有者确认可用。Windows 真机同时确认官方 `grok login --oauth` 可在 xAI OIDC discovery 阶段超时，此时登录 URL 尚未生成，不能据此声称 Provider 已修复或验证浏览器弹出。
 
-`0.1.7` 已发布闭合 CLI 安装/版本诊断、登录失败可解释性，以及采用 MIT 许可的 Harness `IconThinkOutline16` 路径几何；它不接管官方 CLI 的网络、代理或 OAuth 流程。sidebar quota `0.1.8` 曾发布后撤回，且该 npm 号码不能复用；Search 从未作为 `0.1.8` 发布。`0.1.9` 已发布精确 `grok-4.6` 的 Search 协议和页面，但遗漏 Host namespace 注册并过早冻结组合配置；`0.1.10` 只补齐 canonical settings 注册与调用级快照，不改变固定 Proxy、citation 或不可信远端内容边界。`0.1.10` 的真实 SettingsProvider/LLM 回归、页面写入与候选隔离安装已完成，双平台 CI、main CI 和最终唯一制品仍待关闭。隔离验收与精确 Registry Host/client import/export smoke 均不覆盖浏览器手工对话、Agent/session loop、OAuth、真实账号/真实 xAI 请求或 Windows 真机。完整门禁见[逐版发布检查表](./10-release-checklist.md)。
+`0.1.7` 已发布闭合 CLI 安装/版本诊断、登录失败可解释性，以及采用 MIT 许可的 Harness `IconThinkOutline16` 路径几何；它不接管官方 CLI 的网络、代理或 OAuth 流程。sidebar quota `0.1.8` 曾发布后撤回，且该 npm 号码不能复用；Search 从未作为 `0.1.8` 发布。`0.1.9` 已发布精确 `grok-4.6` 的 Search 协议和页面，但遗漏 Host namespace 注册并过早冻结组合配置；`0.1.10` 只补齐 canonical settings 注册与调用级快照，不改变固定 Proxy、citation 或不可信远端内容边界。`0.1.10` 的真实 SettingsProvider/LLM 回归、页面写入、候选隔离安装与候选双平台 CI 已完成，代码 PR、main CI 和最终唯一制品仍待关闭。隔离验收与精确 Registry Host/client import/export smoke 均不覆盖浏览器手工对话、Agent/session loop、OAuth、真实账号/真实 xAI 请求或 Windows 真机。完整门禁见[逐版发布检查表](./10-release-checklist.md)。
 
 ## 官方依据
 

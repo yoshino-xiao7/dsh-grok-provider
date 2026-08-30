@@ -183,7 +183,8 @@ English summary: every release must close documentation, security, tests, determ
 - [x] 真实 SettingsProvider + LLM Runtime 覆盖安全默认值、`applies:"live"`、组合回退、用户更新、prepared-call 隔离和 namespace 生命周期；client ready/write 与 unavailable fail-closed 测试同时保留。
 - [x] 精确 Node `24.19.0` 全量测试通过：224 项、222 pass、0 fail、2 项 Windows-only skip；生产依赖审计为 0 漏洞。收尾后的 dry-run pack 为 70 个文件；生成 bundle 一致、`git diff --check` 通过，秘密模式扫描仅命中显式测试 canary `Bearer fixture-access-token`。最终字节数与摘要等待合并后的 release commit 冻结。
 - [x] 从预验收候选 tarball 完成隔离 profile 安装：实际 `settings.describe` 包含可写、`applies:"live"` 的唯一 `llm-grok`；浏览器页面两个开关 enabled 且 unavailable 提示消失。浏览器写入由服务端 revision 递增确认并恢复默认关闭；延迟目录与 Host/Adapter fixture 回归分别证明旧调用保持快照、后续请求工具随设置变化。该验收未访问真实 xAI。
-- [ ] macOS 14 / Windows 2022 CI、代码 PR 与 main CI 全绿。
+- [x] 候选 head `95afb22aa6ba6e881594efd3e533c66e51d3a3ac` 的 push CI run [33298737955](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33298737955) 与 PR [#23](https://github.com/yoshino-xiao7/dsh-grok-provider/pull/23) CI run [33298739236](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33298739236) 均完成 macOS 14 / Windows 2022 全绿。
+- [ ] 代码 PR #23 合入受保护 `yukiryou/main`，并确认 main merge commit CI 全绿。
 - [ ] 版本分支合并后，从最终 release commit 唯一生成 `dsh-grok-provider-0.1.10.tgz`，记录文件数、大小、SHA-256 与 SRI；预验收 tarball 不得进入 Release。
 - [ ] 完整提交和唯一制品证据形成后，另行取得精确 `dsh-grok-provider@0.1.10` 发布授权。
 - [ ] 不可变 tag、唯一 GitHub Release asset、Trusted Publisher、npm `latest`、Registry 字节、签名与 provenance 回读全部关闭。
