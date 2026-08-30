@@ -143,8 +143,8 @@ Directory inclusion is not an endorsement by xAI or DeepSeek Harness. [Listing P
 | --- | --- |
 | DeepSeek Harness | Exact support for `0.1.1-rc.2` |
 | Node.js | `>=24.19.0` |
-| macOS arm64 | Image sending has real-Harness confirmation; focused `0.1.11` reasoning regressions and a redacted real summary/Search probe pass, while the final artifact and candidate macOS 14 CI remain pending |
-| Windows x64 | Existing code, slow fakes, and `0.1.10` Windows 2022 CI pass; final `0.1.11` candidate CI remains pending. On a reachable network the official CLI generates the URL and opens the browser, and that path still lacks real-device Windows acceptance |
+| macOS arm64 | Image sending has real-Harness confirmation; focused `0.1.11` regressions, the redacted summary/Search probe, and the code merge commit's macOS 14 CI pass; the release-evidence commit's final CI and unique artifact remain pending |
+| Windows x64 | The `0.1.11` code merge commit's Windows 2022 CI and existing slow fakes pass; the release-evidence commit's final CI remains pending. On a reachable network the official CLI generates the URL and opens the browser, and that path still lacks real-device Windows acceptance |
 | macOS x64 / Linux | Unsupported |
 | Grok CLI | No full-version lock; official path, `login --oauth` capability, and production OIDC credential contract are enforced |
 | Models | Every account catalog model whose backend has a strict codec in this release |
@@ -257,7 +257,7 @@ Read the [contributing guide](CONTRIBUTING.md) before filing an issue or PR. Cha
 - [x] Publish `0.1.7`: Provider/CLI version diagnostics, CLI installation recovery, redacted OIDC discovery-timeout settlement, and the `IconThinkOutline16` settings-navigation compatibility layer
 - [x] Publish `0.1.9`: added the Web/X Search protocol and settings page; the unique artifact, dual-platform CI, signatures, and SLSA provenance are verified; post-release verification found the missing Host settings namespace and unusable controls
 - [x] Publish `0.1.10`: `llm-grok` registration, per-call capture, unique artifact, dual-platform CI, signatures, and provenance are complete
-- [ ] Publish `0.1.11`: repair High Effort + Web Search reasoning-lifecycle compatibility; final dual-platform CI, unique artifact, exact authorization, Registry, and provenance readback remain pending
+- [ ] Publish `0.1.11`: repair High Effort + Web Search reasoning-lifecycle compatibility; the code PR and main dual-platform CI pass, while release-evidence final CI, the unique artifact, exact authorization, Registry, and provenance readback remain pending
 - [ ] A subsequent slice: opt-in image generation (inline results only, committed through Harness attachments)
 - [ ] Complete independent Windows x64 acceptance and publish a later stable fix if needed
 

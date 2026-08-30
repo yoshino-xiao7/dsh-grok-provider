@@ -5,8 +5,8 @@
 状态日期：2026-08-30
 当前 npm 发布线：`dsh-grok-provider@0.1.10`
 当前源码候选：`dsh-grok-provider@0.1.11`
-版本分支：`yukiryou/v0.1.11-reasoning-stream`
-发布基线：`yukiryou/main@fe1e5a7d82defb17ab5bcbb0d9979c43cb48c028`
+版本分支：`yukiryou/v0.1.11-release-evidence`
+发布基线：`yukiryou/main@307ae3ac83526f388c6b4a0d1e1346353bd5f4aa`
 内容类型路线：已冻结于 [能力路线图](./11-capability-roadmap.md)；`0.1.11` 是 Search 续跑的 reasoning 协议兼容修复，不新增内容类型、模型或工具。
 
 ## 已实现
@@ -173,3 +173,4 @@ Windows x64 真机不再是 `0.1.0` 预发布阻断项。首次发布后必须�
 - raw reasoning replay 元数据只记录 encrypted content 与 `reasoning_text` 类型标记，不保存 raw 明文；下一请求只发送 `encrypted_content` 与 `summary: []`，不会回传或把 raw 明文伪装为 summary。当前流中的 raw delta 仍作为 Harness 可见 reasoning 输出。
 - 113/113 聚焦协议回归已覆盖成功与失败形状。脱敏真实 probe 只发出 1 次 POST，得到 68 个事件、34 个 summary delta、0 个 raw delta、decoder accepted 与 1 个 finish；因此它验证当前 summary/Search 续跑路径，但不能作为 raw reasoning 真机证据。
 - Node `24.19.0` 本地全量测试已通过：238 项、236 pass、0 fail、2 项 Windows-only skip；生产依赖审计为 0 漏洞，dry-run pack 为 71 个文件，生成 bundle、diff 与秘密模式门禁均通过。当前尚未发布；双平台 CI、唯一最终 tarball、精确制品授权及 Registry/signature/provenance 回读仍等待后续门禁。
+- 代码 PR #25 已合入受保护 `yukiryou/main`，merge commit 为 `307ae3ac83526f388c6b4a0d1e1346353bd5f4aa`；main CI run `33302830043` 的 macOS 14 / Windows 2022 均通过。发布证据 PR、最终 release commit CI 与唯一制品仍待关闭。

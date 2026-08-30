@@ -1,10 +1,10 @@
 # Grok Build Provider 文档索引
 
-- 状态：**`0.1.10` 已发布并修复 Search 设置链路；`0.1.11` 正在修复 High Effort + Web Search reasoning 生命周期兼容**
+- 状态：**`0.1.10` 已发布；`0.1.11` reasoning 修复已合入受保护主分支，正在关闭发布证据**
 - 当前 npm 稳定版本：`0.1.10`
 - 最近发布版本：`0.1.10`
-- 当前开发分支：`yukiryou/v0.1.11-reasoning-stream`
-- 发布路径：`0.1.11` 聚焦修复与发行文档正在版本分支准备；最终 PR、双平台 CI、唯一制品和精确发布授权待完成
+- 当前开发分支：`yukiryou/v0.1.11-release-evidence`
+- 发布路径：代码 PR #25 已合入 `yukiryou/main@307ae3ac83526f388c6b4a0d1e1346353bd5f4aa`，main CI run `33302830043` 的 macOS 14 / Windows 2022 均通过；发布证据 PR、最终 release commit CI、唯一制品和精确发布授权待完成
 - 发布状态：不可变 `v0.1.10` 精确指向 release commit `fe1e5a7d82defb17ab5bcbb0d9979c43cb48c028`；main CI run `33299116564` 与 Trusted Publisher run `33299599113` 全绿。唯一 70 文件、197,620-byte tarball 的 unpacked size 为 628,836 bytes，SHA-256 为 `f9fe1dea743e86e2799a1073a93a8af91ad5bd389e14f4d2f0528428ada93c62`，npm SRI 为 `sha512-OnfG4diVqJdzYSwJKERNnaplYFbOvFICZP58E0f2Cdh+t7orlTL1DWokvzEHdJrw6HA+UMoKDZgJ6AMEVv4aUg==`；Registry、GitHub Release 与本地制品逐字节一致，npm `latest=0.1.10`，Registry signature 与 SLSA provenance 已回读。该版 Search 设置可写，但 High Effort + Web Search 续跑存在已知 reasoning lifecycle 兼容缺陷
 - 撤回状态：`0.1.8` 只对应 sidebar quota 维护发布，不包含 Search；撤回不会释放 npm semver，任何 Search 制品都不得复用 `0.1.8`
 - 兼容基线：DeepSeek Harness `0.1.1-rc.2`

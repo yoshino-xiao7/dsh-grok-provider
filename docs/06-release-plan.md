@@ -2,7 +2,7 @@
 
 ## 0. 当前状态
 
-当前可用 npm 稳定基线为 `dsh-grok-provider@0.1.10`；其 release commit 为 `fe1e5a7d82defb17ab5bcbb0d9979c43cb48c028`，不可变 tag 为 `v0.1.10`，main CI run `33299116564` 全绿。唯一 tarball 含 70 个文件、197,620 bytes，unpacked size 为 628,836 bytes，SHA-256 为 `f9fe1dea743e86e2799a1073a93a8af91ad5bd389e14f4d2f0528428ada93c62`，npm SRI 为 `sha512-OnfG4diVqJdzYSwJKERNnaplYFbOvFICZP58E0f2Cdh+t7orlTL1DWokvzEHdJrw6HA+UMoKDZgJ6AMEVv4aUg==`；Trusted Publisher run `33299599113` 已完成，Registry、GitHub Release 与本地制品逐字节一致，npm `latest=0.1.10`，Registry signature 与 SLSA provenance 已回读。sidebar quota 维护版 `0.1.8` 曾发布后撤回且不能复用。真实使用随后发现精确 `grok-4.6` 在 High Effort + Web Search 续跑时，可能在一次已完成 Search 后复用已关闭 reasoning ID 作为空占位；当前 `yukiryou/v0.1.11-reasoning-stream` 候选只在已完成 server Search 位于两段 reasoning 之间时放行该严格空项，并加入官方 raw reasoning 支持，不改变认证、设置、Search descriptor、模型 route、图片或平台边界。
+当前可用 npm 稳定基线为 `dsh-grok-provider@0.1.10`；其 release commit 为 `fe1e5a7d82defb17ab5bcbb0d9979c43cb48c028`，不可变 tag 为 `v0.1.10`，main CI run `33299116564` 全绿。唯一 tarball 含 70 个文件、197,620 bytes，unpacked size 为 628,836 bytes，SHA-256 为 `f9fe1dea743e86e2799a1073a93a8af91ad5bd389e14f4d2f0528428ada93c62`，npm SRI 为 `sha512-OnfG4diVqJdzYSwJKERNnaplYFbOvFICZP58E0f2Cdh+t7orlTL1DWokvzEHdJrw6HA+UMoKDZgJ6AMEVv4aUg==`；Trusted Publisher run `33299599113` 已完成，Registry、GitHub Release 与本地制品逐字节一致，npm `latest=0.1.10`，Registry signature 与 SLSA provenance 已回读。sidebar quota 维护版 `0.1.8` 曾发布后撤回且不能复用。真实使用随后发现精确 `grok-4.6` 在 High Effort + Web Search 续跑时，可能在一次已完成 Search 后复用已关闭 reasoning ID 作为空占位；`0.1.11` 只在已完成 server Search 位于两段 reasoning 之间时放行该严格空项，并加入官方 raw reasoning 支持，不改变认证、设置、Search descriptor、模型 route、图片或平台边界。代码 PR #25 已合入 `yukiryou/main@307ae3ac83526f388c6b4a0d1e1346353bd5f4aa`，main CI run `33302830043` 双平台全绿；当前 `yukiryou/v0.1.11-release-evidence` 正在冻结最终发布事实。
 
 首个 `dsh-grok-provider@0.1.0` 于 2026-08-26 从 GitHub Release 中唯一的候选 tarball 发布到 npm；Registry 回读的 SHA-512、重新下载文件的 SHA-256 和 GitHub Release 产物完全一致，并生成 npm provenance attestation。后续稳定版沿用由该流程建立的不可变制品与回读原则。
 
@@ -131,7 +131,7 @@ patch 路径必须为不含 `..`、绝对路径、反斜线或 NUL 的相对 `.y
 
 ## 7. Git 与版本
 
-- `0.1.0` 历史开发分支为 `yukiryou/v0.1.0`；`0.1.10` 代码分支 `yukiryou/v0.1.10-search-settings-fix` 与发布证据分支 `yukiryou/v0.1.10-release-evidence` 已分别经 PR #23、#24 合入受保护 `yukiryou/main`，最终 release commit 为 `fe1e5a7d82defb17ab5bcbb0d9979c43cb48c028`。`0.1.8` 已由撤回的 sidebar quota 发布消耗，不得复用；当前候选分支为 `yukiryou/v0.1.11-reasoning-stream`（目标版本 `0.1.11`），已发布 `0.1.10` 不可覆盖或重发。
+- `0.1.0` 历史开发分支为 `yukiryou/v0.1.0`；`0.1.10` 代码分支 `yukiryou/v0.1.10-search-settings-fix` 与发布证据分支 `yukiryou/v0.1.10-release-evidence` 已分别经 PR #23、#24 合入受保护 `yukiryou/main`，最终 release commit 为 `fe1e5a7d82defb17ab5bcbb0d9979c43cb48c028`。`0.1.8` 已由撤回的 sidebar quota 发布消耗，不得复用。`0.1.11` 代码分支 `yukiryou/v0.1.11-reasoning-stream` 已经 PR #25 合入，当前发布证据分支为 `yukiryou/v0.1.11-release-evidence`；已发布 `0.1.10` 不可覆盖或重发。
 - `package.json`、CHANGELOG、release notes、Git tag 和 tarball 必须使用同一个精确候选版本。
 - 发布提交必须干净且可复现。
 - tag 使用 `v<major>.<minor>.<patch>`，只在发布提交确定后创建。
