@@ -1038,6 +1038,110 @@ test("terminal Web Search output must match the streamed action type and open_pa
   ), { name: "InvalidResponsesStreamError" })
 })
 
+test("streamed and terminal Search items reject self-replacing accessors without invocation", () => {
+  const receipt = { functionNames: [], serverTools: ["web_search"] }
+
+  const streamedWebEvents = webSearchCompletionEvents({ type: "search", query: "xAI", sources: [] })
+  const streamedWebItem = streamedWebEvents.find(
+    (event) => event.type === "response.output_item.done" && event.output_index === 0,
+  ).item
+  const streamedWebIdCalls = installSelfReplacingAccessor(streamedWebItem, "id", "ws_fixture")
+  assert.throws(() => decodeResponsesEvents(streamedWebEvents, receipt), {
+    name: "InvalidResponsesStreamError",
+  })
+  assert.equal(streamedWebIdCalls(), 0)
+
+  const streamedUrl = "https://example.com/streamed"
+  const terminalWebEvents = webSearchCompletionEvents(
+    { type: "open_page", url: streamedUrl },
+    { type: "open_page", url: "https://example.com/mismatched" },
+  )
+  const terminalWebItem = terminalWebEvents.at(-1).response.output[0]
+  const terminalWebTypeCalls = installSelfReplacingAccessor(
+    terminalWebItem,
+    "type",
+    "web_search_call",
+    () => {
+      terminalWebItem.action.url = streamedUrl
+    },
+  )
+  assert.throws(() => decodeResponsesEvents(terminalWebEvents, receipt), {
+    name: "InvalidResponsesStreamError",
+  })
+  assert.equal(terminalWebTypeCalls(), 0)
+
+  const streamedXEvents = xSearchCompletionEvents()
+  const streamedXItem = streamedXEvents.find(
+    (event) => event.type === "response.output_item.done" && event.output_index === 0,
+  ).item
+  const streamedXIdCalls = installSelfReplacingAccessor(streamedXItem, "id", "x_fixture")
+  assert.throws(() => decodeResponsesEvents(streamedXEvents, {
+    functionNames: [],
+    serverTools: ["x_search"],
+  }), { name: "InvalidResponsesStreamError" })
+  assert.equal(streamedXIdCalls(), 0)
+
+  const terminalXEvents = xSearchCompletionEvents()
+  const terminalXItem = terminalXEvents.at(-1).response.output[0]
+  const terminalXTypeCalls = installSelfReplacingAccessor(
+    terminalXItem,
+    "type",
+    "custom_tool_call",
+  )
+  assert.throws(() => decodeResponsesEvents(terminalXEvents, {
+    functionNames: [],
+    serverTools: ["x_search"],
+  }), { name: "InvalidResponsesStreamError" })
+  assert.equal(terminalXTypeCalls(), 0)
+
+  const terminalXInputEvents = xSearchCompletionEvents()
+  const terminalXInputItem = terminalXInputEvents.at(-1).response.output[0]
+  const terminalXInputCalls = installSelfReplacingAccessor(
+    terminalXInputItem,
+    "input",
+    '{"query":"xAI"}',
+  )
+  assert.throws(() => decodeResponsesEvents(terminalXInputEvents, {
+    functionNames: [],
+    serverTools: ["x_search"],
+  }), { name: "InvalidResponsesStreamError" })
+  assert.equal(terminalXInputCalls(), 0)
+
+  const terminalStatusEvents = webSearchCompletionEvents(
+    { type: "open_page", url: streamedUrl },
+    { type: "open_page", url: "https://example.com/status-mismatch" },
+  )
+  const terminalStatusResponse = terminalStatusEvents.at(-1).response
+  const terminalStatusCalls = installSelfReplacingAccessor(
+    terminalStatusResponse,
+    "status",
+    "completed",
+    () => {
+      terminalStatusResponse.output[0].action.url = streamedUrl
+    },
+  )
+  assert.throws(() => decodeResponsesEvents(terminalStatusEvents, receipt), {
+    name: "InvalidResponsesStreamError",
+  })
+  assert.equal(terminalStatusCalls(), 0)
+
+  const terminalOutputEvents = webSearchCompletionEvents({
+    type: "open_page",
+    url: streamedUrl,
+  })
+  const terminalOutputResponse = terminalOutputEvents.at(-1).response
+  const terminalOutput = terminalOutputResponse.output
+  const terminalOutputCalls = installSelfReplacingAccessor(
+    terminalOutputResponse,
+    "output",
+    terminalOutput,
+  )
+  assert.throws(() => decodeResponsesEvents(terminalOutputEvents, receipt), {
+    name: "InvalidResponsesStreamError",
+  })
+  assert.equal(terminalOutputCalls(), 0)
+})
+
 test("Web Search continuation accepts closed empty reasoning before the final message", () => {
   const firstEmpty = {
     id: "rs_search_empty_completed",
@@ -1424,6 +1528,63 @@ test("reused reasoning terminal snapshots and incomplete responses fail closed",
       usage: { input_tokens: 8, output_tokens: 2 },
     },
   }), { name: "InvalidResponsesStreamError" })
+})
+
+test("a closed reused reasoning lifecycle permits a later max-token response", () => {
+  const itemId = "rs_reuse_closed_before_incomplete"
+  const decoder = createOpenReusedReasoning(itemId)
+  decoder.push({
+    type: "response.output_item.done",
+    sequence_number: 14,
+    output_index: 2,
+    item: {
+      id: itemId,
+      type: "reasoning",
+      status: "completed",
+      summary: [],
+    },
+  })
+  decoder.push({
+    type: "response.output_item.added",
+    sequence_number: 15,
+    output_index: 3,
+    item: {
+      id: "msg_after_closed_reuse",
+      type: "message",
+      role: "assistant",
+      status: "in_progress",
+      content: [],
+    },
+  })
+  decoder.push({
+    type: "response.content_part.added",
+    sequence_number: 16,
+    output_index: 3,
+    item_id: "msg_after_closed_reuse",
+    content_index: 0,
+    part: { type: "output_text", text: "", annotations: [] },
+  })
+  decoder.push({
+    type: "response.output_text.delta",
+    sequence_number: 17,
+    output_index: 3,
+    item_id: "msg_after_closed_reuse",
+    content_index: 0,
+    delta: "Partial",
+  })
+  assert.deepEqual(decoder.push({
+    type: "response.incomplete",
+    sequence_number: 18,
+    response: {
+      status: "incomplete",
+      incomplete_details: { reason: "max_output_tokens" },
+      usage: { input_tokens: 8, output_tokens: 2 },
+    },
+  }).slice(-2), [
+    { type: "usage", usage: { inputTokens: 8, outputTokens: 2 } },
+    { type: "finish", reason: { kind: "max-tokens" } },
+  ])
+  decoder.finish()
 })
 
 test("X Search custom tool input lifecycle emits no Harness tool-call chunks", () => {
@@ -2037,6 +2198,64 @@ function xSearchItem(status, input) {
     name: "x_keyword_search",
     input,
   }
+}
+
+function xSearchCompletionEvents() {
+  const input = '{"query":"xAI"}'
+  const text = "X result"
+  const xDone = xSearchItem("completed", input)
+  const messageDone = {
+    id: "msg_x",
+    type: "message",
+    role: "assistant",
+    status: "completed",
+    content: [{ type: "output_text", text, annotations: [] }],
+  }
+  return [
+    { type: "response.created", sequence_number: 0, response: { status: "in_progress" } },
+    { type: "response.in_progress", sequence_number: 1, response: { status: "in_progress" } },
+    { type: "response.output_item.added", sequence_number: 2, output_index: 0, item: xSearchItem("in_progress", "") },
+    { type: "response.custom_tool_call_input.delta", sequence_number: 3, output_index: 0, item_id: "x_fixture", delta: '{"query":' },
+    { type: "response.custom_tool_call_input.delta", sequence_number: 4, output_index: 0, item_id: "x_fixture", delta: '"xAI"}' },
+    { type: "response.custom_tool_call_input.done", sequence_number: 5, output_index: 0, item_id: "x_fixture", input },
+    { type: "response.output_item.done", sequence_number: 6, output_index: 0, item: xDone },
+    { type: "response.output_item.added", sequence_number: 7, output_index: 1, item: { id: "msg_x", type: "message", role: "assistant", status: "in_progress", content: [] } },
+    { type: "response.content_part.added", sequence_number: 8, output_index: 1, item_id: "msg_x", content_index: 0, part: { type: "output_text", text: "", annotations: [] } },
+    { type: "response.output_text.delta", sequence_number: 9, output_index: 1, item_id: "msg_x", content_index: 0, delta: text },
+    { type: "response.output_text.done", sequence_number: 10, output_index: 1, item_id: "msg_x", content_index: 0, text },
+    { type: "response.content_part.done", sequence_number: 11, output_index: 1, item_id: "msg_x", content_index: 0, part: { type: "output_text", text, annotations: [] } },
+    { type: "response.output_item.done", sequence_number: 12, output_index: 1, item: messageDone },
+    {
+      type: "response.completed",
+      sequence_number: 13,
+      response: {
+        status: "completed",
+        output: [xDone, messageDone],
+        server_side_tool_usage: { SERVER_SIDE_TOOL_X_SEARCH: 1 },
+        usage: { input_tokens: 8, output_tokens: 2 },
+      },
+    },
+  ]
+}
+
+function installSelfReplacingAccessor(target, key, value, onGet = () => {}) {
+  let calls = 0
+  Object.defineProperty(target, key, {
+    configurable: true,
+    enumerable: true,
+    get() {
+      calls += 1
+      onGet()
+      Object.defineProperty(target, key, {
+        configurable: true,
+        enumerable: true,
+        value,
+        writable: true,
+      })
+      return value
+    },
+  })
+  return () => calls
 }
 
 function citationAnnotation({ endIndex }) {

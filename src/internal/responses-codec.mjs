@@ -356,7 +356,10 @@ export function createResponsesEventDecoder(receipt) {
             sawServerTool = true
           }
           if (sawServerTool && completedServerCalls.length === 0) fail()
-          chunks.push({ type: "usage", usage: parseUsage(event.response.usage) })
+          chunks.push({
+            type: "usage",
+            usage: parseUsage(captureOwnDataValue(event.response, "usage")),
+          })
           chunks.push({
             type: "finish",
             reason: { kind: sawFunctionCall ? "tool-calls" : "stop" },
@@ -374,12 +377,16 @@ export function createResponsesEventDecoder(receipt) {
 
         case "response.incomplete":
           requireRunning(created, inProgress)
+          const incompleteDetails = captureOwnDataValue(
+            event.response,
+            "incomplete_details",
+          )
           if (
             !sawVisibleOutput ||
             serverCalls.size !== 0 ||
             !isResponseStatus(event.response, "incomplete") ||
-            !isPlainObject(event.response.incomplete_details) ||
-            event.response.incomplete_details.reason !== "max_output_tokens"
+            !isPlainObject(incompleteDetails) ||
+            captureOwnDataValue(incompleteDetails, "reason") !== "max_output_tokens"
           ) fail()
           requireResponseId(event.response, responseId)
           if (validateResponseMetadata(event.response, responsePolicy, completedServerCalls)) {
@@ -396,7 +403,10 @@ export function createResponsesEventDecoder(receipt) {
             })
           }
           blocks.clear()
-          chunks.push({ type: "usage", usage: parseUsage(event.response.usage) })
+          chunks.push({
+            type: "usage",
+            usage: parseUsage(captureOwnDataValue(event.response, "usage")),
+          })
           chunks.push({ type: "finish", reason: { kind: "max-tokens" } })
           completed = true
           break
@@ -570,14 +580,14 @@ function registerOutputItem(item, itemId, itemType, outputIndex, itemLifecycles,
 
   // The first reuse is proven by a completed Web/X Search in logical output order.
   // Once proven, the same id may recur only as another strict empty placeholder.
-  const completedSearchBetweenItems = completedServerCalls.some((call) => (
+  const searchBacked = previous.searchBacked || completedServerCalls.some((call) => (
     call.outputIndex > previous.outputIndex && call.outputIndex < outputIndex
   ))
   requireExactDataKeys(item, ["id", "status", "summary", "type"])
   if (
     previous.type !== "reasoning" ||
     !previous.closed ||
-    (!previous.searchBacked && !completedSearchBetweenItems) ||
+    !searchBacked ||
     itemType !== "reasoning" ||
     item.status !== "in_progress" ||
     !Array.isArray(item.summary) ||
@@ -680,19 +690,19 @@ function closeOutputItem(
 }
 
 function closeServerCall(event, call) {
-  if (!isPlainObject(event.item) || event.item.id !== call.id) fail()
   if (call.type === "web-search") {
     if (call.state !== "completed") fail()
-    const action = validateWebSearchItem(event.item, "completed")
+    const item = validateWebSearchItem(event.item, "completed")
+    if (item.id !== call.id) fail()
     return {
       type: "web_search",
       id: call.id,
-      action,
+      action: item.action,
     }
   }
   if (call.type !== "x-search" || !call.inputDone) fail()
-  validateXSearchItem(event.item, "completed", call.input)
-  if (event.item.call_id !== call.callId || event.item.name !== call.name) fail()
+  const item = validateXSearchItem(event.item, "completed", call.input)
+  if (item.id !== call.id || item.callId !== call.callId || item.name !== call.name) fail()
   return {
     type: "x_search",
     id: call.id,
@@ -717,12 +727,16 @@ function requireServerCall(event, serverCalls, expectedType) {
 
 function validateWebSearchItem(item, status) {
   requireExactDataKeys(item, ["action", "id", "status", "type"])
+  const id = item.id
   if (
     item.type !== "web_search_call" ||
     item.status !== status ||
-    !isBoundedString(item.id, 256)
+    !isBoundedString(id, 256)
   ) fail()
-  return validateWebSearchAction(item.action, status)
+  return Object.freeze({
+    id,
+    action: validateWebSearchAction(item.action, status),
+  })
 }
 
 function validateWebSearchAction(action, status) {
@@ -752,16 +766,23 @@ function validateWebSearchAction(action, status) {
   return Object.freeze({ type })
 }
 
-function validateXSearchItem(item, status, input) {
+function validateXSearchItem(item, status, expectedInput) {
   requireExactDataKeys(item, ["call_id", "id", "input", "name", "status", "type"])
+  const id = item.id
+  const callId = item.call_id
+  const name = item.name
+  const input = item.input
   if (
     item.type !== "custom_tool_call" ||
     item.status !== status ||
-    !isBoundedString(item.id, 256) ||
-    !isBoundedString(item.call_id, 256) ||
-    !X_SEARCH_FUNCTION_NAMES.has(item.name) ||
-    item.input !== input
+    !isBoundedString(id, 256) ||
+    !isBoundedString(callId, 256) ||
+    !X_SEARCH_FUNCTION_NAMES.has(name) ||
+    typeof input !== "string" ||
+    Buffer.byteLength(input, "utf8") > MAX_TOOL_ARGUMENT_BYTES ||
+    (expectedInput !== undefined && input !== expectedInput)
   ) fail()
+  return Object.freeze({ id, callId, name, input })
 }
 
 function appendCustomToolInput(call, delta) {
@@ -926,19 +947,25 @@ function sameAnnotations(left, right) {
 function validateResponseMetadata(response, responsePolicy, completedServerCalls) {
   if (!isPlainObject(response)) fail()
   let sawSearchEvidence = false
-  if (response.citations !== undefined) {
-    if (validateCitations(response.citations)) sawSearchEvidence = true
+  const citations = captureOptionalOwnDataValue(response, "citations")
+  if (citations !== undefined) {
+    if (validateCitations(citations)) sawSearchEvidence = true
   }
   let outputServerCalls
-  if (response.output !== undefined) {
-    const output = validateResponseOutput(response.output, responsePolicy)
+  const responseOutput = captureOptionalOwnDataValue(response, "output")
+  if (responseOutput !== undefined) {
+    const output = validateResponseOutput(responseOutput, responsePolicy)
     outputServerCalls = output.serverCalls
     if (output.sawCitation || outputServerCalls.length > 0) sawSearchEvidence = true
   }
   let serverSideToolUsage
-  if (response.server_side_tool_usage !== undefined) {
+  const responseServerSideToolUsage = captureOptionalOwnDataValue(
+    response,
+    "server_side_tool_usage",
+  )
+  if (responseServerSideToolUsage !== undefined) {
     serverSideToolUsage = validateServerSideToolUsage(
-      response.server_side_tool_usage,
+      responseServerSideToolUsage,
       responsePolicy,
     )
     if (serverSideToolUsage.sawSearch) sawSearchEvidence = true
@@ -972,30 +999,32 @@ function validateResponseOutput(output, responsePolicy) {
   for (let outputIndex = 0; outputIndex < items.length; outputIndex += 1) {
     const item = items[outputIndex]
     if (!isPlainObject(item)) fail()
-    if (item.type === "web_search_call") {
+    const type = captureOwnDataValue(item, "type")
+    if (type === "web_search_call") {
       if (!responsePolicy.serverTools.has("web_search")) fail()
-      const action = validateWebSearchItem(item, "completed")
-      serverCalls.push({ type: "web_search", id: item.id, outputIndex, action })
+      const completedItem = validateWebSearchItem(item, "completed")
+      serverCalls.push({
+        type: "web_search",
+        id: completedItem.id,
+        outputIndex,
+        action: completedItem.action,
+      })
       continue
     }
-    if (item.type === "custom_tool_call") {
-      if (
-        !responsePolicy.serverTools.has("x_search") ||
-        typeof item.input !== "string" ||
-        Buffer.byteLength(item.input, "utf8") > MAX_TOOL_ARGUMENT_BYTES
-      ) fail()
-      validateXSearchItem(item, "completed", item.input)
+    if (type === "custom_tool_call") {
+      if (!responsePolicy.serverTools.has("x_search")) fail()
+      const completedItem = validateXSearchItem(item, "completed")
       serverCalls.push({
         type: "x_search",
-        id: item.id,
-        callId: item.call_id,
-        name: item.name,
+        id: completedItem.id,
+        callId: completedItem.callId,
+        name: completedItem.name,
         outputIndex,
       })
       continue
     }
-    if (item.type === "reasoning" || item.type === "function_call") continue
-    if (item.type !== "message") fail()
+    if (type === "reasoning" || type === "function_call") continue
+    if (type !== "message") fail()
     if (item.content === undefined) continue
     const content = captureDataArray(item.content, MAX_ANNOTATIONS)
     for (const part of content) {
@@ -1122,14 +1151,16 @@ function appendDelta(block, delta) {
 
 function parseUsage(usage) {
   if (!isPlainObject(usage)) fail()
-  const inputTokens = parseCount(usage.input_tokens)
-  const outputTokens = parseCount(usage.output_tokens)
-  const cachedTokens = usage.input_tokens_details === undefined
+  const inputTokens = parseCount(captureOwnDataValue(usage, "input_tokens"))
+  const outputTokens = parseCount(captureOwnDataValue(usage, "output_tokens"))
+  const inputTokenDetails = captureOptionalOwnDataValue(usage, "input_tokens_details")
+  const outputTokenDetails = captureOptionalOwnDataValue(usage, "output_tokens_details")
+  const cachedTokens = inputTokenDetails === undefined
     ? 0
-    : parseCountFrom(usage.input_tokens_details, "cached_tokens")
-  const reasoningTokens = usage.output_tokens_details === undefined
+    : parseCountFrom(inputTokenDetails, "cached_tokens")
+  const reasoningTokens = outputTokenDetails === undefined
     ? 0
-    : parseCountFrom(usage.output_tokens_details, "reasoning_tokens")
+    : parseCountFrom(outputTokenDetails, "reasoning_tokens")
   if (cachedTokens > inputTokens) fail()
 
   return {
@@ -1142,7 +1173,7 @@ function parseUsage(usage) {
 
 function parseCountFrom(value, field) {
   if (!isPlainObject(value)) fail()
-  return parseCount(value[field] ?? 0)
+  return parseCount(captureOptionalOwnDataValue(value, field) ?? 0)
 }
 
 function parseCount(value) {
@@ -1171,7 +1202,7 @@ function requireResponseId(response, expected) {
 }
 
 function isResponseStatus(value, status) {
-  return isPlainObject(value) && value.status === status
+  return isPlainObject(value) && captureOptionalOwnDataValue(value, "status") === status
 }
 
 function isBoundedString(value, maxLength) {
@@ -1233,6 +1264,14 @@ function captureOwnDataValue(value, key) {
   if (!isPlainObject(value)) fail()
   const descriptor = Object.getOwnPropertyDescriptor(value, key)
   if (!descriptor || !("value" in descriptor)) fail()
+  return descriptor.value
+}
+
+function captureOptionalOwnDataValue(value, key) {
+  if (!isPlainObject(value)) fail()
+  const descriptor = Object.getOwnPropertyDescriptor(value, key)
+  if (descriptor === undefined) return undefined
+  if (!("value" in descriptor)) fail()
   return descriptor.value
 }
 

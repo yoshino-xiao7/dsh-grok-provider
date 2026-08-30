@@ -157,10 +157,10 @@ dsh web
 
 - 一个 reasoning ID 的原始生命周期必须先闭合，并且首次复用前必须已有一个完成的 Web/X server Search；之后只允许它以严格空占位再次出现。
 - “严格空”是指可见 summary/content 为空，且没有 summary/raw lifecycle；允许有界、不透明的 `encrypted_content`，但不会把它当作可见 reasoning 或保存上游明文。
-- 每次复用都必须收到独立的 `response.output_item.done`。截断、非空 summary/raw、跨类型、未知 terminal 字段或 accessor 字段继续返回通用非法响应错误。
+- 每次复用都必须收到独立的 `response.output_item.done`；若 `response.incomplete` 到来时仍有复用段未闭合，则返回通用非法响应错误，所有复用段已闭合后的 `max_output_tokens` 终态仍有效。非空 summary/raw、跨类型、未知 terminal 字段或 accessor 字段继续拒绝。
 - 完成态 `open_page` 只接受精确 `type + url`，streamed/final action 的类型与 URL 必须一致；Provider 校验后丢弃 URL，不会访问、预览、下载或回放。
-- 最终源码的脱敏真实账号探针已完成 Web 5 次 Search / 206 events / `stop`、direct X 1 次官方 custom call / 91 events / `stop`，以及两次 Harness `x_search` 后第三次续写的 3 Responses 闭环；未保存结果、URL、prompt、身份或凭据。这些是协议验证，不是发布、OAuth 或 Windows 真机证据。
-- manifest/lock 已同步为 `1.0.0`；Node 24 全量测试为 243 项、241 pass、0 fail、2 项平台跳过，生产依赖审计为 0 漏洞，确定性 build/bundle、72 项 dry-run pack、秘密模式扫描与 diff 检查均通过。仍待双平台 CI、最终 release commit、冻结制品、摘要/SRI、精确授权、发布及 Registry/signature/attestation/provenance 回读。
+- 最终源码完成两层脱敏真实账号复验：原始 Web/X 协议探针各 1 次请求、各 64 events，分别观察到对应 Search 且终态 `completed`；生产 adapter 共完成 5 次 Responses，direct Web/X 均为 `stop`，Harness 同名 `x_search` 三轮依次为 `tool-calls`、`tool-calls`、`stop`，前两轮各 1 次本地调用。未保存结果、URL、prompt、身份或凭据；这些不是发布、OAuth 或 Windows 真机证据。
+- manifest/lock 已同步为 `1.0.0`；Node 24 全量测试为 245 项、243 pass、0 fail、2 项平台跳过，生产依赖审计为 0 漏洞，确定性 build/bundle、72 项 dry-run pack、秘密模式扫描与 diff 检查均通过。仍待双平台 CI、最终 release commit、冻结制品、摘要/SRI、精确授权、发布及 Registry/signature/attestation/provenance 回读。
 
 | 项目 | `0.1.11` 已发布状态 |
 | --- | --- |

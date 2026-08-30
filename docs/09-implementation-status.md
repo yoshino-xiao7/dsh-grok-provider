@@ -182,9 +182,9 @@ Windows x64 真机不再是 `0.1.0` 预发布阻断项。首次发布后必须�
 ## `1.0.0` 候选状态
 
 - 根因已扩展为两个真实上游形状：一个完成的 Search 之后，同一 reasoning ID 不只可能复用一次，而可能继续出现为多个空占位；完成的 `web_search_call` 也可能以 `open_page` 而非 `search` 结束。`0.1.11` 对这两种形状都会把流映射为 `INVALID_RESPONSE`。
-- 候选继续失败关闭：原始 reasoning 必须先闭合，首次复用前必须有完成的 server Search；每次复用都必须严格空并收到独立 `response.output_item.done`。incomplete、非空 summary/raw、跨类型、未知 terminal 字段和 accessor-backed 字段均拒绝。有界 opaque `encrypted_content` 被允许但不会暴露为可见 reasoning。
+- 候选继续失败关闭：原始 reasoning 必须先闭合，首次复用前必须有完成的 server Search；每次复用都必须严格空并收到独立 `response.output_item.done`。`response.incomplete` 不能吞掉尚未闭合的复用段；全部复用段闭合后，后续 max-token 终态仍有效。非空 summary/raw、跨类型、未知 terminal 字段以及 Search item/response container 的 accessor-backed 字段均拒绝。有界 opaque `encrypted_content` 被允许但不会暴露为可见 reasoning。
 - 完成态 `open_page` 只允许精确 `{ type: "open_page", url }` 及既有边界内的 URL；streamed 与 final action 的 type/URL 必须相同。Provider 校验后丢弃该 URL，不打开、不预览、不下载、不 replay。
-- 最终源码的脱敏真实账号生产 codec 探针已完成：Web 为 5 个完成 Search / 206 events / `stop`；direct X 为 1 个官方 custom call / 91 events / `stop`；Harness 形状的两次 `x_search` 与第三次续写在 3 个 Responses 调用中全部完成。验证记录没有结果、URL、prompt、身份或凭据。
+- 最终源码的脱敏真实账号复验已完成：原始 Web/X 协议各完成 1 次、各 64 events，并观察到对应 Search；生产 adapter 共完成 5 次 Responses，direct Web/X 均为 `stop`，Harness 同名 `x_search` 三轮依次为 `tool-calls`、`tool-calls`、`stop`，前两轮各 1 次本地调用。验证记录没有结果、URL、prompt、身份或凭据。
 - 上述只证明候选协议方向能完成三类真实流程，不证明 `1.0.0` 已发布，也不替代双平台 CI、OAuth 或 Windows 真机外部浏览器验收。
-- 已完成：manifest/lock 精确 `1.0.0`；聚焦 codec 38/38；Node 24 全量 243 项、241 pass、0 fail、2 项平台跳过；生产依赖审计 0 漏洞；确定性 build/bundle、72 项 dry-run pack、秘密模式扫描与 `git diff --check`。
+- 已完成：manifest/lock 精确 `1.0.0`；聚焦 codec 40/40；Node 24 全量 245 项、243 pass、0 fail、2 项平台跳过；生产依赖审计 0 漏洞；确定性 build/bundle、72 项 dry-run pack、秘密模式扫描与 `git diff --check`。
 - 待完成：macOS/Windows CI、最终 release commit、唯一 tarball 与摘要/SRI、隔离安装/exports smoke、仓库所有者对该精确制品的明确授权、tag/GitHub Release/Trusted Publisher，以及 Registry 字节/signature/attestation/provenance 回读。

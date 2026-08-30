@@ -86,7 +86,7 @@ Web + X 观察共 68 个 SSE event、4 个 output item、8 个 citation annotati
 - X 不能按公开候选 `x_search_call` 事件实现；当前固定 Proxy 必须使用四项闭合 custom-tool policy。
 - Web/X lifecycle 产生零个 Harness tool-call chunk；function call 仍由 Harness 权限层处理。
 - 观察到任一 server-tool 后禁用本响应的 encrypted reasoning replay。
-- `1.0.0` 候选中，reasoning ID 的首次复用仍须由旧段闭合和位于两段之间的 completed Web/X Search 共同证明。建立 Search-backed 状态后，只允许相同 ID/type 继续出现逐段严格空 visible summary/content、无 summary/raw lifecycle 且收到 `output_item.done` 的占位；terminal 可选 `encrypted_content` 仅作为有界 opaque 字符串处理。未知键、accessor、任一非空内容、未闭合段与 `response.incomplete` 继续失败关闭。
+- `1.0.0` 候选中，reasoning ID 的首次复用仍须由旧段闭合和位于两段之间的 completed Web/X Search 共同证明。建立 Search-backed 状态后，只允许相同 ID/type 继续出现逐段严格空 visible summary/content、无 summary/raw lifecycle 且收到 `output_item.done` 的占位；terminal 可选 `encrypted_content` 仅作为有界 opaque 字符串处理。未知键、accessor、任一非空内容、未闭合段，以及 `response.incomplete` 仍有 open 复用段时继续失败关闭；闭合复用段后的 max-token 终态保持有效。
 
 ## 发布门禁与集成后记
 
@@ -106,8 +106,8 @@ Web + X 观察共 68 个 SSE event、4 个 output item、8 个 citation annotati
 
 脱敏真实 `grok-4.6` Web Search probe 经生产 decoder 只发出 1 次 POST，观察 68 个事件、34 个 summary delta、0 个 raw delta、decoder accepted 与 1 个 finish；没有保存 prompt、回复正文、检索词、citation URL 或凭据。该结果验证当前 summary/Search 路径，不得描述为 raw reasoning 真机证据；raw reasoning 当前只有协议 fixture 回归。
 
-`0.1.11` 发布后的补充脱敏诊断复现了两个独立拒绝点：同一已闭合 reasoning ID 在 completed Search 后再次作为严格空占位出现，以及 completed Web Search 返回 `open_page` action。最终 `1.0.0` 源码的脱敏复跑中，High Effort Web 场景完成 5 个 Web Search 调用、206 个 SSE event 并以 `finish(stop)` 闭合；High Effort direct X 场景完成 1 个允许的 X custom-tool call、91 个 event 后同样闭合；Harness 形状的两次 `x_search` 加第三次续写完成 3 个 Responses。这只是当前账号环境中的协议兼容观察，不是冻结制品或发布授权证据；记录未保存 URL、检索/回复内容、prompt、原始响应或任何凭据。
+`0.1.11` 发布后的补充脱敏诊断复现了两个独立拒绝点：同一已闭合 reasoning ID 在 completed Search 后再次作为严格空占位出现，以及 completed Web Search 返回 `open_page` action。最终 `1.0.0` 源码分两层复跑：原始 High Effort Web/X 协议各完成 1 次、各 64 个 SSE event，分别观察到对应 Search 且终态 `completed`；生产 adapter 共完成 5 次 Responses，direct Web/X 均为 `finish(stop)`，Harness 同名 `x_search` 三轮依次为 `tool-calls`、`tool-calls`、`stop`，前两轮各 1 次本地调用。这只是当前账号环境中的协议兼容观察，不是冻结制品或发布授权证据；记录未保存 URL、检索/回复内容、prompt、原始响应或任何凭据。
 
-`1.0.0` 的本地门禁已通过：新增 open-page/reasoning 聚焦回归 38/38、完整 Node 24 suite 243 项、生产依赖审计 0 漏洞、build/bundle、72 项 dry-run pack、秘密扫描与 diff 检查均完成。发布门禁仍未关闭：macOS/Windows CI、最终提交、唯一制品、精确发布授权、Registry/signature/provenance 回读必须各自完成后，才能把本页状态更新为已发布。
+`1.0.0` 的本地门禁已通过：新增 open-page/reasoning 聚焦回归 40/40、完整 Node 24 suite 245 项、生产依赖审计 0 漏洞、build/bundle、72 项 dry-run pack、秘密扫描与 diff 检查均完成。发布门禁仍未关闭：macOS/Windows CI、最终提交、唯一制品、精确发布授权、Registry/signature/provenance 回读必须各自完成后，才能把本页状态更新为已发布。
 
 这些自动化与脱敏证据仍不构成所有平台完整真实账户验收；浏览器手工对话、OAuth、长会话 Agent loop 和网络可达 Windows 真机浏览器弹出保持独立边界。

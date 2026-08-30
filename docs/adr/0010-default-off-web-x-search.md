@@ -110,7 +110,7 @@ request 与 receipt 均复制并冻结。decoder 不从 Config、route 或原始
 - streamed `output_item.done` 与 final `response.output` 必须对同一 item 绑定相同 action type 与逐字相同 `open_page` URL。校验后该动作直接丢弃：插件不 fetch、不打开或下载 URL、不生成 Harness tool-call chunk、不持久化，也不进入 replay。
 - reasoning ID 的首次复用仍要求旧 lifecycle 已收到 `output_item.done`、两段 output index 之间存在 completed Web/X Search，且新段是相同 reasoning type 的严格空起始形状。只有这次验证才能把 ID 标记为 Search-backed。
 - Search-backed ID 后续可在新的 output index 继续出现，但每段都必须保持同一 ID/type、visible `summary`/`content` 严格为空、不得进入 summary 或 raw lifecycle，并以 `output_item.done` 闭合。无需在每两个后续空段之间虚构新的 Search。
-- terminal 只接受既定 own-data 字段；可选 `encrypted_content` 仅作为既有上限内的 opaque 字符串校验，不解密、不记录。跨类型、任一非空可见内容、未知键、accessor、未闭合段与 `response.incomplete` 均拒绝。观察到 Search 后仍抑制整个响应的 reasoning replay。
+- terminal 只接受既定 own-data 字段；可选 `encrypted_content` 仅作为既有上限内的 opaque 字符串校验，不解密、不记录。跨类型、任一非空可见内容、未知键、accessor、未闭合段，以及 `response.incomplete` 仍有 open 复用段时均拒绝；全部复用段已闭合后的 max-token 终态仍接受。观察到 Search 后仍抑制整个响应的 reasoning replay。
 
 公开 xAI 资料只证明 `open_page` 函数名和 Web 结果属于 `web_search_call` 分类，没有公开 fixed Proxy 的完整 action wire schema或 stream/final 对照形状。因此本增量只接受脱敏真实观察到的 exact `{type,url}`，不推测 `find`、`browse` 或任何其他 action。真实诊断只保存事件类别、计数、闭合结果和错误位置，不保存 URL、检索/回复内容、prompt、原始响应或凭据。
 

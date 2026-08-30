@@ -208,11 +208,11 @@ English summary: every release must close documentation, security, tests, determ
 
 - [x] 版本目标明确为新的稳定版 `1.0.0`；不得覆盖或重发已发布 `0.1.11`，npm `latest` 在 Registry 正式回读前继续保持 `0.1.11`。
 - [x] 根因范围冻结：一个完成的 Web/X server Search 后，同一 reasoning ID 可能继续出现为多个空占位 lifecycle；完成态 Web Search 可能返回精确 `open_page` action。范围不包含新认证方式、endpoint、模型、内容类型、图片生成或本地 URL 访问。
-- [x] 安全契约冻结：首次复用前原 reasoning 必须闭合并有完成 Search；之后每次复用都必须 visible summary/content 与 summary/raw lifecycle 为空，并有独立 `response.output_item.done`。有界 opaque `encrypted_content` 允许存在；incomplete、非空、跨类型、未知 terminal 或 accessor-backed 字段继续失败关闭。
+- [x] 安全契约冻结：首次复用前原 reasoning 必须闭合并有完成 Search；之后每次复用都必须 visible summary/content 与 summary/raw lifecycle 为空，并有独立 `response.output_item.done`。有界 opaque `encrypted_content` 允许存在；`response.incomplete` 不能吞掉 open 复用段，但复用段全部闭合后的 max-token 终态有效；非空、跨类型、未知 terminal 或 accessor-backed Search item/response container 字段继续失败关闭。
 - [x] `open_page` 契约冻结：只接受完成态精确 `type + url`，streamed/final action type 与 URL 必须一致；校验后丢弃 URL，不访问、不预览、不下载、不 replay，也不投影为 Harness 本地工具。
-- [x] 最终源码的脱敏真实账号协议验证完成且只保留计数/终态：Web 5 个完成 Search、206 events、`stop`；direct X 1 个官方 custom call、91 events、`stop`；Harness 形状的两次 `x_search` 加第三次续写共 3 个完成 Responses。未记录结果、URL、prompt、身份或凭据。
+- [x] 最终源码的脱敏真实账号验证完成且只保留计数/终态：原始 Web/X 协议各完成 1 次、各 64 events，并观察到对应 Search；生产 adapter 共完成 5 次 Responses，direct Web/X 均为 `stop`，Harness 同名 `x_search` 三轮依次为 `tool-calls`、`tool-calls`、`stop`，前两轮各 1 次本地调用。未记录结果、URL、prompt、身份或凭据。
 - [x] `package.json` 与 lockfile 已更新到精确 `1.0.0`；发行物契约、中英文 README、CHANGELOG、安全策略、设计/状态/测试/发布文档和 `docs/releases/v1.0.0.md` 对同一候选事实保持一致。
-- [x] 聚焦 codec 38/38 与完整 Node `24.19.0` 测试通过：共 243 项、241 pass、0 fail、2 项平台跳过；覆盖多次严格空复用、Web/X Search-backed 首次复用、opaque encrypted content、每次 `output_item.done`、incomplete/非空/跨类型/terminal/accessor 拒绝，以及 `open_page` streamed/final 一致与边界错误。
+- [x] 聚焦 codec 40/40 与完整 Node `24.19.0` 测试通过：共 245 项、243 pass、0 fail、2 项平台跳过；覆盖多次严格空复用、Web/X Search-backed 首次复用、opaque encrypted content、每次 `output_item.done`、open reuse + incomplete 拒绝、closed reuse + max-token 接受、非空/跨类型/terminal/accessor 拒绝，以及 `open_page` streamed/final 一致与边界错误。
 - [x] `npm audit --omit=dev` 为 0 漏洞；确定性 build 与生成 bundle 一致，`npm run pack:check` 为 72 项，秘密模式扫描和 `git diff --check` 通过。该 dry-run 尚不是冻结制品，大小与摘要不得作为发布授权依据。
 - [ ] 候选分支经受保护 PR 合入 `yukiryou/main`，并记录 macOS 14 / Windows 2022 CI 均全绿的精确 commit 与 run。Windows CI 不得表述为网络可达真机浏览器弹出验收。
 - [ ] 从最终 release commit 只生成并冻结一份 `dsh-grok-provider-1.0.0.tgz`；记录 packed/unpacked size、文件数、SHA-256、base64 SHA-512/npm SRI、manifest/exports 与隔离安装 smoke，禁止 publish job 重建或重新 pack。

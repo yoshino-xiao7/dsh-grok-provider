@@ -168,7 +168,7 @@ const request = await requestCompiler.compile(options, preparedRoute)
 
 - completed Web Search 额外接受 own-data 精确 `{type:"open_page",url}`；URL 必须为非空且 UTF-8 不超过 16 KiB。streamed `output_item.done` 与 final `response.output` 必须绑定相同 action type 与逐字相同 URL。
 - `open_page` 仅作为 xAI 已执行 server-tool 的协议结果验证后丢弃；插件不 fetch、不打开 URL、不生成 Harness tool-call chunk、不保存到 replay。非 completed 形状、未知键、accessor、错误类型、空/超限 URL 或 stream/final 不一致均失败关闭。
-- reasoning ID 的首次复用继续要求旧段已闭合且两段间存在 completed Web/X Search；Search-backed 证明建立后，只允许相同 ID/type 继续出现逐段严格空 visible summary/content、无 summary/raw lifecycle 且有 `output_item.done` 的占位。terminal 只允许既定 own-data 字段；可选 `encrypted_content` 仅作为有界 opaque 字符串接受。任一非空内容、未闭合段、未知键、accessor 或 `response.incomplete` 继续失败关闭。
+- reasoning ID 的首次复用继续要求旧段已闭合且两段间存在 completed Web/X Search；Search-backed 证明建立后，只允许相同 ID/type 继续出现逐段严格空 visible summary/content、无 summary/raw lifecycle 且有 `output_item.done` 的占位。terminal 只允许既定 own-data 字段；可选 `encrypted_content` 仅作为有界 opaque 字符串接受。任一非空内容、未闭合段、未知键、accessor，或 `response.incomplete` 仍有 open 复用段时继续失败关闭；复用段全部闭合后允许后续 max-token 终态。
 - `0.1.11` 的 raw reasoning 互斥、Search replay 抑制、固定 origin、Search 开关、精确模型 allowlist、图片、认证和平台边界保持不变。
 - 公开 xAI 资料只证明 `open_page` 函数名和 `web_search_call` 分类，没有公开 fixed Proxy 的完整 action wire schema；本候选只接受脱敏真实观察到的精确形状，不推测 `find`、`browse` 或其他 action。
 - 脱敏真实验证不得保存 URL、检索/回复内容、prompt 或凭据；本地全量测试已通过，发布状态仍必须等双平台 CI、最终提交、冻结制品、明确授权、Registry/signature/provenance 回读全部关闭后再更新。
