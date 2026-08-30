@@ -9,6 +9,12 @@ export class InvalidResponsesSseError extends Error {
   }
 }
 
+class ResponsesSseSourceError {
+  constructor(sourceError) {
+    this.sourceError = sourceError
+  }
+}
+
 export async function* parseResponsesSse(source) {
   if (source === null || source === undefined || typeof source[Symbol.asyncIterator] !== "function") {
     throw new TypeError("Responses SSE source must be an async iterable")
@@ -78,7 +84,7 @@ export async function* parseResponsesSse(source) {
   }
 
   try {
-    for await (const chunk of source) {
+    for await (const chunk of preserveSourceErrors(source)) {
       if (!(chunk instanceof Uint8Array)) fail()
       totalBytes += chunk.byteLength
       if (totalBytes > MAX_STREAM_BYTES) fail()
@@ -102,6 +108,7 @@ export async function* parseResponsesSse(source) {
       if (value !== undefined) yield value
     }
   } catch (error) {
+    if (error instanceof ResponsesSseSourceError) throw error.sourceError
     if (error instanceof InvalidResponsesSseError || error instanceof TypeError) throw error
     if (error?.name === "AbortError") throw error
     throw new InvalidResponsesSseError()
@@ -109,6 +116,14 @@ export async function* parseResponsesSse(source) {
     buffer = ""
     dataLines = []
     eventName = undefined
+  }
+}
+
+async function* preserveSourceErrors(source) {
+  try {
+    for await (const chunk of source) yield chunk
+  } catch (error) {
+    throw new ResponsesSseSourceError(error)
   }
 }
 

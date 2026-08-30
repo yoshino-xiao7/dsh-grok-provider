@@ -5,6 +5,7 @@ import { Context } from "@deepseek-ai/cordis"
 import LlmRuntime from "@deepseek-ai/dsh-llm"
 
 import { createGrokAdapter } from "../../../src/internal/grok-adapter.mjs"
+import { GrokTransportError } from "../../../src/internal/grok-transport.mjs"
 import { mapLlmError } from "../../../src/internal/llm-error.mjs"
 
 const catalog = JSON.stringify({
@@ -743,6 +744,39 @@ test("an enabled Search setting fails unsupported routes before the Responses PO
     })) {}
   }, (error) => error?.code === "UNSUPPORTED_CONTENT")
   assert.equal(transportCalls, 0)
+})
+
+test("a Responses HTTP 400 remains a provider error instead of an invalid stream", async () => {
+  const sourceError = new GrokTransportError(400)
+  const adapter = createGrokAdapter({
+    getGeneration: () => ({
+      id: 1,
+      transport: {
+        async listModels() { return catalog },
+        async *streamResponses() { throw sourceError },
+      },
+    }),
+    mapError: mapLlmError,
+  })
+  const prepared = await adapter.prepareCall("grok", "grok-4.6")
+
+  await assert.rejects(async () => {
+    for await (const _chunk of prepared.stream({
+      provider: "grok",
+      model: "grok-4.6",
+      messages: [{
+        id: "transport-400",
+        role: "user",
+        source: { kind: "user" },
+        content: [{ type: "text", text: "Hello" }],
+      }],
+    })) {}
+  }, (error) => {
+    assert.equal(error?.code, "PROVIDER_ERROR")
+    assert.equal(error?.failure?.status, 400)
+    assert.equal(error?.cause, sourceError)
+    return true
+  })
 })
 
 test("a background call rejects Search output because its compiled receipt contains no server tools", async () => {

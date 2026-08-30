@@ -1,8 +1,8 @@
 # ADR-0010：默认关闭且独立配置的 Web/X Search
 
-- 状态：已接受；`0.1.9`–`1.0.0` 均已发布
+- 状态：已接受；`0.1.9`–`1.0.0` 已发布，`1.0.1` 请求冲突修正处于源码候选
 - 日期：2026-08-30
-- 适用版本：`0.1.9` 协议能力，`0.1.10` 可用设置链路，`0.1.11` 首次 reasoning 响应兼容，`1.0.0` 补充响应兼容
+- 适用版本：`0.1.9` 协议能力，`0.1.10` 可用设置链路，`0.1.11` 首次 reasoning 响应兼容，`1.0.0` 补充响应兼容，`1.0.1` 同名工具冲突与 transport 错误归因修正
 - 取代：无
 
 ## 背景
@@ -52,7 +52,7 @@ for await (const chunk of call.stream({ route, transport })) {
 }
 ```
 
-request 与 receipt 均复制并冻结。decoder 不从 Config、route 或原始 options 再计算允许项。
+request 与 receipt 均复制并冻结。decoder 不从 Config、route 或原始 options 再计算允许项。`functionNames` 只记录最终 wire 上仍可调用的 function definitions，不包含已过滤的源 definitions 或仅存在于消息历史的 calls。最终 receipt 的 `functionNames` 与 `serverTools` 必须无交集；任何交集都表示 request/receipt 能力声明含糊并失败关闭。
 
 ### 3. 请求规则
 
@@ -60,7 +60,8 @@ request 与 receipt 均复制并冻结。decoder 不从 Config、route 或原始
 - 任一 Provider 开关打开时才读取 own-data `purpose`。`undefined` 表示普通对话；任意非空字符串表示后台/派生调用并强制关闭 Search；accessor、空字符串和其他类型在 Responses POST 前失败。
 - `web_search`、`x_search` 只对固定 Proxy 已验证的精确 `grok-4.6` route 开放。动态目录中的其他模型默认没有 Search capability。
 - 用户开启了模型不支持的 Search 时，整个调用在 POST 前返回 `UNSUPPORTED_CONTENT`；不静默裁剪、不删除工具后重放。
-- 工具顺序固定为 Harness functions、`web_search`、`x_search`，共同受 128 项与 16 MiB 完整 JSON 上限约束。
+- 所有 Harness function definitions 必须先按既有 schema、own-data 与资源上限完整验证。随后，仅当对应 xAI server Search 已启用时，才从 wire definitions 精确过滤同名 `web_search` / `x_search`；关闭该开关时，本地 function 保留。历史 `function_call` / `function_call_output` 保持原样，不删除、不改名。
+- 工具顺序固定为过滤后的 Harness functions、`web_search`、`x_search`。源 function 列表先受 128 项上限约束，最终 wire tools 再共同受 128 项与 16 MiB 完整 JSON 上限约束。过滤不会把无效源 function 变成可接受输入，也不会在 POST 失败后触发降级重放。
 - Search 继续复用唯一固定 `/v1/responses` transport，不增加 endpoint、origin、API Key 或任意 URL 请求。
 
 ### 4. 响应规则
@@ -114,9 +115,23 @@ request 与 receipt 均复制并冻结。decoder 不从 Config、route 或原始
 
 公开 xAI 资料只证明 `open_page` 函数名和 Web 结果属于 `web_search_call` 分类，没有公开 fixed Proxy 的完整 action wire schema或 stream/final 对照形状。因此本增量只接受脱敏真实观察到的 exact `{type,url}`，不推测 `find`、`browse` 或任何其他 action。真实诊断只保存事件类别、计数、闭合结果和错误位置，不保存 URL、检索/回复内容、prompt、原始响应或凭据。
 
+## `1.0.1` 同名工具冲突与错误归因修正（源码候选）
+
+`1.0.0` 的真实桌面会话暴露了 request 侧缺陷：Harness 提供的本地 function 集合本身可以包含 `web_search` / `x_search`，而 Provider 启用同名 xAI server Search 后仍把两类 definition 一起发送。固定 Proxy 对这种同名共存返回 HTTP 400。旧 SSE wrapper 又把 source iterable 抛出的 transport error 包装成 `InvalidResponsesSseError`，最终将 HTTP 400 误报为 `INVALID_RESPONSE`。
+
+候选采用以下闭合规则：
+
+- 先完整捕获并验证全部 Harness functions，再根据本次冻结的 server-tool 集合精确过滤同名 wire definitions。这样无法利用保留名绕过 function schema、键集合、大小或总数校验。
+- 只过滤 definitions，不改写消息历史。历史 `function_call` 及其按 `call_id` 关联的 `function_call_output` 原样保留，避免为了当前 Search 设置破坏既有会话连续性。
+- 对应 Search 关闭时不发生过滤，本地 `web_search` / `x_search` 仍由 Harness 权限层执行。过滤也不把 server Search 投影成 Harness tool-call。
+- request compiler 反向派生 receipt 时拒绝 function/server-tool 名称交集，codec 捕获外部 receipt 时执行同一不变量。
+- SSE parser 通过私有 source-error wrapper 区分 transport 迭代失败与 framing/JSON/parser 失败。前者原样上抛并由既有 LLM 错误映射处理；后者继续收敛为 `INVALID_RESPONSE`。
+
+经明确授权的脱敏真实账号验证精确回放原失败 X 会话结构：8 条 messages、40 个 source functions，最终 wire 为 38 个 function definitions + 2 个 server Search tools，同时保留 2 个历史 reserved-name calls；只执行 1 次 models GET 和 1 次 Responses POST，接收 314 个 events 并以 `response.completed` 闭合。验证不保存或输出消息/回复正文、URL、账号身份或凭据。该证据只验证当前候选源码与当前账号环境，不构成制品、CI、发布、供应链或 Windows 真机证据。
+
 - 不支持的精确模型能力：`UNSUPPORTED_CONTENT`。
 - 协议、receipt、未知事件、未声明 function 或不闭合 lifecycle：`INVALID_RESPONSE`。
-- Abort、认证、429 与其他 HTTP 错误沿用现有 `ABORTED`、`AUTH`、`RATE_LIMIT`、`PROVIDER_ERROR`。
+- Abort、认证、429 与其他 HTTP 错误沿用现有 `ABORTED`、`AUTH`、`RATE_LIMIT`、`PROVIDER_ERROR`；尤其 fixed-Proxy HTTP 400 不再由 SSE 层改写为 `INVALID_RESPONSE`。
 - 任意 POST 一旦发出，失败后不得自动移除 Search 并重放。
 
 ## 安全后果
@@ -134,4 +149,4 @@ request 与 receipt 均复制并冻结。decoder 不从 Config、route 或原始
 
 ## 验证
 
-协议证据与脱敏观察见 [`docs/13-upstream-search-evidence.md`](../13-upstream-search-evidence.md)。发布前还必须通过 request/codec/Adapter/UI 聚焦回归、全量 Node 24 测试、双平台 CI、生产依赖审计和唯一制品门禁。
+协议证据与脱敏观察见 [`docs/13-upstream-search-evidence.md`](../13-upstream-search-evidence.md)。`1.0.1` 的 request/codec/Adapter/UI 聚焦回归、精确 Node `24.19.0` 本地全量测试、生产依赖审计、dry-run pack 与预期仅 fixture canary 的秘密模式扫描已通过；发布前尚须完成双平台 CI、固定 release commit、唯一制品冻结与隔离安装，并基于完整制品证据另行取得精确发布授权。

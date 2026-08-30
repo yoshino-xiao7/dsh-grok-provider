@@ -1,11 +1,11 @@
 # Grok Build Provider 文档索引
 
-- 状态：**`1.0.0` 已正式发布**
-- 发布范围：允许已完成 Search 支撑的 reasoning ID 继续以多个严格空且逐次闭合的占位生命周期出现，并接受完成态精确 `open_page` type/URL；其余未知形状继续失败关闭
-- 当前 npm 稳定版本与最近发布版本：`1.0.0`
-- 发布基线：`yukiryou/main@c6548199582b122f1d285422eabea0205eaf602f`
-- 发布路径：代码 PR #28 与发布证据 PR #29 已合入；annotated tag object `192561cda1ac58cbc4077f0de8fa614dff9a5557` peel 到最终 release commit。final CI run [`33308603394`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33308603394) 双平台全绿，Trusted Publisher run [`33309083806` attempt 1](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33309083806/attempts/1) 已完成
-- 发布状态：仓库所有者明确授权的唯一 72 文件 tarball 为 226,704 bytes，unpacked size 715,014 bytes；SHA-1 `50e5d898dba241d1e19def7705db216e3060b892`、SHA-256 `30cd83dad77f7d2611126b3c4737c8fabffeae79f385fa623e61dcecfe39f5e2`、npm SRI `sha512-WL2f6Kfg5yT5nNf1p4//mLSajCnZttL/pDR3BISrFgSGtZd9DEJlnibq08ETz503n1wHIdCBcU/ICMPG9K4vOw==`。冻结候选、GitHub Release 与 npm Registry 逐字节一致，npm `latest=1.0.0`；Node 24 隔离安装、1 个 Registry signature、2 个 attestations、安装图 11 个 signed packages / 2 个 attested packages 及 SLSA provenance 均已验证
+- 状态：**`1.0.1` 源码候选，尚未发布**
+- 候选范围：启用 xAI server Search 时过滤已完整验证的同名 Harness wire definitions，保留历史 function calls/results，并透传 SSE source transport error
+- 当前 npm 稳定版本与最近发布版本：`1.0.0`；源码 manifest/lock：`1.0.1`
+- `1.0.0` 已发布基线：`yukiryou/main@c6548199582b122f1d285422eabea0205eaf602f`
+- `1.0.0` 发布路径：代码 PR #28 与发布证据 PR #29 已合入；annotated tag object `192561cda1ac58cbc4077f0de8fa614dff9a5557` peel 到最终 release commit。final CI run [`33308603394`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33308603394) 双平台全绿，Trusted Publisher run [`33309083806` attempt 1](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33309083806/attempts/1) 已完成
+- `1.0.0` 发布状态：仓库所有者明确授权的唯一 72 文件 tarball 为 226,704 bytes，unpacked size 715,014 bytes；SHA-1 `50e5d898dba241d1e19def7705db216e3060b892`、SHA-256 `30cd83dad77f7d2611126b3c4737c8fabffeae79f385fa623e61dcecfe39f5e2`、npm SRI `sha512-WL2f6Kfg5yT5nNf1p4//mLSajCnZttL/pDR3BISrFgSGtZd9DEJlnibq08ETz503n1wHIdCBcU/ICMPG9K4vOw==`。冻结候选、GitHub Release 与 npm Registry 逐字节一致，npm `latest=1.0.0`；Node 24 隔离安装、1 个 Registry signature、2 个 attestations、安装图 11 个 signed packages / 2 个 attested packages 及 SLSA provenance 均已验证
 - 撤回状态：`0.1.8` 只对应 sidebar quota 维护发布，不包含 Search；撤回不会释放 npm semver，任何 Search 制品都不得复用 `0.1.8`
 - 兼容基线：DeepSeek Harness `0.1.1-rc.2`
 - 目标平台：macOS arm64、Windows x64
@@ -56,6 +56,7 @@
 - [v0.1.10 中英双语发行说明](./releases/v0.1.10.md)
 - [v0.1.11 中英双语发行说明](./releases/v0.1.11.md)
 - [v1.0.0 中英双语发行说明](./releases/v1.0.0.md)
+- [v1.0.1 中英双语候选说明](./releases/v1.0.1.md)
 - [v0.1.2-rc.1 中英双语预发行说明](./releases/v0.1.2-rc.1.md)
 - [ADR-0001：认证与传输路线](./adr/0001-auth-and-transport-route.md)
 - [ADR-0002：首版能力边界](./adr/0002-v0.1-scope.md)
@@ -75,6 +76,8 @@
 `0.1.7` 已发布闭合 CLI 安装/版本诊断、登录失败可解释性，以及采用 MIT 许可的 Harness `IconThinkOutline16` 路径几何；它不接管官方 CLI 的网络、代理或 OAuth 流程。sidebar quota `0.1.8` 曾发布后撤回，且该 npm 号码不能复用；Search 从未作为 `0.1.8` 发布。`0.1.9` 发布精确 `grok-4.6` 的 Search 协议和页面，`0.1.10` 补齐 canonical settings 注册与调用级快照。`0.1.11` 已正式发布，收窄兼容真实 High Effort + Web Search 续跑出现的一次已关闭 reasoning ID 空占位复用，接受空 reasoning，并加入与 summary 严格互斥的官方 raw `reasoning_text` 生命周期。脱敏真实探针只观察到 summary delta，不能作为 raw reasoning 真机证据；浏览器手工对话、OAuth、完整真实会话和网络可达 Windows 真机外部浏览器弹出继续属于独立边界。完整门禁见[逐版发布检查表](./10-release-checklist.md)。
 
 `1.0.0` 已发布真实 Search stream 的剩余两种兼容修复：Search-backed reasoning ID 可多次作为严格空占位重新出现；完成态 Web Search 可返回精确 `open_page` action。脱敏真实账号验证未记录结果、URL、prompt、身份或凭据；发布与供应链回读仍不构成 OAuth 或 Windows 真机浏览器验收证据。
+
+`1.0.1` 源码候选修复 request 侧同名冲突与错误归因：固定 Proxy 会拒绝同时存在 Harness `web_search` / `x_search` function definitions 和同名 xAI server Search descriptors 的请求。候选先完整验证所有 functions，再只过滤已启用的同名 wire definitions；关闭开关时保留本地工具，历史 calls/results 原样保留，receipt 拒绝交集。SSE source transport error 不再被包装成 parser error，因此 HTTP 400 映射为 `PROVIDER_ERROR` 而非 `INVALID_RESPONSE`。一次授权的脱敏原失败 X 会话结构回放以 8 messages、40 source functions、38 wire functions + 2 server tools、2 historical reserved calls、1 models GET、1 Responses POST、314 events 和 `response.completed` 结束；没有保存正文、URL、身份或凭据。精确 Node `24.19.0` 本地全量门禁为 253 tests、251 pass、0 fail、2 platform skips，生产依赖审计为 0 漏洞，隔离 cache 的 dry-run pack 列出 73 个文件。该候选尚无冻结制品、双平台 CI 或发布回读。
 
 ## 官方依据
 
