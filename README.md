@@ -150,7 +150,7 @@ dsh web
 - 编译器先完整验证 40 个源 functions，再仅过滤与已启用 server Search 同名的 wire definitions。关闭对应开关时，本地工具保持原样；已有会话中的历史 `function_call` / `function_call_output` 也不删除或改名。
 - 最终 request receipt 拒绝 function/server-tool 名称交集；SSE parser 保留 source transport error，HTTP 400 因而映射到 `PROVIDER_ERROR`，真正的 SSE/协议错误仍为 `INVALID_RESPONSE`。
 - 一次经明确授权的脱敏真实账号回放使用原失败 X 会话结构：8 条 messages、40 个 source functions、wire 38 functions + 2 server tools、保留 2 个历史 reserved-name calls；只执行 1 次 models GET 和 1 次 Responses POST，接收 314 events 并以 `response.completed` 闭合。未保存消息/回复正文、URL、身份或凭据。
-- 精确 Node `24.19.0` 本地全量门禁为 253 tests、251 pass、0 fail、2 platform skips；生产依赖审计为 0 漏洞，隔离 cache 的 dry-run pack 列出 73 个文件，秘密模式扫描只命中显式 fixture canary 及其检查表记录。上述证据只证明候选源码与本地门禁解决已知冲突；不代表双平台 CI、冻结制品、隔离安装、发布、供应链回读或 Windows 真机浏览器登录已经完成。候选详情见 [`docs/releases/v1.0.1.md`](docs/releases/v1.0.1.md)。
+- 精确 Node `24.19.0` 本地全量门禁为 253 tests、251 pass、0 fail、2 platform skips；生产依赖审计为 0 漏洞，隔离 cache 的 dry-run pack 列出 73 个文件，秘密模式扫描只命中显式 fixture canary 及其检查表记录。代码 PR #31 的 push/PR CI、merge commit `0c60200e12c3b8455331f31a317ece9b1945c458` 及 main CI run `33312621786` 已在 macOS 14 / Windows 2022 全绿。上述证据仍不代表最终 release commit、冻结制品、隔离安装、发布、供应链回读或 Windows 真机浏览器登录已经完成。候选详情见 [`docs/releases/v1.0.1.md`](docs/releases/v1.0.1.md)。
 
 ### `1.0.0` 修复边界
 

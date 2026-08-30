@@ -199,4 +199,5 @@ Windows x64 真机不再是 `0.1.0` 预发布阻断项。首次发布后必须�
 - 最终源码结构回放结果为 8 messages、40 source functions、38 wire functions + 2 server tools、2 historical reserved calls、1 models GET、1 Responses POST、314 events、`response.completed`。没有保存正文、URL、账号身份或凭据。
 - manifest 与 lockfile 已进入 `1.0.1` 源码候选；双语 README、CHANGELOG、ADR、测试计划、证据页及候选 Release Notes 同步描述未发布状态。
 - 本地精确 Node `24.19.0` 全量门禁已完成：253 tests、251 pass、0 fail、2 platform skips；生产依赖审计为 0 漏洞，确定性 build 与隔离 cache 的 73 文件 dry-run pack 通过；秘密模式扫描只命中显式 fixture canary 及其检查表记录。
-- 尚未完成或不得声称：双平台 CI、固定 release commit、候选制品冻结、隔离安装、tag/GitHub Release、精确制品发布授权、npm Registry、signature/attestations/provenance，以及网络可达 Windows 真机浏览器登录。
+- 代码分支 head `125c3630908bddd625104949c0c887c9d8d265c9` 的 push run `33312524048` 与 PR run `33312541746`、代码 PR #31、merge commit `0c60200e12c3b8455331f31a317ece9b1945c458` 及 main CI run `33312621786` 均已完成 macOS 14 / Windows 2022 全绿。
+- 尚未完成或不得声称：固定 final release commit 及其双平台 CI、候选制品冻结、隔离安装、tag/GitHub Release、精确制品发布授权、npm Registry、signature/attestations/provenance，以及网络可达 Windows 真机浏览器登录。
