@@ -143,8 +143,8 @@ dsh web
 | --- | --- |
 | DeepSeek Harness | 精确支持 `0.1.1-rc.2` |
 | Node.js | `>=24.19.0` |
-| macOS arm64 | 已发布的 `0.1.7` 基线已完成真实网络与隔离 Harness 验收；`0.1.9` Search 仍需完成隔离 Harness 验收 |
-| Windows x64 | 代码与 slow-fake 覆盖；`0.1.9` 正式候选仍需通过 Windows CI。网络可达时由官方 CLI 生成 URL 并打开浏览器，该路径仍未完成 Windows 真机验收 |
+| macOS arm64 | 已发布的 `0.1.7` 基线已完成真实网络验收；`0.1.9` Search 已完成失败关闭 fixture 下的隔离 Web Harness 四场景验收 |
+| Windows x64 | 代码、slow-fake 与 `0.1.9` Windows 2022 CI 已通过；网络可达时由官方 CLI 生成 URL 并打开浏览器，该路径仍未完成 Windows 真机验收 |
 | macOS x64 / Linux | 不支持 |
 | Grok CLI | 不锁完整版本；严格校验官方路径、`login --oauth` 能力与生产 OIDC 凭据契约 |
 | 模型 | 当前账号目录中 backend 已被严格 codec 支持的全部模型 |
@@ -219,7 +219,7 @@ dsh-grok-provider Host
 
 ### Windows 能用吗
 
-代码与 slow-fake 已覆盖 Windows x64，正式候选仍需通过 Windows CI。官方 CLI 仍负责生成登录 URL 与打开外部浏览器；网络可达的 Windows 真机浏览器弹出尚未确认，因此不能表述为该问题已经修复或验证。
+代码、slow-fake 与 `0.1.9` Windows 2022 CI 已覆盖 Windows x64。官方 CLI 仍负责生成登录 URL 与打开外部浏览器；网络可达的 Windows 真机浏览器弹出尚未确认，因此不能表述为该问题已经修复或验证。
 
 ## 开发
 

@@ -139,7 +139,7 @@ const request = await requestCompiler.compile(options, preparedRoute)
 - 固定 CLI Chat Proxy 的 Web、X、双开与生产 function → `web_search` 顺序 Web+function 四组脱敏协议观察已完成；实现只允许实测 lifecycle，详见[证据页](./13-upstream-search-evidence.md)。
 - request 与 response receipt 由同一深模块绑定；精确 `grok-4.6` 之外失败关闭，Web/X 远端调用产生零 Harness tool-call chunk。
 - 搜索词、远端检索、额外用量、citation 和 prompt injection 风险必须在 UI 与安全文档中就近披露。
-- 本地精确 Node 24 全量测试、生产依赖审计、68 文件 dry-run pack、生成 bundle/diff/秘密模式门禁已通过；仍需完成双平台 CI、隔离 Harness 与最终 release commit 的唯一制品门禁，开发证据不构成发布。
+- 本地精确 Node 24 全量测试、生产依赖审计、69 文件 dry-run pack、生成 bundle/diff/秘密模式门禁已通过；候选与 main 合并提交的双平台 CI、隔离 Web Harness 四场景验收也已完成。隔离验收不覆盖浏览器手工对话、OAuth、真实账号/真实 xAI 请求或 Windows 真机；仍需关闭最终 release commit 的唯一制品、明确授权与发布后回读门禁，开发证据不构成发布。
 
 ## 8. 后续：默认关闭的图片生成
 
@@ -155,4 +155,4 @@ const request = await requestCompiler.compile(options, preparedRoute)
 - ACP、`grok -p` Headless、Linux / macOS x64 发布承诺。
 - 厂商 `code_execution`；Harness 已有本地工具权限层。
 
-English summary: `0.1.7` remains the available stable baseline from commit `68f6b474bd860b829f03e7712ec79e8afe2b9b8d`; its 64-file, 167,970-byte artifact, Registry signature, and provenance are verified. Version `0.1.8` was briefly published for sidebar-quota maintenance and then withdrawn; npm does not permit that version number to be reused, and Search was never released as `0.1.8`. The current `yukiryou/v0.1.9-search` branch targets independent, default-off Web/X Search for exact `grok-4.6`. Four fixed-Proxy protocol cases and the local Node 24/audit/69-file pack gates are complete, while dual-platform CI, isolated Harness acceptance, and exact-artifact release gates remain pending. The Windows CLI timeout still occurs before a login URL is created, so browser launch is neither fixed nor verified.
+English summary: `0.1.7` remains the available stable baseline from commit `68f6b474bd860b829f03e7712ec79e8afe2b9b8d`; its 64-file, 167,970-byte artifact, Registry signature, and provenance are verified. Version `0.1.8` was briefly published for sidebar-quota maintenance and then withdrawn; npm does not permit that version number to be reused, and Search was never released as `0.1.8`. Version `0.1.9` targets independent, default-off Web/X Search for exact `grok-4.6`. Four fixed-Proxy protocol cases, local Node 24/audit/69-file pack gates, dual-platform candidate/main CI, and four isolated Web Harness cases are complete; exact-artifact, explicit-authorization, and post-publish readback gates remain pending. The isolated fixtures do not cover manual browser conversations, OAuth, a real account, real xAI Search requests, or a real Windows device. The Windows CLI timeout still occurs before a login URL is created, so browser launch is neither fixed nor verified.

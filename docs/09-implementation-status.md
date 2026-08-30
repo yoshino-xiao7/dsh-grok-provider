@@ -148,4 +148,4 @@ Windows x64 真机不再是 `0.1.0` 预发布阻断项。首次发布后必须�
 - 只有精确 `grok-4.6` route 支持 Search。Harness functions 后依次追加 `web_search`、`x_search`，共同受 128 项和 16 MiB 上限约束；不支持模型在 Responses POST 前返回 `UNSUPPORTED_CONTENT`。
 - 固定 Proxy 的 Web、X、双开与生产 function → `web_search` 顺序 Web+function 四组脱敏观察已完成。Web 使用标准 search lifecycle；X 使用四项闭合的 `custom_tool_call` 名称。Search 事件产生零 Harness tool-call chunk，结构化 citation 有界校验后丢弃，观察到 Search 后不保存 encrypted reasoning replay。
 - 精确 Node `24.19.0` 本地全量测试已通过：221 项、219 pass、0 fail、2 项 Windows-only skip；生产依赖审计为 0 漏洞，干净提交的 dry-run pack 为 69 个文件，生成 bundle 一致性、diff 与秘密模式扫描通过。
-- 当前仍需关闭 macOS 14 / Windows 2022 CI、隔离 Harness 和最终 release commit 的唯一 `0.1.9` 制品门禁；尚未发布。
+- 候选 head `402920fa0f5eb0b543a09a597ada0b2dd9661020` 的 push/PR CI、代码 PR #20 合并提交 `89297ad5c30e1edd94936b52fbe89d0331aaddf5` 的 main CI，以及隔离 Web Harness 默认关闭、Web-only、X-only、function → `web_search` Mixed 四场景验收均已通过。隔离 fetch 无 passthrough；浏览器手工对话、OAuth、真实账号/真实 xAI 请求和 Windows 真机不由此覆盖。当前仍需关闭最终 release commit 的唯一 `0.1.9` 制品、明确授权与发布后回读门禁；尚未发布。

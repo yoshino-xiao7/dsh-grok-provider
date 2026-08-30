@@ -143,8 +143,8 @@ Directory inclusion is not an endorsement by xAI or DeepSeek Harness. [Listing P
 | --- | --- |
 | DeepSeek Harness | Exact support for `0.1.1-rc.2` |
 | Node.js | `>=24.19.0` |
-| macOS arm64 | The published `0.1.7` baseline completed real-network and isolated Harness acceptance; `0.1.9` Search still requires isolated Harness acceptance |
-| Windows x64 | Covered by code and slow fakes; the `0.1.9` final candidate must still pass Windows CI. On a reachable network the official CLI generates the URL and opens the browser, and that path still lacks real-device Windows acceptance |
+| macOS arm64 | The published `0.1.7` baseline completed real-network acceptance; `0.1.9` Search passed four isolated Web Harness cases under fail-closed fixtures |
+| Windows x64 | Covered by code, slow fakes, and passing `0.1.9` Windows 2022 CI. On a reachable network the official CLI generates the URL and opens the browser, and that path still lacks real-device Windows acceptance |
 | macOS x64 / Linux | Unsupported |
 | Grok CLI | No full-version lock; official path, `login --oauth` capability, and production OIDC credential contract are enforced |
 | Models | Every account catalog model whose backend has a strict codec in this release |
@@ -219,7 +219,7 @@ Versions through `0.1.2` could not convert some third-party tool-call histories 
 
 ### Does Windows work?
 
-Windows x64 is covered by code and slow fakes, and the final candidate must still pass Windows CI. The official CLI still generates the sign-in URL and launches the external browser. Network-reachable browser launch has not yet been confirmed on a real Windows device, so it must not be described as fixed or verified.
+Windows x64 is covered by code, slow fakes, and passing `0.1.9` Windows 2022 CI. The official CLI still generates the sign-in URL and launches the external browser. Network-reachable browser launch has not yet been confirmed on a real Windows device, so it must not be described as fixed or verified.
 
 ## Development
 

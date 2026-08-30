@@ -1,6 +1,6 @@
 # `0.1.9` Web/X Search 上游与固定 Proxy 证据
 
-- 状态：`grok-4.6` 四组脱敏观察已完成；mixed request 已按生产 function → `web_search` 顺序复验；`0.1.9` 实现与发行门禁进行中
+- 状态：`grok-4.6` 四组脱敏观察、生产顺序 mixed 复验、双平台 CI 与隔离 Web Harness 验收已完成；最终制品与发布后回读门禁仍未完成
 - 观察日期：2026-08-30
 - 固定 origin/path：`https://cli-chat-proxy.grok.com/v1/responses`
 - Provider client identity：`dsh-grok-provider/1.0.5`
@@ -83,9 +83,9 @@ Web + X 观察共 68 个 SSE event、4 个 output item、8 个 citation annotati
 
 - [x] request/compiler、严格 codec、Adapter、真实 Host Config → LlmRuntime 与 settingsScope 设置页聚焦测试全绿。
 - [x] 全量 Node `24.19.0` 测试通过（221 项、219 pass、0 fail、2 项 Windows-only skip）；生产依赖审计为 0 漏洞，干净提交的 dry-run pack 为 69 个文件，生成 bundle/diff/秘密模式扫描通过。
-- [x] 以 function → `web_search` 顺序单独重跑 mixed 真机探针，并更新该 case 的 request bytes 与事件计数。
-- [ ] macOS/Windows CI 通过。
-- [ ] 隔离 Harness 中验证默认关闭、两个独立开关、普通对话和混合 function 行为。
+- [x] 以 function → `web_search` 顺序单独重跑 mixed 固定 Proxy 脱敏协议探针，并更新该 case 的 request bytes 与事件计数。
+- [x] 候选 push/PR 与 main 合并提交的 macOS 14 / Windows 2022 CI 通过。
+- [x] macOS 隔离 Web Harness profile 的真实 `ctx.llm` 路径完成默认关闭、Web-only、X-only 与 function → `web_search` Mixed 四组验收；fetch 在插件导入前由失败关闭 fixture 接管，无 passthrough 或外部 xAI、npm、login 请求。该证据不覆盖浏览器手工对话、Agent/session loop、OAuth、真实账号、真实 xAI 请求或 Windows 真机。
 - [ ] 唯一 `0.1.9` 制品、digest/SRI、签名、provenance 与 Registry 回读。
 
-这些未完成项意味着当前仅是开发证据，不构成发布或所有平台真实账户验收。
+剩余的唯一制品、发布授权、Registry、签名与 provenance 门禁未关闭，因此当前证据不构成发布或所有平台真实账户验收。
