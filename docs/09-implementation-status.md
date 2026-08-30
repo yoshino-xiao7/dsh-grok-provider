@@ -1,12 +1,11 @@
 # 当前实现与发布状态
 
-`0.1.10` 已发布并修复 `llm-grok` Host settings 注册与按调用快照。真实 High Effort + Web Search 续跑随后暴露 reasoning item ID 空占位复用兼容缺口；当前 `0.1.11` 源码候选只修复该 Responses 生命周期并加入官方 raw reasoning 事件支持。
+`0.1.11` 已正式发布，在 `0.1.10` 的 `llm-grok` Host settings 注册与按调用快照基础上，收窄修复真实 High Effort + Web Search 续跑暴露的 reasoning item ID 空占位复用兼容缺口，并加入官方 raw reasoning 事件支持。
 
 状态日期：2026-08-30
-当前 npm 发布线：`dsh-grok-provider@0.1.10`
-当前源码候选：`dsh-grok-provider@0.1.11`
-版本分支：`yukiryou/v0.1.11-release-evidence`
-发布基线：`yukiryou/main@307ae3ac83526f388c6b4a0d1e1346353bd5f4aa`
+当前 npm 发布线：`dsh-grok-provider@0.1.11`
+当前源码发布版：`dsh-grok-provider@0.1.11`
+发布基线：`yukiryou/main@2e5c6dbc8bb83377a4db4d8e31452b3ce96500c5`
 内容类型路线：已冻结于 [能力路线图](./11-capability-roadmap.md)；`0.1.11` 是 Search 续跑的 reasoning 协议兼容修复，不新增内容类型、模型或工具。
 
 ## 已实现
@@ -22,7 +21,7 @@
 - `0.1.6` 历史兼容：普通 user/system 历史中的私有 reasoning 被省略并保留相邻可见 text/image；只有有效的同 Provider assistant 历史可以进入加密 reasoning replay，一层 tool-result 仍只接受公开 text/image。
 - `0.1.7` 维护：独立只读 diagnostics RPC 投影插件版本与官方 CLI 的 `ready|missing|invalid|unavailable` 闭合集合；登录失败只投影白名单 reason 并及时结束 spinner。设置导航在 Harness 当前无原生 icon slot 时，以精确标签匹配、冲突失败关闭和可回收 lifecycle 应用 MIT 许可的 `IconThinkOutline16` 几何。
 - 已发布 `0.1.10` Search 能力与可写设置链路：Web/X 默认关闭且可独立编译；request/receipt 同编译、调用级设置快照、精确 route、共享工具/字节预算、后台 purpose 关闭、Web 标准 lifecycle、四项 X custom-tool、function membership、citation 有界丢弃与 replay 抑制均失败关闭。
-- `0.1.11` 候选 reasoning 兼容：允许已闭合 reasoning ID 以严格空项再出现一次，接受闭合空 reasoning，支持官方 raw `reasoning_text` 标准生命周期；raw 与 summary 互斥，raw replay 只携带 encrypted content 与空 summary。
+- 已发布的 `0.1.11` reasoning 兼容：允许已闭合 reasoning ID 以严格空项再出现一次，接受闭合空 reasoning，支持官方 raw `reasoning_text` 标准生命周期；raw 与 summary 互斥，raw replay 只携带 encrypted content 与空 summary。
 
 ## 已验证
 
@@ -165,12 +164,15 @@ Windows x64 真机不再是 `0.1.0` 预发布阻断项。首次发布后必须�
 - 隔离 Web Harness 的真实 `settings.describe` 已返回可写、`applies:"live"` 的唯一 `llm-grok` namespace。页面两个开关均 enabled，“暂时不可用”提示消失；浏览器写入把 revision 从 1 推进到 4，最终已恢复 `{webSearch:false,xSearch:false}`。
 - 最终候选 head `1e5e875c6e55616f8d589ed56d4aa5fab643387a` 的 push/PR CI、代码 PR #23、发布证据 PR #24 与 final main CI run [33299116564](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33299116564) 均完成 macOS 14 / Windows 2022 全绿。不可变 `v0.1.10`、唯一 GitHub Release asset 与 Trusted Publisher run [33299599113](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33299599113) 已完成；Registry、Release 与本地制品逐字节一致，npm `latest=0.1.10`，Registry signature 与 SLSA provenance 已回读。
 
-## `0.1.11` 候选状态
+## `0.1.11` 发布状态
 
 - 真实失败边界为精确 `grok-4.6`、High Effort、Web Search 续跑：上游可在一个已闭合 reasoning lifecycle 后，以新 output index 把同一 reasoning ID 再使用一次作为严格空占位；旧 codec 的全局 ID 唯一约束把整段响应映射为 `INVALID_RESPONSE`。
 - 新状态机只在一个已完成 server Search 位于两段 reasoning 之间时，允许已闭合 reasoning ID 一次性复用为空项；无 Search 间隔、未闭合、跨类型、非空或第二次复用继续失败关闭。普通空 reasoning 同样必须完成 added/done 闭环。
 - 新增官方 Responses raw reasoning lifecycle：`reasoning_text` content part、`response.reasoning_text.delta` / `done` 与最终 item content 必须一致；raw 与 summary 模式严格互斥，乱序、混用、重复与截断均拒绝。
 - raw reasoning replay 元数据只记录 encrypted content 与 `reasoning_text` 类型标记，不保存 raw 明文；下一请求只发送 `encrypted_content` 与 `summary: []`，不会回传或把 raw 明文伪装为 summary。当前流中的 raw delta 仍作为 Harness 可见 reasoning 输出。
 - 113/113 聚焦协议回归已覆盖成功与失败形状。脱敏真实 probe 只发出 1 次 POST，得到 68 个事件、34 个 summary delta、0 个 raw delta、decoder accepted 与 1 个 finish；因此它验证当前 summary/Search 续跑路径，但不能作为 raw reasoning 真机证据。
-- Node `24.19.0` 本地全量测试已通过：238 项、236 pass、0 fail、2 项 Windows-only skip；生产依赖审计为 0 漏洞，dry-run pack 为 71 个文件，生成 bundle、diff 与秘密模式门禁均通过。当前尚未发布；双平台 CI、唯一最终 tarball、精确制品授权及 Registry/signature/provenance 回读仍等待后续门禁。
-- 代码 PR #25 已合入受保护 `yukiryou/main`，merge commit 为 `307ae3ac83526f388c6b4a0d1e1346353bd5f4aa`；main CI run `33302830043` 的 macOS 14 / Windows 2022 均通过。发布证据 PR、最终 release commit CI 与唯一制品仍待关闭。
+- Node `24.19.0` 本地全量测试已通过：238 项、236 pass、0 fail、2 项 Windows-only skip；生产依赖审计为 0 漏洞，dry-run pack 为 71 个文件，生成 bundle、diff 与秘密模式门禁均通过。代码 PR #25 已合入受保护 `yukiryou/main`，merge commit 为 `307ae3ac83526f388c6b4a0d1e1346353bd5f4aa`；main CI run `33302830043` 的 macOS 14 / Windows 2022 均通过。
+- 发布证据 PR #26 合入后的最终 release commit 为 `2e5c6dbc8bb83377a4db4d8e31452b3ce96500c5`；其 final CI run [`33303080849`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33303080849) 在 macOS 14 / Windows 2022 全绿。Annotated tag object `353bcd3717d4440ab20a2b05a5e9d51eef22fa7f` peel 到该 release commit。
+- 仓库所有者明确授权的唯一 `dsh-grok-provider-0.1.11.tgz` 含 71 个文件、207,022 bytes，unpacked size 为 656,139 bytes；SHA-256 为 `8fca0eca86769ee9febd35606cc8c944a0ae968cec2937a30ccaf68d36d42b2d`，SRI 为 `sha512-2qInRIq5Dkf7CqXq8z1mVvMelStg3nZ1wuWEqsExgfm7iXF0Jn5f7d11IAtHRxdKdJm/j0s8tYT1Dx6IdtGNqg==`。
+- GitHub Release 与 Trusted Publisher run [`33303631312`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33303631312) 已完成；npm `latest=0.1.11`，Registry、Release 与本地 tarball 逐字节一致。Registry 精确版本的隔离安装及 Host/client import/export smoke 通过。
+- `npm audit signatures` 确认隔离安装图中 9 个包具有已验证 Registry 签名、3 个包具有已验证 attestations；本包公开 npm metadata 包含 1 个 Registry signature、2 个 attestations。SLSA provenance 精确绑定 `release.yml`、`v0.1.11`、release commit 与 Trusted Publisher run。网络可达 Windows 真机外部浏览器弹出仍未完成验收，发布不改变该边界。

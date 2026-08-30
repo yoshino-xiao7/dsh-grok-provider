@@ -2,7 +2,7 @@
 
 ## 0. 当前状态
 
-当前可用 npm 稳定基线为 `dsh-grok-provider@0.1.10`；其 release commit 为 `fe1e5a7d82defb17ab5bcbb0d9979c43cb48c028`，不可变 tag 为 `v0.1.10`，main CI run `33299116564` 全绿。唯一 tarball 含 70 个文件、197,620 bytes，unpacked size 为 628,836 bytes，SHA-256 为 `f9fe1dea743e86e2799a1073a93a8af91ad5bd389e14f4d2f0528428ada93c62`，npm SRI 为 `sha512-OnfG4diVqJdzYSwJKERNnaplYFbOvFICZP58E0f2Cdh+t7orlTL1DWokvzEHdJrw6HA+UMoKDZgJ6AMEVv4aUg==`；Trusted Publisher run `33299599113` 已完成，Registry、GitHub Release 与本地制品逐字节一致，npm `latest=0.1.10`，Registry signature 与 SLSA provenance 已回读。sidebar quota 维护版 `0.1.8` 曾发布后撤回且不能复用。真实使用随后发现精确 `grok-4.6` 在 High Effort + Web Search 续跑时，可能在一次已完成 Search 后复用已关闭 reasoning ID 作为空占位；`0.1.11` 只在已完成 server Search 位于两段 reasoning 之间时放行该严格空项，并加入官方 raw reasoning 支持，不改变认证、设置、Search descriptor、模型 route、图片或平台边界。代码 PR #25 已合入 `yukiryou/main@307ae3ac83526f388c6b4a0d1e1346353bd5f4aa`，main CI run `33302830043` 双平台全绿；当前 `yukiryou/v0.1.11-release-evidence` 正在冻结最终发布事实。
+当前可用 npm 稳定基线为 `dsh-grok-provider@0.1.11`，npm `latest=0.1.11`。最终 release commit 为 `2e5c6dbc8bb83377a4db4d8e31452b3ce96500c5`；annotated tag object `353bcd3717d4440ab20a2b05a5e9d51eef22fa7f` peel 到该提交，final CI run [`33303080849`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33303080849) 双平台全绿。仓库所有者明确授权的唯一 tarball 含 71 个文件、207,022 bytes，unpacked size 为 656,139 bytes，SHA-256 为 `8fca0eca86769ee9febd35606cc8c944a0ae968cec2937a30ccaf68d36d42b2d`，npm SRI 为 `sha512-2qInRIq5Dkf7CqXq8z1mVvMelStg3nZ1wuWEqsExgfm7iXF0Jn5f7d11IAtHRxdKdJm/j0s8tYT1Dx6IdtGNqg==`。Trusted Publisher run [`33303631312`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33303631312) 已完成，Registry、GitHub Release 与本地制品逐字节一致；Registry 精确版本隔离安装及 Host/client import/export smoke 通过。`npm audit signatures` 确认安装图中 9 个包具有已验证 Registry 签名、3 个包具有已验证 attestations，本包公开 npm metadata 包含 1 个 Registry signature、2 个 attestations；SLSA provenance 精确绑定 `release.yml`、`v0.1.11`、release commit 与 publish run。sidebar quota 维护版 `0.1.8` 曾发布后撤回且不能复用。`0.1.11` 只在已完成 server Search 位于两段 reasoning 之间时放行已关闭 reasoning ID 的严格空占位复用，并加入官方 raw reasoning 支持，不改变认证、设置、Search descriptor、模型 route、图片或平台边界。真实 probe 只覆盖 summary/Search，raw reasoning 仍只有协议 fixture 证据；网络可达 Windows 真机外部浏览器弹出仍未验收。
 
 首个 `dsh-grok-provider@0.1.0` 于 2026-08-26 从 GitHub Release 中唯一的候选 tarball 发布到 npm；Registry 回读的 SHA-512、重新下载文件的 SHA-256 和 GitHub Release 产物完全一致，并生成 npm provenance attestation。后续稳定版沿用由该流程建立的不可变制品与回读原则。
 
@@ -131,7 +131,7 @@ patch 路径必须为不含 `..`、绝对路径、反斜线或 NUL 的相对 `.y
 
 ## 7. Git 与版本
 
-- `0.1.0` 历史开发分支为 `yukiryou/v0.1.0`；`0.1.10` 代码分支 `yukiryou/v0.1.10-search-settings-fix` 与发布证据分支 `yukiryou/v0.1.10-release-evidence` 已分别经 PR #23、#24 合入受保护 `yukiryou/main`，最终 release commit 为 `fe1e5a7d82defb17ab5bcbb0d9979c43cb48c028`。`0.1.8` 已由撤回的 sidebar quota 发布消耗，不得复用。`0.1.11` 代码分支 `yukiryou/v0.1.11-reasoning-stream` 已经 PR #25 合入，当前发布证据分支为 `yukiryou/v0.1.11-release-evidence`；已发布 `0.1.10` 不可覆盖或重发。
+- `0.1.0` 历史开发分支为 `yukiryou/v0.1.0`；`0.1.10` 代码分支 `yukiryou/v0.1.10-search-settings-fix` 与发布证据分支 `yukiryou/v0.1.10-release-evidence` 已分别经 PR #23、#24 合入受保护 `yukiryou/main`，最终 release commit 为 `fe1e5a7d82defb17ab5bcbb0d9979c43cb48c028`。`0.1.8` 已由撤回的 sidebar quota 发布消耗，不得复用。`0.1.11` 代码分支 `yukiryou/v0.1.11-reasoning-stream` 与发布证据分支 `yukiryou/v0.1.11-release-evidence` 已分别经 PR #25、#26 合入，最终 release commit 为 `2e5c6dbc8bb83377a4db4d8e31452b3ce96500c5`；已发布版本不可覆盖或重发。
 - `package.json`、CHANGELOG、release notes、Git tag 和 tarball 必须使用同一个精确候选版本。
 - 发布提交必须干净且可复现。
 - tag 使用 `v<major>.<minor>.<patch>`，只在发布提交确定后创建。
@@ -194,9 +194,9 @@ scoped 包首次公开发布必须保留 `--access public`。
 npm 发布不会自动成为受管可安装项。当前发现状态：
 
 - GitHub 仓库已添加 DeepSeek Harness 官方推荐的 `dsh-plugin` 与 `dsh` Topics，可被 Topic 驱动来源发现。
-- YukiRyou curated catalog 当前仍是精确 `dsh-grok-provider@0.1.0`、verification `installed`、仅 `darwin-arm64`。`0.1.10` 已发布及其完整性/provenance 回读不等于从 catalog 安装该精确版本，因此不得据此升级条目或增加平台。
+- YukiRyou curated catalog 当前仍是精确 `dsh-grok-provider@0.1.0`、verification `installed`、仅 `darwin-arm64`。`0.1.11` 已发布及其完整性/provenance 回读不等于从 catalog 安装该精确版本，因此不得据此升级条目或增加平台。
 - 公共 `awesome-dsh-plugin` 的收录 PR #3415 已合并，项目已进入 `model` 分类。该列表不记录精确 npm 版本或平台验证字段，因此收录只代表发现入口，不证明任一后续制品的受管安装或平台验收。
-- Windows x64 仍未完成一条闭合的 Registry 精确版本 production inspector、安装、重启、浏览器登录、聊天、工具调用和重新认证链路。`0.1.6` 发布后已确认图片可用，并确认官方 CLI 可在生成登录 URL 前因 OIDC discovery timeout 退出；`0.1.7` 只增加闭合诊断，不是浏览器弹出已修复或已验证的证据。`0.1.10` 的 Registry/制品回读也未覆盖上述真实链路、OAuth、完整真实账号会话或 Windows 浏览器弹出。
+- Windows x64 仍未完成一条闭合的 Registry 精确版本 production inspector、安装、重启、浏览器登录、聊天、工具调用和重新认证链路。`0.1.6` 发布后已确认图片可用，并确认官方 CLI 可在生成登录 URL 前因 OIDC discovery timeout 退出；`0.1.7` 只增加闭合诊断，不是浏览器弹出已修复或已验证的证据。`0.1.11` 的 Registry/制品回读也未覆盖上述真实链路、OAuth、完整真实账号会话或 Windows 浏览器弹出。
 
 catalog 条目只能记录实际验证完成的精确版本和平台。当前条目记录：
 

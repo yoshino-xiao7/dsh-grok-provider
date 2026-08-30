@@ -1,6 +1,6 @@
 # `0.1.9` Web/X Search 上游与固定 Proxy 证据
 
-- 状态：`grok-4.6` 四组脱敏观察、生产顺序 mixed 复验、双平台 CI、隔离 Web Harness、最终制品与发布后回读门禁均已完成；`0.1.9` 发布协议、`0.1.10` 修复 Host settings，`0.1.11` 候选修复 High Effort + Web Search reasoning lifecycle
+- 状态：`grok-4.6` 四组脱敏观察、生产顺序 mixed 复验、双平台 CI、隔离 Web Harness、最终制品与发布后回读门禁均已完成；`0.1.9` 发布协议、`0.1.10` 修复 Host settings，`0.1.11` 已发布 High Effort + Web Search reasoning lifecycle 修复
 - 观察日期：2026-08-30
 - 固定 origin/path：`https://cli-chat-proxy.grok.com/v1/responses`
 - Provider client identity：`dsh-grok-provider/1.0.5`
@@ -92,6 +92,8 @@ Web + X 观察共 68 个 SSE event、4 个 output item、8 个 citation annotati
 `0.1.9` 发布后的真实页面检查证明上述协议证据没有覆盖 Host namespace 注册：`settings.describe` 可写但不包含 `llm-grok`，客户端因此正确派生 `unavailable` 并禁用开关；Host 同时只在启动时读取一次组合配置。`0.1.10` 增加真实 SettingsProvider + LLM Runtime 回归和 Adapter 首次 await 前快照回归，只修复设置进入后续请求的链路，并已正式发布。
 
 `0.1.10` 发布后的真实 High Effort + Web Search 使用暴露另一条响应兼容边界：一次已完成 server Search 可以位于已关闭 reasoning item 与复用同一 ID 的严格空 reasoning 占位之间。`0.1.11` 只在这个精确顺序下允许一次复用；无已完成 Search 间隔、未闭合、跨类型、非空或再次复用仍失败关闭。它同时接受完整闭合的空 reasoning，并支持与 summary 严格互斥的官方 raw `reasoning_text` lifecycle。replay 元数据不保存 raw 明文，后续请求只发送 encrypted content 与空 summary；当前流中的 raw delta 仍作为 Harness 可见 reasoning 输出。
+
+`0.1.11` 已从 release commit `2e5c6dbc8bb83377a4db4d8e31452b3ce96500c5` 正式发布；final CI run `33303080849` 的 macOS 14 / Windows 2022 全绿，Trusted Publisher run `33303631312` 已完成。唯一 tarball 含 71 个文件，为 207,022 bytes packed、656,139 bytes unpacked，SHA-256 为 `8fca0eca86769ee9febd35606cc8c944a0ae968cec2937a30ccaf68d36d42b2d`，SRI 为 `sha512-2qInRIq5Dkf7CqXq8z1mVvMelStg3nZ1wuWEqsExgfm7iXF0Jn5f7d11IAtHRxdKdJm/j0s8tYT1Dx6IdtGNqg==`。npm `latest=0.1.11`，Registry、Release 与本地制品逐字节一致；本包公开 metadata 的 1 个 Registry signature 与 2 个 package attestations 已验证，SLSA provenance 精确绑定 `release.yml`、`v0.1.11`、release commit `2e5c6dbc8bb83377a4db4d8e31452b3ce96500c5` 与 Trusted Publisher run `33303631312`。
 
 脱敏真实 `grok-4.6` Web Search probe 经生产 decoder 只发出 1 次 POST，观察 68 个事件、34 个 summary delta、0 个 raw delta、decoder accepted 与 1 个 finish；没有保存 prompt、回复正文、检索词、citation URL 或凭据。该结果验证当前 summary/Search 路径，不得描述为 raw reasoning 真机证据；raw reasoning 当前只有协议 fixture 回归。
 

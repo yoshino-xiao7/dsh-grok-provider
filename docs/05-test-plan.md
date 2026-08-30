@@ -7,7 +7,7 @@
 - 所有本地模拟服务使用随机 loopback 端口，不访问真实第三方。
 - 真实账号 smoke 只在发布候选上人工执行，记录脱敏结果。
 - `0.1.0` 发布前必须通过 macOS arm64 真机与 macOS/Windows 自动化矩阵；Windows x64 首次真机验证在发布后对 Registry 精确版本执行，验证前对外标注“代码支持、真机未验证”。
-- `0.1.1` 及后续版本不要求每次重复真机验证；自动化矩阵、契约测试、干净安装和 tarball 校验是常规发版门禁。认证流程、平台 subprocess seam 或安全契约发生变化的版本原则上仍须做对应平台的定向真机验证；若仓库所有者对精确版本明确批准发布后验证，发布前必须公开标注未验证范围、保留自动化门禁，并在失败时使用新的递增稳定版修复。`0.1.6` 采用该已记录特例并已发布；发布后图片已确认可用，Windows 官方 CLI 则在生成登录 URL 前复现 OIDC discovery timeout。已发布 `0.1.7` 负责解释并闭合这些状态，不把系统网络失败冒充成浏览器弹出修复；发布后撤回的 sidebar quota `0.1.8`、已发布的 Search `0.1.9`–`0.1.10` 与当前 `0.1.11` reasoning 兼容候选均不改变认证流程。
+- `0.1.1` 及后续版本不要求每次重复真机验证；自动化矩阵、契约测试、干净安装和 tarball 校验是常规发版门禁。认证流程、平台 subprocess seam 或安全契约发生变化的版本原则上仍须做对应平台的定向真机验证；若仓库所有者对精确版本明确批准发布后验证，发布前必须公开标注未验证范围、保留自动化门禁，并在失败时使用新的递增稳定版修复。`0.1.6` 采用该已记录特例并已发布；发布后图片已确认可用，Windows 官方 CLI 则在生成登录 URL 前复现 OIDC discovery timeout。已发布 `0.1.7` 负责解释并闭合这些状态，不把系统网络失败冒充成浏览器弹出修复；发布后撤回的 sidebar quota `0.1.8` 与已发布 `0.1.9`–`0.1.11` 均不改变认证流程。
 
 ## 2. Gate 0：方案确认
 
@@ -249,4 +249,6 @@ Web 与 TUI 分别验证：
 - Windows x64 自动化平台测试通过，且 README、release notes 和 marketplace 元数据在首次真机验证前明确披露“代码支持、真机未验证”。
 - npm 回读的 SHA-512 与本地发布 tarball 一致。
 
-`0.1.0` 发布后原计划完成一次 Windows x64 Registry 精确版本真机验收；仓库所有者随后明确决定该验收不再阻断稳定发布，且普通后续版本不重复要求真机验证。`0.1.1` 及后续版本以 CI、契约测试、隔离安装和制品校验为常规门禁。已发布 `0.1.6` 改变了认证预检 deadline 所有权并通过 Windows slow-fake 与 Windows CI；发布后图片已确认可用，但 Windows 官方 CLI 直接命令在固定 OIDC discovery 请求上超时，未生成登录 URL。已发布 `0.1.7` 准确区分 CLI 缺失、discovery 超时与 discovery 可访问状态，并确保前两类及时、脱敏结算；在第三类真实通过前不得把代码、CI 或错误可解释性表述为 Windows 浏览器弹出已修复或已验证。发布后撤回的 `0.1.8`、已发布 `0.1.9`–`0.1.10` Search 与当前 `0.1.11` reasoning 兼容修复均不改变这一边界；Registry/制品回读也不构成 Windows 真机、OAuth 或完整真实账号验收。
+`0.1.0` 发布后原计划完成一次 Windows x64 Registry 精确版本真机验收；仓库所有者随后明确决定该验收不再阻断稳定发布，且普通后续版本不重复要求真机验证。`0.1.1` 及后续版本以 CI、契约测试、隔离安装和制品校验为常规门禁。已发布 `0.1.6` 改变了认证预检 deadline 所有权并通过 Windows slow-fake 与 Windows CI；发布后图片已确认可用，但 Windows 官方 CLI 直接命令在固定 OIDC discovery 请求上超时，未生成登录 URL。已发布 `0.1.7` 准确区分 CLI 缺失、discovery 超时与 discovery 可访问状态，并确保前两类及时、脱敏结算；在第三类真实通过前不得把代码、CI 或错误可解释性表述为 Windows 浏览器弹出已修复或已验证。发布后撤回的 `0.1.8` 与已发布 `0.1.9`–`0.1.11` 均不改变这一边界；Registry/制品回读也不构成 Windows 真机、OAuth 或完整真实账号验收。
+
+`0.1.11` 的发布验收已关闭：release commit `2e5c6dbc8bb83377a4db4d8e31452b3ce96500c5` 的 final CI run `33303080849` 在 macOS 14 / Windows 2022 全绿，Trusted Publisher run `33303631312` 发布唯一 71 文件、207,022-byte packed / 656,139-byte unpacked 制品。SHA-256 为 `8fca0eca86769ee9febd35606cc8c944a0ae968cec2937a30ccaf68d36d42b2d`，SRI 为 `sha512-2qInRIq5Dkf7CqXq8z1mVvMelStg3nZ1wuWEqsExgfm7iXF0Jn5f7d11IAtHRxdKdJm/j0s8tYT1Dx6IdtGNqg==`；npm `latest=0.1.11`，Registry、Release 与本地制品逐字节一致。1 个 Registry signature、2 个 package attestations 与精确绑定 `release.yml` / `v0.1.11` / release commit / 发布 run 的 SLSA provenance 已验证。脱敏真实 probe 只验证 1 POST、68 events、34 summary deltas、0 raw deltas、decoder accepted 与 1 finish 的 summary/Search 路径；raw reasoning 仍只有协议 fixture 证据。
