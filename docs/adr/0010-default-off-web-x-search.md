@@ -1,8 +1,8 @@
 # ADR-0010：默认关闭且独立配置的 Web/X Search
 
-- 状态：已接受；`0.1.9`–`1.0.1` 已发布
+- 状态：已接受；`0.1.9`–`1.0.2` 已发布
 - 日期：2026-08-30
-- 适用版本：`0.1.9` 协议能力，`0.1.10` 可用设置链路，`0.1.11` 首次 reasoning 响应兼容，`1.0.0` 补充响应兼容，`1.0.1` 同名工具冲突与 transport 错误归因修正
+- 适用版本：`0.1.9` 协议能力，`0.1.10` 可用设置链路，`0.1.11` 首次 reasoning 响应兼容，`1.0.0` 补充响应兼容，`1.0.1` 同名工具冲突与 transport 错误归因修正，`1.0.2` 严格空 reasoning 可见投影修复
 - 取代：无
 
 ## 背景
@@ -157,4 +157,6 @@ request 与 receipt 均复制并冻结。decoder 不从 Config、route 或原始
 
 ## 验证
 
-协议证据与脱敏观察见 [`docs/13-upstream-search-evidence.md`](../13-upstream-search-evidence.md)。`1.0.1` 的 request/codec/Adapter/UI 聚焦回归、精确 Node `24.19.0` 本地全量测试、生产依赖审计、dry-run pack、预期仅 fixture canary 的秘密模式扫描，以及代码/main/final 双平台 CI 已通过。最终 release commit、唯一制品冻结与隔离安装、精确发布授权、Registry、签名、attestations 与精确 SLSA provenance 回读均已独立完成；Windows 真机浏览器登录仍未验收。
+协议证据与脱敏观察见 [`docs/13-upstream-search-evidence.md`](../13-upstream-search-evidence.md)。`1.0.2` 的 projection/codec/Adapter 聚焦回归、精确 Node `24.19.0` 本地全量测试、生产依赖审计、74 文件 dry-run pack、预期仅 fixture canary 的秘密模式扫描，以及代码/main/final 双平台 CI 已通过。候选源码的真实账号生产 Adapter 验收各发送一次 `grok-4.6` High Effort 请求：Web 为 `5 Search / 1 非空 reasoning / 0 空 reasoning / 1 非空 text / 1 finish`，X 为 `3 custom-tool Search / 1 非空 reasoning / 0 空 reasoning / 1 非空 text / 1 finish`，且只保留这些计数。
+
+最终 release commit `be200f9352afe93b27dd2856d89c01674f0cd637`、annotated tag object `b7efd3aabb99c73e1747d2d87890cdf9b284c438`、final CI run `33318426571` 与 Trusted Publisher run `33319150964` attempt 1 均已回读。仓库所有者明确授权的唯一 74 文件 tarball 为 255,282 bytes packed / 789,962 bytes unpacked，SHA-1 `3feddb7048fe4c796037804518999b12ae491802`、SHA-256 `010a21770cb3e4e42b7195984df1f5bf8dc5027066198cf99b7d713ac045f605`、SRI `sha512-TcvvPUXBJZEA728pVnUrXSZebGfIoB5ATG5041wA1OFzOE+hFTO98C5Fxl99WuFW2y7V89gkusYIKCpGlLNQIg==`；冻结候选、GitHub Release asset 与 npm Registry tarball 逐字节一致，npm `latest=1.0.2`。锁定隔离安装、本包 1 个 Registry signature / 2 个 package attestations、安装图 11 个 signed / 2 个 attested packages，以及精确绑定 `release.yml` / `refs/tags/v1.0.2` / release commit / publish run 的 SLSA provenance 均已验证。真实账号和供应链证据都不构成 OAuth、完整桌面会话或网络可达 Windows 真机外部浏览器弹出验收。

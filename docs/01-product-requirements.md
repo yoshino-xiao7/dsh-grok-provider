@@ -126,6 +126,7 @@ Web 的“退出”或 TUI `/grok logout` 先中止本插件所有在途 Grok �
 - `1.0.1` 已证明：启用 server Search 时，全部 Harness functions 先完整验证，再只从 wire definitions 移除与已启用 `web_search` / `x_search` 精确同名的 callable definition；关闭对应开关时本地 function 保留，历史 calls/results 不删除、不改名。request/decoder receipts 拒绝名称交集；source transport error 保留既有 `AUTH`、`RATE_LIMIT`、`ABORTED` 与 `PROVIDER_ERROR` 映射，只有真实 framing/JSON/协议错误进入 `INVALID_RESPONSE`。
 - `1.0.1` 最终 release commit `3c25a53571531e35ac888df16df4fe6c01849e85` 的双平台 final CI、唯一 73 文件制品、精确授权、Trusted Publisher run `33313699790` attempt 1、Registry 字节、锁定隔离安装、生产依赖审计、签名、attestations 与 SLSA provenance 回读均已完成；npm `latest=1.0.1`。这些供应链证据不构成网络可达 Windows 真机浏览器弹出验收。
 - `1.0.2` 只改变严格空 reasoning 的 Harness 投影及其对齐槽：普通空项继续执行既有 ID/type、sequence、output index、状态、summary/content 空性、大小、可选 encrypted content 与闭合校验；Search-backed 同 ID 复用额外保留精确 own-data 键集/accessor 拒绝。生命周期最终为空时产生零个可见 block，首个非空 delta 才按 output index 开始 block。正文、工具、usage、finish、可见非空 replay 与 Search replay 抑制不变；隐藏的普通空项不占 replay 槽，其 encrypted content 校验后不持久化；旧会话不回写。
+- `1.0.2` 已从 release commit `be200f9352afe93b27dd2856d89c01674f0cd637` 正式发布；annotated tag object `b7efd3aabb99c73e1747d2d87890cdf9b284c438` peel 到该提交，final CI run `33318426571` 在 macOS 14 / Windows 2022 全绿，Trusted Publisher run `33319150964` attempt 1 发布仓库所有者明确授权的唯一 74 文件制品。tarball 为 255,282-byte packed / 789,962-byte unpacked，SHA-1 `3feddb7048fe4c796037804518999b12ae491802`、SHA-256 `010a21770cb3e4e42b7195984df1f5bf8dc5027066198cf99b7d713ac045f605`、SRI `sha512-TcvvPUXBJZEA728pVnUrXSZebGfIoB5ATG5041wA1OFzOE+hFTO98C5Fxl99WuFW2y7V89gkusYIKCpGlLNQIg==`。冻结候选、GitHub Release asset 与 npm Registry tarball 逐字节一致，npm `latest=1.0.2`；锁定隔离安装、1 个 Registry signature、2 个 package attestations、安装图 11 个 signed packages / 2 个 attested packages 与精确绑定 `release.yml` / `refs/tags/v1.0.2` / release commit / publish run 的 SLSA provenance 均已验证。候选源码的真实账号验收仍只记录 Web `5 Search / 1 非空 reasoning / 0 空 reasoning / 1 非空 text / 1 finish` 与 X `3 custom-tool Search / 1 非空 reasoning / 0 空 reasoning / 1 非空 text / 1 finish`；这些发布与账号证据均不构成网络可达 Windows 真机外部浏览器弹出验收。
 
 ## 8. `0.1.0` 历史发布阻断项
 
@@ -154,6 +155,8 @@ Web 的“退出”或 TUI `/grok logout` 先中止本插件所有在途 Grok �
 - `0.1.10` 已发布：补齐 canonical settings namespace 与按调用动态快照，使 `0.1.9` 的两个开关真正可写。
 - `0.1.11` 已发布：修复 High Effort + Web Search reasoning 生命周期兼容并支持官方 raw reasoning 事件；不改变 Search descriptor、支持模型、认证或图片边界。
 - `1.0.0` 已发布：接受 fixed Proxy 已实测的 completed `open_page` 精确动作，并把 Search-backed reasoning ID 从“一次复用”收窄调整为“可多段复用、每段必须严格空且闭合”；不执行 URL、不新增本地工具、不扩大模型、认证、图片或 origin 边界。
+- `1.0.1` 已发布：消除已启用 server Search 与 Harness 同名 function definition 的冲突，并保留真实 transport error 分类；不删除历史 calls/results，不改变本地工具权限边界。
+- `1.0.2` 已发布：隐藏完整闭合但始终严格空的 reasoning 可见投影，同时保留协议校验、output-index 顺序与 replay 边界。
 - 再后续独立切片：默认关闭的图片生成（内联结果 → Harness attachment）。
 
 `prompt_cache_key` 不与图片输入捆绑；若以后排期，需独立分析会话标识隐私和 POST 不自动重放边界。任意 URL 下载、API Key、企业 OIDC、ACP、Headless 和 Linux 仍不在路线内。公开协议可驱动隔离原型，但每个切片在声明能力、合并发布基线前必须有独立 ADR 与固定 CLI Chat Proxy spike；`0.1.4` 的 `grok-4.6` user/tool-result 红蓝语义门禁已于 2026-08-28 通过，`grok-4.5` 因语义不可靠失败关闭，最终 Harness attachment 复验见[上游证据页](./12-upstream-image-input-evidence.md)。

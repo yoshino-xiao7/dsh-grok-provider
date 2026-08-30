@@ -1,10 +1,10 @@
 # 当前实现与发布状态
 
-`1.0.2` 制品修复严格空 reasoning lifecycle 被投影成多行无内容 `Think` 的显示问题，同时保留普通项既有校验与 Search-backed 复用项的精确 own-data/accessor 校验。本文不在实际完成前预写该版本的发布或供应链事实。
+`1.0.2` 已正式发布并完成供应链回读。该制品修复严格空 reasoning lifecycle 被投影成多行无内容 `Think` 的显示问题，同时保留普通项既有校验与 Search-backed 复用项的精确 own-data/accessor 校验。
 
 状态日期：2026-08-30
-本文对应制品版本：`dsh-grok-provider@1.0.2`
-上一已验证发布基线：`dsh-grok-provider@1.0.1` / `yukiryou/main@3c25a53571531e35ac888df16df4fe6c01849e85`
+本文对应已发布制品：`dsh-grok-provider@1.0.2`
+当前已验证发布基线：`dsh-grok-provider@1.0.2` / `yukiryou/main@be200f9352afe93b27dd2856d89c01674f0cd637`
 内容类型路线：已冻结于 [能力路线图](./11-capability-roadmap.md)；`1.0.2` 只修复可见 reasoning 投影，不新增内容类型、模型、认证方式、endpoint 或本地工具。
 
 ## 已实现
@@ -23,7 +23,7 @@
 - 已发布的 `0.1.11` reasoning 兼容：允许已闭合 reasoning ID 以严格空项再出现一次，接受闭合空 reasoning，支持官方 raw `reasoning_text` 标准生命周期；raw 与 summary 互斥，raw replay 只携带 encrypted content 与空 summary。
 - 已发布 `1.0.0`：首次复用前仍要求一个完成的 Web/X server Search；一旦该 ID 已被 Search-backed，允许后续多个严格空占位 lifecycle，每个都必须独立 `output_item.done`。完成态 Web Search `open_page` 只接受精确有界 type/URL，并要求 streamed/final action 一致；URL 校验后丢弃，不产生本地工具调用或网络访问。
 - 已发布 `1.0.1`：全部 Harness functions 先完整验证，再从 wire definitions 精确过滤与本次已启用 server `web_search` / `x_search` 同名的定义；对应开关关闭时本地 function 保留，历史 function calls/results 原样保留。最终 receipt 拒绝 function/server-tool 交集。SSE source transport error 原样上抛，HTTP 400 进入 `PROVIDER_ERROR`，parser/协议错误仍为 `INVALID_RESPONSE`。
-- `1.0.2`：reasoning item added 只建立内部 FSM，首个非空 summary/raw delta 才开始 Harness block；始终严格空且完整闭合的 item 产生零可见 chunk。不同非空 item 仍分别闭合，旧会话不回写。
+- 已发布 `1.0.2`：reasoning item added 只建立内部 FSM，首个非空 summary/raw delta 才开始 Harness block；始终严格空且完整闭合的 item 产生零可见 chunk。不同非空 item 仍分别闭合，旧会话不回写。
 
 ## 已验证
 
@@ -213,4 +213,6 @@ Windows x64 真机不再是 `0.1.0` 预发布阻断项。首次发布后必须�
 - 正文、工具调用、usage、finish、可见非空 replay、Search replay 抑制、request compiler、认证、模型、图片、endpoint、citation/URL 和工具权限不变。隐藏普通空项不占 replay 对齐槽，其 encrypted content 校验后不持久化；已持久化的旧空 `Think` 不删除。
 - 2026-08-30 真实账号对候选源码生产 Adapter 的 Web/X 各 1 次 `grok-4.6` High Effort 验收已完成：Search lifecycle 计数分别为 5/3，每次均投影 1 个非空 reasoning、0 个空 reasoning、1 个非空 text 和 1 个 finish；只输出计数，未保存正文、URL、身份、凭据或原始响应。
 - 代码分支 head `52359e691dfd1bbdb849362c9d1a461e4e693b83` 的 push run `33318180580` 与 PR run `33318197083`、代码 PR #34、merge commit `47d688cc47bc9643f3477ee9333cfdf7788045cd` 及 main CI run `33318245251` 均已完成 macOS 14 / Windows 2022 全绿。
-- `1.0.2` 的固定 final release commit 及其 CI、冻结制品文件数/大小/摘要、隔离安装、精确授权、tag、Release、Registry、签名、attestations 与 provenance 只能在各步骤实际完成后补录；版本同步、本地 265 项全量测试（263 pass、0 fail、2 platform skips）、0 生产漏洞和 74 文件 dry-run pack 已按实际结果记录，dry-run 值不冒充冻结制品。
+- 版本同步、本地 265 项全量测试（263 pass、0 fail、2 platform skips）、0 生产漏洞和 74 文件 dry-run pack 已完成；代码 PR #34 合并后的发布证据 PR #35 形成 final release commit `be200f9352afe93b27dd2856d89c01674f0cd637`。其 final CI run [`33318426571`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33318426571) 在 macOS 14 / Windows 2022 全绿，annotated tag object `b7efd3aabb99c73e1747d2d87890cdf9b284c438` peel 到该提交。
+- 仓库所有者明确授权的唯一 `dsh-grok-provider-1.0.2.tgz` 含 74 个文件、255,282 bytes packed、789,962 bytes unpacked；SHA-1 `3feddb7048fe4c796037804518999b12ae491802`、SHA-256 `010a21770cb3e4e42b7195984df1f5bf8dc5027066198cf99b7d713ac045f605`、SRI `sha512-TcvvPUXBJZEA728pVnUrXSZebGfIoB5ATG5041wA1OFzOE+hFTO98C5Fxl99WuFW2y7V89gkusYIKCpGlLNQIg==`。唯一 GitHub Release asset、冻结候选与 Registry tarball 逐字节一致。
+- Trusted Publisher run [`33319150964` attempt 1](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33319150964/attempts/1) 已完成，npm `latest=1.0.2`。Node `24.19.0` / npm `11.5.1` 锁定 Registry 隔离安装通过 Host `name`/`apply` 与 client `id`/factory smoke，生产依赖审计为 0 漏洞；本包 1 个 Registry signature、2 个 attestations，安装图 11 个 signed packages / 2 个 attested packages，以及精确绑定 `release.yml` / `refs/tags/v1.0.2` / release commit / publish run 的 SLSA provenance 均已验证。网络可达 Windows 真机外部浏览器弹出仍未完成验收，发布不改变该边界。
