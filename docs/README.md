@@ -1,13 +1,11 @@
 # Grok Build Provider 文档索引
 
-- 状态：**`1.0.0` Search 响应协议修复候选开发中；尚未发布**
-- 候选范围：允许已完成 Search 支撑的 reasoning ID 继续以多个严格空且逐次闭合的占位生命周期出现，并接受完成态精确 `open_page` type/URL；其余未知形状继续失败关闭
-- 候选门禁：版本号、本地自动化、代码 PR #28 与 main CI run `33308371009` 的双平台门禁已完成；发布证据 final CI、最终提交、唯一制品、摘要/SRI、精确制品授权、发布与 Registry/signature/attestation/provenance 回读仍待完成
-- 当前 npm 稳定版本：`0.1.11`
-- 最近发布版本：`0.1.11`
-- 发布基线：`yukiryou/main@2e5c6dbc8bb83377a4db4d8e31452b3ce96500c5`
-- 发布路径：代码 PR #25 合入 `yukiryou/main@307ae3ac83526f388c6b4a0d1e1346353bd5f4aa` 后，发布证据 PR #26 形成最终 release commit；annotated tag object `353bcd3717d4440ab20a2b05a5e9d51eef22fa7f` peel 到该提交。final CI run [`33303080849`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33303080849) 的 macOS 14 / Windows 2022 均通过，Trusted Publisher run [`33303631312`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33303631312) 已完成
-- 发布状态：仓库所有者明确授权的唯一 71 文件 tarball 为 207,022 bytes，unpacked size 656,139 bytes；SHA-256 为 `8fca0eca86769ee9febd35606cc8c944a0ae968cec2937a30ccaf68d36d42b2d`，npm SRI 为 `sha512-2qInRIq5Dkf7CqXq8z1mVvMelStg3nZ1wuWEqsExgfm7iXF0Jn5f7d11IAtHRxdKdJm/j0s8tYT1Dx6IdtGNqg==`。Registry、GitHub Release 与本地制品逐字节一致，npm `latest=0.1.11`；Registry 精确版本隔离安装及 Host/client smoke 通过。`npm audit signatures` 确认安装图中 9 个包具有已验证 Registry 签名、3 个包具有已验证 attestations，本包公开 metadata 包含 1 个 Registry signature、2 个 attestations；SLSA provenance 精确绑定 `release.yml`、`v0.1.11`、release commit 与 publish run
+- 状态：**`1.0.0` 已正式发布**
+- 发布范围：允许已完成 Search 支撑的 reasoning ID 继续以多个严格空且逐次闭合的占位生命周期出现，并接受完成态精确 `open_page` type/URL；其余未知形状继续失败关闭
+- 当前 npm 稳定版本与最近发布版本：`1.0.0`
+- 发布基线：`yukiryou/main@c6548199582b122f1d285422eabea0205eaf602f`
+- 发布路径：代码 PR #28 与发布证据 PR #29 已合入；annotated tag object `192561cda1ac58cbc4077f0de8fa614dff9a5557` peel 到最终 release commit。final CI run [`33308603394`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33308603394) 双平台全绿，Trusted Publisher run [`33309083806` attempt 1](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33309083806/attempts/1) 已完成
+- 发布状态：仓库所有者明确授权的唯一 72 文件 tarball 为 226,704 bytes，unpacked size 715,014 bytes；SHA-1 `50e5d898dba241d1e19def7705db216e3060b892`、SHA-256 `30cd83dad77f7d2611126b3c4737c8fabffeae79f385fa623e61dcecfe39f5e2`、npm SRI `sha512-WL2f6Kfg5yT5nNf1p4//mLSajCnZttL/pDR3BISrFgSGtZd9DEJlnibq08ETz503n1wHIdCBcU/ICMPG9K4vOw==`。冻结候选、GitHub Release 与 npm Registry 逐字节一致，npm `latest=1.0.0`；Node 24 隔离安装、1 个 Registry signature、2 个 attestations、安装图 11 个 signed packages / 2 个 attested packages 及 SLSA provenance 均已验证
 - 撤回状态：`0.1.8` 只对应 sidebar quota 维护发布，不包含 Search；撤回不会释放 npm semver，任何 Search 制品都不得复用 `0.1.8`
 - 兼容基线：DeepSeek Harness `0.1.1-rc.2`
 - 目标平台：macOS arm64、Windows x64
@@ -57,7 +55,7 @@
 - [v0.1.9 中英双语发行说明](./releases/v0.1.9.md)
 - [v0.1.10 中英双语发行说明](./releases/v0.1.10.md)
 - [v0.1.11 中英双语发行说明](./releases/v0.1.11.md)
-- [v1.0.0 候选中英双语发行说明](./releases/v1.0.0.md)
+- [v1.0.0 中英双语发行说明](./releases/v1.0.0.md)
 - [v0.1.2-rc.1 中英双语预发行说明](./releases/v0.1.2-rc.1.md)
 - [ADR-0001：认证与传输路线](./adr/0001-auth-and-transport-route.md)
 - [ADR-0002：首版能力边界](./adr/0002-v0.1-scope.md)
@@ -76,7 +74,7 @@
 
 `0.1.7` 已发布闭合 CLI 安装/版本诊断、登录失败可解释性，以及采用 MIT 许可的 Harness `IconThinkOutline16` 路径几何；它不接管官方 CLI 的网络、代理或 OAuth 流程。sidebar quota `0.1.8` 曾发布后撤回，且该 npm 号码不能复用；Search 从未作为 `0.1.8` 发布。`0.1.9` 发布精确 `grok-4.6` 的 Search 协议和页面，`0.1.10` 补齐 canonical settings 注册与调用级快照。`0.1.11` 已正式发布，收窄兼容真实 High Effort + Web Search 续跑出现的一次已关闭 reasoning ID 空占位复用，接受空 reasoning，并加入与 summary 严格互斥的官方 raw `reasoning_text` 生命周期。脱敏真实探针只观察到 summary delta，不能作为 raw reasoning 真机证据；浏览器手工对话、OAuth、完整真实会话和网络可达 Windows 真机外部浏览器弹出继续属于独立边界。完整门禁见[逐版发布检查表](./10-release-checklist.md)。
 
-`1.0.0` 候选继续修复真实 Search stream 的剩余两种形状：Search-backed reasoning ID 可多次作为严格空占位重新出现；完成态 Web Search 可返回精确 `open_page` action。“严格空”要求 visible summary/content 与 summary/raw lifecycle 均为空，但允许有界 opaque `encrypted_content`；每次复用都必须有自己的 `response.output_item.done`，`response.incomplete` 不能吞掉 open 复用段，全部闭合后仍允许后续 max-token 终态；跨类型、非空、未知 terminal/accessor 字段继续拒绝。`open_page` 的 streamed/final type 与 URL 必须一致，Provider 校验后丢弃 URL 且从不访问。最终源码的脱敏真实账号验证只保留计数和终态：原始 Web/X 协议各完成 1 次、各 64 events，并观察到对应 Search；生产 adapter 共完成 5 次 Responses，direct Web/X 均为 `stop`，Harness 同名 `x_search` 三轮为 `tool-calls`、`tool-calls`、`stop`。未记录结果、URL、prompt、身份或凭据；这些不是 `1.0.0` 已发布、OAuth 或 Windows 真机验收证据。
+`1.0.0` 已发布真实 Search stream 的剩余两种兼容修复：Search-backed reasoning ID 可多次作为严格空占位重新出现；完成态 Web Search 可返回精确 `open_page` action。脱敏真实账号验证未记录结果、URL、prompt、身份或凭据；发布与供应链回读仍不构成 OAuth 或 Windows 真机浏览器验收证据。
 
 ## 官方依据
 

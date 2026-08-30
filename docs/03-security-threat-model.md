@@ -11,7 +11,7 @@
 
 `0.1.11` 已从 release commit `2e5c6dbc8bb83377a4db4d8e31452b3ce96500c5` 正式发布；final CI run `33303080849` 的 macOS 14 / Windows 2022 全绿。唯一 71 文件制品为 207,022 bytes packed、656,139 bytes unpacked，SHA-256 为 `8fca0eca86769ee9febd35606cc8c944a0ae968cec2937a30ccaf68d36d42b2d`，npm SRI 为 `sha512-2qInRIq5Dkf7CqXq8z1mVvMelStg3nZ1wuWEqsExgfm7iXF0Jn5f7d11IAtHRxdKdJm/j0s8tYT1Dx6IdtGNqg==`；Trusted Publisher run `33303631312` 完成，Registry、GitHub Release 与本地制品逐字节一致，npm `latest=0.1.11`。本包公开 metadata 中的 1 个 Registry signature 与 2 个 package attestations 已验证，SLSA provenance 精确绑定 `release.yml`、`v0.1.11`、上述 release commit 与该发布 run。sidebar quota `0.1.8` 曾发布后撤回且不能复用。`0.1.9` 发布精确 `grok-4.6` 的默认关闭 Web/X Search 协议与页面，`0.1.10` 补齐 Host `llm-grok` namespace 与按调用快照，`0.1.11` 修复 High Effort + Web Search 续跑的 Responses reasoning 生命周期并加入官方 raw reasoning 事件支持；它不改变推理 Bearer 的固定 origin、Search descriptor、支持模型、官方 CLI OAuth 所有权或系统网络/代理边界。供应链回读不构成网络可达 Windows 真机浏览器弹出验收。
 
-`1.0.0` 当前仍是未发布候选；npm 稳定版仍为 `0.1.11`。该候选只收窄扩展固定 Proxy 响应解码：接受 completed `open_page` 精确动作，并允许已由 completed Web/X Search 证明的 reasoning ID 继续出现多个逐段严格空且闭合的占位。它不打开或下载 URL，不生成 Harness 本地工具调用，不保存 Search/reasoning replay，也不改变固定 origin、凭据、设置、模型或图片能力边界。
+`1.0.0` 已正式发布，npm `latest=1.0.0`。最终 release commit `c6548199582b122f1d285422eabea0205eaf602f`、双平台 final CI、仓库所有者明确授权的唯一 72 文件制品、Trusted Publisher run `33309083806` attempt 1、Registry 字节、签名、attestations 与 SLSA provenance 回读均已关闭。该版本只收窄扩展固定 Proxy 响应解码：接受 completed `open_page` 精确动作，并允许已由 completed Web/X Search 证明的 reasoning ID 继续出现多个逐段严格空且闭合的占位。它不打开或下载 URL，不生成 Harness 本地工具调用，不保存 Search/reasoning replay，也不改变固定 origin、凭据、设置、模型或图片能力边界；供应链证据不构成网络可达 Windows 真机浏览器弹出验收。
 
 ## 2. 信任边界
 
@@ -244,7 +244,7 @@ TUI 通过 Harness 的 human-command registry 注册一个全局 `/grok`，只�
 - 最终 JSON 超限继续逐张淘汰最旧图片；缺服务、projection unsupported、源图片位置/引用/MIME 不支持在 Responses POST 前以 `UNSUPPORTED_CONTENT` 拒绝。store 返回损坏或不自洽的投影、超过含图编译 block 预算、更深 tool-result，以及图片全部淘汰后剩余非图片请求仍不合法，都保持通用 `INVALID_RESPONSE`。
 - AbortSignal 在查询服务前检查并传给所有投影读取；编译失败时 Responses POST 调用必须为 0，但模型目录 GET 可能已发生。
 
-`0.1.9` 按 [ADR-0010](./adr/0010-default-off-web-x-search.md) 独立增加 Search 协议与页面；`0.1.10` 补齐真实 Host settings 集成；`0.1.11` 首次收窄兼容 Search 之后的 reasoning lifecycle；`1.0.0` 候选继续兼容实测的 `open_page` 与多段 Search-backed reasoning 占位，且不扩大图片或 origin 边界：
+`0.1.9` 按 [ADR-0010](./adr/0010-default-off-web-x-search.md) 独立增加 Search 协议与页面；`0.1.10` 补齐真实 Host settings 集成；`0.1.11` 首次收窄兼容 Search 之后的 reasoning lifecycle；已发布 `1.0.0` 继续兼容实测的 `open_page` 与多段 Search-backed reasoning 占位，且不扩大图片或 origin 边界：
 
 - Web Search 与 X Search 在唯一 `llm-grok` namespace 中默认关闭并独立持久化；无 settings service 时回退组合配置。每个调用在首次 await 前冻结一次 policy，热更新只影响后续调用；两项全关时不读取 `purpose`，最终 request wire 与 `0.1.7` 保持一致。
 - 只为固定 Proxy 已验证的精确 `grok-4.6` route 编译 `{type:"web_search"}` / `{type:"x_search"}`；不支持模型在 Responses POST 前返回 `UNSUPPORTED_CONTENT`。
@@ -252,7 +252,7 @@ TUI 通过 Harness 的 human-command registry 注册一个全局 `/grok`，只�
 - Web 与 X 都是 xAI 已执行的 server tool，产生零个 Harness `tool-call` chunk；X 只接受四个实测 custom-tool 名称。未启用类别、未知、重复、乱序或未闭合生命周期全部失败关闭。
 - citation URL 不被打开、下载或重新请求；结构化 annotation/citations 只做有界验证后丢弃。观察到任何 Search 后不保存本响应的 encrypted reasoning replay。
 - Search 关闭不代表服务商内部绝不检索；开启后提示词与模型生成的检索词会到达 xAI，且结果可能错误、含提示注入并产生额外用量。
-- `1.0.0` 候选只在 completed Web `web_search_call` 中接受 own-data 精确 `{type:"open_page",url}`：URL 必须为非空且不超过 16 KiB UTF-8。streamed `output_item.done` 与 final `response.output` 必须绑定相同 action type 与逐字相同 URL；验证后动作被丢弃，不 fetch、不形成 Harness tool chunk、不进入 replay。非 completed 形状、未知键、accessor、错误类型、空值、超限或前后不一致均失败关闭。
+- `1.0.0` 只在 completed Web `web_search_call` 中接受 own-data 精确 `{type:"open_page",url}`：URL 必须为非空且不超过 16 KiB UTF-8。streamed `output_item.done` 与 final `response.output` 必须绑定相同 action type 与逐字相同 URL；验证后动作被丢弃，不 fetch、不形成 Harness tool chunk、不进入 replay。非 completed 形状、未知键、accessor、错误类型、空值、超限或前后不一致均失败关闭。
 - reasoning ID 的首次复用仍要求旧段已闭合、completed Web/X Search 位于新旧 output index 之间且新段严格为空。Search-backed 证明建立后，同一 ID 只可继续作为相同 reasoning type 的逐段严格空占位；每段必须无 summary/raw lifecycle、visible `summary`/`content` 为空并收到 `output_item.done`。terminal 仅允许既定 own-data 字段；可选 `encrypted_content` 只作为有界 opaque 字符串校验，不解密、不记录。跨类型、非空、未闭合、未知键、accessor，以及 `response.incomplete` 仍有未闭合复用段时均失败关闭；复用段全部闭合后允许后续 max-token 终态。raw `reasoning_text` 与 summary lifecycle 仍互斥；观察到 Search 后仍不保存任何 reasoning replay。
 
 公开 xAI 文档、离线测试与真机验证继续作为三类独立证据。[图片证据页](./12-upstream-image-input-evidence.md)记录的固定 Proxy 门禁已对 `grok-4.6` 的普通 user 与一层 tool-result 分别发送红/蓝合成图：4 次均为 HTTP 200、`text/event-stream`、completed，规范化整段回复只含正确颜色词和可选句末标点。`grok-4.5` 的受控红图语义不可靠，因此即使公开模型页声明图片能力也不进入本插件图片集合。图片固定使用 `detail:"high"`。Harness `0.1.1-rc.2` attachment-local/LlmRuntime 已复验 `grok-4.6` image、`grok-4.5`/未知模型 text-only，候选门禁随后关闭并完成 `0.1.4` 发布。已发布 `0.1.6` 只允许普通 user/system 历史省略通过闭合字符串/长度校验的私有 reasoning 并保留相邻可见 text/image。sidebar quota `0.1.8` 发布后已撤回，Search 的四组固定 Proxy 观察归属已发布 `0.1.9`，`0.1.10` 修复真实设置入口。`0.1.11` 的脱敏真实 probe 经生产 decoder 完成 1 次 POST、68 个事件、34 个 summary delta、0 个 raw delta与 1 个 finish，只验证 summary/Search 路径；raw reasoning 仍只有协议 fixture 证据。`1.0.0` 的补充真实观察只保存事件类别、计数、闭合结果和错误位置，不保存 URL、检索/回复内容、prompt 或任何凭据。隔离验收与制品回读不覆盖浏览器手工对话、Agent/session loop、OAuth、完整真实账号会话或 Windows 真机。任意 URL 下载与把 Authorization 带到第二个 origin 在所有版本仍永久禁止。
