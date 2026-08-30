@@ -1,11 +1,11 @@
 # 能力路线图
 
-- 状态：**`1.0.1` 同名 Search 工具冲突修复源码候选，尚未发布**
-- 当前 npm 稳定版：`1.0.0`
-- 最近发布：`1.0.0`
+- 状态：**`1.0.1` 同名 Search 工具冲突修复已正式发布**
+- 当前 npm 稳定版：`1.0.1`
+- 最近发布：`1.0.1`
 - 最近撤回：`0.1.8`（npm 版本号不可复用）
-- 当前已发布基线：`yukiryou/main@c6548199582b122f1d285422eabea0205eaf602f`
-- 当前源码候选分支：`yukiryou/v1.0.1-search-tool-collision`
+- 当前已发布基线：`yukiryou/main@3c25a53571531e35ac888df16df4fe6c01849e85`
+- 发布后证据分支：`yukiryou/v1.0.1-post-release-evidence`
 
 本文是 `0.1.3` 之后内容类型迭代的单一事实来源。`0.1.0`–`0.1.3` 的历史范围仍以 [ADR-0002](./adr/0002-v0.1-scope.md) 和[产品需求](./01-product-requirements.md)为准。
 
@@ -34,7 +34,7 @@
 | `0.1.10`（已发布） | 修复 `llm-grok` 注册与按调用读取 Search 设置 | 真实 SettingsProvider/LLM 回归、隔离安装、双平台 CI、唯一制品与 Registry 回读均已关闭 | [ADR-0010](./adr/0010-default-off-web-x-search.md) 的发布后修正 |
 | `0.1.11`（已发布） | 修复 High Effort + Web Search reasoning ID 空占位复用，并支持官方 raw reasoning lifecycle | 闭合状态机回归、脱敏 summary/Search probe、双平台 CI、唯一制品与 Registry 回读均已关闭 | [ADR-0010](./adr/0010-default-off-web-x-search.md) 的响应兼容修正 |
 | `1.0.0`（已发布） | 接受 completed `open_page` 精确动作，并允许同一 Search-backed reasoning ID 多段严格空且闭合地复用 | open-page/reasoning 正负契约、脱敏真实 Web/X、全量 Node 24、双平台 CI、唯一制品、明确授权与发布回读均已关闭 | [ADR-0010](./adr/0010-default-off-web-x-search.md) 的 `1.0.0` 增量 |
-| `1.0.1`（源码候选） | 启用 server Search 时以同名 server descriptor 替代 Harness callable definition；保留历史 call/result，并修正 transport error 归因 | 根因 A/B、请求/receipt/SSE 回归、Node 24 本地门禁、一次脱敏原失败会话结构回放及代码/main 双平台 CI 已完成；final release commit、制品、精确发布授权与发布回读待完成 | [ADR-0010](./adr/0010-default-off-web-x-search.md) 的 `1.0.1` 增量 |
+| `1.0.1`（已发布） | 启用 server Search 时以同名 server descriptor 替代 Harness callable definition；保留历史 call/result，并修正 transport error 归因 | 根因 A/B、请求/receipt/SSE 回归、Node 24、本地与双平台 CI、脱敏真实回放、唯一制品、精确授权、Registry、签名、attestations 与 provenance 回读均已关闭 | [ADR-0010](./adr/0010-default-off-web-x-search.md) 的 `1.0.1` 增量 |
 | 再后续版本 | 默认关闭的图片生成 | Proxy 返回可有界提交到 Harness attachment 的内联结果 | ADR-0011 |
 
 版本号可因缺陷修复顺延。`prompt_cache_key` 与图片输入相互独立，不属于 `0.1.4`：它需要独立的会话标识隐私、路由稳定性和“不得自动重放已经发送的 POST”分析，不得作为图片请求失败后的重试/降级机制。
@@ -188,4 +188,4 @@ const request = await requestCompiler.compile(options, preparedRoute)
 - ACP、`grok -p` Headless、Linux / macOS x64 发布承诺。
 - 厂商 `code_execution`；Harness 已有本地工具权限层。
 
-English summary: `1.0.0` is the current stable npm release from commit `c6548199582b122f1d285422eabea0205eaf602f`; version `0.1.8` was briefly published for sidebar-quota maintenance and then withdrawn, and its npm version number remains unusable. Final CI run `33308603394` passed on macOS 14 and Windows 2022. Trusted Publisher run `33309083806` attempt 1 published the explicitly authorized unique 72-file artifact, which is 226,704 bytes packed and 715,014 bytes unpacked, with SHA-1 `50e5d898dba241d1e19def7705db216e3060b892`, SHA-256 `30cd83dad77f7d2611126b3c4737c8fabffeae79f385fa623e61dcecfe39f5e2`, and SRI `sha512-WL2f6Kfg5yT5nNf1p4//mLSajCnZttL/pDR3BISrFgSGtZd9DEJlnibq08ETz503n1wHIdCBcU/ICMPG9K4vOw==`. npm reports `latest=1.0.0`; frozen-candidate, GitHub Release, and Registry bytes are identical. The isolated Node 24 Host/client smoke passed, this package's one Registry signature and two attestations verified, and SLSA provenance binds `release.yml`, `v1.0.0`, the release commit, and publish run exactly. The unpublished `1.0.1` source candidate fixes fixed-Proxy HTTP 400 caused by same-name Harness function definitions and enabled server Search descriptors, preserves historical calls/results, and propagates source transport errors under the established provider/auth/rate-limit/abort mappings. Its root-cause A/B, exact Node 24 local suite (253 tests, 251 pass, 0 fail, 2 skips), zero-vulnerability production audit, 73-file dry-run pack, expected-only secret scan, one redacted original-session replay ending in `response.completed`, code PR #31, and main dual-platform CI run `33312621786` are complete; a fixed final release commit, frozen artifact, exact publication authorization, and supply-chain readback remain pending. Network-reachable browser launch on a physical Windows device remains a separate acceptance boundary.
+English summary: `1.0.1` is the current stable npm release from commit `3c25a53571531e35ac888df16df4fe6c01849e85`; version `0.1.8` was briefly published for sidebar-quota maintenance and then withdrawn, and its npm version number remains unusable. Final CI run `33312946205` passed on macOS 14 and Windows 2022. Trusted Publisher run `33313699790` attempt 1 published the explicitly authorized unique 73-file artifact, which is 240,904 bytes packed and 748,888 bytes unpacked, with SHA-1 `9e6449160947104e8dbb71b7201c53e81b073f83`, SHA-256 `e3e15646d38de23c32c71ed759f9c10be9b2d790d4b10b4b8dfe59a44fbfef9f`, and SRI `sha512-Bm1qjJQ9i7CWT0oWah7QKDVBP8dR2YQtvEEZGE/BOSwZCo8sZbrW2v2QSfUfLsOLHcQXFZZ0jlDCAztr1m/q+A==`. npm reports `latest=1.0.1`; frozen-candidate, GitHub Release, and Registry bytes are identical. The locked Node `24.19.0` / npm `11.5.1` Host/client smoke and production audit passed; this package's one Registry signature and two attestations verified, the installed graph reports 11 signed packages and 2 attested packages, and SLSA provenance exactly binds `release.yml`, `refs/tags/v1.0.1`, the release commit, and publish run. The release fixes fixed-Proxy HTTP 400 caused by same-name Harness function definitions and enabled server Search descriptors, preserves historical calls/results, and propagates source transport errors under the established provider/auth/rate-limit/abort mappings. Network-reachable browser launch on a physical Windows device remains a separate acceptance boundary.

@@ -13,6 +13,8 @@
 
 `1.0.0` 已正式发布，npm `latest=1.0.0`。最终 release commit `c6548199582b122f1d285422eabea0205eaf602f`、双平台 final CI、仓库所有者明确授权的唯一 72 文件制品、Trusted Publisher run `33309083806` attempt 1、Registry 字节、签名、attestations 与 SLSA provenance 回读均已关闭。该版本只收窄扩展固定 Proxy 响应解码：接受 completed `open_page` 精确动作，并允许已由 completed Web/X Search 证明的 reasoning ID 继续出现多个逐段严格空且闭合的占位。它不打开或下载 URL，不生成 Harness 本地工具调用，不保存 Search/reasoning replay，也不改变固定 origin、凭据、设置、模型或图片能力边界；供应链证据不构成网络可达 Windows 真机浏览器弹出验收。
 
+`1.0.1` 已正式发布，npm `latest=1.0.1`。最终 release commit `3c25a53571531e35ac888df16df4fe6c01849e85`、双平台 final CI、仓库所有者明确授权的唯一 73 文件制品、Trusted Publisher run `33313699790` attempt 1、Registry 字节、锁定隔离安装、生产依赖审计、签名、attestations 与 SLSA provenance 回读均已关闭。该版本只在完整验证 source functions 后移除与已启用 server Search 精确同名的 wire callable definitions，并保留历史 calls/results；request/decoder receipt 拒绝名称交集，source transport error 不再被 parser 误标为 `INVALID_RESPONSE`。它不放宽固定 origin、凭据、设置、模型、图片、本地工具或 URL 边界；供应链证据仍不构成网络可达 Windows 真机浏览器弹出验收。
+
 ## 2. 信任边界
 
 ```text

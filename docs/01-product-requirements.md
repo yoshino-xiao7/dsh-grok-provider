@@ -123,6 +123,8 @@ Web 的“退出”或 TUI `/grok logout` 先中止本插件所有在途 Grok �
 - `1.0.0` 已新增失败关闭回归：completed Web `open_page` 只接受 own-data 精确 `{type:"open_page",url}`，其中 URL 为非空且不超过 16 KiB UTF-8；streamed `output_item.done` 与 final `response.output` 必须逐项绑定 action type 和 URL。验证后仅丢弃该动作，不 fetch、不生成 Harness tool chunk、不进入 replay；未知键、accessor、空/超限/非字符串 URL、非 completed `open_page` 或前后不一致均返回 `INVALID_RESPONSE`。
 - `1.0.0` 已证明：reasoning ID 的首次复用仍要求旧段已 `output_item.done` 且两段之间存在 completed Web/X Search；一旦该 ID 被 Search-backed 证明，后续只允许相同 ID/type 逐段以严格空 visible summary/content、无 summary/raw lifecycle 的完整 `added → output_item.done` 占位继续出现。terminal 只接受既定 own-data 字段，可选 encrypted content 仅作为有界 opaque 字符串处理；未知键、accessor、任一非空可见内容，以及 `response.incomplete` 发生时仍未 `output_item.done` 的复用段全部失败关闭；所有复用段已闭合后的 max-token 终态仍按既有契约接受。
 - `1.0.0` 最终 release commit `c6548199582b122f1d285422eabea0205eaf602f` 的双平台 CI、唯一 72 文件制品、精确授权、Trusted Publisher run `33309083806` attempt 1、Registry 字节、签名、attestations 与 SLSA provenance 回读均已完成；npm `latest=1.0.0`。这些供应链证据不构成网络可达 Windows 真机浏览器弹出验收。
+- `1.0.1` 已证明：启用 server Search 时，全部 Harness functions 先完整验证，再只从 wire definitions 移除与已启用 `web_search` / `x_search` 精确同名的 callable definition；关闭对应开关时本地 function 保留，历史 calls/results 不删除、不改名。request/decoder receipts 拒绝名称交集；source transport error 保留既有 `AUTH`、`RATE_LIMIT`、`ABORTED` 与 `PROVIDER_ERROR` 映射，只有真实 framing/JSON/协议错误进入 `INVALID_RESPONSE`。
+- `1.0.1` 最终 release commit `3c25a53571531e35ac888df16df4fe6c01849e85` 的双平台 final CI、唯一 73 文件制品、精确授权、Trusted Publisher run `33313699790` attempt 1、Registry 字节、锁定隔离安装、生产依赖审计、签名、attestations 与 SLSA provenance 回读均已完成；npm `latest=1.0.1`。这些供应链证据不构成网络可达 Windows 真机浏览器弹出验收。
 
 ## 8. `0.1.0` 历史发布阻断项
 
