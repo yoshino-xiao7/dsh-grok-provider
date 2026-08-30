@@ -1,9 +1,9 @@
 # 能力路线图
 
-- 状态：**`0.1.8` sidebar quota 维护版曾发布后撤回；`0.1.9` 默认关闭的 Web/X Search 正在开发（2026-08-30）**
-- 当前 npm 稳定版：`0.1.7`
-- 最近发布：`0.1.8`（已撤回，npm 版本号不可复用）
-- 当前开发分支：`yukiryou/v0.1.9-search`
+- 状态：**`0.1.9` 默认关闭的 Web/X Search 已正式发布；`0.1.8` sidebar quota 维护版曾发布后撤回（2026-08-30）**
+- 当前 npm 稳定版：`0.1.9`
+- 最近发布：`0.1.9`
+- 最近撤回：`0.1.8`（npm 版本号不可复用）
 
 本文是 `0.1.3` 之后内容类型迭代的单一事实来源。`0.1.0`–`0.1.3` 的历史范围仍以 [ADR-0002](./adr/0002-v0.1-scope.md) 和[产品需求](./01-product-requirements.md)为准。
 
@@ -28,7 +28,7 @@
 | `0.1.6` | 图片历史 reasoning 兼容与 Windows 官方 CLI 分阶段 deadline | 聚焦回归、macOS/Windows CI、唯一制品与发布回读 | 复用现有图片与认证契约 |
 | `0.1.7` | Windows 运行时诊断、登录失败可解释性与 `IconThinkOutline16` 设置导航图标维护 | 闭合 DTO/reason、lifecycle、UI/图标回归与 Windows 三态真机证据 | [ADR-0009](./adr/0009-runtime-diagnostics-and-login-failures.md) |
 | `0.1.8`（已撤回） | sidebar quota 维护；不含 Search | 发布后撤回；npm 号码已消耗且不得复用 | 见 `0.1.8` 撤回说明 |
-| `0.1.9` 候选 | 默认关闭的 Web Search / X Search | Proxy 接受 server tools；已记录可放行事件 | [ADR-0010](./adr/0010-default-off-web-x-search.md) 与固定 Proxy 证据 |
+| `0.1.9`（已发布） | 默认关闭的 Web Search / X Search | 固定 Proxy、双平台 CI、隔离 Harness、唯一制品与 Registry 回读门禁均已关闭 | [ADR-0010](./adr/0010-default-off-web-x-search.md) 与固定 Proxy 证据 |
 | 再后续版本 | 默认关闭的图片生成 | Proxy 返回可有界提交到 Harness attachment 的内联结果 | ADR-0011 |
 
 版本号可因缺陷修复顺延。`prompt_cache_key` 与图片输入相互独立，不属于 `0.1.4`：它需要独立的会话标识隐私、路由稳定性和“不得自动重放已经发送的 POST”分析，不得作为图片请求失败后的重试/降级机制。
@@ -133,13 +133,14 @@ const request = await requestCompiler.compile(options, preparedRoute)
 - 本版不新增模型能力、Responses wire、认证 origin 或 Search runtime；Windows 可访问 discovery 时由官方 CLI 实际弹出浏览器仍是发布门禁，不得由自动化或图标变更替代。
 - 最终 release commit `68f6b474bd860b829f03e7712ec79e8afe2b9b8d` 的唯一 64 文件、167,970-byte tarball 已由 Trusted Publisher run `33226665968` 发布；npm `latest=0.1.7`，Registry、Release 与本地制品逐字节一致，签名与 provenance 已验证。
 
-## 7. `0.1.9` 候选：默认关闭的 Web/X Search
+## 7. `0.1.9`：已发布默认关闭的 Web/X Search
 
 - 两个独立开关默认关闭；关闭时 request wire 不包含 server tool。
 - 固定 CLI Chat Proxy 的 Web、X、双开与生产 function → `web_search` 顺序 Web+function 四组脱敏协议观察已完成；实现只允许实测 lifecycle，详见[证据页](./13-upstream-search-evidence.md)。
 - request 与 response receipt 由同一深模块绑定；精确 `grok-4.6` 之外失败关闭，Web/X 远端调用产生零 Harness tool-call chunk。
 - 搜索词、远端检索、额外用量、citation 和 prompt injection 风险必须在 UI 与安全文档中就近披露。
-- 本地精确 Node 24 全量测试、生产依赖审计、69 文件 dry-run pack、生成 bundle/diff/秘密模式门禁已通过；候选与 main 合并提交的双平台 CI、隔离 Web Harness 四场景验收也已完成。隔离验收不覆盖浏览器手工对话、OAuth、真实账号/真实 xAI 请求或 Windows 真机；仍需关闭最终 release commit 的唯一制品、明确授权与发布后回读门禁，开发证据不构成发布。
+- 本地精确 Node 24 全量测试、生产依赖审计、69 文件 dry-run pack、生成 bundle/diff/秘密模式门禁已通过；候选与 main 合并提交的双平台 CI、隔离 Web Harness 四场景验收也已完成。隔离验收不覆盖浏览器手工对话、Agent/session loop、OAuth、真实账号/真实 xAI 请求或 Windows 真机。
+- 最终 release commit `a0af7b74882546dc3d9477b8f6c1494935e6bfb4` 的 CI run `33295408650` 全绿；唯一 69 文件、190,049-byte tarball 的 unpacked size 为 603,475 bytes，SHA-256 为 `78c73c95ea71d66cad6e6146fed41c281f1c8b29f60353e3f20247ec23833210`，SRI 为 `sha512-GeXQg3qedCGZz9D5MMaHd8Afe5Bn0nxjG+PQmKOB2AxB3m6IiGA07PMD77dEAOJVbAzKk0SnxAOKTZMTQFtuYg==`。Trusted Publisher run `33295761336` 完成，npm `latest=0.1.9`，Registry、Release 与本地制品逐字节一致。精确 Registry 安装的 Host/client import/export smoke 通过；精确安装审计图汇总 71 个已验证签名与 3 个 attestations，本包 attestations endpoint 返回 2 项，SLSA provenance 精确绑定 tag、workflow、commit 与 release run。
 
 ## 8. 后续：默认关闭的图片生成
 
@@ -155,4 +156,4 @@ const request = await requestCompiler.compile(options, preparedRoute)
 - ACP、`grok -p` Headless、Linux / macOS x64 发布承诺。
 - 厂商 `code_execution`；Harness 已有本地工具权限层。
 
-English summary: `0.1.7` remains the available stable baseline from commit `68f6b474bd860b829f03e7712ec79e8afe2b9b8d`; its 64-file, 167,970-byte artifact, Registry signature, and provenance are verified. Version `0.1.8` was briefly published for sidebar-quota maintenance and then withdrawn; npm does not permit that version number to be reused, and Search was never released as `0.1.8`. Version `0.1.9` targets independent, default-off Web/X Search for exact `grok-4.6`. Four fixed-Proxy protocol cases, local Node 24/audit/69-file pack gates, dual-platform candidate/main CI, and four isolated Web Harness cases are complete; exact-artifact, explicit-authorization, and post-publish readback gates remain pending. The isolated fixtures do not cover manual browser conversations, OAuth, a real account, real xAI Search requests, or a real Windows device. The Windows CLI timeout still occurs before a login URL is created, so browser launch is neither fixed nor verified.
+English summary: `0.1.9` is the current stable npm release from commit `a0af7b74882546dc3d9477b8f6c1494935e6bfb4`; version `0.1.8` was briefly published for sidebar-quota maintenance and then withdrawn, and its npm version number remains unusable. The unique 69-file, 190,049-byte artifact has an unpacked size of 603,475 bytes, SHA-256 `78c73c95ea71d66cad6e6146fed41c281f1c8b29f60353e3f20247ec23833210`, and SRI `sha512-GeXQg3qedCGZz9D5MMaHd8Afe5Bn0nxjG+PQmKOB2AxB3m6IiGA07PMD77dEAOJVbAzKk0SnxAOKTZMTQFtuYg==`. Final CI run `33295408650` and Trusted Publisher run `33295761336` passed; npm `latest=0.1.9`, and the Registry, GitHub Release, and local artifacts are byte-identical. The exact Registry Host/client import/export smoke passed. Its exact-install audit graph reported 71 verified signatures and 3 attestations, while this package's attestations endpoint returned 2; SLSA provenance binds the tag, workflow, commit, and release run. Isolated fixtures and import/export smoke do not cover manual browser conversations, the Agent/session loop, OAuth, a real account, real xAI Search requests, or a real Windows device. The Windows CLI timeout still occurs before a login URL is created, so browser launch is neither fixed nor verified.
