@@ -4,7 +4,11 @@
 
 让 DeepSeek Harness 使用你已登录的官方 Grok Build 账号：动态模型发现、流式推理、图片输入、可选 Web/X Search、工具调用，以及账号额度与模型能力面板。
 
-> 非官方社区项目，与 xAI 或 DeepSeek Harness 官方无隶属关系。当前稳定版及 npm Registry 的 `latest` 均为 `0.1.11`；该版在 `0.1.10` 的 Web/X Search 设置注册修复基础上，专门修复 `grok-4.6` 在 High Effort + Web Search 续跑时的 reasoning 生命周期兼容缺口。`0.1.8` 曾发布后撤回且版本号不可复用。项目不再发行预发行版；正式版缺陷通过新的递增稳定版本修复。
+> 非官方社区项目，与 xAI 或 DeepSeek Harness 官方无隶属关系。当前稳定版及 npm Registry 的 `latest` 仍为 `0.1.11`。`1.0.0` 正在作为 Search 响应协议修复候选开发，尚未发布、尚未冻结唯一制品，也尚未获得精确制品发布授权；不得把候选安装命令或真实账号探针表述为 Registry 发布事实。`0.1.8` 曾发布后撤回且版本号不可复用。项目不再发行预发行版；正式版缺陷通过新的递增稳定版本修复。
+
+当前源码候选版本为 `1.0.0`；npm Registry 的 `latest` 仍为 `0.1.11`。
+
+`1.0.0` 候选解决两类真实上游形状：一次 Search 完成后，同一 reasoning ID 可能继续以多个严格空占位生命周期出现；已完成 Web Search 也可能返回 `open_page` action。候选只接受闭合、Search-backed、严格空的复用，以及精确且有界的 `{ type: "open_page", url }`，不会打开或下载 URL。
 
 ## 它解决什么问题
 
@@ -15,7 +19,7 @@
 | 模型 | 运行时读取账号可见的全部 Grok Build 模型，不维护静态模型白名单 |
 | 对话 | Responses 流式文本、reasoning、加密 reasoning replay、usage 与 finish reason |
 | 图片 | 仅精确 `grok-4.6` 接收 Harness attachment 中有界的 JPEG/PNG 图片；`grok-4.5` 与其他模型保持 text-only |
-| 搜索 | `0.1.10` 已让精确 `grok-4.6` 的 Web Search / X Search 可默认关闭、分别开启；已发布的 `0.1.11` 修复 High Effort + Web Search 续跑的 reasoning 生命周期兼容，远端 lifecycle 仍不伪装成本地工具 |
+| 搜索 | 已发布 `0.1.11` 提供精确 `grok-4.6` 的默认关闭 Web/X Search；`1.0.0` 候选补齐多次严格空 reasoning 复用与完成态 `open_page` action，远端 lifecycle 仍不伪装成本地工具 |
 | 工具 | 将 function call 交回 Harness 权限层；Provider 本身不执行工具 |
 | 账户面板 | 登录状态、每周/月额度、重置时间、动态模型能力与 reasoning 档位 |
 | 界面 | Web 设置页中英文切换；TUI 提供闭合的 `/grok` 命令 |
@@ -46,6 +50,15 @@ grok models
 dsh plugin --profile web add dsh-grok-provider@0.1.11
 dsh web
 ```
+
+`1.0.0` 发布并完成 Registry 回读后，可改用：
+
+```sh
+dsh plugin --profile web add dsh-grok-provider@1.0.0
+dsh web
+```
+
+当前请不要把这条候选命令当作已可安装版本；npm `latest` 仍是 `0.1.11`。
 
 ### 3. 登录并选择模型
 
@@ -139,6 +152,15 @@ dsh web
 出现在目录中不代表 xAI 或 DeepSeek Harness 官方背书。项目已通过[收录 PR #3415](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin/pull/3415) 进入公共 `awesome-dsh-plugin` 的 `model` 分类；该目录是仓库级发现入口，不承载精确 npm 版本或平台验收声明。
 
 ## 兼容性与范围
+
+### `1.0.0` 候选修复边界
+
+- 一个 reasoning ID 的原始生命周期必须先闭合，并且首次复用前必须已有一个完成的 Web/X server Search；之后只允许它以严格空占位再次出现。
+- “严格空”是指可见 summary/content 为空，且没有 summary/raw lifecycle；允许有界、不透明的 `encrypted_content`，但不会把它当作可见 reasoning 或保存上游明文。
+- 每次复用都必须收到独立的 `response.output_item.done`；若 `response.incomplete` 到来时仍有复用段未闭合，则返回通用非法响应错误，所有复用段已闭合后的 `max_output_tokens` 终态仍有效。非空 summary/raw、跨类型、未知 terminal 字段或 accessor 字段继续拒绝。
+- 完成态 `open_page` 只接受精确 `type + url`，streamed/final action 的类型与 URL 必须一致；Provider 校验后丢弃 URL，不会访问、预览、下载或回放。
+- 最终源码完成两层脱敏真实账号复验：原始 Web/X 协议探针各 1 次请求、各 64 events，分别观察到对应 Search 且终态 `completed`；生产 adapter 共完成 5 次 Responses，direct Web/X 均为 `stop`，Harness 同名 `x_search` 三轮依次为 `tool-calls`、`tool-calls`、`stop`，前两轮各 1 次本地调用。未保存结果、URL、prompt、身份或凭据；这些不是发布、OAuth 或 Windows 真机证据。
+- manifest/lock 已同步为 `1.0.0`；Node 24 全量测试为 245 项、243 pass、0 fail、2 项平台跳过，生产依赖审计为 0 漏洞，确定性 build/bundle、72 项 dry-run pack、秘密模式扫描与 diff 检查均通过。仍待双平台 CI、最终 release commit、冻结制品、摘要/SRI、精确授权、发布及 Registry/signature/attestation/provenance 回读。
 
 | 项目 | `0.1.11` 已发布状态 |
 | --- | --- |
@@ -259,6 +281,7 @@ npm run pack:check
 - [x] 发布 `0.1.9`：加入 Web/X Search 协议与设置页，唯一制品、双平台 CI、签名与 SLSA provenance 均已验证；发布后确认 Host 设置 namespace 遗漏，开关不可用
 - [x] 发布 `0.1.10`：`llm-grok` 注册、按调用读取设置、唯一制品、双平台 CI、签名与 provenance 已完成
 - [x] 发布 `0.1.11`：修复 High Effort + Web Search reasoning 生命周期兼容；唯一制品、双平台 final CI、精确授权、Registry、签名、attestations 与 provenance 回读均已完成
+- [ ] 发布 `1.0.0`：修复多次严格空 reasoning ID 复用和完成态 Web Search `open_page` action；版本、本地自动化与真实协议探针已通过，双平台 CI、最终提交、唯一制品与精确授权仍待完成
 - [ ] 再后续独立切片：默认关闭的图片生成（只收内联结果，提交 Harness attachment）
 - [ ] 完成 Windows x64 独立真机验收并按需发布后续稳定修复版
 

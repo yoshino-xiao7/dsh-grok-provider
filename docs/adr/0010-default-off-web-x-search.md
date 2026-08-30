@@ -1,8 +1,8 @@
 # ADR-0010：默认关闭且独立配置的 Web/X Search
 
-- 状态：已接受；协议能力已在 `0.1.9` 正式发布，`0.1.10` 修正设置集成缺口，`0.1.11` 修正 reasoning 续跑兼容
+- 状态：已接受；`0.1.9`–`0.1.11` 历史已发布，`1.0.0` completed `open_page` 与多段 Search-backed reasoning 增量为未发布候选
 - 日期：2026-08-30
-- 适用版本：`0.1.9` 协议能力，`0.1.10` 可用设置链路，`0.1.11` reasoning 响应兼容
+- 适用版本：`0.1.9` 协议能力，`0.1.10` 可用设置链路，`0.1.11` 首次 reasoning 响应兼容，`1.0.0` 补充响应兼容候选
 - 取代：无
 
 ## 背景
@@ -99,6 +99,20 @@ request 与 receipt 均复制并冻结。decoder 不从 Config、route 或原始
 - raw replay 元数据只保留 encrypted content 与 `reasoning_text` 类型标记；后续请求只发送 `encrypted_content` 和 `summary:[]`，不把 raw 明文重新发送或伪装成 summary。观察到 Search 时仍按既有规则抑制整个响应的 reasoning replay。
 
 脱敏真实 probe 对最终目标形状只发出一次 Responses POST，生产 decoder 接受 68 个事件、34 个 summary delta 与一个 finish；它没有产生 raw delta，因此只证明 summary/Search 续跑路径。raw reasoning 的接受域由官方事件契约和失败关闭 fixture 覆盖，不能描述为真机已验证。
+
+## `1.0.0` Search 响应兼容增量（候选）
+
+`0.1.11` 发布后的真实 High Effort Web/X 使用继续暴露两个 fixed Proxy 合法形状：completed `web_search_call` 的 action 可能是 `open_page`；同一已闭合 reasoning ID 在一次 completed Search 证明后，可能不止一次以新的 output index 继续出现严格空占位。`0.1.11` 的“一次复用”与仅 `search` action allowlist 因此仍会产生 `INVALID_RESPONSE`。
+
+`1.0.0` 只在 decoder 内增加以下精确接受域，不改变 request descriptor、设置、模型 allowlist、认证、图片或 origin：
+
+- completed Web Search 额外接受 action own keys 精确 `{type:"open_page",url}`。`url` 必须是非空且 UTF-8 不超过 16 KiB 的 own-data 字符串；未知键、accessor、错误类型、空值、超限和非 completed `open_page` 仍失败关闭。
+- streamed `output_item.done` 与 final `response.output` 必须对同一 item 绑定相同 action type 与逐字相同 `open_page` URL。校验后该动作直接丢弃：插件不 fetch、不打开或下载 URL、不生成 Harness tool-call chunk、不持久化，也不进入 replay。
+- reasoning ID 的首次复用仍要求旧 lifecycle 已收到 `output_item.done`、两段 output index 之间存在 completed Web/X Search，且新段是相同 reasoning type 的严格空起始形状。只有这次验证才能把 ID 标记为 Search-backed。
+- Search-backed ID 后续可在新的 output index 继续出现，但每段都必须保持同一 ID/type、visible `summary`/`content` 严格为空、不得进入 summary 或 raw lifecycle，并以 `output_item.done` 闭合。无需在每两个后续空段之间虚构新的 Search。
+- terminal 只接受既定 own-data 字段；可选 `encrypted_content` 仅作为既有上限内的 opaque 字符串校验，不解密、不记录。跨类型、任一非空可见内容、未知键、accessor、未闭合段，以及 `response.incomplete` 仍有 open 复用段时均拒绝；全部复用段已闭合后的 max-token 终态仍接受。观察到 Search 后仍抑制整个响应的 reasoning replay。
+
+公开 xAI 资料只证明 `open_page` 函数名和 Web 结果属于 `web_search_call` 分类，没有公开 fixed Proxy 的完整 action wire schema或 stream/final 对照形状。因此本增量只接受脱敏真实观察到的 exact `{type,url}`，不推测 `find`、`browse` 或任何其他 action。真实诊断只保存事件类别、计数、闭合结果和错误位置，不保存 URL、检索/回复内容、prompt、原始响应或凭据。
 
 - 不支持的精确模型能力：`UNSUPPORTED_CONTENT`。
 - 协议、receipt、未知事件、未声明 function 或不闭合 lifecycle：`INVALID_RESPONSE`。

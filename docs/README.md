@@ -1,6 +1,8 @@
 # Grok Build Provider 文档索引
 
-- 状态：**`0.1.11` reasoning stream 兼容修复已正式发布**
+- 状态：**`1.0.0` Search 响应协议修复候选开发中；尚未发布**
+- 候选范围：允许已完成 Search 支撑的 reasoning ID 继续以多个严格空且逐次闭合的占位生命周期出现，并接受完成态精确 `open_page` type/URL；其余未知形状继续失败关闭
+- 候选门禁：版本号与本地自动化已完成；双平台 CI、最终提交、唯一制品、摘要/SRI、精确制品授权、发布与 Registry/signature/attestation/provenance 回读仍待完成
 - 当前 npm 稳定版本：`0.1.11`
 - 最近发布版本：`0.1.11`
 - 发布基线：`yukiryou/main@2e5c6dbc8bb83377a4db4d8e31452b3ce96500c5`
@@ -55,6 +57,7 @@
 - [v0.1.9 中英双语发行说明](./releases/v0.1.9.md)
 - [v0.1.10 中英双语发行说明](./releases/v0.1.10.md)
 - [v0.1.11 中英双语发行说明](./releases/v0.1.11.md)
+- [v1.0.0 候选中英双语发行说明](./releases/v1.0.0.md)
 - [v0.1.2-rc.1 中英双语预发行说明](./releases/v0.1.2-rc.1.md)
 - [ADR-0001：认证与传输路线](./adr/0001-auth-and-transport-route.md)
 - [ADR-0002：首版能力边界](./adr/0002-v0.1-scope.md)
@@ -72,6 +75,8 @@
 `0.1.2-rc.1` 是唯一一次预发行尝试。仓库所有者决定从稳定 `0.1.2` 起不再发行预发行版；正式版缺陷通过新的递增稳定版本修复。`0.1.4` 已发布：仅精确 `grok-4.6` 开启图片，普通 user 与一层 tool-result 的红/蓝合成图共四次脱敏 Proxy 请求均通过；`grok-4.5` 的红图语义结果不可靠，因此失败关闭并与其他模型保持 text-only。`0.1.5` 维护发布供应链、账户面板投影与 Provider Runtime 安装事务。`0.1.6` 已发布图片历史 reasoning 兼容与 Windows CLI 分阶段 deadline 修复，精确制品、Trusted Publisher、Registry signature 与 provenance 均已验证；发布后图片能力已由仓库所有者确认可用。Windows 真机同时确认官方 `grok login --oauth` 可在 xAI OIDC discovery 阶段超时，此时登录 URL 尚未生成，不能据此声称 Provider 已修复或验证浏览器弹出。
 
 `0.1.7` 已发布闭合 CLI 安装/版本诊断、登录失败可解释性，以及采用 MIT 许可的 Harness `IconThinkOutline16` 路径几何；它不接管官方 CLI 的网络、代理或 OAuth 流程。sidebar quota `0.1.8` 曾发布后撤回，且该 npm 号码不能复用；Search 从未作为 `0.1.8` 发布。`0.1.9` 发布精确 `grok-4.6` 的 Search 协议和页面，`0.1.10` 补齐 canonical settings 注册与调用级快照。`0.1.11` 已正式发布，收窄兼容真实 High Effort + Web Search 续跑出现的一次已关闭 reasoning ID 空占位复用，接受空 reasoning，并加入与 summary 严格互斥的官方 raw `reasoning_text` 生命周期。脱敏真实探针只观察到 summary delta，不能作为 raw reasoning 真机证据；浏览器手工对话、OAuth、完整真实会话和网络可达 Windows 真机外部浏览器弹出继续属于独立边界。完整门禁见[逐版发布检查表](./10-release-checklist.md)。
+
+`1.0.0` 候选继续修复真实 Search stream 的剩余两种形状：Search-backed reasoning ID 可多次作为严格空占位重新出现；完成态 Web Search 可返回精确 `open_page` action。“严格空”要求 visible summary/content 与 summary/raw lifecycle 均为空，但允许有界 opaque `encrypted_content`；每次复用都必须有自己的 `response.output_item.done`，`response.incomplete` 不能吞掉 open 复用段，全部闭合后仍允许后续 max-token 终态；跨类型、非空、未知 terminal/accessor 字段继续拒绝。`open_page` 的 streamed/final type 与 URL 必须一致，Provider 校验后丢弃 URL 且从不访问。最终源码的脱敏真实账号验证只保留计数和终态：原始 Web/X 协议各完成 1 次、各 64 events，并观察到对应 Search；生产 adapter 共完成 5 次 Responses，direct Web/X 均为 `stop`，Harness 同名 `x_search` 三轮为 `tool-calls`、`tool-calls`、`stop`。未记录结果、URL、prompt、身份或凭据；这些不是 `1.0.0` 已发布、OAuth 或 Windows 真机验收证据。
 
 ## 官方依据
 

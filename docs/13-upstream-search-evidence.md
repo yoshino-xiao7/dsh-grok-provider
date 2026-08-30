@@ -1,14 +1,14 @@
-# `0.1.9` Web/X Search 上游与固定 Proxy 证据
+# `0.1.9`–`1.0.0` Web/X Search 上游与固定 Proxy 证据
 
-- 状态：`grok-4.6` 四组脱敏观察、生产顺序 mixed 复验、双平台 CI、隔离 Web Harness、最终制品与发布后回读门禁均已完成；`0.1.9` 发布协议、`0.1.10` 修复 Host settings，`0.1.11` 已发布 High Effort + Web Search reasoning lifecycle 修复
+- 状态：`0.1.9`–`0.1.11` 的协议、集成、双平台 CI、最终制品与发布回读历史均已关闭；`1.0.0` completed `open_page` 与多段 Search-backed reasoning 兼容仍是未发布候选
 - 观察日期：2026-08-30
 - 固定 origin/path：`https://cli-chat-proxy.grok.com/v1/responses`
 - Provider client identity：`dsh-grok-provider/1.0.5`
-- 协议目标版本：`0.1.9`；设置链路修正：`0.1.10`；reasoning 响应兼容修正：`0.1.11`
+- 协议目标版本：`0.1.9`；设置链路修正：`0.1.10`；首次 reasoning 响应兼容修正：`0.1.11`；补充响应兼容候选：`1.0.0`
 
-sidebar quota 维护版 `0.1.8` 曾发布后撤回，npm Registry 已消耗该版本号且不能复用；本页所有 Search 协议证据只属于已发布 `0.1.9`，不能据此把 Search 描述为 `0.1.8` 能力，也不能替代 `0.1.10` 的真实 settings 集成验收。
+sidebar quota 维护版 `0.1.8` 曾发布后撤回，npm Registry 已消耗该版本号且不能复用；本页的 Search 能力基线证据属于已发布 `0.1.9`，`1.0.0` 内容只属于明确标记的响应兼容候选，不能据此把 Search 描述为 `0.1.8` 能力，也不能替代 `0.1.10` 的真实 settings 集成验收。
 
-本页只保存协议形状、计数和边界，不保存 access token、refresh token、搜索词、回答正文、citation URL、X 帖子/用户内容或原始响应。
+本页只保存协议形状、计数、闭合结果和错误边界，不保存 access token、refresh token、搜索词、prompt、回答正文、`open_page`/citation URL、X 帖子/用户内容或原始响应。
 
 ## 官方资料
 
@@ -20,7 +20,7 @@ sidebar quota 维护版 `0.1.8` 曾发布后撤回，npm Registry 已消耗该�
 - [官方 Grok Build sampler source](https://github.com/xai-org/grok-build/blob/main/crates/codegen/xai-grok-sampler/src/client.rs)：X Search output 需要按 xAI-specific custom tool call 处理。
 - [官方 Grok Build conversation types](https://github.com/xai-org/grok-build/blob/main/crates/codegen/xai-grok-sampling-types/src/conversation.rs)：Web 保存为 `WebSearchToolCall`，X 保存为 `CustomToolCall`，以及四类 X 子工具语义。
 
-公开资料不能替代固定 CLI Chat Proxy 的实测，所以 production allowlist 只采用下列脱敏观察。
+这些公开资料可以证明 `open_page` 函数名以及 Web 结果属于 `web_search_call` 类别，但没有公开 fixed CLI Chat Proxy 的完整 action wire schema，也不能证明 streamed item 与 final `response.output` 的逐字段形状。production allowlist 因此只采用下列脱敏真实观察到的精确形状，不推测 `find`、`browse` 或其他 action。
 
 ## 探针边界
 
@@ -55,6 +55,14 @@ Web + X 观察共 68 个 SSE event、4 个 output item、8 个 citation annotati
 - lifecycle event own keys：`item_id,output_index,sequence_number,type`。
 - event：`response.web_search_call.in_progress`、`.searching`、`.completed`。
 
+### `1.0.0` completed `open_page` 增量（候选）
+
+- 只在 completed `web_search_call` 接受 action own keys 精确 `type,url`，且 `type:"open_page"`。
+- `url` 必须是非空、UTF-8 不超过 16 KiB 的 own-data 字符串；未知键、accessor、错误类型、空值和超限均失败关闭。
+- streamed `output_item.done` 与 final `response.output` 必须绑定相同 action type 与逐字相同 URL；任何漂移均失败关闭。
+- 校验后的 `open_page` 被丢弃：不 fetch、不打开 URL、不发 Harness tool-call chunk、不持久化、不进入 reasoning replay。
+- `search` 的既有精确 `{query,sources,type}` 接受域保持不变；非 completed `open_page` 不能借此扩展。
+
 ### X Search 冻结形状
 
 - request tool：`{"type":"x_search"}`。
@@ -78,6 +86,7 @@ Web + X 观察共 68 个 SSE event、4 个 output item、8 个 citation annotati
 - X 不能按公开候选 `x_search_call` 事件实现；当前固定 Proxy 必须使用四项闭合 custom-tool policy。
 - Web/X lifecycle 产生零个 Harness tool-call chunk；function call 仍由 Harness 权限层处理。
 - 观察到任一 server-tool 后禁用本响应的 encrypted reasoning replay。
+- `1.0.0` 候选中，reasoning ID 的首次复用仍须由旧段闭合和位于两段之间的 completed Web/X Search 共同证明。建立 Search-backed 状态后，只允许相同 ID/type 继续出现逐段严格空 visible summary/content、无 summary/raw lifecycle 且收到 `output_item.done` 的占位；terminal 可选 `encrypted_content` 仅作为有界 opaque 字符串处理。未知键、accessor、任一非空内容、未闭合段，以及 `response.incomplete` 仍有 open 复用段时继续失败关闭；闭合复用段后的 max-token 终态保持有效。
 
 ## 发布门禁与集成后记
 
@@ -96,5 +105,9 @@ Web + X 观察共 68 个 SSE event、4 个 output item、8 个 citation annotati
 `0.1.11` 已从 release commit `2e5c6dbc8bb83377a4db4d8e31452b3ce96500c5` 正式发布；final CI run `33303080849` 的 macOS 14 / Windows 2022 全绿，Trusted Publisher run `33303631312` 已完成。唯一 tarball 含 71 个文件，为 207,022 bytes packed、656,139 bytes unpacked，SHA-256 为 `8fca0eca86769ee9febd35606cc8c944a0ae968cec2937a30ccaf68d36d42b2d`，SRI 为 `sha512-2qInRIq5Dkf7CqXq8z1mVvMelStg3nZ1wuWEqsExgfm7iXF0Jn5f7d11IAtHRxdKdJm/j0s8tYT1Dx6IdtGNqg==`。npm `latest=0.1.11`，Registry、Release 与本地制品逐字节一致；本包公开 metadata 的 1 个 Registry signature 与 2 个 package attestations 已验证，SLSA provenance 精确绑定 `release.yml`、`v0.1.11`、release commit `2e5c6dbc8bb83377a4db4d8e31452b3ce96500c5` 与 Trusted Publisher run `33303631312`。
 
 脱敏真实 `grok-4.6` Web Search probe 经生产 decoder 只发出 1 次 POST，观察 68 个事件、34 个 summary delta、0 个 raw delta、decoder accepted 与 1 个 finish；没有保存 prompt、回复正文、检索词、citation URL 或凭据。该结果验证当前 summary/Search 路径，不得描述为 raw reasoning 真机证据；raw reasoning 当前只有协议 fixture 回归。
+
+`0.1.11` 发布后的补充脱敏诊断复现了两个独立拒绝点：同一已闭合 reasoning ID 在 completed Search 后再次作为严格空占位出现，以及 completed Web Search 返回 `open_page` action。最终 `1.0.0` 源码分两层复跑：原始 High Effort Web/X 协议各完成 1 次、各 64 个 SSE event，分别观察到对应 Search 且终态 `completed`；生产 adapter 共完成 5 次 Responses，direct Web/X 均为 `finish(stop)`，Harness 同名 `x_search` 三轮依次为 `tool-calls`、`tool-calls`、`stop`，前两轮各 1 次本地调用。这只是当前账号环境中的协议兼容观察，不是冻结制品或发布授权证据；记录未保存 URL、检索/回复内容、prompt、原始响应或任何凭据。
+
+`1.0.0` 的本地门禁已通过：新增 open-page/reasoning 聚焦回归 40/40、完整 Node 24 suite 245 项、生产依赖审计 0 漏洞、build/bundle、72 项 dry-run pack、秘密扫描与 diff 检查均完成。发布门禁仍未关闭：macOS/Windows CI、最终提交、唯一制品、精确发布授权、Registry/signature/provenance 回读必须各自完成后，才能把本页状态更新为已发布。
 
 这些自动化与脱敏证据仍不构成所有平台完整真实账户验收；浏览器手工对话、OAuth、长会话 Agent loop 和网络可达 Windows 真机浏览器弹出保持独立边界。

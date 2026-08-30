@@ -21,7 +21,7 @@
 - Web 设置页能区分官方 CLI 缺失、无效、检测不可用、OIDC discovery 网络超时与真人授权超时，并显示 Provider/已验证 CLI 版本；这些诊断不得暴露路径、stderr、代理配置或 OAuth URL。
 - 首版只接受与发布绑定 CLI 版本的 xAI 第一方 OIDC schema 相符的候选。CLI 有效配置若选择外部 auth provider、企业 OIDC、API key 或无法判定的凭据结构，插件必须显示“不受支持的认证配置”并拒绝由本插件把该 token 发给 xAI CLI Chat Proxy；这不把未签名 metadata 宣称成来源证明。
 - 支持多轮文本对话、reasoning 增量、流式文本、工具调用、usage 和明确 finish 原因。
-- `0.1.9` 引入精确 `grok-4.6` 的 Web/X Search 协议与页面，`0.1.10` 补齐可写 Host settings 集成；`0.1.11` 修复 High Effort + Web Search 续跑的 reasoning lifecycle：两个开关独立、默认关闭，后台/派生 purpose 不启用 Search，远端 server-tool lifecycle 不得投影为 Harness 本地工具。
+- `0.1.9` 引入精确 `grok-4.6` 的 Web/X Search 协议与页面，`0.1.10` 补齐可写 Host settings 集成，`0.1.11` 首次兼容 High Effort + Web Search 的 reasoning 续跑；`1.0.0` 候选继续兼容已实测的 completed `open_page` 与同一 Search-backed reasoning ID 的多段严格空占位：两个开关仍独立、默认关闭，后台/派生 purpose 不启用 Search，远端 server-tool lifecycle 不得投影为 Harness 本地工具。
 - Harness 中止请求时，网络流和解析器都能及时终止。
 - 热更新设置或重新认证不会让同一调用混用两组路由或凭据。
 - 凭据不进入 renderer、RPC、settings、workspace、本插件日志、错误详情、诊断包或 npm tarball；官方 CLI 自身的日志、网络与遥测属于独立 vendor boundary。
@@ -71,7 +71,7 @@
 - Grok ACP 或 `grok -p` headless 代理。
 - 厂商侧 Web Search、X Search、远程抓取。
 - 图片生成、图片 URL 下载或文件落盘。
-- 图片输入（`0.1.0`–`0.1.3`）；已发布 `0.1.4` 按[能力路线图](./11-capability-roadmap.md)与 [ADR-0008](./adr/0008-image-input-request-compiler.md)只为精确 `grok-4.6` 独立引入，`grok-4.5` 与所有其他模型继续 text-only；维护版 `0.1.5`–`0.1.7`、发布后撤回的 sidebar quota `0.1.8` 与已发布 `0.1.9`–`0.1.11` 均不扩大该图片集合。
+- 图片输入（`0.1.0`–`0.1.3`）；已发布 `0.1.4` 按[能力路线图](./11-capability-roadmap.md)与 [ADR-0008](./adr/0008-image-input-request-compiler.md)只为精确 `grok-4.6` 独立引入，`grok-4.5` 与所有其他模型继续 text-only；维护版 `0.1.5`–`0.1.7`、发布后撤回的 sidebar quota `0.1.8`、已发布 `0.1.9`–`0.1.11` 与 `1.0.0` 候选均不扩大该图片集合。
 - 自定义 endpoint、企业 OIDC、自定义代理或多账号。
 - 自动安装或更新 Grok CLI。
 - 在远程 Web/headless 主机自动打开浏览器或无人值守登录的承诺。
@@ -120,6 +120,8 @@ Web 的“退出”或 TUI `/grok logout` 先中止本插件所有在途 Grok �
 - `0.1.10` 的真实 SettingsProvider 与隔离 Web Harness 验收已证明唯一可写 `llm-grok` namespace、两个开关默认关闭且可操作；设置更新只影响首次 await 之后尚未开始的新调用，已准备或在途调用保持原快照。
 - `0.1.11` 已验证只在一个已完成 server Search 位于两段 reasoning 之间时允许已关闭 reasoning ID 一次性复用为严格空项；raw `reasoning_text` 与 summary lifecycle 互斥，replay 元数据不保存 raw 明文，后续请求只发送 encrypted content 与空 summary，当前流中的 raw delta 仍作为 Harness 可见 reasoning 输出。脱敏真实 probe 只观察到 summary/Search（34 个 summary delta、0 个 raw delta），因此 raw reasoning 仍只有协议 fixture 证据。
 - `0.1.11` 已从 release commit `2e5c6dbc8bb83377a4db4d8e31452b3ce96500c5` 正式发布：final CI run `33303080849` 的 macOS 14 / Windows 2022 全绿；Trusted Publisher run `33303631312` 发布唯一 71 文件、207,022-byte packed / 656,139-byte unpacked 制品。SHA-256 为 `8fca0eca86769ee9febd35606cc8c944a0ae968cec2937a30ccaf68d36d42b2d`，SRI 为 `sha512-2qInRIq5Dkf7CqXq8z1mVvMelStg3nZ1wuWEqsExgfm7iXF0Jn5f7d11IAtHRxdKdJm/j0s8tYT1Dx6IdtGNqg==`；npm `latest=0.1.11`，Registry、Release 与本地制品逐字节一致。本包 1 个 Registry signature、2 个 package attestations 与精确绑定 `release.yml` / `v0.1.11` / release commit / 发布 run 的 SLSA provenance 均已验证。该供应链证据不构成网络可达 Windows 真机浏览器弹出验收。
+- `1.0.0` 候选必须新增失败关闭回归：completed Web `open_page` 只接受 own-data 精确 `{type:"open_page",url}`，其中 URL 为非空且不超过 16 KiB UTF-8；streamed `output_item.done` 与 final `response.output` 必须逐项绑定 action type 和 URL。验证后仅丢弃该动作，不 fetch、不生成 Harness tool chunk、不进入 replay；未知键、accessor、空/超限/非字符串 URL、非 completed `open_page` 或前后不一致均返回 `INVALID_RESPONSE`。
+- `1.0.0` 候选还必须证明：reasoning ID 的首次复用仍要求旧段已 `output_item.done` 且两段之间存在 completed Web/X Search；一旦该 ID 被 Search-backed 证明，后续只允许相同 ID/type 逐段以严格空 visible summary/content、无 summary/raw lifecycle 的完整 `added → output_item.done` 占位继续出现。terminal 只接受既定 own-data 字段，可选 encrypted content 仅作为有界 opaque 字符串处理；未知键、accessor、任一非空可见内容，以及 `response.incomplete` 发生时仍未 `output_item.done` 的复用段全部失败关闭；所有复用段已闭合后的 max-token 终态仍按既有契约接受。
 
 ## 8. `0.1.0` 历史发布阻断项
 
@@ -147,6 +149,7 @@ Web 的“退出”或 TUI `/grok logout` 先中止本插件所有在途 Grok �
 - `0.1.9`：已为精确 `grok-4.6` 发布默认关闭、设计为可独立开启的 Web Search / X Search 协议与页面，但遗漏 Host `llm-grok` namespace，真实页面开关不可用。
 - `0.1.10` 已发布：补齐 canonical settings namespace 与按调用动态快照，使 `0.1.9` 的两个开关真正可写。
 - `0.1.11` 已发布：修复 High Effort + Web Search reasoning 生命周期兼容并支持官方 raw reasoning 事件；不改变 Search descriptor、支持模型、认证或图片边界。
+- `1.0.0` 候选：接受 fixed Proxy 已实测的 completed `open_page` 精确动作，并把 Search-backed reasoning ID 从“一次复用”收窄调整为“可多段复用、每段必须严格空且闭合”；不执行 URL、不新增本地工具、不扩大模型、认证、图片或 origin 边界。
 - 再后续独立切片：默认关闭的图片生成（内联结果 → Harness attachment）。
 
 `prompt_cache_key` 不与图片输入捆绑；若以后排期，需独立分析会话标识隐私和 POST 不自动重放边界。任意 URL 下载、API Key、企业 OIDC、ACP、Headless 和 Linux 仍不在路线内。公开协议可驱动隔离原型，但每个切片在声明能力、合并发布基线前必须有独立 ADR 与固定 CLI Chat Proxy spike；`0.1.4` 的 `grok-4.6` user/tool-result 红蓝语义门禁已于 2026-08-28 通过，`grok-4.5` 因语义不可靠失败关闭，最终 Harness attachment 复验见[上游证据页](./12-upstream-image-input-evidence.md)。
