@@ -1,6 +1,6 @@
 # `0.1.9`–`1.0.2` Web/X Search 上游、协议与投影证据
 
-- 状态：`0.1.9`–`1.0.1` 的协议、集成、最终制品与发布回读已关闭；`1.0.2` 只记录严格空 reasoning 的可见投影边界，发布证据尚未预写
+- 状态：`0.1.9`–`1.0.2` 的协议、集成、最终制品与发布回读已关闭；`1.0.2` 只改变严格空 reasoning 的可见投影边界
 - 观察日期：2026-08-30
 - 固定 origin/path：`https://cli-chat-proxy.grok.com/v1/responses`
 - Provider client identity：`dsh-grok-provider/1.0.5`
@@ -143,6 +143,8 @@ Web + X 观察共 68 个 SSE event、4 个 output item、8 个 citation annotati
 
 `1.0.2` 延迟可见 block：item added 仅建立内部状态；首个非空 summary/raw delta 才输出 block start；item 完成时仍严格为空则输出零个 block chunk。普通空项保留既有 ID/type own-data、sequence/output index、status、summary/content 空性、encrypted-content 上限与 lifecycle 一致性校验；Search-backed 复用项继续采用更严格的精确 own-data 形状并拒绝未知键/accessor。Search 后整响应 replay 抑制不变；非 Search 响应中，被隐藏的普通空项不占 replay 对齐槽，其 encrypted content 校验后不持久化。
 
-聚焦证据必须覆盖普通空项的既有校验、多个 Search-backed 空复用的精确键/accessor 校验、有界 opaque encrypted content、summary/raw 首 delta、十空一非空、多个非空块、多未决项保序、后块先完成，以及非空复用、未知键/accessor 复用、乱序、未闭合 Search-backed 复用段和 incomplete + open reuse 负例；普通非复用 partial item 保持既有 max-token 正例。`1.0.2` 的 CI、冻结制品、摘要、授权、Release、Registry、签名、attestations 与 provenance 只在实际完成后记录。
+聚焦证据覆盖普通空项的既有校验、多个 Search-backed 空复用的精确键/accessor 校验、有界 opaque encrypted content、summary/raw 首 delta、十空一非空、多个非空块、多未决项保序、后块先完成，以及非空复用、未知键/accessor 复用、乱序、未闭合 Search-backed 复用段和 incomplete + open reuse 负例；普通非复用 partial item 保持既有 max-token 正例。
 
 2026-08-30 使用真实 Grok 账号对候选源码的生产 Adapter 路径各发送一次 `grok-4.6` High Effort 请求：Web Search 实际观察到 5 个 completed Search lifecycle，X Search 实际观察到 3 个 completed custom-tool Search lifecycle。两次均只投影 1 个非空 reasoning block、0 个空 reasoning block、1 个非空 text block 和 1 个 finish。验收仅输出这些计数，没有保存或输出搜索/回复正文、URL、身份、凭据或原始响应；它不替代冻结制品、双平台 CI 或 Windows 浏览器登录验收。
+
+`1.0.2` 的发布回读已关闭：最终 release commit `be200f9352afe93b27dd2856d89c01674f0cd637` 的 final CI run [`33318426571`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33318426571) 在 macOS 14 / Windows 2022 全绿；annotated tag object `b7efd3aabb99c73e1747d2d87890cdf9b284c438` peel 到该提交。Trusted Publisher run [`33319150964` attempt 1](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33319150964/attempts/1) 从精确 `refs/tags/v1.0.2` 发布仓库所有者明确授权的唯一 74 文件制品。tarball 为 255,282 bytes packed / 789,962 bytes unpacked，SHA-1 `3feddb7048fe4c796037804518999b12ae491802`、SHA-256 `010a21770cb3e4e42b7195984df1f5bf8dc5027066198cf99b7d713ac045f605`、SRI `sha512-TcvvPUXBJZEA728pVnUrXSZebGfIoB5ATG5041wA1OFzOE+hFTO98C5Fxl99WuFW2y7V89gkusYIKCpGlLNQIg==`。冻结候选、GitHub Release asset 与 npm Registry tarball 逐字节一致，npm `latest=1.0.2`；锁定 Registry 隔离安装、1 个 Registry signature、2 个 package attestations、安装图 11 个 signed packages / 2 个 attested packages 与精确绑定 `release.yml` / tag ref / release commit / publish run 的 SLSA provenance 均已验证。真实账号验收与供应链回读仍不构成 OAuth、完整桌面会话或网络可达 Windows 真机外部浏览器弹出验收。

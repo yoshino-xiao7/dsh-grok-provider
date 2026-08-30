@@ -1,11 +1,10 @@
 # 能力路线图
 
-- 状态：**`1.0.2` 严格空 reasoning 可见投影修复已进入制品文档**
-- 本文对应制品：`1.0.2`
-- 上一已完成发布回读版本：`1.0.1`
+- 状态：**`1.0.2` 已正式发布并完成供应链回读**
+- 当前稳定版与本文对应制品：`1.0.2`
 - 最近撤回：`0.1.8`（npm 版本号不可复用）
-- 当前已发布基线：`yukiryou/main@3c25a53571531e35ac888df16df4fe6c01849e85`
-- 发布后证据分支：`yukiryou/v1.0.1-post-release-evidence`
+- 当前已发布基线：`yukiryou/main@be200f9352afe93b27dd2856d89c01674f0cd637`
+- 发布后证据分支：`yukiryou/v1.0.2-post-release-evidence`
 
 本文是 `0.1.3` 之后内容类型迭代的单一事实来源。`0.1.0`–`0.1.3` 的历史范围仍以 [ADR-0002](./adr/0002-v0.1-scope.md) 和[产品需求](./01-product-requirements.md)为准。
 
@@ -35,7 +34,7 @@
 | `0.1.11`（已发布） | 修复 High Effort + Web Search reasoning ID 空占位复用，并支持官方 raw reasoning lifecycle | 闭合状态机回归、脱敏 summary/Search probe、双平台 CI、唯一制品与 Registry 回读均已关闭 | [ADR-0010](./adr/0010-default-off-web-x-search.md) 的响应兼容修正 |
 | `1.0.0`（已发布） | 接受 completed `open_page` 精确动作，并允许同一 Search-backed reasoning ID 多段严格空且闭合地复用 | open-page/reasoning 正负契约、脱敏真实 Web/X、全量 Node 24、双平台 CI、唯一制品、明确授权与发布回读均已关闭 | [ADR-0010](./adr/0010-default-off-web-x-search.md) 的 `1.0.0` 增量 |
 | `1.0.1`（已发布） | 启用 server Search 时以同名 server descriptor 替代 Harness callable definition；保留历史 call/result，并修正 transport error 归因 | 根因 A/B、请求/receipt/SSE 回归、Node 24、本地与双平台 CI、脱敏真实回放、唯一制品、精确授权、Registry、签名、attestations 与 provenance 回读均已关闭 | [ADR-0010](./adr/0010-default-off-web-x-search.md) 的 `1.0.1` 增量 |
-| `1.0.2` | 严格空 reasoning lifecycle 完整校验但不显示空 `Think`；非空 reasoning 延迟到首个 delta 才开始 block | 普通/复用空项、summary/raw、混合顺序、失败关闭、双平台 CI 与实际 tarball README 门禁 | [ADR-0010](./adr/0010-default-off-web-x-search.md) 的 `1.0.2` 投影修复 |
+| `1.0.2`（已发布） | 严格空 reasoning lifecycle 完整校验但不显示空 `Think`；非空 reasoning 延迟到首个 delta 才开始 block | 普通/复用空项、summary/raw、混合顺序、失败关闭、双平台 CI、实际 tarball README、唯一制品与 Registry/供应链回读均已关闭 | [ADR-0010](./adr/0010-default-off-web-x-search.md) 的 `1.0.2` 投影修复 |
 | 再后续版本 | 默认关闭的图片生成 | Proxy 返回可有界提交到 Harness attachment 的内联结果 | ADR-0011 |
 
 版本号可因缺陷修复顺延。`prompt_cache_key` 与图片输入相互独立，不属于 `0.1.4`：它需要独立的会话标识隐私、路由稳定性和“不得自动重放已经发送的 POST”分析，不得作为图片请求失败后的重试/降级机制。
@@ -175,13 +174,13 @@ const request = await requestCompiler.compile(options, preparedRoute)
 - 公开 xAI 资料只证明 `open_page` 函数名和 `web_search_call` 分类，没有公开 fixed Proxy 的完整 action wire schema；本版只接受脱敏真实观察到的精确形状，不推测 `find`、`browse` 或其他 action。
 - 脱敏真实验证未保存 URL、检索/回复内容、prompt 或凭据；最终 release commit、双平台 final CI、唯一制品、明确授权、Registry signature/attestations/provenance 回读均已关闭。网络可达 Windows 真机浏览器弹出仍是独立未验收边界。
 
-### `1.0.2` 显示修复
+### `1.0.2` 显示修复（已发布）
 
 - reasoning item added 时只建立内部 FSM；首个非空 summary/raw delta 才创建 Harness block，严格空且闭合的 item 产生零个可见 chunk。
 - 普通空项保留既有 ID/type、sequence、output index、状态、summary/content 空性、大小、可选 encrypted content、terminal 与 incomplete 检查；Search-backed 同 ID 复用额外保留精确 own-data 键集/accessor 拒绝。这是投影修复，不扩大接受域。
 - 多个非空 reasoning item 不合并并按 output index 发射；正文、工具、usage、finish、可见非空 replay、Search replay 抑制和 request compiler 保持不变。隐藏普通空项不占 replay 对齐槽，其 encrypted content 校验后不持久化；旧会话中的空 `Think` 不回写。
 - `1.0.2` 还关闭 `1.0.1` npm 页面旧 README 的流程缺口：双语前言/Quick Start 使用耐久制品措辞，发布 workflow 必须检查实际 tarball，而非只检查后续主分支。
-- 测试、CI、冻结制品、摘要、授权、Release、Registry 与供应链状态在实际完成前保持未声明。
+- final release commit `be200f9352afe93b27dd2856d89c01674f0cd637` 的双平台 CI run `33318426571` 全绿；annotated tag object `b7efd3aabb99c73e1747d2d87890cdf9b284c438` peel 到该提交。仓库所有者明确授权的唯一 74 文件制品为 255,282 bytes packed、789,962 bytes unpacked，SHA-1 `3feddb7048fe4c796037804518999b12ae491802`、SHA-256 `010a21770cb3e4e42b7195984df1f5bf8dc5027066198cf99b7d713ac045f605`、SRI `sha512-TcvvPUXBJZEA728pVnUrXSZebGfIoB5ATG5041wA1OFzOE+hFTO98C5Fxl99WuFW2y7V89gkusYIKCpGlLNQIg==`。Trusted Publisher run `33319150964` attempt 1、npm `latest=1.0.2` 与三方 tarball 字节一致均已回读；Node `24.19.0` / npm `11.5.1` 锁定 Registry 安装通过 Host 注册/`apply`/注入与 client 注册/factory/`apply`/注入 smoke，生产依赖审计为 0 漏洞。1 个 Registry signature、2 个 attestations、安装图 11 个 signed packages / 2 个 attested packages 与精确绑定 `release.yml` / `refs/tags/v1.0.2` / release commit / publish run 的 SLSA provenance 也均已验证；网络可达 Windows 真机浏览器弹出仍未验收。
 
 ## 8. 后续：默认关闭的图片生成
 
@@ -197,4 +196,4 @@ const request = await requestCompiler.compile(options, preparedRoute)
 - ACP、`grok -p` Headless、Linux / macOS x64 发布承诺。
 - 厂商 `code_execution`；Harness 已有本地工具权限层。
 
-English summary: this roadmap describes the `1.0.2` artifact boundary. Ordinary empty reasoning retains its existing validation, while Search-backed same-ID reuse retains exact own-data/accessor checks. A visible Harness block starts only at the first non-empty summary/raw delta and visible blocks preserve output-index order. Multiple non-empty items stay separate; visible non-empty replay and Search replay suppression remain unchanged, while a hidden ordinary empty item has no replay slot. Old conversations are not rewritten, and authentication, model, image, endpoint, URL, permission, and Windows-login boundaries are unchanged. `1.0.1` remains a historical fully verified release; `1.0.2` publication and supply-chain facts are recorded only after they actually exist.
+English summary: `1.0.2` is the current stable release from commit `be200f9352afe93b27dd2856d89c01674f0cd637`. It keeps ordinary empty-reasoning validation and Search-backed exact own-data/accessor checks while suppressing contentless Harness blocks; visible blocks retain output-index order, visible non-empty replay and Search replay suppression remain unchanged, and old conversations are not rewritten. Final CI run `33318426571` passed on macOS 14 and Windows 2022. Annotated tag object `b7efd3aabb99c73e1747d2d87890cdf9b284c438` peels to the release commit. Trusted Publisher run `33319150964` attempt 1 published the explicitly authorized unique 74-file artifact: 255,282 bytes packed, 789,962 bytes unpacked, SHA-1 `3feddb7048fe4c796037804518999b12ae491802`, SHA-256 `010a21770cb3e4e42b7195984df1f5bf8dc5027066198cf99b7d713ac045f605`, and SRI `sha512-TcvvPUXBJZEA728pVnUrXSZebGfIoB5ATG5041wA1OFzOE+hFTO98C5Fxl99WuFW2y7V89gkusYIKCpGlLNQIg==`. npm reports `latest=1.0.2`; frozen-candidate, GitHub Release, and Registry bytes are identical. The locked Registry install, one package signature, two attestations, installed-graph signature audit, and SLSA provenance all verified. Authentication, model, image, endpoint, URL, permission, and platform boundaries are unchanged; network-reachable browser launch on a physical Windows device remains unverified.

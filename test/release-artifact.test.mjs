@@ -141,6 +141,33 @@ test("the exact 1.0.2 source release exports runtime artifacts and Web loader me
   )
   assert.match(
     releaseWorkflow,
+    /printf -v expected_zh_artifact '本说明对应 `dsh-grok-provider@%s` 制品'/u,
+  )
+  assert.match(
+    releaseWorkflow,
+    /printf -v expected_zh_readme '本 README 随 `%s` 一起进入 npm tarball，下面的精确安装命令也固定为 `%s`。'/u,
+  )
+  assert.match(
+    releaseWorkflow,
+    /printf -v expected_en_artifact 'This README describes the `dsh-grok-provider@%s` artifact'/u,
+  )
+  assert.match(
+    releaseWorkflow,
+    /printf -v expected_en_readme 'This README is included in the `%s` npm tarball, and the exact installation command below is pinned to `%s`.'/u,
+  )
+  for (const [expected, surface] of [
+    ["expected_zh_artifact", "preamble_zh"],
+    ["expected_zh_readme", "preamble_zh"],
+    ["expected_en_artifact", "preamble_en"],
+    ["expected_en_readme", "preamble_en"],
+  ]) {
+    assert.match(
+      releaseWorkflow,
+      new RegExp(`grep -Fq "\\$${expected}" <<< "\\$${surface}"`, "u"),
+    )
+  }
+  assert.match(
+    releaseWorkflow,
     /grep -Eq '未发布\|候选\|继续安装' <<< "\$release_surface_zh"/u,
   )
   assert.match(
@@ -171,11 +198,11 @@ test("the exact 1.0.2 source release exports runtime artifacts and Web loader me
   assert.match(chineseReadme, /## 安全与隐私/u)
   assert.match(
     chinesePreamble,
-    /本说明对应 `dsh-grok-provider@1\.0\.2` 制品；`0\.1\.8` 曾发布后撤回且版本号不可复用。/u,
+    /本说明对应已发布的 `dsh-grok-provider@1\.0\.2`；`0\.1\.8` 曾发布后撤回且版本号不可复用。/u,
   )
   assert.match(
     chinesePreamble,
-    /本 README 随 `1\.0\.2` 一起进入 npm tarball，下面的精确安装命令也固定为 `1\.0\.2`。/u,
+    /已发布的 `1\.0\.2` npm tarball 内含双语 README，安装命令固定到该精确版本；本仓库当前 README 在发布回读后补记完整证据。npm Registry 确认 `dsh-grok-provider@1\.0\.2` 可安装且 `latest=1\.0\.2`。/u,
   )
   assert.doesNotMatch(chineseReleaseSurface, /未发布|候选|继续安装/u)
   assert.deepEqual(
@@ -187,11 +214,11 @@ test("the exact 1.0.2 source release exports runtime artifacts and Web loader me
   assert.match(englishReadme, /## Security and privacy/u)
   assert.match(
     englishPreamble,
-    /This README describes the `dsh-grok-provider@1\.0\.2` artifact; version `0\.1\.8` was published and then withdrawn and cannot be reused\./u,
+    /This README describes the published `dsh-grok-provider@1\.0\.2`; version `0\.1\.8` was published and then withdrawn and cannot be reused\./u,
   )
   assert.match(
     englishPreamble,
-    /This README is included in the `1\.0\.2` npm tarball, and the exact installation command below is pinned to `1\.0\.2`\./u,
+    /The published `1\.0\.2` npm tarball includes the bilingual README with an installation command pinned to that exact version; this repository README now records the completed post-publication evidence\. npm Registry confirms that `dsh-grok-provider@1\.0\.2` is installable and `latest=1\.0\.2`\./u,
   )
   assert.doesNotMatch(englishReleaseSurface, /unpublished|candidate|continue installing/iu)
   assert.deepEqual(
@@ -200,10 +227,10 @@ test("the exact 1.0.2 source release exports runtime artifacts and Web loader me
   )
   assert.match(englishReadme, /\[`THIRD_PARTY_NOTICES\.md`\]\(THIRD_PARTY_NOTICES\.md\)/u)
   const securityPolicy = await fs.readFile(path.join(root, "SECURITY.md"), "utf8")
-  assert.match(securityPolicy, /本安全策略对应 `dsh-grok-provider@1\.0\.2` 制品/u)
+  assert.match(securityPolicy, /本安全策略对应已发布的 `dsh-grok-provider@1\.0\.2` 制品/u)
   assert.match(
     securityPolicy,
-    /Release security note: the `1\.0\.2` artifact changes visible reasoning projection and its aligned replay envelope/u,
+    /Release security note: the published `1\.0\.2` artifact changes visible reasoning projection and its aligned replay envelope/u,
   )
   const currentReleaseNotes = await fs.readFile(
     path.join(root, "docs/releases/v1.0.2.md"),
@@ -216,7 +243,29 @@ test("the exact 1.0.2 source release exports runtime artifacts and Web loader me
   assert.match(currentReleaseNotes, /X Search 实际完成 3 个 custom-tool Search lifecycle/u)
   assert.match(currentReleaseNotes, /dsh-grok-provider@1\.0\.2/u)
   assert.match(currentReleaseNotes, /\n<details>\n<summary>English release notes<\/summary>\n/u)
-  assert.doesNotMatch(currentReleaseNotes, /`1\.0\.2` (?:已正式发布|is published)/iu)
+  assert.match(currentReleaseNotes, /`dsh-grok-provider@1\.0\.2` 已正式发布/u)
+  assert.doesNotMatch(currentReleaseNotes, /尚未发布|unpublished.*candidate|仍须逐项实际完成/iu)
+  assert.match(currentReleaseNotes, /be200f9352afe93b27dd2856d89c01674f0cd637/u)
+  assert.match(currentReleaseNotes, /b7efd3aabb99c73e1747d2d87890cdf9b284c438/u)
+  assert.match(currentReleaseNotes, /33318426571/u)
+  assert.match(currentReleaseNotes, /33319150964.*attempt 1/su)
+  assert.match(currentReleaseNotes, /74 文件.*255,282 bytes.*789,962 bytes/su)
+  assert.match(currentReleaseNotes, /3feddb7048fe4c796037804518999b12ae491802/u)
+  assert.match(currentReleaseNotes, /010a21770cb3e4e42b7195984df1f5bf8dc5027066198cf99b7d713ac045f605/u)
+  assert.match(
+    currentReleaseNotes,
+    /sha512-TcvvPUXBJZEA728pVnUrXSZebGfIoB5ATG5041wA1OFzOE\+hFTO98C5Fxl99WuFW2y7V89gkusYIKCpGlLNQIg==/u,
+  )
+  assert.match(currentReleaseNotes, /冻结候选、GitHub Release asset 与 npm Registry tarball 逐字节一致/u)
+  assert.match(
+    currentReleaseNotes,
+    /npm 确认 `dsh-grok-provider@1\.0\.2` 可安装且 `latest=1\.0\.2`/u,
+  )
+  assert.match(currentReleaseNotes, /11 个 Registry 签名包与 2 个 attested 包/u)
+  assert.match(currentReleaseNotes, /1 个 Registry signature 与 2 个 attestations/u)
+  assert.match(currentReleaseNotes, /`refs\/tags\/v1\.0\.2`/u)
+  assert.match(currentReleaseNotes, /不构成网络可达 Windows 真机外部浏览器弹出验收/u)
+  assert.match(currentReleaseNotes, /is not real-device Windows external-browser acceptance/u)
   const releaseNotes = await fs.readFile(
     path.join(root, "docs/releases/v1.0.1.md"),
     "utf8",

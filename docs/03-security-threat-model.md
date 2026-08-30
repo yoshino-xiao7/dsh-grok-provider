@@ -15,7 +15,9 @@
 
 `1.0.1` 已正式发布，npm `latest=1.0.1`。最终 release commit `3c25a53571531e35ac888df16df4fe6c01849e85`、双平台 final CI、仓库所有者明确授权的唯一 73 文件制品、Trusted Publisher run `33313699790` attempt 1、Registry 字节、锁定隔离安装、生产依赖审计、签名、attestations 与 SLSA provenance 回读均已关闭。该版本只在完整验证 source functions 后移除与已启用 server Search 精确同名的 wire callable definitions，并保留历史 calls/results；request/decoder receipt 拒绝名称交集，source transport error 不再被 parser 误标为 `INVALID_RESPONSE`。它不放宽固定 origin、凭据、设置、模型、图片、本地工具或 URL 边界；供应链证据仍不构成网络可达 Windows 真机浏览器弹出验收。
 
-`1.0.2` 制品只调整 decoder 到 Harness 的可见投影及其 replay 对齐槽。普通严格空 reasoning item 保留既有字段、顺序、状态、空性、大小和闭合校验；Search-backed 同 ID 复用额外保留精确 own-data 键集与 accessor 拒绝。只有首个非空 summary/raw delta 才按 output index 启动可见 block。该延迟投影不得吞掉未闭合复用段，也不改变普通非复用 partial item 的既有 max-token 处理、可见非空 replay 或 Search 后 replay 抑制；隐藏普通空项的 encrypted content 校验后不持久化。发布、CI、摘要、Registry 与供应链事实只在实际完成后另行记录。
+`1.0.2` 已正式发布，npm `latest=1.0.2`。最终 release commit `be200f9352afe93b27dd2856d89c01674f0cd637`、annotated tag object `b7efd3aabb99c73e1747d2d87890cdf9b284c438`、双平台 final CI run `33318426571` 与 Trusted Publisher run `33319150964` attempt 1 均已回读。仓库所有者明确授权的唯一 74 文件制品为 255,282 bytes packed / 789,962 bytes unpacked，SHA-1 `3feddb7048fe4c796037804518999b12ae491802`、SHA-256 `010a21770cb3e4e42b7195984df1f5bf8dc5027066198cf99b7d713ac045f605`、SRI `sha512-TcvvPUXBJZEA728pVnUrXSZebGfIoB5ATG5041wA1OFzOE+hFTO98C5Fxl99WuFW2y7V89gkusYIKCpGlLNQIg==`；冻结候选、GitHub Release asset 与 Registry tarball 逐字节一致。锁定隔离安装、本包 1 个 Registry signature / 2 个 package attestations、安装图 11 个 signed / 2 个 attested packages，以及精确绑定 `release.yml`、`refs/tags/v1.0.2`、release commit 与 publish run 的 SLSA provenance 均已验证。
+
+该版本只调整 decoder 到 Harness 的可见投影及其 replay 对齐槽。普通严格空 reasoning item 保留既有字段、顺序、状态、空性、大小和闭合校验；Search-backed 同 ID 复用额外保留精确 own-data 键集与 accessor 拒绝。只有首个非空 summary/raw delta 才按 output index 启动可见 block。该延迟投影不得吞掉未闭合复用段，也不改变普通非复用 partial item 的既有 max-token 处理、可见非空 replay 或 Search 后 replay 抑制；隐藏普通空项的 encrypted content 校验后不持久化。真实账号验收仅保留 Web `5/1/0/1/1` 与 X `3/1/0/1/1` 的 Search/non-empty-reasoning/empty-reasoning/non-empty-text/finish 计数，不保存内容、URL、身份、凭据或原始响应。该证据与供应链回读都不构成 OAuth、完整桌面会话或网络可达 Windows 真机外部浏览器弹出验收。
 
 ## 2. 信任边界
 

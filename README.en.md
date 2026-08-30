@@ -4,11 +4,11 @@
 
 Use an already authenticated official Grok Build account from DeepSeek Harness, with dynamic model discovery, streaming reasoning, image input, optional Web/X Search, tool calls, and an account quota/model capability dashboard.
 
-> Unofficial community project; not affiliated with xAI or DeepSeek Harness. This README describes the `dsh-grok-provider@1.0.2` artifact; version `0.1.8` was published and then withdrawn and cannot be reused.
+> Unofficial community project; not affiliated with xAI or DeepSeek Harness. This README describes the published `dsh-grok-provider@1.0.2`; version `0.1.8` was published and then withdrawn and cannot be reused.
 
 `1.0.2` fixes a presentation defect: an upstream Search stream may contain fully closed reasoning lifecycles with no visible text. The Provider continues to validate those lifecycles strictly but no longer projects them as empty Harness `Think` rows; reasoning with real summary/raw deltas remains visible as separate blocks.
 
-This README is included in the `1.0.2` npm tarball, and the exact installation command below is pinned to `1.0.2`. Publication state, integrity digests, signatures, attestations, and provenance must come from actual npm Registry and GitHub Release readback rather than being predicted before artifact freeze.
+The published `1.0.2` npm tarball includes the bilingual README with an installation command pinned to that exact version; this repository README now records the completed post-publication evidence. npm Registry confirms that `dsh-grok-provider@1.0.2` is installable and `latest=1.0.2`.
 
 ## What it provides
 
@@ -44,7 +44,7 @@ When the network is reachable and OIDC discovery succeeds, the official CLI open
 
 ### 2. Install the provider
 
-Install the exact version described here after confirming that it is available from the npm Registry:
+Install the published exact version:
 
 ```sh
 dsh plugin --profile web add dsh-grok-provider@1.0.2
@@ -135,9 +135,9 @@ Uninstalling the provider does not remove the official Grok CLI or directly modi
 ## Sources and discovery
 
 - Exact npm version described by this README: [dsh-grok-provider@1.0.2](https://www.npmjs.com/package/dsh-grok-provider/v/1.0.2)
-- Previous GitHub release with completed readback: [v1.0.1](https://github.com/yoshino-xiao7/dsh-grok-provider/releases/tag/v1.0.1)
-- Release evidence: release commit `3c25a53571531e35ac888df16df4fe6c01849e85`, annotated tag object `ab79b1bb1e408a0112166cadc26761a327819c3f` peeling to that commit, final CI run [`33312946205`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33312946205), and Trusted Publisher run [`33313699790` attempt 1](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33313699790/attempts/1). The repository owner explicitly authorized the unique 73-file artifact, which is 240,904 bytes packed and 748,888 bytes unpacked; SHA-1 is `9e6449160947104e8dbb71b7201c53e81b073f83`, SHA-256 is `e3e15646d38de23c32c71ed759f9c10be9b2d790d4b10b4b8dfe59a44fbfef9f`, and SRI is `sha512-Bm1qjJQ9i7CWT0oWah7QKDVBP8dR2YQtvEEZGE/BOSwZCo8sZbrW2v2QSfUfLsOLHcQXFZZ0jlDCAztr1m/q+A==`. Frozen-candidate, GitHub Release, and npm Registry copies are byte-identical; a locked Registry install under Node `24.19.0` / npm `11.5.1` passed Host `name`/`apply` and client `id`/factory smoke checks with zero production vulnerabilities. `npm audit signatures` confirmed verified Registry signatures for 11 packages and verified attestations for 2 packages; this package's public metadata exposes 1 Registry signature and 2 attestations, while SLSA provenance exactly binds `release.yml`, `refs/tags/v1.0.1`, the release commit, and publish run.
-- npm page documentation correction: the `1.0.1` tarball retained an older installation example; the README embedded in the `1.0.2` artifact uses the exact `@1.0.2` command. Published `1.0.1` bytes are not replaced.
+- Current GitHub release with completed readback: [v1.0.2](https://github.com/yoshino-xiao7/dsh-grok-provider/releases/tag/v1.0.2)
+- Release evidence: release commit `be200f9352afe93b27dd2856d89c01674f0cd637`, annotated tag object `b7efd3aabb99c73e1747d2d87890cdf9b284c438` peeling to that commit, final CI run [`33318426571`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33318426571), and Trusted Publisher run [`33319150964` attempt 1](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33319150964/attempts/1). The repository owner explicitly authorized the unique 74-file artifact, which is 255,282 bytes packed and 789,962 bytes unpacked; SHA-1 is `3feddb7048fe4c796037804518999b12ae491802`, SHA-256 is `010a21770cb3e4e42b7195984df1f5bf8dc5027066198cf99b7d713ac045f605`, and SRI is `sha512-TcvvPUXBJZEA728pVnUrXSZebGfIoB5ATG5041wA1OFzOE+hFTO98C5Fxl99WuFW2y7V89gkusYIKCpGlLNQIg==`. The frozen candidate, GitHub Release asset, and npm Registry tarball are byte-identical, and npm confirms that `dsh-grok-provider@1.0.2` is installable and `latest=1.0.2`. A locked Registry install under Node `24.19.0` / npm `11.5.1` passed Host registration/`apply`/injection and client registration/factory/`apply`/injection smoke checks with zero production vulnerabilities. `npm audit signatures` confirmed verified Registry signatures for 11 packages and verified attestations for 2 packages; this package's public metadata exposes 1 Registry signature and 2 attestations, while SLSA provenance exactly binds `release.yml`, `refs/tags/v1.0.2`, the release commit, and publish run.
+- npm page documentation correction: the `1.0.1` tarball retained an older installation example; the README in the published `1.0.2` tarball uses the exact `@1.0.2` command. Published `1.0.1` bytes are not replaced.
 - GitHub community discovery: the repository carries the DeepSeek Harness-recommended `dsh-plugin` and `dsh` topics
 - YukiRyou managed source: [deepseek-yukiryou-plugin-catalog](https://github.com/yoshino-xiao7/deepseek-yukiryou-plugin-catalog), still pinned to the real-device-accepted `dsh-grok-provider@0.1.0` and marking only `darwin-arm64`
 
@@ -150,7 +150,7 @@ Directory inclusion is not an endorsement by xAI or DeepSeek Harness. [Listing P
 - An ordinary strictly empty reasoning item retains the existing ID/type, sequence, output-index, status, empty summary/content, size, optional encrypted-content, and closure checks. A same-ID Search-backed reuse additionally retains exact own-data key and accessor rejection. This release does not expand the accepted protocol domain.
 - The Provider delays creating a Harness reasoning block until the first non-empty summary/raw delta, then emits the existing delta and block-end sequence. A lifecycle that remains empty produces no visible reasoning chunk.
 - Multiple non-empty reasoning items remain separate in output-index order. Text, tool calls, usage, finish reasons, visible non-empty reasoning replay, Search replay suppression, and fail-closed behavior are unchanged. A hidden ordinary empty item occupies no visible block/replay alignment slot, so its validated bounded encrypted content is not persisted.
-- The exact Node `24.19.0` local gate reports 265 tests, 263 pass, 0 fail, and 2 platform skips; production audit reports zero vulnerabilities and the isolated-cache dry-run pack lists 74 files. Branch head `52359e691dfd1bbdb849362c9d1a461e4e693b83` push/PR CI, code PR [#34](https://github.com/yoshino-xiao7/dsh-grok-provider/pull/34), merge commit `47d688cc47bc9643f3477ee9333cfdf7788045cd`, and main CI run [`33318245251`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33318245251) pass on macOS 14 and Windows 2022. This still does not establish a final release commit, frozen artifact, publication, or supply-chain readback.
+- The exact Node `24.19.0` local gate reports 265 tests, 263 pass, 0 fail, and 2 platform skips; production audit reports zero vulnerabilities. Final release commit `be200f9352afe93b27dd2856d89c01674f0cd637` for the 74-file artifact and final CI run [`33318426571`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33318426571) pass on macOS 14 and Windows 2022. Unique-artifact authorization, isolated installation, Registry, signature, attestation, and provenance readback are complete.
 - The repair affects new responses after upgrading; empty `Think` rows already persisted in older conversations are not rewritten.
 - Search settings, models, authentication, images, fixed endpoints, citation/URL handling, and the Harness tool-permission boundary are unchanged. This is not real-device Windows browser-login acceptance.
 
@@ -171,7 +171,7 @@ Directory inclusion is not an endorsement by xAI or DeepSeek Harness. [Listing P
 - Two-layer redacted real-account verification passed against the final source: raw Web/X probes each completed one 64-event response, observed the requested Search kind, and reached `completed`; the production adapter completed 5 Responses calls, with direct Web/X both ending in `stop` and a Harness-shaped local `x_search` call/result continuation ending `tool-calls`, `tool-calls`, then `stop`, with one local call in each of the first two turns. That continuation did not place a Harness `x_search` function definition beside an xAI `{ type: "x_search" }` server descriptor in the same wire request; `1.0.1` later isolated that combination as an HTTP 400 conflict. No results, URLs, prompts, identity, or credentials were retained; this is not publication, OAuth, or real-device Windows evidence.
 - The manifest and lockfile are synchronized at `1.0.0`; the Node 24 suite reports 245 tests, 243 pass, 0 fail, and 2 platform skips. Production audit reports zero vulnerabilities, and the deterministic build/bundle comparison, 72-entry dry-run pack, secret scan, and diff check pass. Code PR #28, main CI run [`33308371009`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33308371009), the final release commit, dual-platform final CI, unique artifact, exact authorization, and Registry/signature/attestation/provenance readback are complete.
 
-| Item | `1.0.2` artifact boundary |
+| Item | Published `1.0.2` compatibility boundary |
 | --- | --- |
 | DeepSeek Harness | Exact support for `0.1.1-rc.2` |
 | Node.js | `>=24.19.0` |
@@ -292,6 +292,7 @@ Read the [contributing guide](CONTRIBUTING.md) before filing an issue or PR. Cha
 - [x] Publish `0.1.11`: repair High Effort + Web Search reasoning-lifecycle compatibility; the unique artifact, final dual-platform CI, exact authorization, Registry, signatures, attestations, and provenance readback are complete
 - [x] Publish `1.0.0`: repair multiple strictly empty reasoning-ID reuses and completed Web Search `open_page` actions; the unique artifact, final dual-platform CI, exact authorization, Registry, signatures, attestations, and provenance readback are complete
 - [x] Publish `1.0.1`: repair HTTP 400 conflicts between server Search and same-name Harness function definitions while preserving true transport-error classification; the unique artifact, final dual-platform CI, exact authorization, Registry, signatures, attestations, and provenance readback are complete
+- [x] Publish `1.0.2`: hide contentless `Think` projections for strictly empty reasoning while preserving protocol validation and output-index order; the unique artifact, final dual-platform CI, exact authorization, Registry, signatures, attestations, and provenance readback are complete
 - [ ] A subsequent slice: opt-in image generation (inline results only, committed through Harness attachments)
 - [ ] Complete independent Windows x64 acceptance and publish a later stable fix if needed
 
