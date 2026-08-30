@@ -7,7 +7,7 @@
 - 所有本地模拟服务使用随机 loopback 端口，不访问真实第三方。
 - 真实账号 smoke 只在发布候选上人工执行，记录脱敏结果。
 - `0.1.0` 发布前必须通过 macOS arm64 真机与 macOS/Windows 自动化矩阵；Windows x64 首次真机验证在发布后对 Registry 精确版本执行，验证前对外标注“代码支持、真机未验证”。
-- `0.1.1` 及后续版本不要求每次重复真机验证；自动化矩阵、契约测试、干净安装和 tarball 校验是常规发版门禁。认证流程、平台 subprocess seam 或安全契约发生变化的版本原则上仍须做对应平台的定向真机验证；若仓库所有者对精确版本明确批准发布后验证，发布前必须公开标注未验证范围、保留自动化门禁，并在失败时使用新的递增稳定版修复。`0.1.6` 采用该已记录特例并已发布；发布后图片已确认可用，Windows 官方 CLI 则在生成登录 URL 前复现 OIDC discovery timeout。已发布 `0.1.7` 负责解释并闭合这些状态，不把系统网络失败冒充成浏览器弹出修复；发布后撤回的 sidebar quota `0.1.8` 与当前 Search 候选 `0.1.9` 均不改变认证流程。
+- `0.1.1` 及后续版本不要求每次重复真机验证；自动化矩阵、契约测试、干净安装和 tarball 校验是常规发版门禁。认证流程、平台 subprocess seam 或安全契约发生变化的版本原则上仍须做对应平台的定向真机验证；若仓库所有者对精确版本明确批准发布后验证，发布前必须公开标注未验证范围、保留自动化门禁，并在失败时使用新的递增稳定版修复。`0.1.6` 采用该已记录特例并已发布；发布后图片已确认可用，Windows 官方 CLI 则在生成登录 URL 前复现 OIDC discovery timeout。已发布 `0.1.7` 负责解释并闭合这些状态，不把系统网络失败冒充成浏览器弹出修复；`0.1.10` 只修复 Search settings 集成，不改变认证流程。
 
 ## 2. Gate 0：方案确认
 
@@ -143,6 +143,8 @@
 - 本地 fake/codec 测试与 CLI Chat Proxy 脱敏图片 spike 是两类独立证据；精确 `grok-4.6` 必须分别通过普通 user 与一层 tool-result 的红/蓝语义门禁，请求图片固定为 `detail:"high"`。`grok-4.5` 的受控红图语义不可靠，必须失败关闭为 text-only；真实 Harness attachment smoke 还必须独立复验仅 `grok-4.6` 保留图片、`grok-4.5`/未知模型 text-only 且网络请求为 0。
 - Provider 只发已声明 Harness function 的 tool-call chunks，不执行工具/写文件；未声明工具名、恶意路径参数、伪造 server search/image/tool 事件不能绕过 Harness 权限层。`0.1.9` 的 Web/X server-tool 事件产生零 Harness `tool-call` chunk；后续生图版本也不得绕过 Harness 权限层。
 - Search 两项全关时不读取 `purpose`，request wire 与 `0.1.7` 一致；任一开关启用时，非空后台 purpose 关闭 Search，空字符串、错误类型或 accessor 在 POST 前失败。
+- 真实 `SettingsProvider` + `LlmRuntime` 必须描述唯一 `llm-grok` namespace，默认值为两项关闭且 `applies:"live"`；用户层更新进入后续请求，插件卸载清理 namespace，无 settings service 时回退组合配置。
+- Adapter 必须在每个调用开始且首次模型目录 await 前冻结 Search policy；用延迟目录证明等待期间的设置更新不改变该 prepared call，而下一调用读取新值。
 - 只有精确 `grok-4.6` route 可接收 Search descriptor；`grok-4.5`、未知模型、缺 capability 或 capability 顺序/值异常均在 POST 前失败。Harness functions → Web → X 的顺序、128 项共享上限和 16 MiB JSON 上限必须锁定。
 - Web lifecycle、四项 X custom-tool 名称、Web+X 交错与 Web+function 混合都必须闭合；未启用类别、未知 name/event/annotation、重复 output index、乱序、截断或未闭合状态失败关闭。结构化 citation 有界校验后丢弃，任一 Search 出现后 encrypted reasoning replay 为空。
 
@@ -247,4 +249,4 @@ Web 与 TUI 分别验证：
 - Windows x64 自动化平台测试通过，且 README、release notes 和 marketplace 元数据在首次真机验证前明确披露“代码支持、真机未验证”。
 - npm 回读的 SHA-512 与本地发布 tarball 一致。
 
-`0.1.0` 发布后原计划完成一次 Windows x64 Registry 精确版本真机验收；仓库所有者随后明确决定该验收不再阻断稳定发布，且普通后续版本不重复要求真机验证。`0.1.1` 及后续版本以 CI、契约测试、隔离安装和制品校验为常规门禁。已发布 `0.1.6` 改变了认证预检 deadline 所有权并通过 Windows slow-fake 与 Windows CI；发布后图片已确认可用，但 Windows 官方 CLI 直接命令在固定 OIDC discovery 请求上超时，未生成登录 URL。已发布 `0.1.7` 准确区分 CLI 缺失、discovery 超时与 discovery 可访问状态，并确保前两类及时、脱敏结算；在第三类真实通过前不得把代码、CI 或错误可解释性表述为 Windows 浏览器弹出已修复或已验证。发布后撤回的 `0.1.8` 与当前 `0.1.9` Search 候选均不改变这一边界。
+`0.1.0` 发布后原计划完成一次 Windows x64 Registry 精确版本真机验收；仓库所有者随后明确决定该验收不再阻断稳定发布，且普通后续版本不重复要求真机验证。`0.1.1` 及后续版本以 CI、契约测试、隔离安装和制品校验为常规门禁。已发布 `0.1.6` 改变了认证预检 deadline 所有权并通过 Windows slow-fake 与 Windows CI；发布后图片已确认可用，但 Windows 官方 CLI 直接命令在固定 OIDC discovery 请求上超时，未生成登录 URL。已发布 `0.1.7` 准确区分 CLI 缺失、discovery 超时与 discovery 可访问状态，并确保前两类及时、脱敏结算；在第三类真实通过前不得把代码、CI 或错误可解释性表述为 Windows 浏览器弹出已修复或已验证。发布后撤回的 `0.1.8`、已发布 `0.1.9` Search 协议与当前 `0.1.10` settings 集成修复均不改变这一边界。

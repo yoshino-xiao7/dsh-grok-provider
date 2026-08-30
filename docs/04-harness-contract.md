@@ -31,10 +31,10 @@
 
 初步分组：
 
-- required：`@deepseek-ai/cordis`、`@deepseek-ai/dsh-llm`、`@deepseek-ai/schemastery`。
+- required：`@deepseek-ai/cordis`、`@deepseek-ai/dsh-llm`、`@deepseek-ai/dsh-settings`、`@deepseek-ai/schemastery`。Host 通过 settings 包的 canonical helper 静态注册可选 settings service；包本身必须由 Runtime 提供。
 - profile-specific optional：subprocess、commands、connection 和 client UI packages。目标桌面 Runtime 必须实际挂载 subprocess service 才能提供官方 CLI 登录；缺失时模型 Provider 仍可读取已有有效官方凭据，但登录/注销动作不可用。
 
-全部放入 `peerDependencies`，optional 项同时声明 `peerDependenciesMeta.<name>.optional: true`。可选 peer 不得被 Host 入口无条件静态 import；需要通过独立 export、条件加载或已证明的 Runtime external 方式隔离。Web、TUI、headless 三种缺失可选 service/peer 的测试必须通过。
+全部放入 `peerDependencies`，optional 项同时声明 `peerDependenciesMeta.<name>.optional: true`。可选 peer 不得被 Host 入口无条件静态 import；需要通过独立 export、条件加载或已证明的 Runtime external 方式隔离。`@deepseek-ai/dsh-settings` 不是 optional peer，但 `ctx.settings` service 仍是可选能力；canonical helper 在 service 缺失或卸载时回退组合配置。Web、TUI、headless 三种缺失可选 service/peer 的测试必须通过。
 
 这些包由 Harness Runtime 满足，不进入插件普通 dependency 图。版本在脚手架阶段以实际 rc.2 manifest 再核对；不自动放宽到未经测试的 Harness 版本。
 

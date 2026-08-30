@@ -1,10 +1,10 @@
 # Grok Build Provider 文档索引
 
-- 状态：**`0.1.8` sidebar quota 维护版曾发布后撤回；`0.1.9` 默认关闭的 Web/X Search 切片正在开发**
-- 当前 npm 稳定版本：`0.1.7`
-- 最近发布版本：`0.1.8`（已撤回，npm 号码不可复用）
-- 当前开发分支：`yukiryou/v0.1.9-search`
-- 发布状态：不可变 `v0.1.7` 精确指向 release commit `68f6b474bd860b829f03e7712ec79e8afe2b9b8d`；唯一 64 文件、167,970-byte tarball 的 SHA-256 为 `fd4d2a77b70335cb71f950f299e3c6e0b57d3720de424d99343bd58921a40aaf`，npm SRI 为 `sha512-QhCvp/Y0vq1XHY7XQ+anUnv4sxHH4xxhDRPCzDvqCpXHRgc+IrzJS62bqf5ALGx6fRoKWchy/dbJ0n+LjmkS2w==`；Trusted Publisher run `33226665968` 已完成，Registry signature 与 provenance 已验证
+- 状态：**`0.1.9` 已发布但 Search 设置链路存在缺陷；`0.1.10` 正在修复 Host namespace 与按调用配置快照**
+- 当前 npm 稳定版本：`0.1.9`
+- 最近发布版本：`0.1.9`
+- 当前开发分支：`yukiryou/v0.1.10-search-settings-fix`
+- 发布状态：不可变 `v0.1.9` 指向 release commit `a0af7b74882546dc3d9477b8f6c1494935e6bfb4`；唯一制品 SHA-256 为 `78c73c95ea71d66cad6e6146fed41c281f1c8b29f60353e3f20247ec23833210`，Registry signature 与 provenance 已验证。该制品遗漏 `llm-grok` Host settings 注册，不能通过重启或重装修复。
 - 撤回状态：`0.1.8` 只对应 sidebar quota 维护发布，不包含 Search；撤回不会释放 npm semver，任何 Search 制品都不得复用 `0.1.8`
 - 兼容基线：DeepSeek Harness `0.1.1-rc.2`
 - 目标平台：macOS arm64、Windows x64
@@ -52,6 +52,7 @@
 - [v0.1.7 中英双语发行说明](./releases/v0.1.7.md)
 - [v0.1.8 sidebar quota 撤回说明](./releases/v0.1.8.md)
 - [v0.1.9 中英双语发行说明](./releases/v0.1.9.md)
+- [v0.1.10 中英双语发行说明](./releases/v0.1.10.md)
 - [v0.1.2-rc.1 中英双语预发行说明](./releases/v0.1.2-rc.1.md)
 - [ADR-0001：认证与传输路线](./adr/0001-auth-and-transport-route.md)
 - [ADR-0002：首版能力边界](./adr/0002-v0.1-scope.md)
@@ -68,7 +69,7 @@
 
 `0.1.2-rc.1` 是唯一一次预发行尝试。仓库所有者决定从稳定 `0.1.2` 起不再发行预发行版；正式版缺陷通过新的递增稳定版本修复。`0.1.4` 已发布：仅精确 `grok-4.6` 开启图片，普通 user 与一层 tool-result 的红/蓝合成图共四次脱敏 Proxy 请求均通过；`grok-4.5` 的红图语义结果不可靠，因此失败关闭并与其他模型保持 text-only。`0.1.5` 维护发布供应链、账户面板投影与 Provider Runtime 安装事务。`0.1.6` 已发布图片历史 reasoning 兼容与 Windows CLI 分阶段 deadline 修复，精确制品、Trusted Publisher、Registry signature 与 provenance 均已验证；发布后图片能力已由仓库所有者确认可用。Windows 真机同时确认官方 `grok login --oauth` 可在 xAI OIDC discovery 阶段超时，此时登录 URL 尚未生成，不能据此声称 Provider 已修复或验证浏览器弹出。
 
-`0.1.7` 已发布闭合 CLI 安装/版本诊断、登录失败可解释性，以及采用 MIT 许可的 Harness `IconThinkOutline16` 路径几何；它不接管官方 CLI 的网络、代理或 OAuth 流程。sidebar quota `0.1.8` 曾发布后撤回，且该 npm 号码不能复用；Search 从未作为 `0.1.8` 发布。当前 `0.1.9` 候选实现默认关闭、可分别启用的 Web/X Search，精确模型、固定 Proxy、citation 与不可信远端内容边界见 ADR-0010。完整门禁见[逐版发布检查表](./10-release-checklist.md)。
+`0.1.7` 已发布闭合 CLI 安装/版本诊断、登录失败可解释性，以及采用 MIT 许可的 Harness `IconThinkOutline16` 路径几何；它不接管官方 CLI 的网络、代理或 OAuth 流程。sidebar quota `0.1.8` 曾发布后撤回，且该 npm 号码不能复用。`0.1.9` 已发布 Search 协议和页面，但遗漏 Host namespace 注册并过早冻结组合配置；`0.1.10` 只补齐 canonical settings 注册与调用级快照，不改变固定 Proxy、citation 或不可信远端内容边界。完整门禁见[逐版发布检查表](./10-release-checklist.md)。
 
 ## 官方依据
 

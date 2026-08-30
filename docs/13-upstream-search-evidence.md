@@ -1,12 +1,12 @@
 # `0.1.9` Web/X Search 上游与固定 Proxy 证据
 
-- 状态：`grok-4.6` 四组脱敏观察、生产顺序 mixed 复验、双平台 CI 与隔离 Web Harness 验收已完成；最终制品与发布后回读门禁仍未完成
+- 状态：`0.1.9` 协议证据、双平台 CI、唯一制品与发布回读已完成；发布后发现 Host settings 集成缺口，由 `0.1.10` 修复
 - 观察日期：2026-08-30
 - 固定 origin/path：`https://cli-chat-proxy.grok.com/v1/responses`
 - Provider client identity：`dsh-grok-provider/1.0.5`
-- 目标版本：`0.1.9`
+- 协议目标版本：`0.1.9`；设置链路修正：`0.1.10`
 
-sidebar quota 维护版 `0.1.8` 曾发布后撤回，npm Registry 已消耗该版本号且不能复用；本页所有 Search 证据只属于 `0.1.9` 候选，不能据此把 Search 描述为 `0.1.8` 能力。
+sidebar quota 维护版 `0.1.8` 曾发布后撤回，npm Registry 已消耗该版本号且不能复用；本页所有 Search 协议证据只属于已发布 `0.1.9`，不能据此把 Search 描述为 `0.1.8` 能力，也不能替代 `0.1.10` 的真实 settings 集成验收。
 
 本页只保存协议形状、计数和边界，不保存 access token、refresh token、搜索词、回答正文、citation URL、X 帖子/用户内容或原始响应。
 
@@ -79,13 +79,15 @@ Web + X 观察共 68 个 SSE event、4 个 output item、8 个 citation annotati
 - Web/X lifecycle 产生零个 Harness tool-call chunk；function call 仍由 Harness 权限层处理。
 - 观察到任一 server-tool 后禁用本响应的 encrypted reasoning replay。
 
-## 未完成门禁
+## 发布门禁与集成后记
 
 - [x] request/compiler、严格 codec、Adapter、真实 Host Config → LlmRuntime 与 settingsScope 设置页聚焦测试全绿。
 - [x] 全量 Node `24.19.0` 测试通过（221 项、219 pass、0 fail、2 项 Windows-only skip）；生产依赖审计为 0 漏洞，干净提交的 dry-run pack 为 69 个文件，生成 bundle/diff/秘密模式扫描通过。
 - [x] 以 function → `web_search` 顺序单独重跑 mixed 固定 Proxy 脱敏协议探针，并更新该 case 的 request bytes 与事件计数。
 - [x] 候选 push/PR 与 main 合并提交的 macOS 14 / Windows 2022 CI 通过。
 - [x] macOS 隔离 Web Harness profile 的真实 `ctx.llm` 路径完成默认关闭、Web-only、X-only 与 function → `web_search` Mixed 四组验收；fetch 在插件导入前由失败关闭 fixture 接管，无 passthrough 或外部 xAI、npm、login 请求。该证据不覆盖浏览器手工对话、Agent/session loop、OAuth、真实账号、真实 xAI 请求或 Windows 真机。
-- [ ] 唯一 `0.1.9` 制品、digest/SRI、签名、provenance 与 Registry 回读。
+- [x] 唯一 `0.1.9` 制品、digest/SRI、签名、provenance 与 Registry 回读。
 
-剩余的唯一制品、发布授权、Registry、签名与 provenance 门禁未关闭，因此当前证据不构成发布或所有平台真实账户验收。
+`0.1.9` 发布后的真实页面检查证明上述协议证据没有覆盖 Host namespace 注册：`settings.describe` 可写但不包含 `llm-grok`，客户端因此正确派生 `unavailable` 并禁用开关；Host 同时只在启动时读取一次组合配置。`0.1.10` 增加真实 SettingsProvider + LLM Runtime 回归和 Adapter 首次 await 前快照回归，只修复设置进入后续请求的链路，不改变本页任何固定 Proxy 结论。
+
+这些自动化与脱敏证据仍不构成所有平台真实账户验收；真实 xAI Search、浏览器手工对话、OAuth 和网络可达 Windows 真机浏览器弹出保持独立边界。

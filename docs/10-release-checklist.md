@@ -170,6 +170,20 @@ English summary: every release must close documentation, security, tests, determ
 - [x] 候选 head `402920fa0f5eb0b543a09a597ada0b2dd9661020` 的 push CI run [33294837923](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33294837923) 与 PR CI run [33294887140](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33294887140)，以及代码 PR [#20](https://github.com/yoshino-xiao7/dsh-grok-provider/pull/20) 合并提交 `89297ad5c30e1edd94936b52fbe89d0331aaddf5` 的 main CI run [33295176360](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33295176360)，均完成 macOS 14 / Windows 2022 全绿。
 - [x] 基于同一候选代码的 macOS 隔离 Web Harness profile 验收通过：默认关闭请求无 `tools`；Web-only 为 `web_search`；X-only 为 `x_search`；Mixed 保持 function → `web_search` 且只向 Harness 交付一个 fixture function call。每组均只有受控的 models GET 与 Responses POST，fetch 无 passthrough，且没有外部 xAI、npm 或 login 请求；这不替代浏览器手工对话、Agent/session loop、OAuth、真实账号、真实 xAI 请求或 Windows 真机验收。
 - [x] 代码 PR #20 已合入受保护 `yukiryou/main`，merge commit 为 `89297ad5c30e1edd94936b52fbe89d0331aaddf5`。
-- [ ] 发布证据 PR 合并并确定最终 release commit；从该 commit 唯一生成一次 `dsh-grok-provider-0.1.9.tgz`，完成清单、隔离加载、文件数、大小、SHA-256 与 SRI。预验收 tarball 不得冒充或替代最终制品。
-- [ ] 在完整提交与唯一制品证据后取得精确 `dsh-grok-provider@0.1.9` 发布授权；绿色门禁本身不构成授权，任何既有 `0.1.8` 授权均不适用于 `0.1.9`。
+- [x] 发布证据 PR #21 合并；最终 release commit 为 `a0af7b74882546dc3d9477b8f6c1494935e6bfb4`。唯一 69 文件、190,049-byte tarball 的 SHA-256 为 `78c73c95ea71d66cad6e6146fed41c281f1c8b29f60353e3f20247ec23833210`，SRI 为 `sha512-GeXQg3qedCGZz9D5MMaHd8Afe5Bn0nxjG+PQmKOB2AxB3m6IiGA07PMD77dEAOJVbAzKk0SnxAOKTZMTQFtuYg==`。
+- [x] 仓库所有者在完整提交与唯一制品证据后明确授权精确 `dsh-grok-provider@0.1.9`。
+- [x] 不可变 `v0.1.9`、唯一 GitHub Release asset、Trusted Publisher run `33295761336`、npm `latest=0.1.9`、Registry 字节、签名与 provenance 回读全部关闭。
+- [x] 发布后真实页面验证发现功能验收缺口：Host 未注册 `llm-grok`，两个 Search 开关失败关闭为 `unavailable`。该缺陷不覆盖或重发 `0.1.9`，使用递增稳定版 `0.1.10` 修复。
+
+## `0.1.10` Search settings 集成修复门禁
+
+- [x] 从 `origin/yukiryou/main@a0af7b74882546dc3d9477b8f6c1494935e6bfb4` 创建隔离分支 `yukiryou/v0.1.10-search-settings-fix`；原工作树两个未跟踪文件保持未修改。
+- [x] 建立快速红测：真实 Host namespace 缺失、设置更新未进入请求、Adapter 两次调用都无 Search tools；当前实现修复后三项转绿。
+- [x] 使用 canonical `@deepseek-ai/dsh-settings@0.1.1-rc.2` 注册 `llm-grok`，并在 Adapter 调用开始、首次 await 前冻结策略；compiler/receipt 静态不变量不变。
+- [x] 真实 SettingsProvider + LLM Runtime 覆盖安全默认值、`applies:"live"`、组合回退、用户更新、prepared-call 隔离和 namespace 生命周期；client ready/write 与 unavailable fail-closed 测试同时保留。
+- [x] 精确 Node `24.19.0` 全量测试通过：224 项、222 pass、0 fail、2 项 Windows-only skip；生产依赖审计为 0 漏洞。收尾后的 dry-run pack 为 70 个文件；生成 bundle 一致、`git diff --check` 通过，秘密模式扫描仅命中显式测试 canary `Bearer fixture-access-token`。最终字节数与摘要等待合并后的 release commit 冻结。
+- [x] 从预验收候选 tarball 完成隔离 profile 安装：实际 `settings.describe` 包含可写、`applies:"live"` 的唯一 `llm-grok`；浏览器页面两个开关 enabled 且 unavailable 提示消失。浏览器写入由服务端 revision 递增确认并恢复默认关闭；延迟目录与 Host/Adapter fixture 回归分别证明旧调用保持快照、后续请求工具随设置变化。该验收未访问真实 xAI。
+- [ ] macOS 14 / Windows 2022 CI、代码 PR 与 main CI 全绿。
+- [ ] 版本分支合并后，从最终 release commit 唯一生成 `dsh-grok-provider-0.1.10.tgz`，记录文件数、大小、SHA-256 与 SRI；预验收 tarball 不得进入 Release。
+- [ ] 完整提交和唯一制品证据形成后，另行取得精确 `dsh-grok-provider@0.1.10` 发布授权。
 - [ ] 不可变 tag、唯一 GitHub Release asset、Trusted Publisher、npm `latest`、Registry 字节、签名与 provenance 回读全部关闭。

@@ -2,7 +2,7 @@
 
 ## 0. 当前状态
 
-当前可用 npm 稳定基线为 `dsh-grok-provider@0.1.7`；其 release commit 为 `68f6b474bd860b829f03e7712ec79e8afe2b9b8d`，不可变 tag 为 `v0.1.7`。唯一 tarball 含 64 个文件、167,970 bytes，SHA-256 为 `fd4d2a77b70335cb71f950f299e3c6e0b57d3720de424d99343bd58921a40aaf`，npm SRI 为 `sha512-QhCvp/Y0vq1XHY7XQ+anUnv4sxHH4xxhDRPCzDvqCpXHRgc+IrzJS62bqf5ALGx6fRoKWchy/dbJ0n+LjmkS2w==`；Trusted Publisher run `33226665968` 已完成，Registry signature 与 provenance 已验证。sidebar quota 维护版 `0.1.8` 曾发布后撤回；npm Registry 已永久消耗该版本号，禁止把 Search 制品重新标记或发布为 `0.1.8`。当前 `0.1.9` 在 `yukiryou/v0.1.9-search` 开发为默认关闭、可独立启用的 Web/X Search 候选，尚未发布。
+当前 npm 稳定基线为 `dsh-grok-provider@0.1.9`；其 release commit 为 `a0af7b74882546dc3d9477b8f6c1494935e6bfb4`，不可变 tag 为 `v0.1.9`。唯一 tarball 含 69 个文件、190,049 bytes，SHA-256 为 `78c73c95ea71d66cad6e6146fed41c281f1c8b29f60353e3f20247ec23833210`，npm SRI 为 `sha512-GeXQg3qedCGZz9D5MMaHd8Afe5Bn0nxjG+PQmKOB2AxB3m6IiGA07PMD77dEAOJVbAzKk0SnxAOKTZMTQFtuYg==`；Trusted Publisher run `33295761336` 已完成，Registry signature 与 provenance 已验证。该版本的 Search 开关因 Host settings namespace 遗漏而不可用；当前 `0.1.10` 在 `yukiryou/v0.1.10-search-settings-fix` 修复该集成，不覆盖或重发 `0.1.9`。
 
 首个 `dsh-grok-provider@0.1.0` 于 2026-08-26 从 GitHub Release 中唯一的候选 tarball 发布到 npm；Registry 回读的 SHA-512、重新下载文件的 SHA-256 和 GitHub Release 产物完全一致，并生成 npm provenance attestation。后续稳定版沿用由该流程建立的不可变制品与回读原则。
 
@@ -66,7 +66,7 @@ CHANGELOG.md
 
 `docs/` 与根目录中相互链接的中文默认页 `README.md`、英文版 `README.en.md`、`CONTRIBUTING.md`、`SECURITY.md` 和 `THIRD_PARTY_NOTICES.md` 一起进入 tarball，使安装后的架构、安全边界、第三方许可、社区维护方式和发布门禁链接保持可读。发布前的证据文档只记录脱敏事实、hash 与固定公开地址，不得包含 token、真实 prompt/响应或用户身份数据。
 
-目标为零普通 runtime dependencies。DSH peer 精确使用 `0.1.1-rc.2`；Cordis `4.0.1`、Schemastery `3.18.1` 由目标桌面 Runtime snapshot 满足。`@deepseek-ai/dsh-subprocess`、settings、commands、connection 和 client UI/locale 等 profile-specific peer 通过 `peerDependenciesMeta.optional: true` 标注，并有 Web/TUI/headless 缺失-peer 测试。插件不打包本地 subprocess 实现。
+目标为零普通 runtime dependencies。DSH peer 精确使用 `0.1.1-rc.2`；Cordis `4.0.1`、Schemastery `3.18.1` 由目标桌面 Runtime snapshot 满足。`@deepseek-ai/dsh-settings` 是 Host Search 设置链路的直接、非 optional peer；`@deepseek-ai/dsh-subprocess`、commands、connection 和 client UI/locale 等 profile-specific peer 保持 optional，并有 Web/TUI/headless 缺失-peer测试。插件不打包 settings provider 或本地 subprocess 实现。
 
 `package.json` 同时固定公开 Registry：
 
@@ -131,7 +131,7 @@ patch 路径必须为不含 `..`、绝对路径、反斜线或 NUL 的相对 `.y
 
 ## 7. Git 与版本
 
-- `0.1.0` 历史开发分支：`yukiryou/v0.1.0`；当前候选分支：`yukiryou/v0.1.9-search`（目标版本 `0.1.9`）。`0.1.8` 已由撤回的 sidebar quota 发布消耗，不得复用。
+- `0.1.0` 历史开发分支：`yukiryou/v0.1.0`；当前候选分支：`yukiryou/v0.1.10-search-settings-fix`（目标版本 `0.1.10`）。`0.1.8` 已由撤回发布消耗，`0.1.9` 已发布且不可覆盖。
 - `package.json`、CHANGELOG、release notes、Git tag 和 tarball 必须使用同一个精确候选版本。
 - 发布提交必须干净且可复现。
 - tag 使用 `v<major>.<minor>.<patch>`，只在发布提交确定后创建。

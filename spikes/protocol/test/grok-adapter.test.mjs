@@ -508,7 +508,7 @@ test("the adapter compiles Web Search and decodes its server lifecycle through t
         },
       },
     }),
-    searchPolicy: Object.freeze({ webSearch: true, xSearch: false }),
+    getSearchPolicy: () => Object.freeze({ webSearch: true, xSearch: false }),
     mapError: mapLlmError,
   })
   const prepared = await adapter.prepareCall("grok", "grok-4.6")
@@ -530,6 +530,102 @@ test("the adapter compiles Web Search and decodes its server lifecycle through t
   assert.deepEqual(chunks.at(-1), { type: "finish", reason: { kind: "stop" } })
 })
 
+test("the adapter snapshots Search policy before model discovery and refreshes it for the next call", async () => {
+  let searchPolicy = Object.freeze({ webSearch: true, xSearch: false })
+  let releaseFirstCatalog
+  let markFirstCatalogStarted
+  let catalogReads = 0
+  const firstCatalogStarted = new Promise((resolve) => { markFirstCatalogStarted = resolve })
+  const firstCatalogRelease = new Promise((resolve) => { releaseFirstCatalog = resolve })
+  const capturedRequests = []
+  const adapter = createGrokAdapter({
+    getGeneration: () => ({
+      id: 1,
+      transport: {
+        async listModels() {
+          catalogReads += 1
+          if (catalogReads === 1) {
+            markFirstCatalogStarted()
+            await firstCatalogRelease
+          }
+          return catalog
+        },
+        async *streamResponses(request) {
+          capturedRequests.push(request)
+          yield * completedResponseEvents()
+        },
+      },
+    }),
+    getSearchPolicy: () => searchPolicy,
+    mapError: mapLlmError,
+  })
+
+  const firstPreparedPromise = adapter.prepareCall("grok", "grok-4.6")
+  await firstCatalogStarted
+  searchPolicy = Object.freeze({ webSearch: false, xSearch: true })
+  releaseFirstCatalog()
+  const firstPrepared = await firstPreparedPromise
+  const secondPrepared = await adapter.prepareCall("grok", "grok-4.6")
+  const options = (id) => ({
+    provider: "grok",
+    model: "grok-4.6",
+    messages: [{
+      id,
+      role: "user",
+      source: { kind: "user" },
+      content: [{ type: "text", text: "Search official docs" }],
+    }],
+  })
+
+  for await (const _chunk of firstPrepared.stream(options("first-policy"))) {}
+  for await (const _chunk of secondPrepared.stream(options("second-policy"))) {}
+
+  assert.deepEqual(capturedRequests.map((request) => request.tools), [
+    [{ type: "web_search" }],
+    [{ type: "x_search" }],
+  ])
+})
+
+test("the direct adapter stream snapshots Search policy before iteration starts", async () => {
+  let searchPolicy = Object.freeze({ webSearch: true, xSearch: false })
+  const capturedRequests = []
+  const adapter = createGrokAdapter({
+    getGeneration: () => ({
+      id: 1,
+      transport: {
+        async listModels() { return catalog },
+        async *streamResponses(request) {
+          capturedRequests.push(request)
+          yield * completedResponseEvents()
+        },
+      },
+    }),
+    getSearchPolicy: () => searchPolicy,
+    mapError: mapLlmError,
+  })
+  const options = (id) => ({
+    provider: "grok",
+    model: "grok-4.6",
+    messages: [{
+      id,
+      role: "user",
+      source: { kind: "user" },
+      content: [{ type: "text", text: "Search official docs" }],
+    }],
+  })
+
+  const firstStream = adapter.stream(options("first-direct-policy"))
+  searchPolicy = Object.freeze({ webSearch: false, xSearch: true })
+
+  for await (const _chunk of firstStream) {}
+  for await (const _chunk of adapter.stream(options("second-direct-policy"))) {}
+
+  assert.deepEqual(capturedRequests.map((request) => request.tools), [
+    [{ type: "web_search" }],
+    [{ type: "x_search" }],
+  ])
+})
+
 test("the adapter compiles X Search and decodes its custom lifecycle through the final receipt", async () => {
   let capturedRequest
   const adapter = createGrokAdapter({
@@ -543,7 +639,7 @@ test("the adapter compiles X Search and decodes its custom lifecycle through the
         },
       },
     }),
-    searchPolicy: Object.freeze({ webSearch: false, xSearch: true }),
+    getSearchPolicy: () => Object.freeze({ webSearch: false, xSearch: true }),
     mapError: mapLlmError,
   })
   const prepared = await adapter.prepareCall("grok", "grok-4.6")
@@ -578,7 +674,7 @@ test("the adapter binds Web Search and Harness functions in one final receipt", 
         },
       },
     }),
-    searchPolicy: Object.freeze({ webSearch: true, xSearch: false }),
+    getSearchPolicy: () => Object.freeze({ webSearch: true, xSearch: false }),
     mapError: mapLlmError,
   })
   const prepared = await adapter.prepareCall("grok", "grok-4.6")
@@ -629,7 +725,7 @@ test("an enabled Search setting fails unsupported routes before the Responses PO
         },
       },
     }),
-    searchPolicy: Object.freeze({ webSearch: true, xSearch: false }),
+    getSearchPolicy: () => Object.freeze({ webSearch: true, xSearch: false }),
     mapError: mapLlmError,
   })
   const prepared = await adapter.prepareCall("grok", "grok-4.5")
@@ -662,7 +758,7 @@ test("a background call rejects Search output because its compiled receipt conta
         },
       },
     }),
-    searchPolicy: Object.freeze({ webSearch: true, xSearch: true }),
+    getSearchPolicy: () => Object.freeze({ webSearch: true, xSearch: true }),
     mapError: mapLlmError,
   })
   const prepared = await adapter.prepareCall("grok", "grok-4.6")

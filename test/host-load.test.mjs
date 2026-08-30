@@ -6,6 +6,7 @@ import test from "node:test"
 
 import { Context } from "@deepseek-ai/cordis"
 import LlmRuntime, { LlmError } from "@deepseek-ai/dsh-llm"
+import SettingsProvider from "@deepseek-ai/dsh-settings"
 
 import * as grokPlugin from "../src/host/index.mjs"
 import { mapLlmError } from "../src/internal/llm-error.mjs"
@@ -30,6 +31,31 @@ test("the Host plugin registers and cleanly removes the Grok provider in the rea
   await llmFiber.dispose()
 })
 
+test("the Host exposes one live llm-grok settings namespace with safe defaults", async () => {
+  const ctx = new Context()
+  const settingsFiber = ctx.plugin(MemorySettingsProvider)
+  await settingsFiber
+  const llmFiber = ctx.plugin(LlmRuntime)
+  await llmFiber
+  const grokFiber = ctx.plugin(grokPlugin)
+  await grokFiber
+
+  assert.deepEqual(ctx.settings.describe().map(({ ns, value, applies }) => ({
+    ns,
+    value,
+    applies,
+  })), [{
+    ns: "llm-grok",
+    value: { webSearch: false, xSearch: false },
+    applies: "live",
+  }])
+
+  await grokFiber.dispose()
+  assert.deepEqual(ctx.settings.describe(), [])
+  await llmFiber.dispose()
+  await settingsFiber.dispose()
+})
+
 test("the Host exposes opt-in Search policy without a selectable authentication mode", () => {
   assert.deepEqual(grokPlugin.Config({}), { webSearch: false, xSearch: false })
   assert.deepEqual(grokPlugin.Config({ webSearch: true, xSearch: false }), {
@@ -41,7 +67,7 @@ test("the Host exposes opt-in Search policy without a selectable authentication 
   assert.deepEqual(Object.keys(grokPlugin).sort(), ["Config", "apply", "inject", "name"])
 })
 
-test("the Host wires webSearch Config through the real LLM runtime into the Grok request", async () => {
+test("the Host applies Search settings to later calls while prepared calls keep their snapshot", async () => {
   const originalFetch = globalThis.fetch
   const originalHome = process.env.HOME
   const originalUserProfile = process.env.USERPROFILE
@@ -49,7 +75,8 @@ test("the Host wires webSearch Config through the real LLM runtime into the Grok
   const authDir = join(fixtureHome, ".grok")
   let grokFiber
   let llmFiber
-  let capturedRequest
+  let settingsFiber
+  const capturedRequests = []
 
   try {
     await mkdir(authDir)
@@ -66,7 +93,7 @@ test("the Host wires webSearch Config through the real LLM runtime into the Grok
         })
       }
       if (url === "https://cli-chat-proxy.grok.com/v1/responses") {
-        capturedRequest = JSON.parse(init.body)
+        capturedRequests.push(JSON.parse(init.body))
         return new Response(completedResponseFixture(), {
           status: 200,
           headers: { "content-type": "text/event-stream" },
@@ -81,18 +108,39 @@ test("the Host wires webSearch Config through the real LLM runtime into the Grok
     grokFiber = ctx.plugin(grokPlugin, { webSearch: true })
     await grokFiber
 
-    for await (const _chunk of ctx.llm.stream({
+    const requestOptions = (id) => ({
       provider: "grok",
       model: "grok-4.6",
       messages: [{
-        id: "host-config-search",
+        id,
         role: "user",
         source: { kind: "user" },
         content: [{ type: "text", text: "Find the official documentation" }],
       }],
-    })) {}
+    })
 
-    assert.deepEqual(capturedRequest.tools, [{ type: "web_search" }])
+    for await (const _chunk of ctx.llm.stream(requestOptions("composition-fallback"))) {}
+
+    settingsFiber = ctx.plugin(MemorySettingsProvider)
+    await settingsFiber
+    assert.deepEqual(ctx.settings.get("llm-grok"), { webSearch: true, xSearch: false })
+
+    const prepared = await ctx.llm.prepareCall({ provider: "grok", model: "grok-4.6" })
+    await ctx.settings.update("llm-grok", { webSearch: false, xSearch: true })
+
+    for await (const _chunk of prepared.stream(requestOptions("prepared-before-update"))) {}
+    for await (const _chunk of ctx.llm.stream(requestOptions("created-after-update"))) {}
+
+    await settingsFiber.dispose()
+    settingsFiber = undefined
+    for await (const _chunk of ctx.llm.stream(requestOptions("after-settings-dispose"))) {}
+
+    assert.deepEqual(capturedRequests.map((request) => request.tools), [
+      [{ type: "web_search" }],
+      [{ type: "web_search" }],
+      [{ type: "x_search" }],
+      [{ type: "web_search" }],
+    ])
   } finally {
     globalThis.fetch = originalFetch
     if (originalHome === undefined) delete process.env.HOME
@@ -103,13 +151,30 @@ test("the Host wires webSearch Config through the real LLM runtime into the Grok
       await grokFiber?.dispose()
     } finally {
       try {
-        await llmFiber?.dispose()
+        await settingsFiber?.dispose()
       } finally {
-        await rm(fixtureHome, { recursive: true, force: true })
+        try {
+          await llmFiber?.dispose()
+        } finally {
+          await rm(fixtureHome, { recursive: true, force: true })
+        }
       }
     }
   }
 })
+
+class MemorySettingsProvider extends SettingsProvider {
+  writable = true
+  document = {}
+
+  async load() {
+    return structuredClone(this.document)
+  }
+
+  async persist(ns, section) {
+    this.document[ns] = structuredClone(section)
+  }
+}
 
 test("the Host distinguishes image and Search policy failures from invalid generic requests", () => {
   assert.equal(mapLlmError(new UnsupportedImageInputError()).code, "UNSUPPORTED_CONTENT")
