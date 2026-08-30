@@ -2,7 +2,7 @@
 
 - 状态：**`1.0.0` Search 响应协议修复候选开发中；尚未发布**
 - 候选范围：允许已完成 Search 支撑的 reasoning ID 继续以多个严格空且逐次闭合的占位生命周期出现，并接受完成态精确 `open_page` type/URL；其余未知形状继续失败关闭
-- 候选门禁：版本号与本地自动化已完成；双平台 CI、最终提交、唯一制品、摘要/SRI、精确制品授权、发布与 Registry/signature/attestation/provenance 回读仍待完成
+- 候选门禁：版本号、本地自动化、代码 PR #28 与 main CI run `33308371009` 的双平台门禁已完成；发布证据 final CI、最终提交、唯一制品、摘要/SRI、精确制品授权、发布与 Registry/signature/attestation/provenance 回读仍待完成
 - 当前 npm 稳定版本：`0.1.11`
 - 最近发布版本：`0.1.11`
 - 发布基线：`yukiryou/main@2e5c6dbc8bb83377a4db4d8e31452b3ce96500c5`

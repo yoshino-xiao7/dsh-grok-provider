@@ -214,7 +214,8 @@ English summary: every release must close documentation, security, tests, determ
 - [x] `package.json` 与 lockfile 已更新到精确 `1.0.0`；发行物契约、中英文 README、CHANGELOG、安全策略、设计/状态/测试/发布文档和 `docs/releases/v1.0.0.md` 对同一候选事实保持一致。
 - [x] 聚焦 codec 40/40 与完整 Node `24.19.0` 测试通过：共 245 项、243 pass、0 fail、2 项平台跳过；覆盖多次严格空复用、Web/X Search-backed 首次复用、opaque encrypted content、每次 `output_item.done`、open reuse + incomplete 拒绝、closed reuse + max-token 接受、非空/跨类型/terminal/accessor 拒绝，以及 `open_page` streamed/final 一致与边界错误。
 - [x] `npm audit --omit=dev` 为 0 漏洞；确定性 build 与生成 bundle 一致，`npm run pack:check` 为 72 项，秘密模式扫描和 `git diff --check` 通过。该 dry-run 尚不是冻结制品，大小与摘要不得作为发布授权依据。
-- [ ] 候选分支经受保护 PR 合入 `yukiryou/main`，并记录 macOS 14 / Windows 2022 CI 均全绿的精确 commit 与 run。Windows CI 不得表述为网络可达真机浏览器弹出验收。
+- [x] 代码 PR #28 已合入受保护 `yukiryou/main`，merge commit 为 `7a6364dd58f3c7e9e1ad68a3d0197a14254bcb8c`；main CI run [`33308371009`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33308371009) 的 macOS 14 / Windows 2022 均通过。该 CI 不代表网络可达真机浏览器弹出验收。
+- [ ] 发布证据 PR 合入后形成最终 release commit，并由该提交的 macOS 14 / Windows 2022 final CI 关闭最后代码门禁。
 - [ ] 从最终 release commit 只生成并冻结一份 `dsh-grok-provider-1.0.0.tgz`；记录 packed/unpacked size、文件数、SHA-256、base64 SHA-512/npm SRI、manifest/exports 与隔离安装 smoke，禁止 publish job 重建或重新 pack。
 - [ ] 在上述提交与唯一制品证据形成后，取得仓库所有者对该精确 `dsh-grok-provider@1.0.0` 制品的明确授权；现有开发请求及任何旧版本授权不得复用。
 - [ ] 创建精确 peel 到 release commit 的不可变 `v1.0.0` tag 和只含该 tarball 的 GitHub Release，由 Trusted Publisher 使用同一 SHA-512 发布；完成 npm `latest=1.0.0`、Registry/Release/本地逐字节一致、隔离安装、Registry signature、attestations 与 SLSA provenance 回读后，才把候选文档更新为正式发布事实。

@@ -1,6 +1,6 @@
 # 当前实现与发布状态
 
-`1.0.0` Search 响应协议修复候选已完成版本更新、本地自动化与脱敏真实协议验证；当前可安装、受支持的稳定版和 npm `latest` 仍是 `0.1.11`。候选尚未完成双平台 CI、最终提交、唯一制品冻结、精确制品授权或发布回读。
+`1.0.0` Search 响应协议修复候选已完成版本更新、本地自动化、脱敏真实协议验证、代码 PR #28 与 main 双平台 CI；当前可安装、受支持的稳定版和 npm `latest` 仍是 `0.1.11`。候选尚未完成发布证据 final CI、最终 release commit、唯一制品冻结、精确制品授权或发布回读。
 
 状态日期：2026-08-30
 当前 npm 发布线：`dsh-grok-provider@0.1.11`
@@ -187,4 +187,5 @@ Windows x64 真机不再是 `0.1.0` 预发布阻断项。首次发布后必须�
 - 最终源码的脱敏真实账号复验已完成：原始 Web/X 协议各完成 1 次、各 64 events，并观察到对应 Search；生产 adapter 共完成 5 次 Responses，direct Web/X 均为 `stop`，Harness 同名 `x_search` 三轮依次为 `tool-calls`、`tool-calls`、`stop`，前两轮各 1 次本地调用。验证记录没有结果、URL、prompt、身份或凭据。
 - 上述只证明候选协议方向能完成三类真实流程，不证明 `1.0.0` 已发布，也不替代双平台 CI、OAuth 或 Windows 真机外部浏览器验收。
 - 已完成：manifest/lock 精确 `1.0.0`；聚焦 codec 40/40；Node 24 全量 245 项、243 pass、0 fail、2 项平台跳过；生产依赖审计 0 漏洞；确定性 build/bundle、72 项 dry-run pack、秘密模式扫描与 `git diff --check`。
-- 待完成：macOS/Windows CI、最终 release commit、唯一 tarball 与摘要/SRI、隔离安装/exports smoke、仓库所有者对该精确制品的明确授权、tag/GitHub Release/Trusted Publisher，以及 Registry 字节/signature/attestation/provenance 回读。
+- 代码 PR #28 已合入受保护 `yukiryou/main`，merge commit 为 `7a6364dd58f3c7e9e1ad68a3d0197a14254bcb8c`；main CI run [`33308371009`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33308371009) 的 macOS 14 / Windows 2022 均通过。
+- 待完成：发布证据 PR 与其 final CI、最终 release commit、唯一 tarball 与摘要/SRI、隔离安装/exports smoke、仓库所有者对该精确制品的明确授权、tag/GitHub Release/Trusted Publisher，以及 Registry 字节/signature/attestation/provenance 回读。
