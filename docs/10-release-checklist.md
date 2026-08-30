@@ -167,7 +167,9 @@ English summary: every release must close documentation, security, tests, determ
 - [x] request/compiler、codec、Adapter、真实 Host Config → LlmRuntime、settingsScope UI 聚焦测试全部通过；默认关闭 wire、未支持 route 零 POST、function membership、Web/X/mixed lifecycle、citation、唯一 ID/连续序列与 replay 抑制均有覆盖。
 - [x] `package.json`/lockfile、CHANGELOG、中英文 README、`SECURITY.md`、产品/威胁/测试/发布/状态文档、ADR/证据与折叠英文的双语 `docs/releases/v0.1.9.md` 已同步为精确候选事实；`docs/releases/v0.1.8.md` 只记录撤回事实，不描述 Search。
 - [x] 精确 Node `24.19.0` 全量测试通过：221 项、219 pass、0 fail、2 项 Windows-only skip；`npm audit --omit=dev` 为 0 漏洞，干净提交的 `npm run pack:check` 为 69 个文件，`git diff --check`、生成 bundle 一致性与秘密模式扫描通过。
-- [ ] macOS 14 / Windows 2022 CI 全绿；隔离 Harness 验证默认关闭、两个独立开关、普通对话与混合 function 行为。
-- [ ] 受保护 PR 合并并确定最终 release commit；从该 commit 唯一生成一次 `dsh-grok-provider-0.1.9.tgz`，完成清单、隔离加载、文件数、大小、SHA-256 与 SRI。
+- [x] 候选 head `402920fa0f5eb0b543a09a597ada0b2dd9661020` 的 push CI run [33294837923](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33294837923) 与 PR CI run [33294887140](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33294887140)，以及代码 PR [#20](https://github.com/yoshino-xiao7/dsh-grok-provider/pull/20) 合并提交 `89297ad5c30e1edd94936b52fbe89d0331aaddf5` 的 main CI run [33295176360](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33295176360)，均完成 macOS 14 / Windows 2022 全绿。
+- [x] 基于同一候选代码的 macOS 隔离 Web Harness profile 验收通过：默认关闭请求无 `tools`；Web-only 为 `web_search`；X-only 为 `x_search`；Mixed 保持 function → `web_search` 且只向 Harness 交付一个 fixture function call。每组均只有受控的 models GET 与 Responses POST，fetch 无 passthrough，且没有外部 xAI、npm 或 login 请求；这不替代浏览器手工对话、Agent/session loop、OAuth、真实账号、真实 xAI 请求或 Windows 真机验收。
+- [x] 代码 PR #20 已合入受保护 `yukiryou/main`，merge commit 为 `89297ad5c30e1edd94936b52fbe89d0331aaddf5`。
+- [ ] 发布证据 PR 合并并确定最终 release commit；从该 commit 唯一生成一次 `dsh-grok-provider-0.1.9.tgz`，完成清单、隔离加载、文件数、大小、SHA-256 与 SRI。预验收 tarball 不得冒充或替代最终制品。
 - [ ] 在完整提交与唯一制品证据后取得精确 `dsh-grok-provider@0.1.9` 发布授权；绿色门禁本身不构成授权，任何既有 `0.1.8` 授权均不适用于 `0.1.9`。
 - [ ] 不可变 tag、唯一 GitHub Release asset、Trusted Publisher、npm `latest`、Registry 字节、签名与 provenance 回读全部关闭。
