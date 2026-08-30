@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.8 - 2026-08-30
+
+- Add a compact `sidebar.footer.action` quota card that renders only when the current conversation selects the `grok` Provider.
+- Show the remaining Grok usage percentage and the billing-period reset time from the existing sanitized dashboard RPC; the sidebar receives no account identity, prepaid balance, OAuth credential, or raw billing response.
+- Keep DeepSeek and Codex conversations free of the Grok card, preserve the full Grok settings dashboard, and refresh quota only while Grok is selected.
+- Add the model-selection and sidebar client peers required to observe the active conversation Provider without changing the Host transport, authentication, model catalog, or fixed network endpoints.
+
 ## 0.1.7 - 2026-08-29
 
 - Add a separate Host diagnostics RPC that reports the installed package version and a closed Grok Build CLI state/version without exposing executable paths, stderr, environment, proxy data, or OAuth URLs.
