@@ -1,11 +1,11 @@
 # 当前实现与发布状态
 
-稳定 `0.1.7` 已发布；sidebar quota 维护版 `0.1.8` 曾发布后撤回且 npm 版本号不可复用。当前 `0.1.9` 源码候选实现默认关闭、可分别启用的 Web/X Search，只对固定 Proxy 已验证的精确 `grok-4.6` 开放。
+稳定 `0.1.9` 已发布，为固定 Proxy 已验证的精确 `grok-4.6` 提供默认关闭、可分别启用的 Web/X Search。sidebar quota 维护版 `0.1.8` 曾发布后撤回且 npm 版本号不可复用。
 
 状态日期：2026-08-30
-当前 npm 发布线：`dsh-grok-provider@0.1.7`
-当前源码候选：`dsh-grok-provider@0.1.9`
-版本分支：`yukiryou/v0.1.9-search`
+当前 npm 发布线：`dsh-grok-provider@0.1.9`
+当前源码发布基线：`dsh-grok-provider@0.1.9`
+发布基线：`yukiryou/main@a0af7b74882546dc3d9477b8f6c1494935e6bfb4`
 内容类型路线：已冻结于 [能力路线图](./11-capability-roadmap.md)；`0.1.7` 诊断与 UI 维护版已发布，`0.1.8` sidebar quota 版已撤回，`0.1.9` 单独加入 Web/X Search。
 
 ## 已实现
@@ -20,7 +20,7 @@
 - `0.1.4` 图片输入：异步 request compiler 惰性读取 Harness attachment，只为精确 `grok-4.6` 生成有序 jpeg/png data URL，并固定 `detail:"high"`；普通 user 与一层 tool-result 图片受格式、尺寸、像素、张数、总字节、content block 和最终 JSON 上限约束，`grok-4.5` 与未知模型继续 text-only。
 - `0.1.6` 历史兼容：普通 user/system 历史中的私有 reasoning 被省略并保留相邻可见 text/image；只有有效的同 Provider assistant 历史可以进入加密 reasoning replay，一层 tool-result 仍只接受公开 text/image。
 - `0.1.7` 维护：独立只读 diagnostics RPC 投影插件版本与官方 CLI 的 `ready|missing|invalid|unavailable` 闭合集合；登录失败只投影白名单 reason 并及时结束 spinner。设置导航在 Harness 当前无原生 icon slot 时，以精确标签匹配、冲突失败关闭和可回收 lifecycle 应用 MIT 许可的 `IconThinkOutline16` 几何。
-- `0.1.9` 候选 Search：Host Config 的 Web/X 两项独立且默认关闭；request/receipt 同编译，精确 route、共享工具/字节预算、后台 purpose 关闭、Web 标准 lifecycle、四项 X custom-tool、function membership、citation 有界丢弃与 replay 抑制均失败关闭。
+- `0.1.9` Search：Host Config 的 Web/X 两项独立且默认关闭；request/receipt 同编译，精确 route、共享工具/字节预算、后台 purpose 关闭、Web 标准 lifecycle、四项 X custom-tool、function membership、citation 有界丢弃与 replay 抑制均失败关闭。
 
 ## 已验证
 
@@ -141,11 +141,13 @@ Windows x64 真机不再是 `0.1.0` 预发布阻断项。首次发布后必须�
 - npm Registry 已消耗 `0.1.8`，即使撤回也不能以同一版本号重新发布不同 Search 制品。
 - 原先标注为 `0.1.8` 的 Search 开发证据与未完成门禁整体迁移到 `0.1.9`，不得把 Search 描述为 `0.1.8` 能力。
 
-## `0.1.9` 候选状态
+## `0.1.9` 发布状态
 
 - Web Search、X Search 两个 Provider 设置默认关闭并可独立写入同一 `llm-grok` Host Config；renderer 不使用 `localStorage` 或第二套 RPC。
 - 两项全关时不读取 `purpose` 并保持 `0.1.7` request wire；启用时，非空后台/派生 purpose 强制关闭 Search，accessor/空值/错误类型本地失败。
 - 只有精确 `grok-4.6` route 支持 Search。Harness functions 后依次追加 `web_search`、`x_search`，共同受 128 项和 16 MiB 上限约束；不支持模型在 Responses POST 前返回 `UNSUPPORTED_CONTENT`。
 - 固定 Proxy 的 Web、X、双开与生产 function → `web_search` 顺序 Web+function 四组脱敏观察已完成。Web 使用标准 search lifecycle；X 使用四项闭合的 `custom_tool_call` 名称。Search 事件产生零 Harness tool-call chunk，结构化 citation 有界校验后丢弃，观察到 Search 后不保存 encrypted reasoning replay。
 - 精确 Node `24.19.0` 本地全量测试已通过：221 项、219 pass、0 fail、2 项 Windows-only skip；生产依赖审计为 0 漏洞，干净提交的 dry-run pack 为 69 个文件，生成 bundle 一致性、diff 与秘密模式扫描通过。
-- 候选 head `402920fa0f5eb0b543a09a597ada0b2dd9661020` 的 push/PR CI、代码 PR #20 合并提交 `89297ad5c30e1edd94936b52fbe89d0331aaddf5` 的 main CI，以及隔离 Web Harness 默认关闭、Web-only、X-only、function → `web_search` Mixed 四场景验收均已通过。隔离 fetch 无 passthrough；浏览器手工对话、OAuth、真实账号/真实 xAI 请求和 Windows 真机不由此覆盖。当前仍需关闭最终 release commit 的唯一 `0.1.9` 制品、明确授权与发布后回读门禁；尚未发布。
+- 候选 head `402920fa0f5eb0b543a09a597ada0b2dd9661020` 的 push/PR CI、代码 PR #20 合并提交 `89297ad5c30e1edd94936b52fbe89d0331aaddf5` 的 main CI，以及隔离 Web Harness 默认关闭、Web-only、X-only、function → `web_search` Mixed 四场景验收均已通过。隔离 fetch 无 passthrough；浏览器手工对话、Agent/session loop、OAuth、真实账号/真实 xAI 请求和 Windows 真机不由此覆盖。
+- 发布证据 PR #21 合并后的最终 release commit 为 `a0af7b74882546dc3d9477b8f6c1494935e6bfb4`；CI run `33295408650` 全绿。唯一 `dsh-grok-provider-0.1.9.tgz` 含 69 个文件、190,049 bytes，unpacked size 为 603,475 bytes，SHA-256 为 `78c73c95ea71d66cad6e6146fed41c281f1c8b29f60353e3f20247ec23833210`，SRI 为 `sha512-GeXQg3qedCGZz9D5MMaHd8Afe5Bn0nxjG+PQmKOB2AxB3m6IiGA07PMD77dEAOJVbAzKk0SnxAOKTZMTQFtuYg==`。
+- 不可变 `v0.1.9`、GitHub Release 与 Trusted Publisher run `33295761336` 已完成；Registry、Release 与本地制品逐字节一致，npm `latest=0.1.9`。精确 Registry 安装的 Host/client import/export smoke 通过；精确安装审计图汇总 71 个已验证签名与 3 个 attestations，本包 attestations endpoint 返回 2 项，SLSA provenance 精确绑定 tag、workflow、commit 与 release run。

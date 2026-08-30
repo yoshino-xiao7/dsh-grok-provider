@@ -1,12 +1,12 @@
 # `0.1.9` Web/X Search 上游与固定 Proxy 证据
 
-- 状态：`grok-4.6` 四组脱敏观察、生产顺序 mixed 复验、双平台 CI 与隔离 Web Harness 验收已完成；最终制品与发布后回读门禁仍未完成
+- 状态：`grok-4.6` 四组脱敏观察、生产顺序 mixed 复验、双平台 CI、隔离 Web Harness、最终制品与发布后回读门禁均已完成；`0.1.9` 已正式发布
 - 观察日期：2026-08-30
 - 固定 origin/path：`https://cli-chat-proxy.grok.com/v1/responses`
 - Provider client identity：`dsh-grok-provider/1.0.5`
 - 目标版本：`0.1.9`
 
-sidebar quota 维护版 `0.1.8` 曾发布后撤回，npm Registry 已消耗该版本号且不能复用；本页所有 Search 证据只属于 `0.1.9` 候选，不能据此把 Search 描述为 `0.1.8` 能力。
+sidebar quota 维护版 `0.1.8` 曾发布后撤回，npm Registry 已消耗该版本号且不能复用；本页所有 Search 证据只属于已发布 `0.1.9`，不能据此把 Search 描述为 `0.1.8` 能力。
 
 本页只保存协议形状、计数和边界，不保存 access token、refresh token、搜索词、回答正文、citation URL、X 帖子/用户内容或原始响应。
 
@@ -79,13 +79,14 @@ Web + X 观察共 68 个 SSE event、4 个 output item、8 个 citation annotati
 - Web/X lifecycle 产生零个 Harness tool-call chunk；function call 仍由 Harness 权限层处理。
 - 观察到任一 server-tool 后禁用本响应的 encrypted reasoning replay。
 
-## 未完成门禁
+## 发布门禁
 
 - [x] request/compiler、严格 codec、Adapter、真实 Host Config → LlmRuntime 与 settingsScope 设置页聚焦测试全绿。
 - [x] 全量 Node `24.19.0` 测试通过（221 项、219 pass、0 fail、2 项 Windows-only skip）；生产依赖审计为 0 漏洞，干净提交的 dry-run pack 为 69 个文件，生成 bundle/diff/秘密模式扫描通过。
 - [x] 以 function → `web_search` 顺序单独重跑 mixed 固定 Proxy 脱敏协议探针，并更新该 case 的 request bytes 与事件计数。
 - [x] 候选 push/PR 与 main 合并提交的 macOS 14 / Windows 2022 CI 通过。
 - [x] macOS 隔离 Web Harness profile 的真实 `ctx.llm` 路径完成默认关闭、Web-only、X-only 与 function → `web_search` Mixed 四组验收；fetch 在插件导入前由失败关闭 fixture 接管，无 passthrough 或外部 xAI、npm、login 请求。该证据不覆盖浏览器手工对话、Agent/session loop、OAuth、真实账号、真实 xAI 请求或 Windows 真机。
-- [ ] 唯一 `0.1.9` 制品、digest/SRI、签名、provenance 与 Registry 回读。
+- [x] 发布证据 PR #21 合并后的最终 release commit 为 `a0af7b74882546dc3d9477b8f6c1494935e6bfb4`，CI run `33295408650` 全绿。唯一 `dsh-grok-provider-0.1.9.tgz` 含 69 个文件、190,049 bytes，unpacked size 为 603,475 bytes，SHA-256 为 `78c73c95ea71d66cad6e6146fed41c281f1c8b29f60353e3f20247ec23833210`，SRI 为 `sha512-GeXQg3qedCGZz9D5MMaHd8Afe5Bn0nxjG+PQmKOB2AxB3m6IiGA07PMD77dEAOJVbAzKk0SnxAOKTZMTQFtuYg==`。
+- [x] 不可变 `v0.1.9`、GitHub Release 与 Trusted Publisher run `33295761336` 已完成；npm `latest=0.1.9`，Registry、Release 与本地制品逐字节一致。精确 Registry 安装的 Host/client import/export smoke 通过；精确安装审计图汇总 71 个已验证签名与 3 个 attestations，本包 attestations endpoint 返回 2 项，SLSA provenance 精确绑定 tag、workflow、commit 与 release run。
 
-剩余的唯一制品、发布授权、Registry、签名与 provenance 门禁未关闭，因此当前证据不构成发布或所有平台真实账户验收。
+发布与供应链门禁已经关闭，但固定 Proxy 观察、隔离 Web Harness 与精确 Registry Host/client import/export smoke 仍不构成浏览器手工对话、Agent/session loop、OAuth、真实账号/真实 xAI 请求或 Windows 真机验收。

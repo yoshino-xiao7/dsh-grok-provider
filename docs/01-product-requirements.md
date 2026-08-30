@@ -71,7 +71,7 @@
 - Grok ACP 或 `grok -p` headless 代理。
 - 厂商侧 Web Search、X Search、远程抓取。
 - 图片生成、图片 URL 下载或文件落盘。
-- 图片输入（`0.1.0`–`0.1.3`）；已发布 `0.1.4` 按[能力路线图](./11-capability-roadmap.md)与 [ADR-0008](./adr/0008-image-input-request-compiler.md)只为精确 `grok-4.6` 独立引入，`grok-4.5` 与所有其他模型继续 text-only；维护版 `0.1.5`–`0.1.7`、发布后撤回的 sidebar quota `0.1.8` 与当前 `0.1.9` 候选均不扩大该图片集合。
+- 图片输入（`0.1.0`–`0.1.3`）；已发布 `0.1.4` 按[能力路线图](./11-capability-roadmap.md)与 [ADR-0008](./adr/0008-image-input-request-compiler.md)只为精确 `grok-4.6` 独立引入，`grok-4.5` 与所有其他模型继续 text-only；维护版 `0.1.5`–`0.1.7`、发布后撤回的 sidebar quota `0.1.8` 与已发布 `0.1.9` 均不扩大该图片集合。
 - 自定义 endpoint、企业 OIDC、自定义代理或多账号。
 - 自动安装或更新 Grok CLI。
 - 在远程 Web/headless 主机自动打开浏览器或无人值守登录的承诺。
@@ -141,7 +141,7 @@ Web 的“退出”或 TUI `/grok logout` 先中止本插件所有在途 Grok �
 - `0.1.6`：已发布图片历史中非 assistant 私有 reasoning 的兼容修复，以及 Windows 官方 CLI 登录预检的分阶段 deadline 修复；不新增模型能力。
 - `0.1.7`：已发布 Windows 官方 CLI 安装/版本诊断、登录失败可解释性与 Web 设置导航 `IconThinkOutline16` 维护；不改变官方 CLI 网络/代理或 OAuth 流程，不新增模型能力。
 - `0.1.8`：sidebar quota 维护版曾发布后撤回；npm Registry 已消耗该版本号，不能把 Search 重新标记或发布为 `0.1.8`。
-- `0.1.9` 当前候选：默认关闭、可独立开启的 Web Search / X Search；只对精确 `grok-4.6` 开放。
+- `0.1.9`：已发布默认关闭、可独立开启的 Web Search / X Search；只对精确 `grok-4.6` 开放。
 - 再后续独立切片：默认关闭的图片生成（内联结果 → Harness attachment）。
 
 `prompt_cache_key` 不与图片输入捆绑；若以后排期，需独立分析会话标识隐私和 POST 不自动重放边界。任意 URL 下载、API Key、企业 OIDC、ACP、Headless 和 Linux 仍不在路线内。公开协议可驱动隔离原型，但每个切片在声明能力、合并发布基线前必须有独立 ADR 与固定 CLI Chat Proxy spike；`0.1.4` 的 `grok-4.6` user/tool-result 红蓝语义门禁已于 2026-08-28 通过，`grok-4.5` 因语义不可靠失败关闭，最终 Harness attachment 复验见[上游证据页](./12-upstream-image-input-evidence.md)。

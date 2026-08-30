@@ -12,7 +12,7 @@
 ## 0.1.8 - 2026-08-30 (withdrawn)
 
 - Briefly published a Grok-only sidebar quota card that moved the sidebar's Grok quota querying and display ownership into the Provider, then withdrew the release by reverting that change.
-- The npm Registry version `dsh-grok-provider@0.1.8` remains permanently reserved and cannot be reused after unpublish; `latest` remains `0.1.7`, and the independent Search slice moves to `0.1.9`.
+- The npm Registry version `dsh-grok-provider@0.1.8` remains permanently reserved and cannot be reused after unpublish; `latest` returned to `0.1.7` after withdrawal, and the independent Search slice moved to the subsequently published `0.1.9`.
 
 ## 0.1.7 - 2026-08-29
 
