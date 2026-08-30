@@ -1,8 +1,9 @@
 # 能力路线图
 
-- 状态：**`0.1.11` High Effort + Web Search reasoning 生命周期兼容修复已发布（2026-08-30）**
+- 状态：**`1.0.0` Search 响应兼容修复开发候选；尚未发布**
 - 当前 npm 稳定版：`0.1.11`
 - 最近发布：`0.1.11`
+- 当前候选：`1.0.0`（completed `open_page` 与多段 Search-backed reasoning 占位）
 - 最近撤回：`0.1.8`（npm 版本号不可复用）
 - 当前发布基线：`yukiryou/main@2e5c6dbc8bb83377a4db4d8e31452b3ce96500c5`
 
@@ -32,6 +33,7 @@
 | `0.1.9`（已发布） | 默认关闭的 Web Search / X Search 协议与页面；Host namespace 遗漏导致开关不可用 | 固定 Proxy、双平台 CI、隔离 Harness、唯一制品与 Registry 回读均已关闭；发布后确认功能集成缺口 | [ADR-0010](./adr/0010-default-off-web-x-search.md) 与固定 Proxy 证据 |
 | `0.1.10`（已发布） | 修复 `llm-grok` 注册与按调用读取 Search 设置 | 真实 SettingsProvider/LLM 回归、隔离安装、双平台 CI、唯一制品与 Registry 回读均已关闭 | [ADR-0010](./adr/0010-default-off-web-x-search.md) 的发布后修正 |
 | `0.1.11`（已发布） | 修复 High Effort + Web Search reasoning ID 空占位复用，并支持官方 raw reasoning lifecycle | 闭合状态机回归、脱敏 summary/Search probe、双平台 CI、唯一制品与 Registry 回读均已关闭 | [ADR-0010](./adr/0010-default-off-web-x-search.md) 的响应兼容修正 |
+| `1.0.0`（候选） | 接受 completed `open_page` 精确动作，并允许同一 Search-backed reasoning ID 多段严格空且闭合地复用 | open-page/reasoning 正负契约、脱敏真实 Web/X 完成、全量 Node 24、双平台 CI、唯一制品与明确发布授权 | [ADR-0010](./adr/0010-default-off-web-x-search.md) 的 `1.0.0` 增量 |
 | 再后续版本 | 默认关闭的图片生成 | Proxy 返回可有界提交到 Harness attachment 的内联结果 | ADR-0011 |
 
 版本号可因缺陷修复顺延。`prompt_cache_key` 与图片输入相互独立，不属于 `0.1.4`：它需要独立的会话标识隐私、路由稳定性和“不得自动重放已经发送的 POST”分析，不得作为图片请求失败后的重试/降级机制。
@@ -162,6 +164,15 @@ const request = await requestCompiler.compile(options, preparedRoute)
 - 不改变 Search descriptor、开关、模型 allowlist、citation、认证、图片或平台边界。代码 PR #25、merge commit `307ae3ac83526f388c6b4a0d1e1346353bd5f4aa` 与 main CI run `33302830043` 已通过。
 - 最终 release commit `2e5c6dbc8bb83377a4db4d8e31452b3ce96500c5` 的 final CI run `33303080849` 在 macOS 14 / Windows 2022 全绿；唯一 71 文件 tarball 为 207,022 bytes packed、656,139 bytes unpacked，SHA-256 为 `8fca0eca86769ee9febd35606cc8c944a0ae968cec2937a30ccaf68d36d42b2d`，SRI 为 `sha512-2qInRIq5Dkf7CqXq8z1mVvMelStg3nZ1wuWEqsExgfm7iXF0Jn5f7d11IAtHRxdKdJm/j0s8tYT1Dx6IdtGNqg==`。Trusted Publisher run `33303631312` 已完成，npm `latest=0.1.11`；Registry、Release 与本地制品逐字节一致。本包公开 metadata 的 1 个 Registry signature 与 2 个 package attestations 已验证，SLSA provenance 精确绑定 `release.yml`、`v0.1.11`、release commit 与该发布 run。
 
+### `1.0.0` 修复切片（候选）
+
+- completed Web Search 额外接受 own-data 精确 `{type:"open_page",url}`；URL 必须为非空且 UTF-8 不超过 16 KiB。streamed `output_item.done` 与 final `response.output` 必须绑定相同 action type 与逐字相同 URL。
+- `open_page` 仅作为 xAI 已执行 server-tool 的协议结果验证后丢弃；插件不 fetch、不打开 URL、不生成 Harness tool-call chunk、不保存到 replay。非 completed 形状、未知键、accessor、错误类型、空/超限 URL 或 stream/final 不一致均失败关闭。
+- reasoning ID 的首次复用继续要求旧段已闭合且两段间存在 completed Web/X Search；Search-backed 证明建立后，只允许相同 ID/type 继续出现逐段严格空 visible summary/content、无 summary/raw lifecycle 且有 `output_item.done` 的占位。terminal 只允许既定 own-data 字段；可选 `encrypted_content` 仅作为有界 opaque 字符串接受。任一非空内容、未闭合段、未知键、accessor 或 `response.incomplete` 继续失败关闭。
+- `0.1.11` 的 raw reasoning 互斥、Search replay 抑制、固定 origin、Search 开关、精确模型 allowlist、图片、认证和平台边界保持不变。
+- 公开 xAI 资料只证明 `open_page` 函数名和 `web_search_call` 分类，没有公开 fixed Proxy 的完整 action wire schema；本候选只接受脱敏真实观察到的精确形状，不推测 `find`、`browse` 或其他 action。
+- 脱敏真实验证不得保存 URL、检索/回复内容、prompt 或凭据；发布状态必须等全量测试、双平台 CI、冻结制品、明确授权、Registry/signature/provenance 回读全部关闭后再更新。
+
 ## 8. 后续：默认关闭的图片生成
 
 - 只接受已验证的内联 base64 结果并有界提交 Harness attachment。
@@ -176,4 +187,4 @@ const request = await requestCompiler.compile(options, preparedRoute)
 - ACP、`grok -p` Headless、Linux / macOS x64 发布承诺。
 - 厂商 `code_execution`；Harness 已有本地工具权限层。
 
-English summary: `0.1.11` is the current stable npm release from commit `2e5c6dbc8bb83377a4db4d8e31452b3ce96500c5`; version `0.1.8` was briefly published for sidebar-quota maintenance and then withdrawn, and its npm version number remains unusable. Final CI run `33303080849` passed on macOS 14 and Windows 2022. The unique 71-file artifact is 207,022 bytes packed and 656,139 bytes unpacked, with SHA-256 `8fca0eca86769ee9febd35606cc8c944a0ae968cec2937a30ccaf68d36d42b2d` and SRI `sha512-2qInRIq5Dkf7CqXq8z1mVvMelStg3nZ1wuWEqsExgfm7iXF0Jn5f7d11IAtHRxdKdJm/j0s8tYT1Dx6IdtGNqg==`. Trusted Publisher run `33303631312` completed; npm reports `latest=0.1.11`, and the Registry, Release, and local bytes are identical. This package's one Registry signature and two package attestations verified, and SLSA provenance binds `release.yml`, `v0.1.11`, the release commit, and the publish run exactly. The release repairs exact `grok-4.6` High Effort + Web Search continuation: one strictly empty reuse of a closed reasoning ID only across a completed server Search, closed empty items, and a mutually exclusive official raw `reasoning_text` lifecycle. Replay metadata does not retain raw plaintext; later requests send only encrypted content with an empty summary, while live raw deltas remain visible to Harness. A redacted real probe emitted 34 summary deltas and zero raw deltas, so raw reasoning remains fixture-verified rather than live-probe verified. Authentication, Search descriptors, image input, and platform support are unchanged; network-reachable browser launch on a physical Windows device remains a separate acceptance boundary.
+English summary: `0.1.11` is the current stable npm release from commit `2e5c6dbc8bb83377a4db4d8e31452b3ce96500c5`; version `0.1.8` was briefly published for sidebar-quota maintenance and then withdrawn, and its npm version number remains unusable. Final CI run `33303080849` passed on macOS 14 and Windows 2022. The unique 71-file artifact is 207,022 bytes packed and 656,139 bytes unpacked, with SHA-256 `8fca0eca86769ee9febd35606cc8c944a0ae968cec2937a30ccaf68d36d42b2d` and SRI `sha512-2qInRIq5Dkf7CqXq8z1mVvMelStg3nZ1wuWEqsExgfm7iXF0Jn5f7d11IAtHRxdKdJm/j0s8tYT1Dx6IdtGNqg==`. Trusted Publisher run `33303631312` completed; npm reports `latest=0.1.11`, and the Registry, Release, and local bytes are identical. This package's one Registry signature and two package attestations verified, and SLSA provenance binds `release.yml`, `v0.1.11`, the release commit, and the publish run exactly. The release repairs exact `grok-4.6` High Effort + Web Search continuation: one strictly empty reuse of a closed reasoning ID only across a completed server Search, closed empty items, and a mutually exclusive official raw `reasoning_text` lifecycle. Replay metadata does not retain raw plaintext; later requests send only encrypted content with an empty summary, while live raw deltas remain visible to Harness. A redacted real probe emitted 34 summary deltas and zero raw deltas, so raw reasoning remains fixture-verified rather than live-probe verified. Authentication, Search descriptors, image input, and platform support are unchanged; network-reachable browser launch on a physical Windows device remains a separate acceptance boundary. Version `1.0.0` is an unpublished candidate that narrowly adds exact completed `open_page` validation and repeated strictly empty, closed placeholders for a Search-backed reasoning ID. It never fetches the URL or exposes a local tool call, keeps Search replay suppressed, and must complete its own CI, frozen-artifact authorization, signature, provenance, and Registry verification before it can replace `0.1.11` as stable.

@@ -937,6 +937,107 @@ test("Web Search lifecycle emits no tool chunks, preserves cited text, and suppr
   })
 })
 
+test("a completed Web Search accepts an exact 16 KiB multibyte open_page URL", () => {
+  const prefix = "https://example.com/"
+  const remainingBytes = (16 * 1024) - Buffer.byteLength(prefix, "utf8")
+  const url = `${prefix}${"界".repeat(Math.floor(remainingBytes / 3))}${"a".repeat(remainingBytes % 3)}`
+  assert.equal(Buffer.byteLength(url, "utf8"), 16 * 1024)
+
+  const chunks = decodeResponsesEvents(
+    webSearchCompletionEvents({ type: "open_page", url }),
+    { functionNames: [], serverTools: ["web_search"] },
+  )
+  assert.deepEqual(chunks.map((chunk) => chunk.type), [
+    "block-start",
+    "text-delta",
+    "block-end",
+    "usage",
+    "finish",
+  ])
+  assert.equal(chunks.some((chunk) => chunk.type.includes("tool-call")), false)
+  assert.deepEqual(chunks.at(-1), { type: "finish", reason: { kind: "stop" } })
+  assert.equal("replayState" in chunks.at(-1), false)
+})
+
+test("open_page rejects malformed, oversized, unknown, and premature actions without invoking accessors", () => {
+  const prefix = "https://example.com/"
+  const overLimit = `${prefix}${"a".repeat((16 * 1024) - Buffer.byteLength(prefix, "utf8") + 1)}`
+  const invalidCompletedActions = [
+    { label: "empty URL", action: { type: "open_page", url: "" } },
+    { label: "non-string URL", action: { type: "open_page", url: 42 } },
+    { label: "missing URL", action: { type: "open_page" } },
+    { label: "extra key", action: { type: "open_page", url: "https://example.com", extra: true } },
+    { label: "oversized URL", action: { type: "open_page", url: overLimit } },
+    { label: "unknown action", action: { type: "find", url: "https://example.com" } },
+  ]
+  for (const { label, action } of invalidCompletedActions) {
+    assert.throws(() => decodeResponsesEvents(
+      webSearchCompletionEvents(action),
+      { functionNames: [], serverTools: ["web_search"] },
+    ), { name: "InvalidResponsesStreamError" }, label)
+  }
+
+  const direct = createRunningDecoder({ functionNames: [], serverTools: ["web_search"] })
+  assert.throws(() => direct.push({
+    type: "response.output_item.added",
+    sequence_number: 2,
+    output_index: 0,
+    item: webSearchItemWithAction("in_progress", {
+      type: "open_page",
+      url: "https://example.com/direct",
+    }),
+  }), { name: "InvalidResponsesStreamError" })
+
+  let typeGetterCalls = 0
+  const typeAccessor = { url: "https://example.com/type-accessor" }
+  Object.defineProperty(typeAccessor, "type", {
+    enumerable: true,
+    get() {
+      typeGetterCalls += 1
+      return "open_page"
+    },
+  })
+  assert.throws(() => decodeResponsesEvents(
+    webSearchCompletionEvents(typeAccessor),
+    { functionNames: [], serverTools: ["web_search"] },
+  ), { name: "InvalidResponsesStreamError" })
+  assert.equal(typeGetterCalls, 0)
+
+  let urlGetterCalls = 0
+  const urlAccessor = { type: "open_page" }
+  Object.defineProperty(urlAccessor, "url", {
+    enumerable: true,
+    get() {
+      urlGetterCalls += 1
+      return "https://example.com/url-accessor"
+    },
+  })
+  assert.throws(() => decodeResponsesEvents(
+    webSearchCompletionEvents(urlAccessor),
+    { functionNames: [], serverTools: ["web_search"] },
+  ), { name: "InvalidResponsesStreamError" })
+  assert.equal(urlGetterCalls, 0)
+})
+
+test("terminal Web Search output must match the streamed action type and open_page URL", () => {
+  const receipt = { functionNames: [], serverTools: ["web_search"] }
+  assert.throws(() => decodeResponsesEvents(
+    webSearchCompletionEvents(
+      { type: "open_page", url: "https://example.com/streamed" },
+      { type: "open_page", url: "https://example.com/terminal" },
+    ),
+    receipt,
+  ), { name: "InvalidResponsesStreamError" })
+
+  assert.throws(() => decodeResponsesEvents(
+    webSearchCompletionEvents(
+      { type: "open_page", url: "https://example.com/streamed" },
+      { type: "search", query: "xAI", sources: [] },
+    ),
+    receipt,
+  ), { name: "InvalidResponsesStreamError" })
+})
+
 test("Web Search continuation accepts closed empty reasoning before the final message", () => {
   const firstEmpty = {
     id: "rs_search_empty_completed",
@@ -1014,7 +1115,7 @@ test("Web Search continuation accepts closed empty reasoning before the final me
   assert.deepEqual(chunks.at(-1), { type: "finish", reason: { kind: "stop" } })
 })
 
-test("Web Search continuation accepts one closed empty reuse of a reasoning item id", () => {
+test("Web Search continuation accepts consecutive closed empty reuse of a reasoning item id", () => {
   const initialReasoningDone = {
     id: "rs_search_reused",
     type: "reasoning",
@@ -1032,6 +1133,12 @@ test("Web Search continuation accepts one closed empty reuse of a reasoning item
     ...reusedReasoningAdded,
     status: "completed",
     encrypted_content: "sealed-search-empty",
+  }
+  const reusedReasoningDoneAgain = {
+    ...reusedReasoningAdded,
+    status: "completed",
+    content: [],
+    encrypted_content: "sealed-search-empty-again",
   }
   const webDone = webSearchItem("completed", "xAI", [])
   const messageDone = {
@@ -1059,16 +1166,19 @@ test("Web Search continuation accepts one closed empty reuse of a reasoning item
     { type: "response.output_item.done", sequence_number: 14, output_index: 2, item: reusedReasoningDone },
     { type: "response.output_item.added", sequence_number: 15, output_index: 3, item: { id: "msg_search_reused", type: "message", role: "assistant", status: "in_progress", content: [] } },
     { type: "response.content_part.added", sequence_number: 16, output_index: 3, item_id: "msg_search_reused", content_index: 0, part: { type: "output_text", text: "", annotations: [] } },
-    { type: "response.output_text.delta", sequence_number: 17, output_index: 3, item_id: "msg_search_reused", content_index: 0, delta: "OK" },
-    { type: "response.output_text.done", sequence_number: 18, output_index: 3, item_id: "msg_search_reused", content_index: 0, text: "OK" },
-    { type: "response.content_part.done", sequence_number: 19, output_index: 3, item_id: "msg_search_reused", content_index: 0, part: { type: "output_text", text: "OK", annotations: [] } },
-    { type: "response.output_item.done", sequence_number: 20, output_index: 3, item: messageDone },
+    { type: "response.output_text.delta", sequence_number: 17, output_index: 3, item_id: "msg_search_reused", content_index: 0, delta: "O" },
+    { type: "response.output_item.added", sequence_number: 18, output_index: 4, item: reusedReasoningAdded },
+    { type: "response.output_item.done", sequence_number: 19, output_index: 4, item: reusedReasoningDoneAgain },
+    { type: "response.output_text.delta", sequence_number: 20, output_index: 3, item_id: "msg_search_reused", content_index: 0, delta: "K" },
+    { type: "response.output_text.done", sequence_number: 21, output_index: 3, item_id: "msg_search_reused", content_index: 0, text: "OK" },
+    { type: "response.content_part.done", sequence_number: 22, output_index: 3, item_id: "msg_search_reused", content_index: 0, part: { type: "output_text", text: "OK", annotations: [] } },
+    { type: "response.output_item.done", sequence_number: 23, output_index: 3, item: messageDone },
     {
       type: "response.completed",
-      sequence_number: 21,
+      sequence_number: 24,
       response: {
         status: "completed",
-        output: [initialReasoningDone, webDone, reusedReasoningDone, messageDone],
+        output: [initialReasoningDone, webDone, reusedReasoningDone, messageDone, reusedReasoningDoneAgain],
         server_side_tool_usage: { SERVER_SIDE_TOOL_WEB_SEARCH: 1 },
         usage: { input_tokens: 8, output_tokens: 3 },
       },
@@ -1081,14 +1191,21 @@ test("Web Search continuation accepts one closed empty reuse of a reasoning item
   })
   assert.equal(chunks.some((chunk) => chunk.type.includes("tool-call")), false)
   assert.deepEqual(chunks.at(-1), { type: "finish", reason: { kind: "stop" } })
+  assert.equal("replayState" in chunks.at(-1), false)
 })
 
-test("reasoning item id reuse is limited to one closed empty placeholder", () => {
-  const unclosed = createReasoningDecoder("rs_reuse_unclosed")
+test("reasoning item id reuse remains strict and Search-backed", () => {
+  const searchReceipt = { functionNames: [], serverTools: ["web_search"] }
+  const unclosed = createReasoningDecoder("rs_reuse_unclosed", searchReceipt)
+  unclosed.push({ type: "response.output_item.added", sequence_number: 3, output_index: 1, item: webSearchItem("in_progress", "", []) })
+  unclosed.push({ type: "response.web_search_call.in_progress", sequence_number: 4, output_index: 1, item_id: "ws_fixture" })
+  unclosed.push({ type: "response.web_search_call.searching", sequence_number: 5, output_index: 1, item_id: "ws_fixture" })
+  unclosed.push({ type: "response.web_search_call.completed", sequence_number: 6, output_index: 1, item_id: "ws_fixture" })
+  unclosed.push({ type: "response.output_item.done", sequence_number: 7, output_index: 1, item: webSearchItem("completed", "xAI", []) })
   assert.throws(() => unclosed.push({
     type: "response.output_item.added",
-    sequence_number: 3,
-    output_index: 1,
+    sequence_number: 8,
+    output_index: 2,
     item: { id: "rs_reuse_unclosed", type: "reasoning", status: "in_progress", summary: [] },
   }), { name: "InvalidResponsesStreamError" })
 
@@ -1101,7 +1218,6 @@ test("reasoning item id reuse is limited to one closed empty placeholder", () =>
     item: { id: "rs_reuse_without_search", type: "reasoning", status: "in_progress", summary: [] },
   }), { name: "InvalidResponsesStreamError" })
 
-  const searchReceipt = { functionNames: [], serverTools: ["web_search"] }
   const withContent = createReasoningDecoder("rs_reuse_content", searchReceipt)
   closeSummaryReasoning(withContent, "rs_reuse_content")
   closeWebSearch(withContent)
@@ -1136,36 +1252,177 @@ test("reasoning item id reuse is limited to one closed empty placeholder", () =>
     part: { type: "summary_text", text: "" },
   }), { name: "InvalidResponsesStreamError" })
 
-  const reusedTwice = createReasoningDecoder("rs_reuse_twice", searchReceipt)
-  closeSummaryReasoning(reusedTwice, "rs_reuse_twice")
-  closeWebSearch(reusedTwice)
-  const reusedAdded = {
-    id: "rs_reuse_twice",
-    type: "reasoning",
-    status: "in_progress",
-    summary: [],
-  }
-  reusedTwice.push({
+  const crossType = createReasoningDecoder("rs_reuse_cross_type", searchReceipt)
+  closeSummaryReasoning(crossType, "rs_reuse_cross_type")
+  closeWebSearch(crossType)
+  assert.throws(() => crossType.push({
     type: "response.output_item.added",
     sequence_number: 13,
     output_index: 2,
-    item: reusedAdded,
+    item: { id: "rs_reuse_cross_type", type: "message", role: "assistant", status: "in_progress", content: [] },
+  }), { name: "InvalidResponsesStreamError" })
+
+  const nonemptySummary = createReasoningDecoder("rs_reuse_nonempty", searchReceipt)
+  closeSummaryReasoning(nonemptySummary, "rs_reuse_nonempty")
+  closeWebSearch(nonemptySummary)
+  assert.throws(() => nonemptySummary.push({
+    type: "response.output_item.added",
+    sequence_number: 13,
+    output_index: 2,
+    item: { id: "rs_reuse_nonempty", type: "reasoning", status: "in_progress", summary: [{ type: "summary_text", text: "visible" }] },
+  }), { name: "InvalidResponsesStreamError" })
+
+  let addedSummaryGetterCalls = 0
+  const accessorAdded = {
+    id: "rs_reuse_added_accessor",
+    type: "reasoning",
+    status: "in_progress",
+  }
+  Object.defineProperty(accessorAdded, "summary", {
+    enumerable: true,
+    get() {
+      addedSummaryGetterCalls += 1
+      return []
+    },
   })
-  reusedTwice.push({
+  const withAddedAccessor = createReasoningDecoder("rs_reuse_added_accessor", searchReceipt)
+  closeSummaryReasoning(withAddedAccessor, "rs_reuse_added_accessor")
+  closeWebSearch(withAddedAccessor)
+  assert.throws(() => withAddedAccessor.push({
+    type: "response.output_item.added",
+    sequence_number: 13,
+    output_index: 2,
+    item: accessorAdded,
+  }), { name: "InvalidResponsesStreamError" })
+  assert.equal(addedSummaryGetterCalls, 0)
+
+  const withRawLifecycle = createOpenReusedReasoning("rs_reuse_raw")
+  assert.throws(() => withRawLifecycle.push({
+    type: "response.content_part.added",
+    sequence_number: 14,
+    output_index: 2,
+    item_id: "rs_reuse_raw",
+    content_index: 0,
+    part: { type: "reasoning_text", text: "" },
+  }), { name: "InvalidResponsesStreamError" })
+})
+
+test("X Search also proves consecutive closed empty reasoning-id reuse", () => {
+  const reasoningId = "rs_x_reused"
+  const initialReasoningDone = {
+    id: reasoningId,
+    type: "reasoning",
+    status: "completed",
+    encrypted_content: "sealed-x-summary",
+    summary: [{ type: "summary_text", text: "X reasoning." }],
+  }
+  const reusedAdded = { id: reasoningId, type: "reasoning", status: "in_progress", summary: [] }
+  const reusedDone = { ...reusedAdded, status: "completed", encrypted_content: "sealed-x-empty" }
+  const reusedDoneAgain = { ...reusedAdded, status: "completed", encrypted_content: "sealed-x-empty-again" }
+  const input = '{"query":"xAI"}'
+  const xDone = xSearchItem("completed", input)
+  const messageDone = {
+    id: "msg_x_reused",
+    type: "message",
+    role: "assistant",
+    status: "completed",
+    content: [{ type: "output_text", text: "OK", annotations: [] }],
+  }
+  const events = [
+    { type: "response.created", sequence_number: 0, response: { status: "in_progress" } },
+    { type: "response.in_progress", sequence_number: 1, response: { status: "in_progress" } },
+    { type: "response.output_item.added", sequence_number: 2, output_index: 0, item: { id: reasoningId, type: "reasoning", status: "in_progress", summary: [] } },
+    { type: "response.reasoning_summary_part.added", sequence_number: 3, output_index: 0, item_id: reasoningId, summary_index: 0, part: { type: "summary_text", text: "" } },
+    { type: "response.reasoning_summary_text.delta", sequence_number: 4, output_index: 0, item_id: reasoningId, summary_index: 0, delta: "X reasoning." },
+    { type: "response.reasoning_summary_text.done", sequence_number: 5, output_index: 0, item_id: reasoningId, summary_index: 0, text: "X reasoning." },
+    { type: "response.reasoning_summary_part.done", sequence_number: 6, output_index: 0, item_id: reasoningId, summary_index: 0, part: { type: "summary_text", text: "X reasoning." } },
+    { type: "response.output_item.done", sequence_number: 7, output_index: 0, item: initialReasoningDone },
+    { type: "response.output_item.added", sequence_number: 8, output_index: 1, item: xSearchItem("in_progress", "") },
+    { type: "response.custom_tool_call_input.delta", sequence_number: 9, output_index: 1, item_id: "x_fixture", delta: input },
+    { type: "response.custom_tool_call_input.done", sequence_number: 10, output_index: 1, item_id: "x_fixture", input },
+    { type: "response.output_item.done", sequence_number: 11, output_index: 1, item: xDone },
+    { type: "response.output_item.added", sequence_number: 12, output_index: 2, item: reusedAdded },
+    { type: "response.output_item.done", sequence_number: 13, output_index: 2, item: reusedDone },
+    { type: "response.output_item.added", sequence_number: 14, output_index: 3, item: reusedAdded },
+    { type: "response.output_item.done", sequence_number: 15, output_index: 3, item: reusedDoneAgain },
+    { type: "response.output_item.added", sequence_number: 16, output_index: 4, item: { id: "msg_x_reused", type: "message", role: "assistant", status: "in_progress", content: [] } },
+    { type: "response.content_part.added", sequence_number: 17, output_index: 4, item_id: "msg_x_reused", content_index: 0, part: { type: "output_text", text: "", annotations: [] } },
+    { type: "response.output_text.delta", sequence_number: 18, output_index: 4, item_id: "msg_x_reused", content_index: 0, delta: "OK" },
+    { type: "response.output_text.done", sequence_number: 19, output_index: 4, item_id: "msg_x_reused", content_index: 0, text: "OK" },
+    { type: "response.content_part.done", sequence_number: 20, output_index: 4, item_id: "msg_x_reused", content_index: 0, part: { type: "output_text", text: "OK", annotations: [] } },
+    { type: "response.output_item.done", sequence_number: 21, output_index: 4, item: messageDone },
+    {
+      type: "response.completed",
+      sequence_number: 22,
+      response: {
+        status: "completed",
+        output: [initialReasoningDone, xDone, reusedDone, reusedDoneAgain, messageDone],
+        server_side_tool_usage: { SERVER_SIDE_TOOL_X_SEARCH: 1 },
+        usage: { input_tokens: 8, output_tokens: 3 },
+      },
+    },
+  ]
+
+  const chunks = decodeResponsesEvents(events, { functionNames: [], serverTools: ["x_search"] })
+  assert.equal(chunks.some((chunk) => chunk.type.includes("tool-call")), false)
+  assert.deepEqual(chunks.at(-1), { type: "finish", reason: { kind: "stop" } })
+  assert.equal("replayState" in chunks.at(-1), false)
+})
+
+test("reused reasoning terminal snapshots and incomplete responses fail closed", () => {
+  const terminalCases = [
+    { label: "visible summary", patch: { summary: [{ type: "summary_text", text: "visible" }] } },
+    { label: "visible raw content", patch: { content: [{ type: "reasoning_text", text: "visible" }] } },
+    { label: "unknown key", patch: { future_field: true } },
+    { label: "empty encrypted content", patch: { encrypted_content: "" } },
+  ]
+  for (const { label, patch } of terminalCases) {
+    const decoder = createOpenReusedReasoning(`rs_reuse_terminal_${label.replaceAll(" ", "_")}`)
+    assert.throws(() => decoder.push({
+      type: "response.output_item.done",
+      sequence_number: 14,
+      output_index: 2,
+      item: {
+        id: `rs_reuse_terminal_${label.replaceAll(" ", "_")}`,
+        type: "reasoning",
+        status: "completed",
+        summary: [],
+        ...patch,
+      },
+    }), { name: "InvalidResponsesStreamError" }, label)
+  }
+
+  let summaryGetterCalls = 0
+  const accessorTerminal = {
+    id: "rs_reuse_terminal_accessor",
+    type: "reasoning",
+    status: "completed",
+  }
+  Object.defineProperty(accessorTerminal, "summary", {
+    enumerable: true,
+    get() {
+      summaryGetterCalls += 1
+      return []
+    },
+  })
+  const accessorDecoder = createOpenReusedReasoning("rs_reuse_terminal_accessor")
+  assert.throws(() => accessorDecoder.push({
     type: "response.output_item.done",
     sequence_number: 14,
     output_index: 2,
-    item: {
-      ...reusedAdded,
-      status: "completed",
-      encrypted_content: "sealed-reused-empty",
+    item: accessorTerminal,
+  }), { name: "InvalidResponsesStreamError" })
+  assert.equal(summaryGetterCalls, 0)
+
+  const incomplete = createOpenReusedReasoning("rs_reuse_incomplete")
+  assert.throws(() => incomplete.push({
+    type: "response.incomplete",
+    sequence_number: 14,
+    response: {
+      status: "incomplete",
+      incomplete_details: { reason: "max_output_tokens" },
+      usage: { input_tokens: 8, output_tokens: 2 },
     },
-  })
-  assert.throws(() => reusedTwice.push({
-    type: "response.output_item.added",
-    sequence_number: 15,
-    output_index: 3,
-    item: reusedAdded,
   }), { name: "InvalidResponsesStreamError" })
 })
 
@@ -1641,6 +1898,22 @@ function closeWebSearch(decoder) {
   })
 }
 
+function createOpenReusedReasoning(itemId) {
+  const decoder = createReasoningDecoder(itemId, {
+    functionNames: [],
+    serverTools: ["web_search"],
+  })
+  closeSummaryReasoning(decoder, itemId)
+  closeWebSearch(decoder)
+  decoder.push({
+    type: "response.output_item.added",
+    sequence_number: 13,
+    output_index: 2,
+    item: { id: itemId, type: "reasoning", status: "in_progress", summary: [] },
+  })
+  return decoder
+}
+
 function closeSummaryReasoning(decoder, itemId) {
   const text = "Reasoning."
   decoder.push({
@@ -1707,6 +1980,52 @@ function webSearchItem(status, query, sources) {
     status,
     action: { type: "search", query, sources },
   }
+}
+
+function webSearchItemWithAction(status, action) {
+  return {
+    id: "ws_fixture",
+    type: "web_search_call",
+    status,
+    action,
+  }
+}
+
+function webSearchCompletionEvents(streamedAction, terminalAction = streamedAction) {
+  const streamedDone = webSearchItemWithAction("completed", streamedAction)
+  const terminalDone = webSearchItemWithAction("completed", terminalAction)
+  const messageDone = {
+    id: "msg_web_action",
+    type: "message",
+    role: "assistant",
+    status: "completed",
+    content: [{ type: "output_text", text: "OK", annotations: [] }],
+  }
+  return [
+    { type: "response.created", sequence_number: 0, response: { status: "in_progress" } },
+    { type: "response.in_progress", sequence_number: 1, response: { status: "in_progress" } },
+    { type: "response.output_item.added", sequence_number: 2, output_index: 0, item: webSearchItem("in_progress", "", []) },
+    { type: "response.web_search_call.in_progress", sequence_number: 3, output_index: 0, item_id: "ws_fixture" },
+    { type: "response.web_search_call.searching", sequence_number: 4, output_index: 0, item_id: "ws_fixture" },
+    { type: "response.web_search_call.completed", sequence_number: 5, output_index: 0, item_id: "ws_fixture" },
+    { type: "response.output_item.done", sequence_number: 6, output_index: 0, item: streamedDone },
+    { type: "response.output_item.added", sequence_number: 7, output_index: 1, item: { id: "msg_web_action", type: "message", role: "assistant", status: "in_progress", content: [] } },
+    { type: "response.content_part.added", sequence_number: 8, output_index: 1, item_id: "msg_web_action", content_index: 0, part: { type: "output_text", text: "", annotations: [] } },
+    { type: "response.output_text.delta", sequence_number: 9, output_index: 1, item_id: "msg_web_action", content_index: 0, delta: "OK" },
+    { type: "response.output_text.done", sequence_number: 10, output_index: 1, item_id: "msg_web_action", content_index: 0, text: "OK" },
+    { type: "response.content_part.done", sequence_number: 11, output_index: 1, item_id: "msg_web_action", content_index: 0, part: { type: "output_text", text: "OK", annotations: [] } },
+    { type: "response.output_item.done", sequence_number: 12, output_index: 1, item: messageDone },
+    {
+      type: "response.completed",
+      sequence_number: 13,
+      response: {
+        status: "completed",
+        output: [terminalDone, messageDone],
+        server_side_tool_usage: { SERVER_SIDE_TOOL_WEB_SEARCH: 1 },
+        usage: { input_tokens: 4, output_tokens: 2 },
+      },
+    },
+  ]
 }
 
 function xSearchItem(status, input) {

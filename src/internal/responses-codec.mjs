@@ -387,7 +387,7 @@ export function createResponsesEventDecoder(receipt) {
           }
           if (sawServerTool && completedServerCalls.length === 0) fail()
           for (const [index, block] of blocks) {
-            if (block.type === "tool-call") fail()
+            if (block.type === "tool-call" || block.reusedReasoning) fail()
             if (block.type === "text") validateAnnotationPositions(block.annotations, block.text.length)
             chunks.push({
               type: "block-end",
@@ -453,16 +453,20 @@ function addOutputItem(
     blocks.has(index) ||
     serverCalls.has(index) ||
     !isPlainObject(event.item) ||
-    !isBoundedString(event.item.id, 256)
+    !isBoundedString(captureOwnDataValue(event.item, "id"), 256)
   ) fail()
+  const itemId = captureOwnDataValue(event.item, "id")
+  const itemType = captureOwnDataValue(event.item, "type")
   const reusedReasoning = registerOutputItem(
     event.item,
+    itemId,
+    itemType,
     index,
     itemLifecycles,
     completedServerCalls,
   )
 
-  if (event.item.type === "web_search_call") {
+  if (itemType === "web_search_call") {
     if (!responsePolicy.serverTools.has("web_search")) fail()
     validateWebSearchItem(event.item, "in_progress")
     serverCalls.set(index, {
@@ -473,7 +477,7 @@ function addOutputItem(
     return "web-search"
   }
 
-  if (event.item.type === "custom_tool_call") {
+  if (itemType === "custom_tool_call") {
     if (!responsePolicy.serverTools.has("x_search")) fail()
     validateXSearchItem(event.item, "in_progress", "")
     if (callIds.has(event.item.call_id)) fail()
@@ -492,7 +496,7 @@ function addOutputItem(
 
   let type
   let block
-  if (event.item.type === "reasoning") {
+  if (itemType === "reasoning") {
     validateReasoningItemStart(event.item)
     type = "reasoning"
     block = {
@@ -510,7 +514,7 @@ function addOutputItem(
       textDone: false,
       contentDone: false,
     }
-  } else if (event.item.type === "message" && event.item.role === "assistant") {
+  } else if (itemType === "message" && event.item.role === "assistant") {
     type = "text"
     block = {
       id: event.item.id,
@@ -523,7 +527,7 @@ function addOutputItem(
       contentDone: false,
     }
   } else if (
-    event.item.type === "function_call" &&
+    itemType === "function_call" &&
     event.item.status === "in_progress" &&
     event.item.arguments === "" &&
     isBoundedString(event.item.call_id, 256) &&
@@ -552,49 +556,50 @@ function addOutputItem(
   return type
 }
 
-function registerOutputItem(item, outputIndex, itemLifecycles, completedServerCalls) {
-  const previous = itemLifecycles.get(item.id)
+function registerOutputItem(item, itemId, itemType, outputIndex, itemLifecycles, completedServerCalls) {
+  const previous = itemLifecycles.get(itemId)
   if (previous === undefined) {
-    itemLifecycles.set(item.id, {
-      type: item.type,
+    itemLifecycles.set(itemId, {
+      type: itemType,
       outputIndex,
       closed: false,
-      reused: false,
+      searchBacked: false,
     })
     return false
   }
 
-  // Output lifecycles may interleave, so bind this narrow exception to logical
-  // output order: a completed Search item must sit between the two reasoning items.
+  // The first reuse is proven by a completed Web/X Search in logical output order.
+  // Once proven, the same id may recur only as another strict empty placeholder.
   const completedSearchBetweenItems = completedServerCalls.some((call) => (
     call.outputIndex > previous.outputIndex && call.outputIndex < outputIndex
   ))
+  requireExactDataKeys(item, ["id", "status", "summary", "type"])
   if (
     previous.type !== "reasoning" ||
     !previous.closed ||
-    previous.reused ||
-    !completedSearchBetweenItems ||
-    item.type !== "reasoning" ||
+    (!previous.searchBacked && !completedSearchBetweenItems) ||
+    itemType !== "reasoning" ||
     item.status !== "in_progress" ||
     !Array.isArray(item.summary) ||
     item.summary.length !== 0
   ) fail()
-  requireExactDataKeys(item, ["id", "status", "summary", "type"])
-  itemLifecycles.set(item.id, {
+  itemLifecycles.set(itemId, {
     type: "reasoning",
     outputIndex,
     closed: false,
-    reused: true,
+    searchBacked: true,
   })
   return true
 }
 
 function markOutputItemClosed(event, itemLifecycles) {
   const index = parseIndex(event.output_index)
-  if (!isPlainObject(event.item) || !isBoundedString(event.item.id, 256)) fail()
-  const lifecycle = itemLifecycles.get(event.item.id)
+  if (!isPlainObject(event.item)) fail()
+  const itemId = captureOwnDataValue(event.item, "id")
+  if (!isBoundedString(itemId, 256)) fail()
+  const lifecycle = itemLifecycles.get(itemId)
   if (lifecycle === undefined || lifecycle.outputIndex !== index || lifecycle.closed) fail()
-  itemLifecycles.set(event.item.id, { ...lifecycle, closed: true })
+  itemLifecycles.set(itemId, { ...lifecycle, closed: true })
 }
 
 function closeOutputItem(
@@ -617,6 +622,9 @@ function closeOutputItem(
   }
 
   const block = requireBlock(event, blocks)
+  if (block.type === "reasoning" && block.reusedReasoning) {
+    validateReusedReasoningItem(event.item, block)
+  }
   if (
     !isPlainObject(event.item) ||
     event.item.id !== block.id ||
@@ -675,10 +683,11 @@ function closeServerCall(event, call) {
   if (!isPlainObject(event.item) || event.item.id !== call.id) fail()
   if (call.type === "web-search") {
     if (call.state !== "completed") fail()
-    validateWebSearchItem(event.item, "completed")
+    const action = validateWebSearchItem(event.item, "completed")
     return {
       type: "web_search",
       id: call.id,
+      action,
     }
   }
   if (call.type !== "x-search" || !call.inputDone) fail()
@@ -713,13 +722,20 @@ function validateWebSearchItem(item, status) {
     item.status !== status ||
     !isBoundedString(item.id, 256)
   ) fail()
-  validateWebSearchAction(item.action, status)
+  return validateWebSearchAction(item.action, status)
 }
 
 function validateWebSearchAction(action, status) {
+  if (!isPlainObject(action)) fail()
+  const type = captureOwnDataValue(action, "type")
+  if (status === "completed" && type === "open_page") {
+    requireExactDataKeys(action, ["type", "url"])
+    if (!isBoundedUtf8String(action.url, MAX_CITATION_URL_BYTES)) fail()
+    return Object.freeze({ type, url: action.url })
+  }
   requireExactDataKeys(action, ["query", "sources", "type"])
   if (
-    action.type !== "search" ||
+    type !== "search" ||
     typeof action.query !== "string" ||
     (status === "completed" && action.query.length === 0) ||
     Buffer.byteLength(action.query, "utf8") > MAX_SEARCH_QUERY_BYTES
@@ -733,6 +749,7 @@ function validateWebSearchAction(action, status) {
     if (!isPlainObject(source)) fail()
     validateBoundedDiscardedJson(source, budget, 0)
   }
+  return Object.freeze({ type })
 }
 
 function validateXSearchItem(item, status, input) {
@@ -848,6 +865,20 @@ function validateEmptyReasoningItem(item, block) {
   }
 }
 
+function validateReusedReasoningItem(item, block) {
+  requireRequiredAndOptionalDataKeys(
+    item,
+    ["id", "status", "summary", "type"],
+    ["content", "encrypted_content"],
+  )
+  validateEmptyReasoningItem(item, block)
+  if (Object.hasOwn(item, "content")) captureDataArray(item.content, 0)
+  if (
+    Object.hasOwn(item, "encrypted_content") &&
+    !isBoundedUtf8String(item.encrypted_content, MAX_ENCRYPTED_REASONING_BYTES)
+  ) fail()
+}
+
 function captureAnnotations(value) {
   const values = captureDataArray(value, MAX_ANNOTATIONS)
   return values.map(captureAnnotation)
@@ -943,8 +974,8 @@ function validateResponseOutput(output, responsePolicy) {
     if (!isPlainObject(item)) fail()
     if (item.type === "web_search_call") {
       if (!responsePolicy.serverTools.has("web_search")) fail()
-      validateWebSearchItem(item, "completed")
-      serverCalls.push({ type: "web_search", id: item.id, outputIndex })
+      const action = validateWebSearchItem(item, "completed")
+      serverCalls.push({ type: "web_search", id: item.id, outputIndex, action })
       continue
     }
     if (item.type === "custom_tool_call") {
@@ -1046,10 +1077,16 @@ function sameServerCall(left, right) {
   return left.type === right.type &&
     left.id === right.id &&
     left.outputIndex === right.outputIndex &&
+    (left.type !== "web_search" || sameWebSearchAction(left.action, right.action)) &&
     (left.type !== "x_search" || (
       left.callId === right.callId &&
       left.name === right.name
     ))
+}
+
+function sameWebSearchAction(left, right) {
+  return left.type === right.type &&
+    (left.type !== "open_page" || left.url === right.url)
 }
 
 function appendToolArguments(block, delta) {
@@ -1174,6 +1211,29 @@ function requireExactDataKeys(value, expectedKeys) {
     const descriptor = Object.getOwnPropertyDescriptor(value, key)
     if (!descriptor || !("value" in descriptor)) fail()
   }
+}
+
+function requireRequiredAndOptionalDataKeys(value, requiredKeys, optionalKeys) {
+  if (!isPlainObject(value)) fail()
+  const required = new Set(requiredKeys)
+  const optional = new Set(optionalKeys)
+  for (const key of Reflect.ownKeys(value)) {
+    if (
+      typeof key !== "string" ||
+      (!required.has(key) && !optional.has(key))
+    ) fail()
+    const descriptor = Object.getOwnPropertyDescriptor(value, key)
+    if (!descriptor || !("value" in descriptor)) fail()
+    required.delete(key)
+  }
+  if (required.size !== 0) fail()
+}
+
+function captureOwnDataValue(value, key) {
+  if (!isPlainObject(value)) fail()
+  const descriptor = Object.getOwnPropertyDescriptor(value, key)
+  if (!descriptor || !("value" in descriptor)) fail()
+  return descriptor.value
 }
 
 function requireRunning(created, inProgress) {

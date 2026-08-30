@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.0 - 2026-08-30 (candidate)
+
+- Fix the remaining `INVALID_RESPONSE` failures observed with exact `grok-4.6` Search responses by accepting repeated, already Search-backed reasoning IDs only as strictly empty placeholders. "Strictly empty" means no visible summary/content and no summary/raw lifecycle; a bounded opaque `encrypted_content` field remains permitted for replay continuity.
+- Require every reused reasoning lifecycle to reach its own `response.output_item.done`. Incomplete lifecycles, cross-type reuse, reuse before the original item closes or before one completed server Search, non-empty summary/raw content, unknown terminal fields, and accessor-backed terminal fields continue to fail closed.
+- Accept the observed completed Web Search `open_page` action only as the exact bounded `{ type: "open_page", url }` shape, require the streamed and final action type/URL to agree, discard the URL after validation, and never open, fetch, preview, or replay it.
+- Add focused protocol regressions for multiple empty reuses, Web/X Search-backed reuse, lifecycle completion, opaque encrypted content, terminal/accessor rejection, and `open_page` start/final consistency.
+- Complete redacted real-account probes through the production codec without retaining prompts, results, URLs, account identity, or credentials: the final-source Web Search run completed 5 server calls across 206 events and ended with `stop`; the final-source direct X Search run completed 1 official custom call across 91 events and ended with `stop`; a Harness-shaped flow with two `x_search` calls plus a third continuation completed in 3 Responses calls.
+- Keep npm `latest` and the supported stable release at `0.1.11` until the `1.0.0` version, tests, dual-platform CI, frozen artifact, exact owner authorization, publication, Registry readback, signatures, attestations, and provenance are complete. Real-device Windows external-browser launch remains unverified.
+
 ## 0.1.11 - 2026-08-30
 
 - Fix `INVALID_RESPONSE` failures when exact `grok-4.6` at High Effort continues after Web Search by accepting the observed one-time reuse of an already closed reasoning item ID as a new empty reasoning placeholder only after one completed Search, while rejecting open, cross-type, non-empty, or repeated reuse.

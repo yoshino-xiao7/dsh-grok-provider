@@ -4,7 +4,11 @@
 
 Use an already authenticated official Grok Build account from DeepSeek Harness, with dynamic model discovery, streaming reasoning, image input, optional Web/X Search, tool calls, and an account quota/model capability dashboard.
 
-> Unofficial community project; not affiliated with xAI or DeepSeek Harness. The current stable release and npm Registry `latest` are both `0.1.11`. Building on the `0.1.10` Web/X Search settings-registration repair, this release focuses on the reasoning-lifecycle compatibility gap seen when `grok-4.6` continues after Web Search at High Effort. Version `0.1.8` was published and then withdrawn and cannot be reused. The project no longer publishes prereleases; stable defects are fixed in a new incremented stable version.
+> Unofficial community project; not affiliated with xAI or DeepSeek Harness. The current stable release and npm Registry `latest` remain `0.1.11`. Version `1.0.0` is an in-development Search-response protocol repair candidate: it is not published, has no frozen unique artifact, and has not received exact-artifact publication authorization. Do not treat its candidate install command or real-account probes as Registry release evidence. Version `0.1.8` was published and then withdrawn and cannot be reused. The project no longer publishes prereleases; stable defects are fixed in a new incremented stable version.
+
+The current source candidate is `1.0.0`; npm Registry `latest` remain `0.1.11` until publication and readback complete.
+
+The `1.0.0` candidate addresses two real upstream shapes: after one completed Search, the same reasoning ID may continue through multiple strictly empty placeholder lifecycles; a completed Web Search may also return an `open_page` action. The candidate accepts only closed, Search-backed, strictly empty reuse and an exact bounded `{ type: "open_page", url }`; it never opens or downloads the URL.
 
 ## What it provides
 
@@ -15,7 +19,7 @@ Use an already authenticated official Grok Build account from DeepSeek Harness, 
 | Models | Discovers every model visible to the account at runtime; no static model allowlist |
 | Conversations | Streaming Responses text, reasoning, encrypted reasoning replay, usage, and finish reasons |
 | Images | Only exact `grok-4.6` accepts bounded JPEG/PNG images from Harness attachments; `grok-4.5` and all other models remain text-only |
-| Search | `0.1.10` provides independent, default-off Web Search and X Search for exact `grok-4.6`; published `0.1.11` repairs the High Effort + Web Search reasoning-continuation lifecycle, while remote lifecycles are never misrepresented as local tools |
+| Search | Published `0.1.11` provides default-off Web/X Search for exact `grok-4.6`; the `1.0.0` candidate adds multiple strictly empty reasoning reuses and completed `open_page` actions, while remote lifecycles are never misrepresented as local tools |
 | Tools | Returns function calls to the Harness permission layer; the provider never executes tools |
 | Account dashboard | Login status, weekly/monthly quota, reset time, dynamic model capabilities and reasoning efforts |
 | Surfaces | Bilingual Web settings and a closed `/grok` TUI command set |
@@ -46,6 +50,15 @@ Install the exact published version that has been read back from the Registry:
 dsh plugin --profile web add dsh-grok-provider@0.1.11
 dsh web
 ```
+
+After `1.0.0` is published and read back from the Registry, use:
+
+```sh
+dsh plugin --profile web add dsh-grok-provider@1.0.0
+dsh web
+```
+
+Do not treat that candidate command as currently installable; npm `latest` is still `0.1.11`.
 
 ### 3. Sign in and select a model
 
@@ -139,6 +152,15 @@ Uninstalling the provider does not remove the official Grok CLI or directly modi
 Directory inclusion is not an endorsement by xAI or DeepSeek Harness. [Listing PR #3415](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin/pull/3415) has added the project to the public `awesome-dsh-plugin` `model` category. That directory is repository-level discovery and carries no exact npm-version or platform-acceptance claim.
 
 ## Compatibility and scope
+
+### `1.0.0` candidate repair boundary
+
+- The original reasoning lifecycle must close, and one completed Web/X server Search must precede the first reuse of that ID. Later appearances are accepted only as strictly empty placeholders.
+- "Strictly empty" means empty visible summary/content and no summary/raw lifecycle. A bounded opaque `encrypted_content` value is allowed, but it is not exposed as visible reasoning and upstream plaintext is not retained.
+- Every reuse must receive its own `response.output_item.done`. Truncation, non-empty summary/raw data, cross-type reuse, unknown terminal fields, and accessor-backed terminal fields still map to the generic invalid-response error.
+- A completed `open_page` action accepts only exact `type + url`; streamed and final action type/URL must agree. The Provider discards the URL after validation and never visits, previews, downloads, or replays it.
+- Redacted real-account probes against the final source completed Web Search with 5 server calls / 206 events / `stop`, direct X Search with 1 official custom call / 91 events / `stop`, and a Harness-shaped three-Responses flow containing two `x_search` calls followed by a third continuation. No results, URLs, prompts, identity, or credentials were retained. This is protocol evidence, not publication, OAuth, or real-device Windows evidence.
+- Versioning, the full test suite, dual-platform CI, frozen artifact, digest/SRI, exact authorization, publication, and Registry/signature/attestation/provenance readback remain pending.
 
 | Item | Published `0.1.11` status |
 | --- | --- |
@@ -259,6 +281,7 @@ Read the [contributing guide](CONTRIBUTING.md) before filing an issue or PR. Cha
 - [x] Publish `0.1.9`: added the Web/X Search protocol and settings page; the unique artifact, dual-platform CI, signatures, and SLSA provenance are verified; post-release verification found the missing Host settings namespace and unusable controls
 - [x] Publish `0.1.10`: `llm-grok` registration, per-call capture, unique artifact, dual-platform CI, signatures, and provenance are complete
 - [x] Publish `0.1.11`: repair High Effort + Web Search reasoning-lifecycle compatibility; the unique artifact, final dual-platform CI, exact authorization, Registry, signatures, attestations, and provenance readback are complete
+- [ ] Publish `1.0.0`: repair multiple strictly empty reasoning-ID reuses and completed Web Search `open_page` actions; candidate protocol probes pass, while versioning, automation, CI, the unique artifact, and exact authorization remain pending
 - [ ] A subsequent slice: opt-in image generation (inline results only, committed through Harness attachments)
 - [ ] Complete independent Windows x64 acceptance and publish a later stable fix if needed
 
