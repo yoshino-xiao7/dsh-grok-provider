@@ -249,7 +249,8 @@ English summary: every release must close documentation, security, tests, determ
 - [x] release workflow 契约从下载的唯一 tarball 直接读取双语 README 前言与 Quick Start，确认精确版本和唯一安装命令并拒绝旧版/候选态引导；聚焦测试锁定该契约，实际 workflow 运行仍须等待精确授权。
 - [x] 精确 Node `24.19.0` 全量测试共 265 项、263 pass、0 fail、2 项平台跳过；`npm audit --omit=dev` 为 0 漏洞，隔离 npm cache 的 dry-run pack 为 74 文件，`git diff --check` 通过。dry-run 大小与摘要不是冻结制品值。
 - [x] 对 dry-run pack 白名单执行私钥、GitHub/npm token、AWS key 与长 Bearer 模式扫描，零命中。
-- [ ] 完成 macOS 14 / Windows 2022 的 push、PR、main/final CI，并记录实际结果。
+- [x] 代码分支 head `52359e691dfd1bbdb849362c9d1a461e4e693b83` 已推送；push run [`33318180580`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33318180580) 与 PR run [`33318197083`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33318197083) 双平台全绿。代码 PR [#34](https://github.com/yoshino-xiao7/dsh-grok-provider/pull/34) 已合入受保护 `yukiryou/main`，merge commit `47d688cc47bc9643f3477ee9333cfdf7788045cd` 的 main CI run [`33318245251`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33318245251) 也在 macOS 14 / Windows 2022 全绿。
+- [ ] 固定 final release commit 并完成其 macOS 14 / Windows 2022 双平台 CI。
 - [ ] 最终 release commit、唯一 tarball、文件数、packed/unpacked size、SHA-1、SHA-256、SRI 与隔离安装完成；dry-run 值不得冒充冻结制品值。
 - [ ] 仓库所有者看到完整精确制品证据后明确授权发布 `dsh-grok-provider@1.0.2`；授权后不得重建或替换。
 - [ ] 不可变 tag、唯一 GitHub Release asset、Trusted Publisher、Registry 字节一致、`latest`、签名、attestations、provenance 与锁定 Registry 安装全部实际回读。
