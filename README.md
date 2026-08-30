@@ -4,7 +4,7 @@
 
 让 DeepSeek Harness 使用你已登录的官方 Grok Build 账号：动态模型发现、流式推理、工具调用，以及账号额度与模型能力面板。
 
-> 非官方社区项目，与 xAI 或 DeepSeek Harness 官方无隶属关系。当前源码候选版本为 `0.1.7`；npm Registry 的 `latest` 与最近发布的稳定版本均为 `0.1.6`。项目不再发行预发行版；正式版缺陷通过新的递增稳定版本修复。
+> 非官方社区项目，与 xAI 或 DeepSeek Harness 官方无隶属关系。当前源码候选版本为 `0.1.8`；npm Registry 的 `latest` 与最近发布的稳定版本均为 `0.1.7`。项目不再发行预发行版；正式版缺陷通过新的递增稳定版本修复。
 
 ## 它解决什么问题
 
@@ -39,10 +39,10 @@ grok models
 
 ### 2. 安装 Provider
 
-`0.1.7` 发布后，从 npm 安装该精确版本：
+`0.1.8` 发布后，从 npm 安装该精确版本：
 
 ```sh
-dsh plugin --profile web add dsh-grok-provider@0.1.7
+dsh plugin --profile web add dsh-grok-provider@0.1.8
 dsh web
 ```
 
@@ -137,7 +137,7 @@ dsh web
 
 ## 兼容性与范围
 
-| 项目 | `0.1.7` 候选状态 |
+| 项目 | `0.1.8` 候选状态 |
 | --- | --- |
 | DeepSeek Harness | 精确支持 `0.1.1-rc.2` |
 | Node.js | `>=24.19.0` |
@@ -250,7 +250,7 @@ npm run pack:check
 - [x] 发布 `0.1.4`：仅精确 `grok-4.6` 图片输入；user/tool-result 红蓝语义 Proxy 门禁与最终 Harness attachment 复验通过，`grok-4.5` 失败关闭为 text-only
 - [x] 发布 `0.1.5`：发布链路、账户面板能力标签与 Provider Runtime 安装回滚维护版；唯一制品、双平台 CI、签名与 SLSA provenance 均已验证
 - [x] 发布 `0.1.6`：图片历史 reasoning 兼容与 Windows 官方 CLI 分阶段 deadline 修复版；图片发送已完成真实 Harness 验证
-- [ ] 发布 `0.1.7`：Provider/CLI 双版本诊断、CLI 安装恢复、OIDC discovery 超时脱敏结算与 `IconThinkOutline16` 设置导航兼容层
+- [ ] 发布 `0.1.8`：仅在当前 Grok 对话显示额度与重置时间的侧栏卡片
 - [ ] `0.1.8` 独立切片：默认关闭、用户分别开启的 Web Search / X Search
 - [ ] 再后续独立切片：默认关闭的图片生成（只收内联结果，提交 Harness attachment）
 - [ ] 完成 Windows x64 独立真机验收并按需发布后续稳定修复版
