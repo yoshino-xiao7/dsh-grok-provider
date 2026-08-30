@@ -256,7 +256,7 @@ npm run pack:check
 - [x] 发布 `0.1.6`：图片历史 reasoning 兼容与 Windows 官方 CLI 分阶段 deadline 修复版；图片发送已完成真实 Harness 验证
 - [x] 发布 `0.1.7`：Provider/CLI 双版本诊断、CLI 安装恢复、OIDC discovery 超时脱敏结算与 `IconThinkOutline16` 设置导航兼容层
 - [x] 发布 `0.1.9`：加入 Web/X Search 协议与设置页，唯一制品、双平台 CI、签名与 SLSA provenance 均已验证；发布后确认 Host 设置 namespace 遗漏，开关不可用
-- [ ] 发布 `0.1.10`：`llm-grok` 注册、按调用读取设置、双平台候选 CI 与隔离安装验收已完成；仍需合并 main、冻结唯一制品和精确发布授权
+- [ ] 发布 `0.1.10`：`llm-grok` 注册、按调用读取设置、隔离安装、代码 PR 与 main 双平台 CI 已完成；仍需合并发布证据、冻结唯一制品和精确发布授权
 - [ ] 再后续独立切片：默认关闭的图片生成（只收内联结果，提交 Harness attachment）
 - [ ] 完成 Windows x64 独立真机验收并按需发布后续稳定修复版
 
