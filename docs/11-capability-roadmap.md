@@ -182,6 +182,12 @@ const request = await requestCompiler.compile(options, preparedRoute)
 - `1.0.2` 还关闭 `1.0.1` npm 页面旧 README 的流程缺口：双语前言/Quick Start 使用耐久制品措辞，发布 workflow 必须检查实际 tarball，而非只检查后续主分支。
 - final release commit `be200f9352afe93b27dd2856d89c01674f0cd637` 的双平台 CI run `33318426571` 全绿；annotated tag object `b7efd3aabb99c73e1747d2d87890cdf9b284c438` peel 到该提交。仓库所有者明确授权的唯一 74 文件制品为 255,282 bytes packed、789,962 bytes unpacked，SHA-1 `3feddb7048fe4c796037804518999b12ae491802`、SHA-256 `010a21770cb3e4e42b7195984df1f5bf8dc5027066198cf99b7d713ac045f605`、SRI `sha512-TcvvPUXBJZEA728pVnUrXSZebGfIoB5ATG5041wA1OFzOE+hFTO98C5Fxl99WuFW2y7V89gkusYIKCpGlLNQIg==`。Trusted Publisher run `33319150964` attempt 1、npm `latest=1.0.2` 与三方 tarball 字节一致均已回读；Node `24.19.0` / npm `11.5.1` 锁定 Registry 安装通过 Host 注册/`apply`/注入与 client 注册/factory/`apply`/注入 smoke，生产依赖审计为 0 漏洞。1 个 Registry signature、2 个 attestations、安装图 11 个 signed packages / 2 个 attested packages 与精确绑定 `release.yml` / `refs/tags/v1.0.2` / release commit / publish run 的 SLSA provenance 也均已验证；网络可达 Windows 真机浏览器弹出仍未验收。
 
+### `1.0.3` 恢复性修复
+
+- 流前 401/403 允许一次由官方 CLI 拥有的会话刷新与同请求重试；同凭据 revision 并发 single-flight，持续拒绝保持 `AUTH`。
+- 200/SSE 开始后永不自动重放。无工具副作用的有界 text/reasoning 可以保留并明确提示用户发送“继续”；工具调用、unknown、畸形协议与 abort 保持失败关闭。
+- 该切片改善偶发认证与长连接故障的恢复体验，不承诺网络永不中断，也不改变 Windows 浏览器登录、API Key、多账号、自定义 endpoint 或生成能力范围。
+
 ## 8. 后续：默认关闭的图片生成
 
 - 只接受已验证的内联 base64 结果并有界提交 Harness attachment。

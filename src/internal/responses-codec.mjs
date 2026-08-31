@@ -33,6 +33,13 @@ export class InvalidResponsesStreamError extends Error {
   }
 }
 
+export class PrematureResponsesStreamError extends Error {
+  constructor() {
+    super("The Grok Responses stream ended before a terminal event")
+    this.name = "PrematureResponsesStreamError"
+  }
+}
+
 export function decodeResponsesEvents(events, receipt) {
   if (!Array.isArray(events) || events.length === 0 || events.length > MAX_EVENTS) {
     throw new InvalidResponsesStreamError()

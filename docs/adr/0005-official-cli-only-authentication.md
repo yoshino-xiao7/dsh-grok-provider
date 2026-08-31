@@ -3,7 +3,7 @@
 - 状态：Accepted
 - 日期：2026-08-26
 - 取代：ADR-0003 在 `0.1.0` 中关于 `managed-device`、插件持久化 OAuth grant 和双认证选择的决定
-- 修订：ADR-0007 从 `0.1.2` 起把精确版本门禁改为能力与凭据契约门禁
+- 修订：ADR-0007 从 `0.1.2` 起把精确版本门禁改为能力与凭据契约门禁；ADR-0011 从 `1.0.3` 起增加流前一次性认证恢复
 
 ## 背景
 
@@ -21,6 +21,7 @@
 - Host 不注入 Harness credentials capability，不包含 OAuth client ID、client secret、device flow、插件实现的 refresh/revoke 或独立 grant store。
 - 官方 CLI 通过系统浏览器完成授权并持久化 `auth.json`。插件只做有界、只读、版本/schema/权限约束的 credential snapshot，并且不提取、使用或写回其中的 refresh token。完全匹配的 access token 过期时，插件可 single-flight 启动固定、30 秒有界的 `grok models`，由官方 CLI 完成 refresh grant 和文件写回；随后只重读、重新校验并重试一次。
 - 模型发现与推理仍使用固定 Grok Build HTTPS endpoints，并动态暴露账号目录中的全部受支持模型。
+- 固定 endpoint 在读取响应体前返回 401/403 时，可按 ADR-0011 single-flight 调用一次上述官方 CLI refresh 路径、重读凭据并重试一次；一旦 200/SSE 开始产生内容就绝不自动重放。
 
 ## 后果
 

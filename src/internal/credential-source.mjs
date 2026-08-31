@@ -34,104 +34,132 @@ export function createCredentialSource({ contract, load, now, refresh }) {
     throw new TypeError("Invalid credential source dependencies")
   }
   let activeRefresh
+  let refreshRevision = 0
 
   const refreshOnce = async () => {
     if (activeRefresh === undefined) {
-      activeRefresh = Promise.resolve().then(refresh).finally(() => {
-        activeRefresh = undefined
-      })
+      activeRefresh = Promise.resolve()
+        .then(refresh)
+        .then((result) => {
+          refreshRevision += 1
+          return result
+        })
+        .finally(() => {
+          activeRefresh = undefined
+        })
     }
     return activeRefresh
   }
 
-  return Object.freeze({
-    async withAccessToken(operation) {
-      if (typeof operation !== "function") {
-        throw new TypeError("Access-token operation must be a function")
-      }
+  const withAccessToken = async (operation, recoveryAllowed) => {
+    if (typeof operation !== "function") {
+      throw new TypeError("Access-token operation must be a function")
+    }
 
-      let raw
-      let rawText
-      let parsed
-      let accessToken
-      let metadata
-      let refreshAttempted = false
+    let raw
+    let rawText
+    let parsed
+    let accessToken
+    let metadata
+    let refreshAttempted = false
+    let recoveryAttempted = false
 
-      try {
-        while (accessToken === undefined) {
-          try {
-            raw = await load()
-            if (utf8ByteLength(raw) > 64 * 1024) {
-              throw new CredentialFileTooLargeError()
-            }
-            rawText = decodeUtf8(raw)
-            parsed = JSON.parse(rawText)
+    try {
+      while (accessToken === undefined) {
+        try {
+          raw = await load()
+          if (utf8ByteLength(raw) > 64 * 1024) {
+            throw new CredentialFileTooLargeError()
+          }
+          rawText = decodeUtf8(raw)
+          parsed = JSON.parse(rawText)
 
-            if (!isPlainObject(parsed)) throw new UnsupportedCredentialError()
+          if (!isPlainObject(parsed)) throw new UnsupportedCredentialError()
 
-            const entries = Object.entries(parsed)
-            if (entries.length !== 1 || entries[0][0] !== contract.scope) {
-              throw new UnsupportedCredentialError()
-            }
-
-            const record = entries[0][1]
-            if (
-              !isPlainObject(record) ||
-              record.auth_mode !== contract.authMode ||
-              record.oidc_issuer !== contract.issuer ||
-              record.oidc_client_id !== contract.clientId ||
-              typeof record.key !== "string" ||
-              record.key.length === 0 ||
-              !isDateTime(record.expires_at)
-            ) {
-              throw new UnsupportedCredentialError()
-            }
-            const currentTime = now()
-            if (!(currentTime instanceof Date) || !Number.isFinite(currentTime.getTime())) {
-              throw new TypeError("Invalid credential source clock")
-            }
-            if (!isFutureDateTime(record.expires_at, currentTime)) throw new CredentialRefreshRequiredError()
-
-            accessToken = record.key
-            metadata = Object.freeze({
-              ...(isHeaderValue(record.user_id) ? { userId: record.user_id } : {}),
-            })
-          } catch (error) {
-            if (
-              error instanceof CredentialRefreshRequiredError &&
-              refresh !== undefined &&
-              !refreshAttempted
-            ) {
-              refreshAttempted = true
-              try {
-                await refreshOnce()
-              } catch {
-                throw new UnsupportedCredentialError()
-              }
-              raw = undefined
-              rawText = undefined
-              parsed = undefined
-              continue
-            }
-            if (
-              error instanceof UnsupportedCredentialError ||
-              error instanceof CredentialFileTooLargeError ||
-              error instanceof TypeError
-            ) {
-              throw error
-            }
+          const entries = Object.entries(parsed)
+          if (entries.length !== 1 || entries[0][0] !== contract.scope) {
             throw new UnsupportedCredentialError()
           }
-        }
 
-        return await operation(accessToken, metadata)
-      } finally {
-        metadata = undefined
-        accessToken = undefined
-        parsed = undefined
-        rawText = undefined
-        raw = undefined
+          const record = entries[0][1]
+          if (
+            !isPlainObject(record) ||
+            record.auth_mode !== contract.authMode ||
+            record.oidc_issuer !== contract.issuer ||
+            record.oidc_client_id !== contract.clientId ||
+            typeof record.key !== "string" ||
+            record.key.length === 0 ||
+            !isDateTime(record.expires_at)
+          ) {
+            throw new UnsupportedCredentialError()
+          }
+          const currentTime = now()
+          if (!(currentTime instanceof Date) || !Number.isFinite(currentTime.getTime())) {
+            throw new TypeError("Invalid credential source clock")
+          }
+          if (!isFutureDateTime(record.expires_at, currentTime)) throw new CredentialRefreshRequiredError()
+
+          accessToken = record.key
+          metadata = Object.freeze({
+            ...(isHeaderValue(record.user_id) ? { userId: record.user_id } : {}),
+          })
+        } catch (error) {
+          if (
+            error instanceof CredentialRefreshRequiredError &&
+            refresh !== undefined &&
+            !refreshAttempted
+          ) {
+            refreshAttempted = true
+            try {
+              await refreshOnce()
+            } catch {
+              throw new UnsupportedCredentialError()
+            }
+            raw = undefined
+            rawText = undefined
+            parsed = undefined
+            continue
+          }
+          if (
+            error instanceof UnsupportedCredentialError ||
+            error instanceof CredentialFileTooLargeError ||
+            error instanceof TypeError
+          ) {
+            throw error
+          }
+          throw new UnsupportedCredentialError()
+        }
       }
+
+      const loadedRevision = refreshRevision
+      const recover = recoveryAllowed
+        ? async (recoveryOperation) => {
+            if (typeof recoveryOperation !== "function" || recoveryAttempted) {
+              throw new TypeError("Invalid access-token recovery operation")
+            }
+            recoveryAttempted = true
+            if (refresh === undefined) throw new UnsupportedCredentialError()
+            try {
+              if (loadedRevision === refreshRevision) await refreshOnce()
+            } catch {
+              throw new UnsupportedCredentialError()
+            }
+            return withAccessToken(recoveryOperation, false)
+          }
+        : undefined
+      return await operation(accessToken, metadata, recover)
+    } finally {
+      metadata = undefined
+      accessToken = undefined
+      parsed = undefined
+      rawText = undefined
+      raw = undefined
+    }
+  }
+
+  return Object.freeze({
+    withAccessToken(operation) {
+      return withAccessToken(operation, true)
     },
   })
 }

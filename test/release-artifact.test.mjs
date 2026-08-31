@@ -21,15 +21,15 @@ function markdownSection(markdown, heading) {
   return markdown.slice(bodyStart, nextSection === -1 ? undefined : nextSection)
 }
 
-test("the exact 1.0.2 source release exports runtime artifacts and Web loader metadata", async () => {
+test("the exact 1.0.3 source release exports runtime artifacts and Web loader metadata", async () => {
   const attributes = await fs.readFile(path.join(root, ".gitattributes"), "utf8")
   assert.match(attributes, /^\*\.yml text eol=lf$/mu)
   const manifest = JSON.parse(await fs.readFile(path.join(root, "package.json"), "utf8"))
   assert.equal(manifest.name, "dsh-grok-provider")
-  assert.equal(manifest.version, "1.0.2")
+  assert.equal(manifest.version, "1.0.3")
   const lockfile = JSON.parse(await fs.readFile(path.join(root, "package-lock.json"), "utf8"))
-  assert.equal(lockfile.version, "1.0.2")
-  assert.equal(lockfile.packages[""].version, "1.0.2")
+  assert.equal(lockfile.version, "1.0.3")
+  assert.equal(lockfile.packages[""].version, "1.0.3")
   assert.deepEqual(manifest.repository, {
     type: "git",
     url: "git+https://github.com/yoshino-xiao7/dsh-grok-provider.git",
@@ -198,36 +198,36 @@ test("the exact 1.0.2 source release exports runtime artifacts and Web loader me
   assert.match(chineseReadme, /## 安全与隐私/u)
   assert.match(
     chinesePreamble,
-    /本说明对应已发布的 `dsh-grok-provider@1\.0\.2`；`0\.1\.8` 曾发布后撤回且版本号不可复用。/u,
+    /本说明对应 `dsh-grok-provider@1\.0\.3` 制品；`0\.1\.8` 曾发布后撤回且版本号不可复用。/u,
   )
   assert.match(
     chinesePreamble,
-    /已发布的 `1\.0\.2` npm tarball 内含双语 README，安装命令固定到该精确版本；本仓库当前 README 在发布回读后补记完整证据。npm Registry 确认 `dsh-grok-provider@1\.0\.2` 可安装且 `latest=1\.0\.2`。/u,
+    /本 README 随 `1\.0\.3` 一起进入 npm tarball，下面的精确安装命令也固定为 `1\.0\.3`。/u,
   )
   assert.doesNotMatch(chineseReleaseSurface, /未发布|候选|继续安装/u)
   assert.deepEqual(
     chineseQuickStart.match(/dsh plugin --profile web add dsh-grok-provider@[0-9]+\.[0-9]+\.[0-9]+/gu),
-    ["dsh plugin --profile web add dsh-grok-provider@1.0.2"],
+    ["dsh plugin --profile web add dsh-grok-provider@1.0.3"],
   )
   assert.match(chineseReadme, /\[`THIRD_PARTY_NOTICES\.md`\]\(THIRD_PARTY_NOTICES\.md\)/u)
   assert.match(englishReadme, /## Quick start/u)
   assert.match(englishReadme, /## Security and privacy/u)
   assert.match(
     englishPreamble,
-    /This README describes the published `dsh-grok-provider@1\.0\.2`; version `0\.1\.8` was published and then withdrawn and cannot be reused\./u,
+    /This README describes the `dsh-grok-provider@1\.0\.3` artifact; version `0\.1\.8` was published and then withdrawn and cannot be reused\./u,
   )
   assert.match(
     englishPreamble,
-    /The published `1\.0\.2` npm tarball includes the bilingual README with an installation command pinned to that exact version; this repository README now records the completed post-publication evidence\. npm Registry confirms that `dsh-grok-provider@1\.0\.2` is installable and `latest=1\.0\.2`\./u,
+    /This README is included in the `1\.0\.3` npm tarball, and the exact installation command below is pinned to `1\.0\.3`\./u,
   )
   assert.doesNotMatch(englishReleaseSurface, /unpublished|candidate|continue installing/iu)
   assert.deepEqual(
     englishQuickStart.match(/dsh plugin --profile web add dsh-grok-provider@[0-9]+\.[0-9]+\.[0-9]+/gu),
-    ["dsh plugin --profile web add dsh-grok-provider@1.0.2"],
+    ["dsh plugin --profile web add dsh-grok-provider@1.0.3"],
   )
   assert.match(englishReadme, /\[`THIRD_PARTY_NOTICES\.md`\]\(THIRD_PARTY_NOTICES\.md\)/u)
   const securityPolicy = await fs.readFile(path.join(root, "SECURITY.md"), "utf8")
-  assert.match(securityPolicy, /本安全策略对应已发布的 `dsh-grok-provider@1\.0\.2` 制品/u)
+  assert.match(securityPolicy, /本安全策略对应 `dsh-grok-provider@1\.0\.3` 制品/u)
   assert.match(
     securityPolicy,
     /Release security note: the published `1\.0\.2` artifact changes visible reasoning projection and its aligned replay envelope/u,
@@ -266,6 +266,14 @@ test("the exact 1.0.2 source release exports runtime artifacts and Web loader me
   assert.match(currentReleaseNotes, /`refs\/tags\/v1\.0\.2`/u)
   assert.match(currentReleaseNotes, /不构成网络可达 Windows 真机外部浏览器弹出验收/u)
   assert.match(currentReleaseNotes, /is not real-device Windows external-browser acceptance/u)
+  const nextReleaseNotes = await fs.readFile(
+    path.join(root, "docs/releases/v1.0.3.md"),
+    "utf8",
+  )
+  assert.match(nextReleaseNotes, /^# dsh-grok-provider v1\.0\.3$/mu)
+  assert.match(nextReleaseNotes, /已开始的请求绝不自动重放/u)
+  assert.match(nextReleaseNotes, /dsh plugin --profile web add dsh-grok-provider@1\.0\.3/u)
+  assert.match(nextReleaseNotes, /<summary>English<\/summary>/u)
   const releaseNotes = await fs.readFile(
     path.join(root, "docs/releases/v1.0.1.md"),
     "utf8",

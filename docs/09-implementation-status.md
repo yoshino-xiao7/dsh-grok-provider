@@ -216,3 +216,12 @@ Windows x64 真机不再是 `0.1.0` 预发布阻断项。首次发布后必须�
 - 版本同步、本地 265 项全量测试（263 pass、0 fail、2 platform skips）、0 生产漏洞和 74 文件 dry-run pack 已完成；代码 PR #34 合并后的发布证据 PR #35 形成 final release commit `be200f9352afe93b27dd2856d89c01674f0cd637`。其 final CI run [`33318426571`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33318426571) 在 macOS 14 / Windows 2022 全绿，annotated tag object `b7efd3aabb99c73e1747d2d87890cdf9b284c438` peel 到该提交。
 - 仓库所有者明确授权的唯一 `dsh-grok-provider-1.0.2.tgz` 含 74 个文件、255,282 bytes packed、789,962 bytes unpacked；SHA-1 `3feddb7048fe4c796037804518999b12ae491802`、SHA-256 `010a21770cb3e4e42b7195984df1f5bf8dc5027066198cf99b7d713ac045f605`、SRI `sha512-TcvvPUXBJZEA728pVnUrXSZebGfIoB5ATG5041wA1OFzOE+hFTO98C5Fxl99WuFW2y7V89gkusYIKCpGlLNQIg==`。唯一 GitHub Release asset、冻结候选与 Registry tarball 逐字节一致。
 - Trusted Publisher run [`33319150964` attempt 1](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33319150964/attempts/1) 已完成，npm `latest=1.0.2`。Node `24.19.0` / npm `11.5.1` 锁定 Registry 隔离安装通过 Host `name`/`apply` 与 client `id`/factory smoke，生产依赖审计为 0 漏洞；本包 1 个 Registry signature、2 个 attestations，安装图 11 个 signed packages / 2 个 attested packages，以及精确绑定 `release.yml` / `refs/tags/v1.0.2` / release commit / publish run 的 SLSA provenance 均已验证。网络可达 Windows 真机外部浏览器弹出仍未完成验收，发布不改变该边界。
+
+## `1.0.3` 认证与长流中断修复
+
+- 已确认 “API key is invalid” 对应一次真实 401，但本地官方 OIDC 凭据随后仍可访问模型目录；“The Grok Build request failed” 则对应 SSE 已开始后的长时间 transport stall，两者不是同一根因。
+- 流前 401/403 通过官方 CLI single-flight refresh、凭据重读与一次重试恢复；持续拒绝保持 `AUTH`。插件不读取 refresh token，也不新增 API Key 模式。
+- 流开始后不重放。仅在已经产生有界 text/reasoning 且没有工具调用、unknown chunk、协议错误或 abort 时保留部分输出并提示“发送继续”；其他路径继续失败关闭。
+- 连续两分钟无任何响应字节会中止当前连接，每个 wire chunk 刷新 idle deadline；持续有输出的长任务不受总时长限制。
+- 源码版本、双语文档、ADR 与 274 项 Node 24 回归已完成；双平台 CI 与供应链发布证据仍按独立边界推进。
+- 当前已登录账号的一次脱敏 `grok-4.6` Low Effort 生产 Adapter 请求已完成，只保留 `2/14/2/1/1/1` 的 block-start/reasoning-delta/block-end/text-delta/usage/finish 计数。生产审计为 0 漏洞，dry-run pack 为 77 文件；这些成功证据不能模拟未来的 401 或断流。

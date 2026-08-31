@@ -66,6 +66,7 @@ Harness rc.2 的默认 `dsh-credentials-local` 会把 grant 明文保存在 `$DS
 - 发送前进入固定 skew 时，在 credential record 的原子 mutation 内刷新一次；并发进程不能各自覆盖旋转后的 refresh token。
 - token 响应、错误 body 与 JWT 均有字节/字段上限；不得记录原文。
 - 已发送 POST 收到 401 后不自动重放；使 generation 失效，下一次明确请求才尝试刷新或返回 `AUTH`。
+- 修订说明：该段属于已被 ADR-0005 取代的自管 OAuth 方案。官方 CLI 单一路线从 `1.0.3` 起按 ADR-0011 只允许在 200/SSE 开始前对 401/403 执行一次官方 CLI 刷新与重试；流开始后仍绝不重放。
 - managed logout 先在原子 mutation 中把 grant 替换为不可用于推理/刷新的 revocation marker，再调用固定 revoke endpoint。远端撤销成功后删除本地 record；失败时原子恢复原 grant 以便用户明确重试。若恢复本身失败则保留不可用 marker，绝不能让待撤销 token 重新进入推理路径。
 - official-cli logout 仍调用受限官方 CLI，绝不删除自管 record；两种 logout 必须显示作用域并分别二次确认。
 

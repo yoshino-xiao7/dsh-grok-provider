@@ -4,7 +4,9 @@
 
 ## 支持范围
 
-本安全策略对应已发布的 `dsh-grok-provider@1.0.2` 制品。它只改变已通过严格校验的 reasoning lifecycle 向 Harness 可见 block 的投影：完整闭合且始终没有非空 summary/raw delta 的 item 不产生可见 block；首个非空 delta 到来时才开始 block。协议接受域、固定 origin、凭据、Search、模型、图片、工具和 URL 边界均不放宽。`0.1.8` 曾发布后撤回且版本号不可复用；网络可达 Windows 真机外部浏览器弹出仍未验收。
+本安全策略对应 `dsh-grok-provider@1.0.3` 制品。它只在 200/SSE 开始前为 401/403 增加一次官方 CLI 会话刷新与同请求重试；同一凭据版本的并发拒绝共享一次刷新。流开始后绝不自动重放。只有已投影且有界的 text/reasoning 可在无工具调用、未知 chunk、协议异常或用户取消时被保留并附加中断提示；其他情况继续失败关闭。协议接受域、固定 origin、refresh-token 隔离、Search、模型、图片、工具和 URL 边界均不放宽。`0.1.8` 曾发布后撤回且版本号不可复用；网络可达 Windows 真机外部浏览器弹出仍未验收。
+
+`1.0.3` 不把 HTTP 401/403 解释为 API Key 模式，也不自行刷新 OAuth grant：固定且有界的官方 `grok models` 子进程拥有刷新行为，插件随后重新读取并严格校验共享凭据。第二次拒绝仍为 `AUTH`。SSE source 的无状态 transport failure 和干净过早 EOF 与畸形事件分开；只有前两者能进入安全部分输出保留，status-bearing transport error、工具调用和所有 `INVALID_RESPONSE` 均不得被吞掉。部分内容不生成 replay metadata，提示不包含上游错误正文。
 
 `1.0.0` 把 reasoning ID 复用收窄为 Search-backed 且严格空的完整生命周期：可见 summary/content 及 summary/raw lifecycle 必须为空，允许有界 opaque `encrypted_content`；每次复用都必须到达自己的 `response.output_item.done`，仅当 `response.incomplete` 到来时仍有复用段未闭合才失败关闭，所有复用段闭合后的 `max_output_tokens` 终态仍有效。非空、跨类型、未知 terminal 字段或 accessor 字段继续拒绝。完成态 Web Search `open_page` 只允许精确且有界的 `type + url`，streamed/final action 的类型与 URL 必须一致，校验后 URL 被丢弃且不会被访问、预览、下载或回放。脱敏真实账号复验未保存结果、URL、prompt、身份或凭据；供应链回读也不构成 OAuth、完整桌面会话或 Windows 真机浏览器验收。
 

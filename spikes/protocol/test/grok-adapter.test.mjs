@@ -789,6 +789,172 @@ test("Responses source failures retain the established LLM error mapping", async
   }
 })
 
+test("a transport disconnect after safe partial output preserves content without replaying", async () => {
+  let requests = 0
+  const adapter = createGrokAdapter({
+    getGeneration: () => ({
+      id: 1,
+      transport: {
+        async listModels() { return catalog },
+        async *streamResponses() {
+          requests += 1
+          yield * encodeResponseEvents([
+            { type: "response.created", sequence_number: 0, response: { status: "in_progress" } },
+            { type: "response.in_progress", sequence_number: 1, response: { status: "in_progress" } },
+            { type: "response.output_item.added", sequence_number: 2, output_index: 0, item: { id: "rs_partial", type: "reasoning", status: "in_progress", summary: [] } },
+            { type: "response.reasoning_summary_part.added", sequence_number: 3, output_index: 0, item_id: "rs_partial", summary_index: 0, part: { type: "summary_text", text: "" } },
+            { type: "response.reasoning_summary_text.delta", sequence_number: 4, output_index: 0, item_id: "rs_partial", summary_index: 0, delta: "Partial reasoning." },
+          ])
+          throw new GrokTransportError()
+        },
+      },
+    }),
+    mapError: mapLlmError,
+  })
+  const prepared = await adapter.prepareCall("grok", "grok-4.6")
+  const chunks = []
+
+  for await (const chunk of prepared.stream({
+    provider: "grok",
+    model: "grok-4.6",
+    messages: [{
+      id: "partial-transport",
+      role: "user",
+      source: { kind: "user" },
+      content: [{ type: "text", text: "Hello" }],
+    }],
+  })) chunks.push(chunk)
+
+  assert.equal(requests, 1)
+  assert.deepEqual(chunks.slice(0, 3), [
+    { type: "block-start", index: 0, blockType: "reasoning" },
+    { type: "reasoning-delta", index: 0, text: "Partial reasoning." },
+    { type: "block-end", index: 0, block: { type: "reasoning", text: "Partial reasoning." } },
+  ])
+  assert.equal(chunks[3].type, "block-start")
+  assert.equal(chunks[3].blockType, "text")
+  assert.equal(chunks[4].type, "text-delta")
+  assert.match(chunks[4].text, /回复连接在完成前中断/u)
+  assert.deepEqual(chunks.at(-1), { type: "finish", reason: { kind: "stop" } })
+})
+
+test("a premature EOF after safe partial output is preserved as an interrupted response", async () => {
+  const adapter = createGrokAdapter({
+    getGeneration: () => ({
+      id: 1,
+      transport: {
+        async listModels() { return catalog },
+        async *streamResponses() {
+          yield * encodeResponseEvents([
+            { type: "response.created", sequence_number: 0, response: { status: "in_progress" } },
+            { type: "response.in_progress", sequence_number: 1, response: { status: "in_progress" } },
+            { type: "response.output_item.added", sequence_number: 2, output_index: 0, item: { id: "msg_partial", type: "message", role: "assistant", status: "in_progress", content: [] } },
+            { type: "response.content_part.added", sequence_number: 3, output_index: 0, item_id: "msg_partial", content_index: 0, part: { type: "output_text", text: "", annotations: [] } },
+            { type: "response.output_text.delta", sequence_number: 4, output_index: 0, item_id: "msg_partial", content_index: 0, delta: "Partial answer." },
+          ])
+        },
+      },
+    }),
+    mapError: mapLlmError,
+  })
+  const prepared = await adapter.prepareCall("grok", "grok-4.6")
+  const chunks = []
+
+  for await (const chunk of prepared.stream({
+    provider: "grok",
+    model: "grok-4.6",
+    messages: [{
+      id: "partial-eof",
+      role: "user",
+      source: { kind: "user" },
+      content: [{ type: "text", text: "Hello" }],
+    }],
+  })) chunks.push(chunk)
+
+  assert.equal(chunks[1].text, "Partial answer.")
+  assert.match(chunks[4].text, /回复连接在完成前中断/u)
+  assert.deepEqual(chunks.at(-1), { type: "finish", reason: { kind: "stop" } })
+})
+
+test("a status-bearing stream error after partial output remains a provider failure", async () => {
+  const adapter = createGrokAdapter({
+    getGeneration: () => ({
+      id: 1,
+      transport: {
+        async listModels() { return catalog },
+        async *streamResponses() {
+          yield * encodeResponseEvents([
+            { type: "response.created", sequence_number: 0, response: { status: "in_progress" } },
+            { type: "response.in_progress", sequence_number: 1, response: { status: "in_progress" } },
+            { type: "response.output_item.added", sequence_number: 2, output_index: 0, item: { id: "msg_partial_status", type: "message", role: "assistant", status: "in_progress", content: [] } },
+            { type: "response.content_part.added", sequence_number: 3, output_index: 0, item_id: "msg_partial_status", content_index: 0, part: { type: "output_text", text: "", annotations: [] } },
+            { type: "response.output_text.delta", sequence_number: 4, output_index: 0, item_id: "msg_partial_status", content_index: 0, delta: "Partial answer." },
+          ])
+          throw new GrokTransportError(200)
+        },
+      },
+    }),
+    mapError: mapLlmError,
+  })
+  const prepared = await adapter.prepareCall("grok", "grok-4.6")
+
+  await assert.rejects(async () => {
+    for await (const _chunk of prepared.stream({
+      provider: "grok",
+      model: "grok-4.6",
+      messages: [{
+        id: "partial-status-error",
+        role: "user",
+        source: { kind: "user" },
+        content: [{ type: "text", text: "Hello" }],
+      }],
+    })) {}
+  }, (error) => error?.code === "PROVIDER_ERROR")
+})
+
+test("a transport disconnect after a partial tool call fails closed without replaying", async () => {
+  let requests = 0
+  const adapter = createGrokAdapter({
+    getGeneration: () => ({
+      id: 1,
+      transport: {
+        async listModels() { return catalog },
+        async *streamResponses() {
+          requests += 1
+          yield * encodeResponseEvents([
+            { type: "response.created", sequence_number: 0, response: { status: "in_progress" } },
+            { type: "response.in_progress", sequence_number: 1, response: { status: "in_progress" } },
+            { type: "response.output_item.added", sequence_number: 2, output_index: 0, item: { id: "fc_partial", type: "function_call", status: "in_progress", call_id: "call_partial", name: "fixture_tool", arguments: "" } },
+            { type: "response.function_call_arguments.delta", sequence_number: 3, output_index: 0, item_id: "fc_partial", delta: "{\"value\":" },
+          ])
+          throw new GrokTransportError()
+        },
+      },
+    }),
+    mapError: mapLlmError,
+  })
+  const prepared = await adapter.prepareCall("grok", "grok-4.6")
+
+  await assert.rejects(async () => {
+    for await (const _chunk of prepared.stream({
+      provider: "grok",
+      model: "grok-4.6",
+      messages: [{
+        id: "partial-tool",
+        role: "user",
+        source: { kind: "user" },
+        content: [{ type: "text", text: "Hello" }],
+      }],
+      tools: [{
+        name: "fixture_tool",
+        description: "Fixture tool",
+        parameters: { type: "object" },
+      }],
+    })) {}
+  }, (error) => error?.code === "PROVIDER_ERROR")
+  assert.equal(requests, 1)
+})
+
 test("a background call rejects Search output because its compiled receipt contains no server tools", async () => {
   let capturedRequest
   const adapter = createGrokAdapter({

@@ -4,11 +4,11 @@
 
 Use an already authenticated official Grok Build account from DeepSeek Harness, with dynamic model discovery, streaming reasoning, image input, optional Web/X Search, tool calls, and an account quota/model capability dashboard.
 
-> Unofficial community project; not affiliated with xAI or DeepSeek Harness. This README describes the published `dsh-grok-provider@1.0.2`; version `0.1.8` was published and then withdrawn and cannot be reused.
+> Unofficial community project; not affiliated with xAI or DeepSeek Harness. This README describes the `dsh-grok-provider@1.0.3` artifact; version `0.1.8` was published and then withdrawn and cannot be reused.
 
-`1.0.2` fixes a presentation defect: an upstream Search stream may contain fully closed reasoning lifecycles with no visible text. The Provider continues to validate those lifecycles strictly but no longer projects them as empty Harness `Think` rows; reasoning with real summary/raw deltas remains visible as separate blocks.
+`1.0.3` addresses two real-session interruption paths. A 401/403 received before streaming begins triggers one bounded refresh through the official Grok CLI and at most one retry. Once streaming starts, the request is never replayed. If a connection then ends after only safe text/reasoning output, the Provider preserves those chunks and asks the user to send “continue”; tool calls, unknown events, and malformed protocol still fail closed.
 
-The published `1.0.2` npm tarball includes the bilingual README with an installation command pinned to that exact version; this repository README now records the completed post-publication evidence. npm Registry confirms that `dsh-grok-provider@1.0.2` is installable and `latest=1.0.2`.
+This README is included in the `1.0.3` npm tarball, and the exact installation command below is pinned to `1.0.3`. The previous version with completed supply-chain readback is `1.0.2`.
 
 ## What it provides
 
@@ -19,7 +19,7 @@ The published `1.0.2` npm tarball includes the bilingual README with an installa
 | Models | Discovers every model visible to the account at runtime; no static model allowlist |
 | Conversations | Streaming Responses text, reasoning, encrypted reasoning replay, usage, and finish reasons |
 | Images | Only exact `grok-4.6` accepts bounded JPEG/PNG images from Harness attachments; `grok-4.5` and all other models remain text-only |
-| Search | Exact `grok-4.6` provides default-off Web/X Search; `1.0.1` resolves same-name function/server-tool conflicts and `1.0.2` hides contentless `Think` projections for strictly empty reasoning |
+| Search | Exact `grok-4.6` provides default-off Web/X Search; `1.0.3` adds pre-stream authentication recovery and safe partial-output preservation without replaying a started stream |
 | Tools | Returns function calls to the Harness permission layer; the provider never executes tools, and local `web_search` / `x_search` remain when the corresponding Search setting is off |
 | Account dashboard | Login status, weekly/monthly quota, reset time, dynamic model capabilities and reasoning efforts |
 | Surfaces | Bilingual Web settings and a closed `/grok` TUI command set |
@@ -44,10 +44,10 @@ When the network is reachable and OIDC discovery succeeds, the official CLI open
 
 ### 2. Install the provider
 
-Install the published exact version:
+Install the exact version:
 
 ```sh
-dsh plugin --profile web add dsh-grok-provider@1.0.2
+dsh plugin --profile web add dsh-grok-provider@1.0.3
 dsh web
 ```
 
