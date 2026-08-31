@@ -24,6 +24,7 @@
 - 已发布 `1.0.0`：首次复用前仍要求一个完成的 Web/X server Search；一旦该 ID 已被 Search-backed，允许后续多个严格空占位 lifecycle，每个都必须独立 `output_item.done`。完成态 Web Search `open_page` 只接受精确有界 type/URL，并要求 streamed/final action 一致；URL 校验后丢弃，不产生本地工具调用或网络访问。
 - 已发布 `1.0.1`：全部 Harness functions 先完整验证，再从 wire definitions 精确过滤与本次已启用 server `web_search` / `x_search` 同名的定义；对应开关关闭时本地 function 保留，历史 function calls/results 原样保留。最终 receipt 拒绝 function/server-tool 交集。SSE source transport error 原样上抛，HTTP 400 进入 `PROVIDER_ERROR`，parser/协议错误仍为 `INVALID_RESPONSE`。
 - 已发布 `1.0.2`：reasoning item added 只建立内部 FSM，首个非空 summary/raw delta 才开始 Harness block；始终严格空且完整闭合的 item 产生零可见 chunk。不同非空 item 仍分别闭合，旧会话不回写。
+- 已发布 `1.0.3`：流前 401/403 允许一次官方 CLI single-flight 恢复与最多一次重试；流后不重放，无工具副作用的有界 text/reasoning 可在 transport interruption、干净过早 EOF 或连续两分钟无 wire bytes 时保留并提示“继续”。
 
 ## 已验证
 
@@ -223,6 +224,8 @@ Windows x64 真机不再是 `0.1.0` 预发布阻断项。首次发布后必须�
 - 流前 401/403 通过官方 CLI single-flight refresh、凭据重读与一次重试恢复；持续拒绝保持 `AUTH`。插件不读取 refresh token，也不新增 API Key 模式。
 - 流开始后不重放。仅在已经产生有界 text/reasoning 且没有工具调用、unknown chunk、协议错误或 abort 时保留部分输出并提示“发送继续”；其他路径继续失败关闭。
 - 连续两分钟无任何响应字节会中止当前连接，每个 wire chunk 刷新 idle deadline；持续有输出的长任务不受总时长限制。
-- 源码版本、双语文档、ADR 与 274 项 Node 24 回归已完成；双平台 CI 与供应链发布证据仍按独立边界推进。
+- 源码版本、双语文档、ADR 与 274 项 Node 24 回归已完成；final CI run `33378215345` 的 macOS 14 / Windows 2022 均通过。
 - 当前已登录账号的一次脱敏 `grok-4.6` Low Effort 生产 Adapter 请求已完成，只保留 `2/14/2/1/1/1` 的 block-start/reasoning-delta/block-end/text-delta/usage/finish 计数。生产审计为 0 漏洞，dry-run pack 为 77 文件；这些成功证据不能模拟未来的 401 或断流。
-- 代码 PR #37 已合并为 `9958f487abf8ebd062eecb4368689e4d049b1d35`，main CI run `33377849906` 的 macOS 14 / Windows 2022 全绿。发布证据提交、唯一制品、授权与供应链回读仍未完成。
+- 代码 PR #37 已合并为 `9958f487abf8ebd062eecb4368689e4d049b1d35`，main CI run `33377849906` 的 macOS 14 / Windows 2022 全绿；发布证据 PR #38 形成最终 release commit `07ebd35c56348a1b3296bd46d1a69f5b0f430241`。
+- 仓库所有者明确授权的唯一 77 文件制品为 267,403 bytes packed、829,862 bytes unpacked；SHA-1 `6197c3d30ec1ef5f559371911d612f6236eee2f9`、SHA-256 `7f740c7258ab7eee0c96e1ddae3398b41a25e718cf267e244f8693c3c99aeb0d`、SRI `sha512-kJgN0NKKV7Te3oAgbPnEua/EQCLnj5S0KWAWrhP0ixudJBepplRFARYHCxwxOwbG87bnX07Mz/dxCoBiphWhqQ==`。annotated tag object `7ec8a8a1086749e7ac1dfb0ef2bd50c821838363` peel 到最终提交；Trusted Publisher run [`33379149158` attempt 1](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33379149158/attempts/1) 已完成。
+- npm `latest=1.0.3`；冻结制品、唯一 GitHub Release asset 与 Registry tarball 逐字节一致。锁定 Registry 安装的 Host/client smoke 与 0 漏洞生产审计通过；本包 1 个 Registry signature、2 个 attestations，安装图 11 个 signed packages / 2 个 attested packages，以及精确绑定 tag、workflow、commit 与 publish run 的 SLSA provenance 均已回读。网络可达 Windows 真机浏览器弹出仍未验收。

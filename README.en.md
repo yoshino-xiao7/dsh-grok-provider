@@ -8,7 +8,7 @@ Use an already authenticated official Grok Build account from DeepSeek Harness, 
 
 `1.0.3` addresses two real-session interruption paths. A 401/403 received before streaming begins triggers one bounded refresh through the official Grok CLI and at most one retry. Once streaming starts, the request is never replayed. If a connection then ends after only safe text/reasoning output, the Provider preserves those chunks and asks the user to send “continue”; tool calls, unknown events, and malformed protocol still fail closed.
 
-This README is included in the `1.0.3` npm tarball, and the exact installation command below is pinned to `1.0.3`. The previous version with completed supply-chain readback is `1.0.2`.
+This README is included in the `1.0.3` npm tarball, and the exact installation command below is pinned to `1.0.3`. npm Registry confirms that `dsh-grok-provider@1.0.3` is installable and `latest=1.0.3`; the Registry, GitHub Release, and frozen artifact are byte-identical.
 
 ## What it provides
 
@@ -134,9 +134,9 @@ Uninstalling the provider does not remove the official Grok CLI or directly modi
 
 ## Sources and discovery
 
-- Exact npm version described by this README: [dsh-grok-provider@1.0.2](https://www.npmjs.com/package/dsh-grok-provider/v/1.0.2)
-- Current GitHub release with completed readback: [v1.0.2](https://github.com/yoshino-xiao7/dsh-grok-provider/releases/tag/v1.0.2)
-- Release evidence: release commit `be200f9352afe93b27dd2856d89c01674f0cd637`, annotated tag object `b7efd3aabb99c73e1747d2d87890cdf9b284c438` peeling to that commit, final CI run [`33318426571`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33318426571), and Trusted Publisher run [`33319150964` attempt 1](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33319150964/attempts/1). The repository owner explicitly authorized the unique 74-file artifact, which is 255,282 bytes packed and 789,962 bytes unpacked; SHA-1 is `3feddb7048fe4c796037804518999b12ae491802`, SHA-256 is `010a21770cb3e4e42b7195984df1f5bf8dc5027066198cf99b7d713ac045f605`, and SRI is `sha512-TcvvPUXBJZEA728pVnUrXSZebGfIoB5ATG5041wA1OFzOE+hFTO98C5Fxl99WuFW2y7V89gkusYIKCpGlLNQIg==`. The frozen candidate, GitHub Release asset, and npm Registry tarball are byte-identical, and npm confirms that `dsh-grok-provider@1.0.2` is installable and `latest=1.0.2`. A locked Registry install under Node `24.19.0` / npm `11.5.1` passed Host registration/`apply`/injection and client registration/factory/`apply`/injection smoke checks with zero production vulnerabilities. `npm audit signatures` confirmed verified Registry signatures for 11 packages and verified attestations for 2 packages; this package's public metadata exposes 1 Registry signature and 2 attestations, while SLSA provenance exactly binds `release.yml`, `refs/tags/v1.0.2`, the release commit, and publish run.
+- Exact npm version described by this README: [dsh-grok-provider@1.0.3](https://www.npmjs.com/package/dsh-grok-provider/v/1.0.3)
+- Current GitHub release with completed readback: [v1.0.3](https://github.com/yoshino-xiao7/dsh-grok-provider/releases/tag/v1.0.3)
+- Release evidence: release commit `07ebd35c56348a1b3296bd46d1a69f5b0f430241`, annotated tag object `7ec8a8a1086749e7ac1dfb0ef2bd50c821838363` peeling to that commit, final CI run [`33378215345`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33378215345), and Trusted Publisher run [`33379149158` attempt 1](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33379149158/attempts/1). The explicitly authorized unique 77-file artifact is 267,403 bytes packed and 829,862 bytes unpacked; SHA-1 is `6197c3d30ec1ef5f559371911d612f6236eee2f9`, SHA-256 is `7f740c7258ab7eee0c96e1ddae3398b41a25e718cf267e244f8693c3c99aeb0d`, and SRI is `sha512-kJgN0NKKV7Te3oAgbPnEua/EQCLnj5S0KWAWrhP0ixudJBepplRFARYHCxwxOwbG87bnX07Mz/dxCoBiphWhqQ==`. The frozen artifact, GitHub Release asset, and Registry tarball are byte-identical. A locked Registry install passed Host/client loading with zero production vulnerabilities; package metadata exposes 1 Registry signature and 2 attestations, while the installed graph has 11 verified signed packages and 2 attested packages. SLSA provenance exactly binds `release.yml`, `refs/tags/v1.0.3`, the release commit, and publish run.
 - npm page documentation correction: the `1.0.1` tarball retained an older installation example; the README in the published `1.0.2` tarball uses the exact `@1.0.2` command. Published `1.0.1` bytes are not replaced.
 - GitHub community discovery: the repository carries the DeepSeek Harness-recommended `dsh-plugin` and `dsh` topics
 - YukiRyou managed source: [deepseek-yukiryou-plugin-catalog](https://github.com/yoshino-xiao7/deepseek-yukiryou-plugin-catalog), still pinned to the real-device-accepted `dsh-grok-provider@0.1.0` and marking only `darwin-arm64`
@@ -144,6 +144,12 @@ Uninstalling the provider does not remove the official Grok CLI or directly modi
 Directory inclusion is not an endorsement by xAI or DeepSeek Harness. [Listing PR #3415](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin/pull/3415) has added the project to the public `awesome-dsh-plugin` `model` category. That directory is repository-level discovery and carries no exact npm-version or platform-acceptance claim.
 
 ## Compatibility and scope
+
+### `1.0.3` repair boundary
+
+- Only a 401/403 received before 200/SSE begins can trigger one bounded shared-session refresh through the official Grok CLI, credential reload, and at most one retry. A persistent rejection remains `AUTH`; no API-key mode is added.
+- A started stream is never replayed. On transport interruption, clean premature EOF, or two continuous minutes without any wire bytes, only bounded text/reasoning with no tool side effects may be preserved with a “send continue” notice. Tool calls, unknown events, malformed protocol, user abort, and empty partial responses remain fail closed.
+- The exact Node `24.19.0` gate reports 274 tests, 272 pass, 0 fail, and 2 platform skips. Final release commit, dual-platform CI, explicit authorization, isolated installation, Registry, signature, attestations, and provenance readback are complete for the unique 77-file artifact. The real-account success-path check does not simulate a future 401 or disconnect, and this release is not real-device Windows browser-login acceptance. See [`docs/releases/v1.0.3.md`](docs/releases/v1.0.3.md).
 
 ### `1.0.2` repair boundary
 
@@ -171,11 +177,11 @@ Directory inclusion is not an endorsement by xAI or DeepSeek Harness. [Listing P
 - Two-layer redacted real-account verification passed against the final source: raw Web/X probes each completed one 64-event response, observed the requested Search kind, and reached `completed`; the production adapter completed 5 Responses calls, with direct Web/X both ending in `stop` and a Harness-shaped local `x_search` call/result continuation ending `tool-calls`, `tool-calls`, then `stop`, with one local call in each of the first two turns. That continuation did not place a Harness `x_search` function definition beside an xAI `{ type: "x_search" }` server descriptor in the same wire request; `1.0.1` later isolated that combination as an HTTP 400 conflict. No results, URLs, prompts, identity, or credentials were retained; this is not publication, OAuth, or real-device Windows evidence.
 - The manifest and lockfile are synchronized at `1.0.0`; the Node 24 suite reports 245 tests, 243 pass, 0 fail, and 2 platform skips. Production audit reports zero vulnerabilities, and the deterministic build/bundle comparison, 72-entry dry-run pack, secret scan, and diff check pass. Code PR #28, main CI run [`33308371009`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33308371009), the final release commit, dual-platform final CI, unique artifact, exact authorization, and Registry/signature/attestation/provenance readback are complete.
 
-| Item | Published `1.0.2` compatibility boundary |
+| Item | Published `1.0.3` compatibility boundary |
 | --- | --- |
 | DeepSeek Harness | Exact support for `0.1.1-rc.2` |
 | Node.js | `>=24.19.0` |
-| macOS arm64 | Image sending has real-Harness confirmation; `1.0.2` only changes the visible projection of strictly empty reasoning |
+| macOS arm64 | Image sending has real-Harness confirmation; `1.0.3` adds pre-stream authentication recovery and safe partial-output preservation |
 | Windows x64 | The code path and existing slow fakes are unchanged. On a reachable network the official CLI generates the URL and opens the browser, and that path still lacks real-device Windows acceptance |
 | macOS x64 / Linux | Unsupported |
 | Grok CLI | No full-version lock; official path, `login --oauth` capability, and production OIDC credential contract are enforced |
