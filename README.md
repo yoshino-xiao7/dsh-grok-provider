@@ -4,11 +4,11 @@
 
 让 DeepSeek Harness 使用你已登录的官方 Grok Build 账号：动态模型发现、流式推理、图片输入、可选 Web/X Search、工具调用，以及账号额度与模型能力面板。
 
-> 非官方社区项目，与 xAI 或 DeepSeek Harness 官方无隶属关系。本说明对应已发布的 `dsh-grok-provider@1.0.2`；`0.1.8` 曾发布后撤回且版本号不可复用。
+> 非官方社区项目，与 xAI 或 DeepSeek Harness 官方无隶属关系。本说明对应 `dsh-grok-provider@1.0.3` 制品；`0.1.8` 曾发布后撤回且版本号不可复用。
 
-`1.0.2` 修复一个显示层问题：上游 Search 流可能产生完整闭合、但没有任何可见文本的 reasoning lifecycle。Provider 仍会严格验证这些 lifecycle，但不再把它们投影成空的 Harness `Think` 行；真正包含 summary/raw delta 的 reasoning 仍按独立块显示。
+`1.0.3` 修复两类真实运行中断：流开始前遇到 401/403 时，通过官方 Grok CLI 进行一次有界会话刷新并仅重试一次；流已开始后绝不重放。若连接中断前只收到安全的文本/reasoning，Provider 会保留已收到内容并提示用户发送“继续”；一旦出现工具调用、未知事件或协议异常，仍严格失败关闭。
 
-已发布的 `1.0.2` npm tarball 内含双语 README，安装命令固定到该精确版本；本仓库当前 README 在发布回读后补记完整证据。npm Registry 确认 `dsh-grok-provider@1.0.2` 可安装且 `latest=1.0.2`。
+本 README 随 `1.0.3` 一起进入 npm tarball，下面的精确安装命令也固定为 `1.0.3`。上一份已完成供应链回读的版本为 `1.0.2`。
 
 ## 它解决什么问题
 
@@ -19,7 +19,7 @@
 | 模型 | 运行时读取账号可见的全部 Grok Build 模型，不维护静态模型白名单 |
 | 对话 | Responses 流式文本、reasoning、加密 reasoning replay、usage 与 finish reason |
 | 图片 | 仅精确 `grok-4.6` 接收 Harness attachment 中有界的 JPEG/PNG 图片；`grok-4.5` 与其他模型保持 text-only |
-| 搜索 | 精确 `grok-4.6` 提供默认关闭的 Web/X Search；`1.0.1` 解决同名 function/server-tool 冲突，`1.0.2` 隐藏严格空 reasoning 的无内容 `Think` 投影 |
+| 搜索 | 精确 `grok-4.6` 提供默认关闭的 Web/X Search；`1.0.3` 增加流前认证恢复与安全的部分输出保留，不自动重放已开始的流 |
 | 工具 | 将 function call 交回 Harness 权限层；Provider 本身不执行工具，关闭对应 Search 开关时保留本地 `web_search` / `x_search` |
 | 账户面板 | 登录状态、每周/月额度、重置时间、动态模型能力与 reasoning 档位 |
 | 界面 | Web 设置页中英文切换；TUI 提供闭合的 `/grok` 命令 |
@@ -44,10 +44,10 @@ grok models
 
 ### 2. 安装 Provider
 
-安装已发布的精确版本：
+安装精确版本：
 
 ```sh
-dsh plugin --profile web add dsh-grok-provider@1.0.2
+dsh plugin --profile web add dsh-grok-provider@1.0.3
 dsh web
 ```
 

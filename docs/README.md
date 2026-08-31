@@ -58,6 +58,7 @@
 - [v1.0.0 中英双语发行说明](./releases/v1.0.0.md)
 - [v1.0.1 中英双语发行说明](./releases/v1.0.1.md)
 - [v1.0.2 中英双语发行说明](./releases/v1.0.2.md)
+- [v1.0.3 中英双语发行说明](./releases/v1.0.3.md)
 - [v0.1.2-rc.1 中英双语预发行说明](./releases/v0.1.2-rc.1.md)
 - [ADR-0001：认证与传输路线](./adr/0001-auth-and-transport-route.md)
 - [ADR-0002：首版能力边界](./adr/0002-v0.1-scope.md)
@@ -69,6 +70,7 @@
 - [ADR-0008：图片输入使用异步请求编译器](./adr/0008-image-input-request-compiler.md)
 - [ADR-0009：运行时版本诊断与闭合登录失败](./adr/0009-runtime-diagnostics-and-login-failures.md)
 - [ADR-0010：默认关闭且独立配置的 Web/X Search](./adr/0010-default-off-web-x-search.md)
+- [ADR-0011：有界认证恢复与部分流保留](./adr/0011-bounded-auth-recovery-and-partial-stream-preservation.md)
 
 ## 发布与后续开发门禁
 

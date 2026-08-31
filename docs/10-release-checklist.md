@@ -204,6 +204,21 @@ English summary: every release must close documentation, security, tests, determ
 - [x] Annotated tag object `353bcd3717d4440ab20a2b05a5e9d51eef22fa7f` peel 到 release commit；不可变 `v0.1.11`、唯一 GitHub Release asset 与 Trusted Publisher run [`33303631312`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33303631312) 已完成。npm `latest=0.1.11`，Registry、Release 与本地 tarball 逐字节一致；`npm audit signatures` 确认隔离安装图中 9 个包具有已验证 Registry 签名、3 个包具有已验证 attestations，本包公开 npm metadata 包含 1 个 Registry signature、2 个 attestations，SLSA provenance 精确绑定 `release.yml`、`v0.1.11`、release commit 与该 run。
 - [ ] 网络可达 Windows 真机的官方 CLI 外部浏览器弹出仍未完成验收；该独立边界不是 `0.1.11` 发布门禁，完成前不得声称已修复或已验证。
 
+## `1.0.3` 认证与长流中断修复门禁
+
+- [x] 从最新 `origin/yukiryou/main` 创建隔离分支 `yukiryou/v1.0.3-auth-recovery`；原工作树的用户文件保持未修改。
+- [x] 真实会话故障分为两类：流前 HTTP 401 与已收到内容后的约 318 秒 transport stall；不再把两者都归因于 API Key。
+- [x] ADR-0011 冻结边界：流前 401/403 最多一次官方 CLI refresh + 同请求重试；同 revision 并发 single-flight；流开始后永不重放。
+- [x] 安全部分保留只接受有界 text/reasoning；工具调用、unknown/status-bearing chunk、畸形协议、abort 与无可见内容继续失败关闭。
+- [x] fixture 红绿回归覆盖一次恢复、持续拒绝、并发刷新、流后不重试、transport/clean EOF 保留与工具/status-bearing 失败关闭。
+- [x] 连续两分钟没有任何响应字节会中止当前连接；每个字节 chunk 刷新 idle deadline，且不会重放请求。
+- [x] 精确 Node `24.19.0` 全量回归：274 tests、272 pass、0 fail、2 platform skips。
+- [x] 当前已登录账号的脱敏 `grok-4.6` Low Effort 生产 Adapter 最小请求完成：2 block-start、14 reasoning-delta、2 block-end、1 text-delta、1 usage、1 finish；未保留正文、URL、身份、凭据或原始事件。
+- [x] 生产依赖审计为 0 漏洞；当前 dry-run pack 为 77 文件。`git diff --check` 通过，秘密模式扫描只命中显式 fixture token 与记录这些 canary 的历史检查表文本；全量测试内含确定性 build。
+- [ ] 代码 PR、双平台 CI、最终 release commit 与唯一 tarball 尚未冻结；冻结前不得给出制品摘要或触发发布。
+- [ ] 仓库所有者需在最终提交、文件数、字节数和摘要明确后授权唯一 `dsh-grok-provider@1.0.3` 制品。
+- [ ] Annotated tag、唯一 GitHub Release asset、Trusted Publisher、Registry 字节、签名、attestations、隔离安装与 provenance 尚待完成。
+
 ## `1.0.0` Search 响应协议修复发布门禁
 
 - [x] 新稳定版 `1.0.0` 已发布；不得覆盖或重发已发布 `0.1.11`，npm Registry 回读为 `latest=1.0.0`。

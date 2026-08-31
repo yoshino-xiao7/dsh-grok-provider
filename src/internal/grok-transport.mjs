@@ -3,7 +3,7 @@ const MAX_JSON_RESPONSE_BYTES = 256 * 1024
 const MAX_REQUEST_BYTES = 16 * 1024 * 1024
 const DEFAULT_MODEL_TIMEOUT_MS = 30 * 1000
 const DEFAULT_BILLING_TIMEOUT_MS = 15 * 1000
-const DEFAULT_RESPONSE_TIMEOUT_MS = 10 * 60 * 1000
+const DEFAULT_RESPONSE_TIMEOUT_MS = 2 * 60 * 1000
 const MAX_TIMER_DELAY_MS = 2_147_483_647
 
 export class GrokTransportError extends Error {
@@ -42,10 +42,10 @@ export function createGrokTransport({
     async getBilling({ signal } = {}) {
       const deadline = createDeadline(signal, billingTimeoutMs)
       try {
-        return await credentialSource.withAccessToken(async (accessToken, metadata) => {
-          if (!isPlainObject(metadata) || !isHeaderValue(metadata.userId)) throw new GrokTransportError()
+        return await withAuthRecovery(credentialSource, async (accessToken, metadata) => {
           let response
           try {
+            if (!isPlainObject(metadata) || !isHeaderValue(metadata.userId)) throw new GrokTransportError()
             const headers = buildHeaders({ accessToken, attributionHeaders, clientIdentifier, clientVersion })
             headers.set("x-userid", metadata.userId)
             response = await fetch(`${BASE_URL}/v1/billing?format=credits`, {
@@ -75,7 +75,7 @@ export function createGrokTransport({
     async listModels({ signal } = {}) {
       const deadline = createDeadline(signal, modelTimeoutMs)
       try {
-        return await credentialSource.withAccessToken(async (accessToken) => {
+        return await withAuthRecovery(credentialSource, async (accessToken) => {
           let response
           try {
             response = await fetch(`${BASE_URL}/v1/models`, {
@@ -124,7 +124,7 @@ export function createGrokTransport({
       let source
       const deadline = createDeadline(signal, responseTimeoutMs)
       try {
-        response = await credentialSource.withAccessToken(async (accessToken) => {
+        response = await withAuthRecovery(credentialSource, async (accessToken) => {
           const headers = buildHeaders({
             accessToken,
             attributionHeaders,
@@ -145,6 +145,7 @@ export function createGrokTransport({
         source = response.body
         for await (const chunk of source) {
           if (!(chunk instanceof Uint8Array)) throw new GrokTransportError(response.status)
+          deadline.reset()
           yield chunk
         }
       } catch (error) {
@@ -161,6 +162,34 @@ export function createGrokTransport({
   })
 }
 
+async function withAuthRecovery(credentialSource, operation) {
+  return credentialSource.withAccessToken(async (accessToken, metadata, recover) => {
+    let response = await operation(accessToken, metadata)
+    if (!isAuthRejection(response)) return response
+    const status = response.status
+    await discardResponse(response)
+    response = undefined
+    if (typeof recover !== "function") throw new GrokTransportError(status)
+    return recover(operation)
+  })
+}
+
+function isAuthRejection(response) {
+  return response !== null &&
+    typeof response === "object" &&
+    (response.status === 401 || response.status === 403)
+}
+
+async function discardResponse(response) {
+  try {
+    if (response.body && typeof response.body.cancel === "function") {
+      await response.body.cancel()
+    }
+  } catch {
+    // A rejected response must not prevent the bounded credential recovery attempt.
+  }
+}
+
 function createDeadline(callerSignal, timeoutMs) {
   if (callerSignal !== undefined && (
     callerSignal === null ||
@@ -173,9 +202,15 @@ function createDeadline(callerSignal, timeoutMs) {
   const abortFromCaller = () => controller.abort(callerSignal.reason)
   if (callerSignal?.aborted) abortFromCaller()
   else callerSignal?.addEventListener("abort", abortFromCaller, { once: true })
-  const timer = setTimeout(() => controller.abort(new DOMException("Timed out", "TimeoutError")), timeoutMs)
+  let timer
+  const reset = () => {
+    clearTimeout(timer)
+    timer = setTimeout(() => controller.abort(new DOMException("Timed out", "TimeoutError")), timeoutMs)
+  }
+  reset()
   return {
     signal: controller.signal,
+    reset,
     dispose() {
       clearTimeout(timer)
       callerSignal?.removeEventListener("abort", abortFromCaller)

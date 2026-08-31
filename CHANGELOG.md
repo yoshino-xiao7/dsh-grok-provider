@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.3 - 2026-08-31
+
+- Recover one pre-stream 401/403 by asking the official Grok CLI to refresh its shared session, reloading the validated credential, and retrying the request exactly once. Concurrent rejections from the same credential revision share one bounded refresh; a persistent rejection remains `AUTH`.
+- Never replay a request after a successful response begins. Abort a response after two continuous minutes without any wire bytes; each received byte chunk refreshes this idle deadline. If the source disconnects, idles out, or reaches clean EOF after only bounded text/reasoning chunks, preserve that partial output, close its visible blocks, and append a bilingual interruption notice asking the user to send “continue.” Any observed tool call, unknown chunk, malformed protocol, user abort, or empty partial response keeps the established fail-closed behavior.
+- Distinguish a clean premature SSE EOF from malformed events so only the former is eligible for partial-output preservation. Focused regressions cover one-shot recovery, persistent auth failure, concurrent single-flight refresh, post-start no-retry, idle timeout, transport interruption, clean EOF, status-bearing stream rejection, and partial tool-call rejection. The exact Node `24.19.0` suite passes with 274 tests, 272 pass, 0 fail, and 2 platform skips.
+- Complete one redacted real-account success-path request with exact `grok-4.6` at Low Effort through the production adapter. It produced 2 block starts, 14 reasoning deltas, 2 block ends, 1 text delta, 1 usage chunk, and 1 finish. No response text, prompt output, URL, identity, credential, or raw event was retained; this does not simulate a future 401 or network stall.
+
 ## 1.0.2 - 2026-08-30
 
 - Suppress contentless Harness reasoning blocks for upstream reasoning lifecycles that fully close without any visible summary or raw delta. The decoder now starts a visible block only when the first non-empty reasoning delta arrives; non-empty reasoning items remain separate blocks with their existing ordering.

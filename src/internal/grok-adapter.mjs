@@ -1,4 +1,5 @@
 import { parseModelCatalogResponse } from "./model-catalog.mjs"
+import { preserveSafePartialResponse } from "./partial-response-recovery.mjs"
 import { createResponsesCallProtocol } from "./responses-call.mjs"
 
 export class GrokAdapterError extends Error {
@@ -131,10 +132,11 @@ async function* streamWithGeneration(generation, preparedRoute, requestPlan, map
   try {
     requireProvider(requestPlan.provider)
     const route = preparedRoute ?? await resolveRoute(generation, requestPlan)
-    for await (const chunk of requestPlan.stream({
+    const stream = requestPlan.stream({
       route,
       transport: generation.transport,
-    })) yield chunk
+    })
+    for await (const chunk of preserveSafePartialResponse(stream)) yield chunk
   } catch (error) {
     throw mapError(error, requestPlan.signal)
   }

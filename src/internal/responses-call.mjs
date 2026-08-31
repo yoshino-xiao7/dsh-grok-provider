@@ -1,4 +1,8 @@
-import { createResponsesEventDecoder } from "./responses-codec.mjs"
+import {
+  InvalidResponsesStreamError,
+  PrematureResponsesStreamError,
+  createResponsesEventDecoder,
+} from "./responses-codec.mjs"
 import { createResponsesRequestCompiler } from "./responses-request-compiler.mjs"
 import { parseResponsesSse } from "./responses-sse.mjs"
 
@@ -50,7 +54,12 @@ async function* streamPreparedCall({ requestPlan, route, transport }) {
   )) {
     for (const chunk of decoder.push(event)) yield chunk
   }
-  decoder.finish()
+  try {
+    decoder.finish()
+  } catch (error) {
+    if (error instanceof InvalidResponsesStreamError) throw new PrematureResponsesStreamError()
+    throw error
+  }
 }
 
 function isPlainObject(value) {
