@@ -215,7 +215,8 @@ English summary: every release must close documentation, security, tests, determ
 - [x] 精确 Node `24.19.0` 全量回归：274 tests、272 pass、0 fail、2 platform skips。
 - [x] 当前已登录账号的脱敏 `grok-4.6` Low Effort 生产 Adapter 最小请求完成：2 block-start、14 reasoning-delta、2 block-end、1 text-delta、1 usage、1 finish；未保留正文、URL、身份、凭据或原始事件。
 - [x] 生产依赖审计为 0 漏洞；当前 dry-run pack 为 77 文件。`git diff --check` 通过，秘密模式扫描只命中显式 fixture token 与记录这些 canary 的历史检查表文本；全量测试内含确定性 build。
-- [ ] 代码 PR、双平台 CI、最终 release commit 与唯一 tarball 尚未冻结；冻结前不得给出制品摘要或触发发布。
+- [x] 代码 PR #37 合并为 `9958f487abf8ebd062eecb4368689e4d049b1d35`；main CI run `33377849906` 的 macOS 14 / Windows 2022 均通过。
+- [ ] 发布证据 PR、最终 release commit 与唯一 tarball 尚未冻结；冻结前不得给出制品摘要或触发发布。
 - [ ] 仓库所有者需在最终提交、文件数、字节数和摘要明确后授权唯一 `dsh-grok-provider@1.0.3` 制品。
 - [ ] Annotated tag、唯一 GitHub Release asset、Trusted Publisher、Registry 字节、签名、attestations、隔离安装与 provenance 尚待完成。
 

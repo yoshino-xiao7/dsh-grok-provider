@@ -225,3 +225,4 @@ Windows x64 真机不再是 `0.1.0` 预发布阻断项。首次发布后必须�
 - 连续两分钟无任何响应字节会中止当前连接，每个 wire chunk 刷新 idle deadline；持续有输出的长任务不受总时长限制。
 - 源码版本、双语文档、ADR 与 274 项 Node 24 回归已完成；双平台 CI 与供应链发布证据仍按独立边界推进。
 - 当前已登录账号的一次脱敏 `grok-4.6` Low Effort 生产 Adapter 请求已完成，只保留 `2/14/2/1/1/1` 的 block-start/reasoning-delta/block-end/text-delta/usage/finish 计数。生产审计为 0 漏洞，dry-run pack 为 77 文件；这些成功证据不能模拟未来的 401 或断流。
+- 代码 PR #37 已合并为 `9958f487abf8ebd062eecb4368689e4d049b1d35`，main CI run `33377849906` 的 macOS 14 / Windows 2022 全绿。发布证据提交、唯一制品、授权与供应链回读仍未完成。
