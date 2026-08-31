@@ -1,11 +1,11 @@
 # Grok Build Provider 文档索引
 
-- 状态：**`dsh-grok-provider@1.0.2` 已正式发布，制品与供应链回读已关闭**
-- 制品范围：完整校验严格空 reasoning lifecycle，但不再投影无内容 `Think`；首个非空 delta 才开始可见 block
-- 当前已完成发布回读版本：`1.0.2`
-- `1.0.2` 已发布基线：`yukiryou/main@be200f9352afe93b27dd2856d89c01674f0cd637`
-- `1.0.2` 发布路径：annotated tag object `b7efd3aabb99c73e1747d2d87890cdf9b284c438` peel 到最终 release commit；final CI run [`33318426571`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33318426571) 双平台全绿，Trusted Publisher run [`33319150964` attempt 1](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33319150964/attempts/1) 已完成
-- `1.0.2` 发布状态：仓库所有者明确授权的唯一 74 文件 tarball 为 255,282 bytes，unpacked size 789,962 bytes；SHA-1 `3feddb7048fe4c796037804518999b12ae491802`、SHA-256 `010a21770cb3e4e42b7195984df1f5bf8dc5027066198cf99b7d713ac045f605`、npm SRI `sha512-TcvvPUXBJZEA728pVnUrXSZebGfIoB5ATG5041wA1OFzOE+hFTO98C5Fxl99WuFW2y7V89gkusYIKCpGlLNQIg==`。冻结候选、GitHub Release asset 与 npm Registry tarball 逐字节一致，npm `latest=1.0.2`；Node `24.19.0` / npm `11.5.1` 锁定隔离安装和生产依赖审计通过，本包 1 个 Registry signature / 2 个 package attestations、安装图 11 个 signed packages / 2 个 attested packages，以及精确绑定 `release.yml` / `refs/tags/v1.0.2` / release commit / publish run 的 SLSA provenance 均已验证
+- 状态：**`dsh-grok-provider@1.0.3` 已正式发布，制品与供应链回读已关闭**
+- 制品范围：流前 401/403 一次官方 CLI 恢复与最多一次重试；流后不重放，安全的有界部分输出可在断流或两分钟 wire-byte idle 后保留
+- 当前已完成发布回读版本：`1.0.3`
+- `1.0.3` 已发布基线：`yukiryou/main@07ebd35c56348a1b3296bd46d1a69f5b0f430241`
+- `1.0.3` 发布路径：annotated tag object `7ec8a8a1086749e7ac1dfb0ef2bd50c821838363` peel 到最终 release commit；final CI run [`33378215345`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33378215345) 双平台全绿，Trusted Publisher run [`33379149158` attempt 1](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33379149158/attempts/1) 已完成
+- `1.0.3` 发布状态：仓库所有者明确授权的唯一 77 文件 tarball 为 267,403 bytes，unpacked size 829,862 bytes；SHA-1 `6197c3d30ec1ef5f559371911d612f6236eee2f9`、SHA-256 `7f740c7258ab7eee0c96e1ddae3398b41a25e718cf267e244f8693c3c99aeb0d`、npm SRI `sha512-kJgN0NKKV7Te3oAgbPnEua/EQCLnj5S0KWAWrhP0ixudJBepplRFARYHCxwxOwbG87bnX07Mz/dxCoBiphWhqQ==`。冻结制品、GitHub Release asset 与 npm Registry tarball 逐字节一致，npm `latest=1.0.3`；Node `24.19.0` / npm `11.5.1` 锁定隔离安装和生产依赖审计通过，本包 1 个 Registry signature / 2 个 package attestations、安装图 11 个 signed packages / 2 个 attested packages，以及精确绑定 `release.yml` / `refs/tags/v1.0.3` / release commit / publish run 的 SLSA provenance 均已验证
 - 撤回状态：`0.1.8` 只对应 sidebar quota 维护发布，不包含 Search；撤回不会释放 npm semver，任何 Search 制品都不得复用 `0.1.8`
 - 兼容基线：DeepSeek Harness `0.1.1-rc.2`
 - 目标平台：macOS arm64、Windows x64
@@ -83,6 +83,8 @@
 `1.0.1` 已发布 request 侧同名冲突与错误归因修复：固定 Proxy 会拒绝同时存在 Harness `web_search` / `x_search` function definitions 和同名 xAI server Search descriptors 的请求。Provider 先完整验证所有 functions，再只过滤已启用的同名 wire definitions；关闭开关时保留本地工具，历史 calls/results 原样保留，receipt 拒绝交集。SSE source transport error 不再被包装成 parser error，因此 HTTP 400 映射为 `PROVIDER_ERROR` 而非 `INVALID_RESPONSE`；401/403、429 与 abort 的既有映射也由 adapter 回归锁定。一次授权的脱敏原失败 X 会话结构回放以 8 messages、40 source functions、38 wire functions + 2 server tools、2 historical reserved calls、1 models GET、1 Responses POST、314 events 和 `response.completed` 结束；没有保存正文、URL、身份或凭据。精确 Node `24.19.0` 本地全量门禁、代码/main/final 双平台 CI、唯一授权制品、隔离安装、Registry、签名、attestations 与 provenance 回读均已完成；这些证据不替代 Windows 真机浏览器登录验收。
 
 `1.0.2` 已发布，只修复可见 reasoning 投影及其对齐槽：普通空 item 保留既有校验，Search-backed 同 ID 复用保留精确 own-data/accessor 校验；空项产生零个 Harness block chunk，非空 summary/raw reasoning 在首个 delta 才按 output index 开始 block。可见非空 replay 与 Search 后整响应 replay 抑制不变；隐藏普通空项不占 replay 槽，其 encrypted content 校验后不持久化。候选源码真实账号验收中，Web 为 `5 Search / 1 非空 reasoning / 0 空 reasoning / 1 非空 text / 1 finish`，X 为 `3 custom-tool Search / 1 非空 reasoning / 0 空 reasoning / 1 非空 text / 1 finish`；只保留计数。旧会话不回写，认证、模型、图片、endpoint、URL、工具权限和 Windows 登录边界不变；发布、CI、制品与供应链回读也不构成网络可达 Windows 真机外部浏览器弹出验收。
+
+`1.0.3` 已发布认证恢复与长流中断修复：流前 401/403 由官方 CLI single-flight 刷新共享会话并最多重试一次；流开始后绝不重放。无工具副作用的有界 text/reasoning 可以在 transport interruption、干净过早 EOF 或连续两分钟无 wire bytes 时保留并提示用户发送“继续”；其余路径失败关闭。唯一授权制品、双平台 CI、Registry 锁定安装、签名、attestations 与 provenance 回读均已完成；真实账号成功路径不模拟未来网络故障，Windows 真机浏览器登录仍是独立未验收边界。
 
 ## 官方依据
 

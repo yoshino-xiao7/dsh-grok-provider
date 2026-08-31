@@ -8,7 +8,7 @@
 
 `1.0.3` 修复两类真实运行中断：流开始前遇到 401/403 时，通过官方 Grok CLI 进行一次有界会话刷新并仅重试一次；流已开始后绝不重放。若连接中断前只收到安全的文本/reasoning，Provider 会保留已收到内容并提示用户发送“继续”；一旦出现工具调用、未知事件或协议异常，仍严格失败关闭。
 
-本 README 随 `1.0.3` 一起进入 npm tarball，下面的精确安装命令也固定为 `1.0.3`。上一份已完成供应链回读的版本为 `1.0.2`。
+本 README 随 `1.0.3` 一起进入 npm tarball，下面的精确安装命令也固定为 `1.0.3`。npm Registry 已确认 `dsh-grok-provider@1.0.3` 可安装且 `latest=1.0.3`；Registry、GitHub Release 与冻结制品逐字节一致。
 
 ## 它解决什么问题
 
@@ -134,9 +134,9 @@ dsh web
 
 ## 项目来源与发现
 
-- 本说明对应的 npm 精确版本：[dsh-grok-provider@1.0.2](https://www.npmjs.com/package/dsh-grok-provider/v/1.0.2)
-- 当前已完成回读的 GitHub Release：[v1.0.2](https://github.com/yoshino-xiao7/dsh-grok-provider/releases/tag/v1.0.2)
-- 发布证据：release commit `be200f9352afe93b27dd2856d89c01674f0cd637`，annotated tag object `b7efd3aabb99c73e1747d2d87890cdf9b284c438` peel 至该提交，final CI run [`33318426571`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33318426571)，Trusted Publisher run [`33319150964` attempt 1](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33319150964/attempts/1)。仓库所有者明确授权的唯一 tarball 含 74 个文件、255,282 bytes，unpacked size 789,962 bytes；SHA-1 为 `3feddb7048fe4c796037804518999b12ae491802`，SHA-256 为 `010a21770cb3e4e42b7195984df1f5bf8dc5027066198cf99b7d713ac045f605`，SRI 为 `sha512-TcvvPUXBJZEA728pVnUrXSZebGfIoB5ATG5041wA1OFzOE+hFTO98C5Fxl99WuFW2y7V89gkusYIKCpGlLNQIg==`。冻结候选、GitHub Release asset 与 npm Registry tarball 逐字节一致，npm 确认 `dsh-grok-provider@1.0.2` 可安装且 `latest=1.0.2`；Node `24.19.0` / npm `11.5.1` 的 Registry 锁定隔离安装通过 Host 注册/`apply`/注入与 client 注册/factory/`apply`/注入 smoke，生产依赖审计为 0 漏洞。`npm audit signatures` 确认安装图中 11 个包具有已验证 Registry 签名、2 个包具有已验证 attestations；本包公开 metadata 包含 1 个 Registry signature、2 个 attestations，SLSA provenance 精确绑定 `release.yml`、`refs/tags/v1.0.2`、release commit 与 publish run。
+- 本说明对应的 npm 精确版本：[dsh-grok-provider@1.0.3](https://www.npmjs.com/package/dsh-grok-provider/v/1.0.3)
+- 当前已完成回读的 GitHub Release：[v1.0.3](https://github.com/yoshino-xiao7/dsh-grok-provider/releases/tag/v1.0.3)
+- 发布证据：release commit `07ebd35c56348a1b3296bd46d1a69f5b0f430241`，annotated tag object `7ec8a8a1086749e7ac1dfb0ef2bd50c821838363` peel 至该提交，final CI run [`33378215345`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33378215345)，Trusted Publisher run [`33379149158` attempt 1](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33379149158/attempts/1)。仓库所有者明确授权的唯一 tarball 含 77 个文件、267,403 bytes，unpacked size 829,862 bytes；SHA-1 为 `6197c3d30ec1ef5f559371911d612f6236eee2f9`，SHA-256 为 `7f740c7258ab7eee0c96e1ddae3398b41a25e718cf267e244f8693c3c99aeb0d`，SRI 为 `sha512-kJgN0NKKV7Te3oAgbPnEua/EQCLnj5S0KWAWrhP0ixudJBepplRFARYHCxwxOwbG87bnX07Mz/dxCoBiphWhqQ==`。冻结制品、GitHub Release asset 与 npm Registry tarball 逐字节一致，Registry 锁定安装通过 Host/client 加载且生产审计为 0 漏洞；本包公开 metadata 含 1 个 Registry signature、2 个 attestations，安装图为 11 个已验证签名包与 2 个 attested 包。SLSA provenance 精确绑定 `release.yml`、`refs/tags/v1.0.3`、release commit 与 publish run。
 - npm 页面文档修正：`1.0.1` tarball 内曾保留旧安装示例；已发布的 `1.0.2` tarball 内，本 README 使用精确 `@1.0.2` 命令。已发布的 `1.0.1` 字节不会被覆盖。
 - GitHub 社区发现：仓库已添加 DeepSeek Harness 官方推荐的 `dsh-plugin` 与 `dsh` Topics
 - YukiRyou 受管来源：[deepseek-yukiryou-plugin-catalog](https://github.com/yoshino-xiao7/deepseek-yukiryou-plugin-catalog)，当前仍锁定已完成真机验收的 `dsh-grok-provider@0.1.0`，且只标记 `darwin-arm64`
@@ -144,6 +144,12 @@ dsh web
 出现在目录中不代表 xAI 或 DeepSeek Harness 官方背书。项目已通过[收录 PR #3415](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin/pull/3415) 进入公共 `awesome-dsh-plugin` 的 `model` 分类；该目录是仓库级发现入口，不承载精确 npm 版本或平台验收声明。
 
 ## 兼容性与范围
+
+### `1.0.3` 修复边界
+
+- 仅在 200/SSE 开始前的 401/403 上，通过官方 Grok CLI 做一次有界共享会话刷新、重新读取凭据并最多重试一次；持续拒绝仍返回 `AUTH`，不新增 API Key 模式。
+- 流开始后绝不自动重放。transport interruption、干净过早 EOF 或连续两分钟没有任何 wire bytes 时，只有无工具副作用且有界的 text/reasoning 可以被保留并附加“发送继续”提示；工具调用、未知事件、畸形协议、用户 abort 或空部分响应继续失败关闭。
+- 精确 Node `24.19.0` 门禁为 274 tests、272 pass、0 fail、2 platform skips；唯一 77 文件制品的 final release commit、双平台 CI、明确授权、隔离安装、Registry、签名、attestations 与 provenance 回读均已完成。真实账号成功路径只验证当前连接，不模拟未来 401 或断流；本版也不构成 Windows 真机浏览器登录验收。详情见 [`docs/releases/v1.0.3.md`](docs/releases/v1.0.3.md)。
 
 ### `1.0.2` 修复边界
 
@@ -171,11 +177,11 @@ dsh web
 - 最终源码完成两层脱敏真实账号复验：原始 Web/X 协议探针各 1 次请求、各 64 events，分别观察到对应 Search 且终态 `completed`；生产 adapter 共完成 5 次 Responses，direct Web/X 均为 `stop`，Harness 形状的本地 `x_search` call/result 续跑三轮依次为 `tool-calls`、`tool-calls`、`stop`，前两轮各 1 次本地调用。该续跑没有在同一 wire request 中同时放入 Harness `x_search` function definition 与 xAI `{ type: "x_search" }` server descriptor；`1.0.1` 后续才隔离出这一 HTTP 400 冲突。未保存结果、URL、prompt、身份或凭据；这些不是发布、OAuth 或 Windows 真机证据。
 - manifest/lock 已同步为 `1.0.0`；Node 24 全量测试为 245 项、243 pass、0 fail、2 项平台跳过，生产依赖审计为 0 漏洞，确定性 build/bundle、72 项 dry-run pack、秘密模式扫描与 diff 检查均通过。代码 PR #28、main CI run [`33308371009`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33308371009)、最终 release commit、双平台 final CI、唯一制品、精确授权及 Registry/signature/attestation/provenance 回读均已完成。
 
-| 项目 | `1.0.2` 已发布兼容边界 |
+| 项目 | `1.0.3` 已发布兼容边界 |
 | --- | --- |
 | DeepSeek Harness | 精确支持 `0.1.1-rc.2` |
 | Node.js | `>=24.19.0` |
-| macOS arm64 | 图片发送已完成真实 Harness 验证；`1.0.2` 只调整严格空 reasoning 的可见投影 |
+| macOS arm64 | 图片发送已完成真实 Harness 验证；`1.0.3` 增加流前认证恢复与安全部分输出保留 |
 | Windows x64 | 代码路径与现有 slow-fake 保持不变；网络可达时由官方 CLI 生成 URL 并打开浏览器，该路径仍未完成 Windows 真机验收 |
 | macOS x64 / Linux | 不支持 |
 | Grok CLI | 不锁完整版本；严格校验官方路径、`login --oauth` 能力与生产 OIDC 凭据契约 |

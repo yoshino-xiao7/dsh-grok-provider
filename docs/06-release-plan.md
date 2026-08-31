@@ -2,7 +2,11 @@
 
 ## 0. 当前状态
 
-`dsh-grok-provider@1.0.2` 已正式发布并完成供应链回读：最终 release commit `be200f9352afe93b27dd2856d89c01674f0cd637` 的 macOS 14 / Windows 2022 final CI run [`33318426571`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33318426571) 全绿，annotated tag object `b7efd3aabb99c73e1747d2d87890cdf9b284c438` peel 到该提交。仓库所有者明确授权的唯一 74 文件制品为 255,282 bytes packed、789,962 bytes unpacked；SHA-1 `3feddb7048fe4c796037804518999b12ae491802`、SHA-256 `010a21770cb3e4e42b7195984df1f5bf8dc5027066198cf99b7d713ac045f605`、SRI `sha512-TcvvPUXBJZEA728pVnUrXSZebGfIoB5ATG5041wA1OFzOE+hFTO98C5Fxl99WuFW2y7V89gkusYIKCpGlLNQIg==`。Trusted Publisher run [`33319150964` attempt 1](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33319150964/attempts/1) 已完成；npm `latest=1.0.2`，冻结候选、唯一 GitHub Release asset 与 Registry tarball 逐字节一致。Node `24.19.0` / npm `11.5.1` 锁定 Registry 安装通过 Host 注册/`apply`/注入与 client 注册/factory/`apply`/注入 smoke，生产依赖审计为 0 漏洞；1 个 Registry signature、2 个 attestations、安装图 11 个 signed packages / 2 个 attested packages，以及精确绑定 `release.yml` / `refs/tags/v1.0.2` / release commit / publish run 的 SLSA provenance 均已验证。
+`dsh-grok-provider@1.0.3` 已正式发布并完成供应链回读：最终 release commit `07ebd35c56348a1b3296bd46d1a69f5b0f430241` 的 macOS 14 / Windows 2022 final CI run [`33378215345`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33378215345) 全绿，annotated tag object `7ec8a8a1086749e7ac1dfb0ef2bd50c821838363` peel 到该提交。仓库所有者明确授权的唯一 77 文件制品为 267,403 bytes packed、829,862 bytes unpacked；SHA-1 `6197c3d30ec1ef5f559371911d612f6236eee2f9`、SHA-256 `7f740c7258ab7eee0c96e1ddae3398b41a25e718cf267e244f8693c3c99aeb0d`、SRI `sha512-kJgN0NKKV7Te3oAgbPnEua/EQCLnj5S0KWAWrhP0ixudJBepplRFARYHCxwxOwbG87bnX07Mz/dxCoBiphWhqQ==`。Trusted Publisher run [`33379149158` attempt 1](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33379149158/attempts/1) 已完成；npm `latest=1.0.3`，冻结制品、唯一 GitHub Release asset 与 Registry tarball 逐字节一致。Node `24.19.0` / npm `11.5.1` 锁定 Registry 安装通过 Host/client smoke，生产依赖审计为 0 漏洞；1 个 Registry signature、2 个 attestations、安装图 11 个 signed packages / 2 个 attested packages，以及精确绑定 `release.yml` / `refs/tags/v1.0.3` / release commit / publish run 的 SLSA provenance 均已验证。
+
+`1.0.3` 修复流前 401/403 的一次官方 CLI 会话刷新与同请求重试，并在流开始后坚持不重放；无工具副作用的有界 text/reasoning 可在 transport interruption、干净过早 EOF 或连续两分钟无 wire bytes 时保留并提示用户发送“继续”。持续认证拒绝、工具调用、未知或畸形协议继续失败关闭。该发布不改变 Windows 浏览器登录边界。
+
+上一稳定版 `1.0.2` 已正式发布并完成供应链回读：最终 release commit `be200f9352afe93b27dd2856d89c01674f0cd637` 的 macOS 14 / Windows 2022 final CI run [`33318426571`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33318426571) 全绿，annotated tag object `b7efd3aabb99c73e1747d2d87890cdf9b284c438` peel 到该提交。仓库所有者明确授权的唯一 74 文件制品为 255,282 bytes packed、789,962 bytes unpacked；SHA-1 `3feddb7048fe4c796037804518999b12ae491802`、SHA-256 `010a21770cb3e4e42b7195984df1f5bf8dc5027066198cf99b7d713ac045f605`、SRI `sha512-TcvvPUXBJZEA728pVnUrXSZebGfIoB5ATG5041wA1OFzOE+hFTO98C5Fxl99WuFW2y7V89gkusYIKCpGlLNQIg==`。Trusted Publisher run [`33319150964` attempt 1](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33319150964/attempts/1) 已完成；冻结候选、唯一 GitHub Release asset 与 Registry tarball 逐字节一致。Node `24.19.0` / npm `11.5.1` 锁定 Registry 安装通过 Host 注册/`apply`/注入与 client 注册/factory/`apply`/注入 smoke，生产依赖审计为 0 漏洞；1 个 Registry signature、2 个 attestations、安装图 11 个 signed packages / 2 个 attested packages，以及精确绑定 `release.yml` / `refs/tags/v1.0.2` / release commit / publish run 的 SLSA provenance 均已验证。
 
 `1.0.2` 只修复严格空 reasoning 被投影为空 `Think` 的显示问题：空 reasoning 仍完整进入 decoder FSM，但仅在首个非空 summary/raw delta 到来时创建 Harness block；严格空生命周期产生零可见 chunk。request、Search、认证、图片、模型、endpoint、工具权限与 Windows 浏览器边界不变。
 
@@ -204,9 +208,9 @@ scoped 包首次公开发布必须保留 `--access public`。
 npm 发布不会自动成为受管可安装项。当前发现状态：
 
 - GitHub 仓库已添加 DeepSeek Harness 官方推荐的 `dsh-plugin` 与 `dsh` Topics，可被 Topic 驱动来源发现。
-- YukiRyou curated catalog 当前仍是精确 `dsh-grok-provider@0.1.0`、verification `installed`、仅 `darwin-arm64`。`1.0.2` 已发布及其完整性/provenance 回读不等于从 catalog 安装该精确版本，因此不得据此升级条目或增加平台。
+- YukiRyou curated catalog 当前仍是精确 `dsh-grok-provider@0.1.0`、verification `installed`、仅 `darwin-arm64`。`1.0.3` 已发布及其完整性/provenance 回读不等于从 catalog 安装该精确版本，因此不得据此升级条目或增加平台。
 - 公共 `awesome-dsh-plugin` 的收录 PR #3415 已合并，项目已进入 `model` 分类。该列表不记录精确 npm 版本或平台验证字段，因此收录只代表发现入口，不证明任一后续制品的受管安装或平台验收。
-- Windows x64 仍未完成一条闭合的 Registry 精确版本 production inspector、安装、重启、浏览器登录、聊天、工具调用和重新认证链路。`0.1.6` 发布后已确认图片可用，并确认官方 CLI 可在生成登录 URL 前因 OIDC discovery timeout 退出；`0.1.7` 只增加闭合诊断，不是浏览器弹出已修复或已验证的证据。`1.0.2` 的 Registry/制品回读也未覆盖上述真实链路、OAuth、完整真实账号会话或 Windows 浏览器弹出。
+- Windows x64 仍未完成一条闭合的 Registry 精确版本 production inspector、安装、重启、浏览器登录、聊天、工具调用和重新认证链路。`0.1.6` 发布后已确认图片可用，并确认官方 CLI 可在生成登录 URL 前因 OIDC discovery timeout 退出；`0.1.7` 只增加闭合诊断，不是浏览器弹出已修复或已验证的证据。`1.0.3` 的 Registry/制品回读也未覆盖上述真实链路、OAuth、完整真实账号会话或 Windows 浏览器弹出。
 
 catalog 条目只能记录实际验证完成的精确版本和平台。当前条目记录：
 

@@ -216,9 +216,9 @@ English summary: every release must close documentation, security, tests, determ
 - [x] 当前已登录账号的脱敏 `grok-4.6` Low Effort 生产 Adapter 最小请求完成：2 block-start、14 reasoning-delta、2 block-end、1 text-delta、1 usage、1 finish；未保留正文、URL、身份、凭据或原始事件。
 - [x] 生产依赖审计为 0 漏洞；当前 dry-run pack 为 77 文件。`git diff --check` 通过，秘密模式扫描只命中显式 fixture token 与记录这些 canary 的历史检查表文本；全量测试内含确定性 build。
 - [x] 代码 PR #37 合并为 `9958f487abf8ebd062eecb4368689e4d049b1d35`；main CI run `33377849906` 的 macOS 14 / Windows 2022 均通过。
-- [ ] 发布证据 PR、最终 release commit 与唯一 tarball 尚未冻结；冻结前不得给出制品摘要或触发发布。
-- [ ] 仓库所有者需在最终提交、文件数、字节数和摘要明确后授权唯一 `dsh-grok-provider@1.0.3` 制品。
-- [ ] Annotated tag、唯一 GitHub Release asset、Trusted Publisher、Registry 字节、签名、attestations、隔离安装与 provenance 尚待完成。
+- [x] 发布证据 PR #38 形成最终 release commit `07ebd35c56348a1b3296bd46d1a69f5b0f430241`；final CI run [`33378215345`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33378215345) 的 macOS 14 / Windows 2022 均通过。从该提交冻结的唯一 tarball 含 77 个文件，为 267,403 bytes packed、829,862 bytes unpacked；SHA-1 `6197c3d30ec1ef5f559371911d612f6236eee2f9`、SHA-256 `7f740c7258ab7eee0c96e1ddae3398b41a25e718cf267e244f8693c3c99aeb0d`、SRI `sha512-kJgN0NKKV7Te3oAgbPnEua/EQCLnj5S0KWAWrhP0ixudJBepplRFARYHCxwxOwbG87bnX07Mz/dxCoBiphWhqQ==`。
+- [x] 仓库所有者在看到完整精确 commit、制品、摘要与验证证据后明确授权发布 `dsh-grok-provider@1.0.3`；授权后没有重建或替换制品。
+- [x] Annotated tag object `7ec8a8a1086749e7ac1dfb0ef2bd50c821838363` peel 到 release commit；不可变 `v1.0.3`、唯一 GitHub Release asset 与 Trusted Publisher run [`33379149158` attempt 1](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33379149158/attempts/1) 已完成。npm `latest=1.0.3`，冻结制品、Release 与 Registry tarball 逐字节一致；Node `24.19.0` / npm `11.5.1` 锁定 Registry 安装及 0 漏洞生产审计通过，本包 1 个 Registry signature、2 个 attestations，安装图 11 个 signed packages / 2 个 attested packages，以及精确绑定 `release.yml` / `refs/tags/v1.0.3` / release commit / publish run 的 SLSA provenance 均已回读。
 
 ## `1.0.0` Search 响应协议修复发布门禁
 
