@@ -229,9 +229,11 @@ English summary: every release must close documentation, security, tests, determ
 - [x] 发行契约扫描全部 `dist/**`，禁止打包产物再引用已删除 helper。
 - [x] 精确 Node `24.19.0` 全量测试、生产依赖审计与 `pack:check`。
 - [x] 代码 PR #41 合并为 `61c80fff0841e44c16dabb2cc803a80c1bdf5456`；main CI run [`33870741679`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33870741679) 的 macOS 14 / Windows 2022 均通过。
-- [ ] 发布证据 PR、最终 release commit 与唯一 tarball 尚未冻结；冻结前不得给出制品摘要或触发发布。
-- [ ] 仓库所有者需在最终提交、文件数、字节数和摘要明确后授权唯一 `dsh-grok-provider@1.0.4` 制品。
-- [ ] Annotated tag、唯一 GitHub Release asset、Trusted Publisher、Registry 字节、签名、attestations、隔离安装与 provenance 尚待完成。
+- [x] 原发布证据 PR #42 的源分支按全局规范从 `cursor/v1.0.4-release-evidence-afa4` 重命名为 `yukiryou/v1.0.4-release-evidence`；GitHub 自动关闭原 PR 后，同一 head `26cc9a17ace288736ae5ab65386358376bef6b1c` 由替代 PR #43 合入，形成最终 release commit `62df21df08053d293ebb59c6e67597402c2305af`。main CI run [`33873037630`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33873037630) 的 macOS 14 / Windows 2022 均通过。
+- [x] 从最终提交冻结唯一 `dsh-grok-provider-1.0.4.tgz`：78 files、274,332 bytes packed、850,183 bytes unpacked；SHA-1 `000380a4699d4e61d96942bcae5f6a0ce7c76477`、SHA-256 `464045290b06ce71b78285571c6968e6268fa403fa2350834d2dc479e88fd001`、SRI `sha512-axCBVXQ9BI9boYrlIsa+TWURMo8tQ5GdHpcQVfXUz2OLg+5rbg3XUZSv3ZRQVYQNmyXSQ+frIBDMsbZUGaXJ6w==`。Node `24.19.0` / npm `11.5.1` 测试为 275 tests、273 pass、0 fail、2 platform skips，生产审计 0 漏洞，隔离安装及 Host export smoke 通过。
+- [x] 仓库所有者看到最终提交、文件数、字节数与摘要后明确授权唯一 `dsh-grok-provider@1.0.4` 制品。授权后发现 Cursor Agent 曾在 npm 发布前预建指向代码提交的同名 tag/Release；Registry 仍为 `notarget` 且没有发布 run。经所有者批准，旧 asset 备份并核对后替换；授权制品未重建。
+- [x] Annotated tag object `dfb269fa9ebb3df3282a151d163043f983bc0619` peel 到最终 release commit；唯一 GitHub Release asset 与 Trusted Publisher run [`33873873314` attempt 1](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33873873314/attempts/1) 已完成。npm `latest=1.0.4`，冻结制品、Release 与 Registry tarball 逐字节一致；本包 1 个 Registry signature、2 个 attestations，`npm audit signatures` 验证安装图 15 个 signed packages / 2 个 attested packages，SLSA provenance 精确绑定 `release.yml` / `refs/tags/v1.0.4` / final release commit / publish run。
+- [ ] 网络可达 Windows 真机的官方 CLI 外部浏览器弹出仍未完成验收；该独立边界不是本 settings 注册修复的发布门禁，完成前不得声称已验证。
 
 ## `1.0.0` Search 响应协议修复发布门禁
 
