@@ -220,6 +220,16 @@ English summary: every release must close documentation, security, tests, determ
 - [x] 仓库所有者在看到完整精确 commit、制品、摘要与验证证据后明确授权发布 `dsh-grok-provider@1.0.3`；授权后没有重建或替换制品。
 - [x] Annotated tag object `7ec8a8a1086749e7ac1dfb0ef2bd50c821838363` peel 到 release commit；不可变 `v1.0.3`、唯一 GitHub Release asset 与 Trusted Publisher run [`33379149158` attempt 1](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33379149158/attempts/1) 已完成。npm `latest=1.0.3`，冻结制品、Release 与 Registry tarball 逐字节一致；Node `24.19.0` / npm `11.5.1` 锁定 Registry 安装及 0 漏洞生产审计通过，本包 1 个 Registry signature、2 个 attestations，安装图 11 个 signed packages / 2 个 attested packages，以及精确绑定 `release.yml` / `refs/tags/v1.0.3` / release commit / publish run 的 SLSA provenance 均已回读。
 
+## `1.0.4` Harness `0.1.2-rc.1` settings 注册修复门禁
+
+- [x] 从 `origin/yukiryou/main` 创建隔离分支 `cursor/fix-settings-install-section-afa4`；范围限制为 settings 注册 API、Harness `0.1.2-rc.1` peer 与 Web inject 替换。
+- [x] 移除 `installSettingsSection` / `settingsNamespace` named import；改用 `ctx.settings.installSection(...)` 与字符串常量 `llm-grok`。
+- [x] required/optional peer 对齐 `0.1.2-rc.1`（Cordis `4.0.2`、Schemastery `3.18.2`）；Web inject 用 `@deepseek-ai/dsh-client-ui-renderer` 取代已删除的 `dsh-client-runtime`。
+- [x] 新增 Host import 回归：真实 `@deepseek-ai/dsh-settings@0.1.2-rc.1` 不再导出已删除 helper，且 `llm-grok` 仍可注册/卸载。
+- [x] 发行契约扫描全部 `dist/**`，禁止打包产物再引用已删除 helper。
+- [x] 精确 Node `24.19.0` 全量测试、生产依赖审计与 `pack:check`。
+- [ ] 代码 PR 合并、双平台 CI、唯一制品冻结、所有者授权与 Trusted Publisher 回读。
+
 ## `1.0.0` Search 响应协议修复发布门禁
 
 - [x] 新稳定版 `1.0.0` 已发布；不得覆盖或重发已发布 `0.1.11`，npm Registry 回读为 `latest=1.0.0`。

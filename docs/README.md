@@ -1,13 +1,13 @@
 # Grok Build Provider 文档索引
 
-- 状态：**`dsh-grok-provider@1.0.3` 已正式发布，制品与供应链回读已关闭**
-- 制品范围：流前 401/403 一次官方 CLI 恢复与最多一次重试；流后不重放，安全的有界部分输出可在断流或两分钟 wire-byte idle 后保留
+- 状态：**`dsh-grok-provider@1.0.4` 正在修复 `0.1.2-rc.1` settings 注册；上一份已完成供应链回读的版本为 `1.0.3`**
+- 制品范围：Host 改用 `ctx.settings.installSection` 注册 `llm-grok`，peer 对齐 Harness `0.1.2-rc.1`
 - 当前已完成发布回读版本：`1.0.3`
 - `1.0.3` 已发布基线：`yukiryou/main@07ebd35c56348a1b3296bd46d1a69f5b0f430241`
 - `1.0.3` 发布路径：annotated tag object `7ec8a8a1086749e7ac1dfb0ef2bd50c821838363` peel 到最终 release commit；final CI run [`33378215345`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33378215345) 双平台全绿，Trusted Publisher run [`33379149158` attempt 1](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33379149158/attempts/1) 已完成
 - `1.0.3` 发布状态：仓库所有者明确授权的唯一 77 文件 tarball 为 267,403 bytes，unpacked size 829,862 bytes；SHA-1 `6197c3d30ec1ef5f559371911d612f6236eee2f9`、SHA-256 `7f740c7258ab7eee0c96e1ddae3398b41a25e718cf267e244f8693c3c99aeb0d`、npm SRI `sha512-kJgN0NKKV7Te3oAgbPnEua/EQCLnj5S0KWAWrhP0ixudJBepplRFARYHCxwxOwbG87bnX07Mz/dxCoBiphWhqQ==`。冻结制品、GitHub Release asset 与 npm Registry tarball 逐字节一致，npm `latest=1.0.3`；Node `24.19.0` / npm `11.5.1` 锁定隔离安装和生产依赖审计通过，本包 1 个 Registry signature / 2 个 package attestations、安装图 11 个 signed packages / 2 个 attested packages，以及精确绑定 `release.yml` / `refs/tags/v1.0.3` / release commit / publish run 的 SLSA provenance 均已验证
 - 撤回状态：`0.1.8` 只对应 sidebar quota 维护发布，不包含 Search；撤回不会释放 npm semver，任何 Search 制品都不得复用 `0.1.8`
-- 兼容基线：DeepSeek Harness `0.1.1-rc.2`
+- 兼容基线：DeepSeek Harness `0.1.2-rc.1`
 - 目标平台：macOS arm64、Windows x64
 
 本仓库是一次 clean-room 重写。设计只依据 DeepSeek Harness 的公开接口、xAI 官方 Grok Build 文档和通用协议标准；不会复制、移植或修改 `dsh-llm-grok` 的源码、目录结构或实现细节。
@@ -58,6 +58,7 @@
 - [v1.0.0 中英双语发行说明](./releases/v1.0.0.md)
 - [v1.0.1 中英双语发行说明](./releases/v1.0.1.md)
 - [v1.0.2 中英双语发行说明](./releases/v1.0.2.md)
+- [v1.0.4 中英双语发行说明](./releases/v1.0.4.md)
 - [v1.0.3 中英双语发行说明](./releases/v1.0.3.md)
 - [v0.1.2-rc.1 中英双语预发行说明](./releases/v0.1.2-rc.1.md)
 - [ADR-0001：认证与传输路线](./adr/0001-auth-and-transport-route.md)
@@ -84,7 +85,7 @@
 
 `1.0.2` 已发布，只修复可见 reasoning 投影及其对齐槽：普通空 item 保留既有校验，Search-backed 同 ID 复用保留精确 own-data/accessor 校验；空项产生零个 Harness block chunk，非空 summary/raw reasoning 在首个 delta 才按 output index 开始 block。可见非空 replay 与 Search 后整响应 replay 抑制不变；隐藏普通空项不占 replay 槽，其 encrypted content 校验后不持久化。候选源码真实账号验收中，Web 为 `5 Search / 1 非空 reasoning / 0 空 reasoning / 1 非空 text / 1 finish`，X 为 `3 custom-tool Search / 1 非空 reasoning / 0 空 reasoning / 1 非空 text / 1 finish`；只保留计数。旧会话不回写，认证、模型、图片、endpoint、URL、工具权限和 Windows 登录边界不变；发布、CI、制品与供应链回读也不构成网络可达 Windows 真机外部浏览器弹出验收。
 
-`1.0.3` 已发布认证恢复与长流中断修复：流前 401/403 由官方 CLI single-flight 刷新共享会话并最多重试一次；流开始后绝不重放。无工具副作用的有界 text/reasoning 可以在 transport interruption、干净过早 EOF 或连续两分钟无 wire bytes 时保留并提示用户发送“继续”；其余路径失败关闭。唯一授权制品、双平台 CI、Registry 锁定安装、签名、attestations 与 provenance 回读均已完成；真实账号成功路径不模拟未来网络故障，Windows 真机浏览器登录仍是独立未验收边界。
+`1.0.4` 修复 `1.0.3` 在 Harness `0.1.2-rc.1` 中因 named import 已删除的 `installSettingsSection` 而无法到达 ready 的问题。Host 改用 `ctx.settings.installSection`，peer 对齐 `0.1.2-rc.1`。`1.0.3` 已发布认证恢复与长流中断修复：流前 401/403 由官方 CLI single-flight 刷新共享会话并最多重试一次；流开始后绝不重放。
 
 ## 官方依据
 

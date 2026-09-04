@@ -25,6 +25,7 @@
 - 已发布 `1.0.1`：全部 Harness functions 先完整验证，再从 wire definitions 精确过滤与本次已启用 server `web_search` / `x_search` 同名的定义；对应开关关闭时本地 function 保留，历史 function calls/results 原样保留。最终 receipt 拒绝 function/server-tool 交集。SSE source transport error 原样上抛，HTTP 400 进入 `PROVIDER_ERROR`，parser/协议错误仍为 `INVALID_RESPONSE`。
 - 已发布 `1.0.2`：reasoning item added 只建立内部 FSM，首个非空 summary/raw delta 才开始 Harness block；始终严格空且完整闭合的 item 产生零可见 chunk。不同非空 item 仍分别闭合，旧会话不回写。
 - 已发布 `1.0.3`：流前 401/403 允许一次官方 CLI single-flight 恢复与最多一次重试；流后不重放，无工具副作用的有界 text/reasoning 可在 transport interruption、干净过早 EOF 或连续两分钟无 wire bytes 时保留并提示“继续”。
+- `1.0.4` 正在修复 Harness `0.1.2-rc.1` 启动失败：Host 改用 `ctx.settings.installSection` 注册 `llm-grok`，并提升 settings/llm/client peer 到实际支持该 Runtime 的版本边界。
 
 ## 已验证
 
@@ -160,7 +161,7 @@ Windows x64 真机不再是 `0.1.0` 预发布阻断项。首次发布后必须�
 
 ## `0.1.10` 发布状态
 
-- 通过 `@deepseek-ai/dsh-settings@0.1.1-rc.2` 的 canonical `installSettingsSection` 注册 `llm-grok`，解析 schema 默认值、组合配置和持久化用户层；settings service 缺失或重载时回退组合配置。
+- 通过 `@deepseek-ai/dsh-settings@0.1.2-rc.1` 的 `ctx.settings.installSection` 注册 `llm-grok`，解析 schema 默认值、组合配置和持久化用户层；settings service 缺失或重载时回退组合配置。`1.0.3` 及更早版本使用的 `installSettingsSection` named import 已在该 Harness 版本删除。
 - Adapter 在每次调用开始且首次模型目录 await 前捕获一次 Search policy；后续设置提交影响下一调用，已准备或在途调用保持原策略。request compiler 与 receipt 继续只处理冻结调用，不承担动态状态。
 - 真实 SettingsProvider + LLM Runtime 回归覆盖唯一 namespace、安全默认值、`applies:"live"`、持久化更新、组合回退和插件生命周期清理；延迟目录回归证明快照早于首个 await。
 - 聚焦 Host/Adapter/client 38 项回归通过；精确 Node `24.19.0` 全量为 224 项、222 pass、0 fail、2 项 Windows-only skip，生产依赖审计为 0 漏洞。
@@ -229,3 +230,10 @@ Windows x64 真机不再是 `0.1.0` 预发布阻断项。首次发布后必须�
 - 代码 PR #37 已合并为 `9958f487abf8ebd062eecb4368689e4d049b1d35`，main CI run `33377849906` 的 macOS 14 / Windows 2022 全绿；发布证据 PR #38 形成最终 release commit `07ebd35c56348a1b3296bd46d1a69f5b0f430241`。
 - 仓库所有者明确授权的唯一 77 文件制品为 267,403 bytes packed、829,862 bytes unpacked；SHA-1 `6197c3d30ec1ef5f559371911d612f6236eee2f9`、SHA-256 `7f740c7258ab7eee0c96e1ddae3398b41a25e718cf267e244f8693c3c99aeb0d`、SRI `sha512-kJgN0NKKV7Te3oAgbPnEua/EQCLnj5S0KWAWrhP0ixudJBepplRFARYHCxwxOwbG87bnX07Mz/dxCoBiphWhqQ==`。annotated tag object `7ec8a8a1086749e7ac1dfb0ef2bd50c821838363` peel 到最终提交；Trusted Publisher run [`33379149158` attempt 1](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33379149158/attempts/1) 已完成。
 - npm `latest=1.0.3`；冻结制品、唯一 GitHub Release asset 与 Registry tarball 逐字节一致。锁定 Registry 安装的 Host/client smoke 与 0 漏洞生产审计通过；本包 1 个 Registry signature、2 个 attestations，安装图 11 个 signed packages / 2 个 attested packages，以及精确绑定 tag、workflow、commit 与 publish run 的 SLSA provenance 均已回读。网络可达 Windows 真机浏览器弹出仍未验收。
+
+## `1.0.4` Harness `0.1.2-rc.1` settings 注册修复
+
+- 发布 `1.0.3` 后，在 DeepSeek YukiRyou Desktop `1.0.8` / dsh `0.1.2-rc.1` 中启用插件会导致 Runtime 在 ready 前以 code 1 退出。失败日志为 `@deepseek-ai/dsh-settings` 不再提供 named export `installSettingsSection`。
+- Host 改为 `ctx.inject(["settings"], ...)` 后调用 `settings.installSection`，namespace 使用字符串常量 `llm-grok`；打包 `dist/**` 不得再出现 `installSettingsSection` 或 `settingsNamespace`。
+- required peer 对齐 `0.1.2-rc.1`；Web inject 用 `dsh-client-ui-renderer` 取代已删除的 `dsh-client-runtime`。认证、Search 协议、图片与固定 endpoint 不变。
+- 发布制品、双平台 CI 与 Registry 回读在合并与授权后补记。

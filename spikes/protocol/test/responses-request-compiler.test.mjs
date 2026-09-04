@@ -816,8 +816,8 @@ test("the request compiler removes the oldest image until the final JSON fits 16
   }, imageRoute())
 
   assert.equal(request.input[0].role, "user")
-  assert.match(request.input[0].content, /^\[image omitted to keep the request/u)
-  assert.match(request.input[1].content, /^\[image omitted to keep the request/u)
+  assert.match(request.input[0].content, /^\[image omitted to fit request image limits/u)
+  assert.match(request.input[1].content, /^\[image omitted to fit request image limits/u)
   assert.equal(request.input[2].content[0].type, "input_image")
   assert.ok(Buffer.byteLength(JSON.stringify(request), "utf8") <= 16 * 1024 * 1024)
 })

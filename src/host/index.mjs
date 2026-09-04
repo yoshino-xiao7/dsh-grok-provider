@@ -4,10 +4,6 @@ import { randomUUID } from "node:crypto"
 import packageJson from "../../package.json" with { type: "json" }
 
 import { attributionHeaders } from "@deepseek-ai/dsh-llm"
-import {
-  installSettingsSection,
-  settingsNamespace,
-} from "@deepseek-ai/dsh-settings"
 import Schema from "@deepseek-ai/schemastery"
 
 import {
@@ -31,7 +27,7 @@ import { createRuntimeDiagnostics } from "../internal/runtime-diagnostics.mjs"
 
 export const name = "llm-grok"
 export const inject = ["llm"]
-const SETTINGS_NAMESPACE = settingsNamespace(name)
+const SETTINGS_NAMESPACE = "llm-grok"
 
 export const Config = Schema.object({
   webSearch: Schema.boolean().default(false).description("Allow xAI Web Search for regular Grok requests"),
@@ -84,11 +80,13 @@ export function apply(ctx, config) {
       mapError: mapLlmError,
     }),
   })
-  installSettingsSection(ctx, SETTINGS_NAMESPACE, Config, config, {
-    setSource(source) {
-      currentConfig = source
-    },
-    onChange() {},
+  ctx.inject(["settings"], (settingsCtx) => {
+    settingsCtx.settings.installSection(ctx, SETTINGS_NAMESPACE, Config, config, {
+      setSource(source) {
+        currentConfig = source
+      },
+      onChange() {},
+    })
   })
   const authController = createAuthController({
     registry: runtime.auth,

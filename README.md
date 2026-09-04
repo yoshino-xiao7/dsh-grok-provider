@@ -4,11 +4,11 @@
 
 让 DeepSeek Harness 使用你已登录的官方 Grok Build 账号：动态模型发现、流式推理、图片输入、可选 Web/X Search、工具调用，以及账号额度与模型能力面板。
 
-> 非官方社区项目，与 xAI 或 DeepSeek Harness 官方无隶属关系。本说明对应 `dsh-grok-provider@1.0.3` 制品；`0.1.8` 曾发布后撤回且版本号不可复用。
+> 非官方社区项目，与 xAI 或 DeepSeek Harness 官方无隶属关系。本说明对应 `dsh-grok-provider@1.0.4` 制品；`0.1.8` 曾发布后撤回且版本号不可复用。
 
-`1.0.3` 修复两类真实运行中断：流开始前遇到 401/403 时，通过官方 Grok CLI 进行一次有界会话刷新并仅重试一次；流已开始后绝不重放。若连接中断前只收到安全的文本/reasoning，Provider 会保留已收到内容并提示用户发送“继续”；一旦出现工具调用、未知事件或协议异常，仍严格失败关闭。
+`1.0.4` 修复 `dsh-grok-provider@1.0.3` 在 DeepSeek Harness `0.1.2-rc.1` 中启用后 Runtime 无法到达 ready 的问题：Host 不再 named import 已删除的 `installSettingsSection` / `settingsNamespace`，改用 `ctx.settings.installSection(...)` 注册 `llm-grok`。认证恢复、部分输出保留、Search、图片与固定 endpoint 边界不变。
 
-本 README 随 `1.0.3` 一起进入 npm tarball，下面的精确安装命令也固定为 `1.0.3`。npm Registry 已确认 `dsh-grok-provider@1.0.3` 可安装且 `latest=1.0.3`；Registry、GitHub Release 与冻结制品逐字节一致。
+本 README 随 `1.0.4` 一起进入 npm tarball，下面的精确安装命令也固定为 `1.0.4`。上一份已完成供应链回读的版本为 `1.0.3`。
 
 ## 它解决什么问题
 
@@ -19,7 +19,7 @@
 | 模型 | 运行时读取账号可见的全部 Grok Build 模型，不维护静态模型白名单 |
 | 对话 | Responses 流式文本、reasoning、加密 reasoning replay、usage 与 finish reason |
 | 图片 | 仅精确 `grok-4.6` 接收 Harness attachment 中有界的 JPEG/PNG 图片；`grok-4.5` 与其他模型保持 text-only |
-| 搜索 | 精确 `grok-4.6` 提供默认关闭的 Web/X Search；`1.0.3` 增加流前认证恢复与安全的部分输出保留，不自动重放已开始的流 |
+| 搜索 | 精确 `grok-4.6` 提供默认关闭的 Web/X Search；`1.0.4` 把 settings 注册切到 Harness `0.1.2-rc.1` 的 `installSection`，不改变 Search 协议 |
 | 工具 | 将 function call 交回 Harness 权限层；Provider 本身不执行工具，关闭对应 Search 开关时保留本地 `web_search` / `x_search` |
 | 账户面板 | 登录状态、每周/月额度、重置时间、动态模型能力与 reasoning 档位 |
 | 界面 | Web 设置页中英文切换；TUI 提供闭合的 `/grok` 命令 |
@@ -28,7 +28,7 @@
 
 ### 1. 准备环境
 
-- DeepSeek Harness `0.1.1-rc.2`
+- DeepSeek Harness `0.1.2-rc.1`
 - Node.js `24.19.0` 或更高版本
 - macOS arm64 或 Windows x64
 - 官方 Grok Build CLI（支持 `login --oauth`，并使用官方默认 Grok home）
@@ -47,7 +47,7 @@ grok models
 安装精确版本：
 
 ```sh
-dsh plugin --profile web add dsh-grok-provider@1.0.3
+dsh plugin --profile web add dsh-grok-provider@1.0.4
 dsh web
 ```
 
@@ -74,7 +74,7 @@ Web 设置页展示：
 
 当 protobuf-backed billing 返回完整的 weekly/monthly 周期但省略零值百分比时，页面会恢复为“已使用 0% / 剩余 100%”；其他不完整响应保持未知，不伪造额度。
 
-当前 Harness `0.1.1-rc.2` 的 `settings.section` 没有插件图标字段。Provider 内嵌来自 `@deepseek-ai/dsh-client-ui-primitives@0.1.0-rc.7`、采用 MIT 许可的 `IconThinkOutline16` 路径几何；仅当设置对话框中的标签与 DOM 结构都精确且唯一匹配时，才用它显示 `Grok Build` 导航项，否则安全保留宿主齿轮。兼容层的观察器、标记和样式均随插件卸载清理。
+当前 Harness `0.1.2-rc.1` 的 `settings.section` 没有插件图标字段。Provider 内嵌来自 `@deepseek-ai/dsh-client-ui-primitives@0.1.0-rc.7`、采用 MIT 许可的 `IconThinkOutline16` 路径几何；仅当设置对话框中的标签与 DOM 结构都精确且唯一匹配时，才用它显示 `Grok Build` 导航项，否则安全保留宿主齿轮。兼容层的观察器、标记和样式均随插件卸载清理。
 
 ## 插件预览
 
@@ -145,6 +145,13 @@ dsh web
 
 ## 兼容性与范围
 
+### `1.0.4` 修复边界
+
+- Host 不再从 `@deepseek-ai/dsh-settings` named import `installSettingsSection` 或 `settingsNamespace`；改用 settings service 的 `installSection`，namespace 为合法字符串常量 `llm-grok`。
+- settings service 缺失或重载时仍回退组合配置；启用、停用和失败回滚不删除 receipt、generation 或账号状态。
+- required peer 提升到 Harness `0.1.2-rc.1` 实际提供的 `dsh-settings` / `dsh-llm` 与 Cordis `4.0.2`、Schemastery `3.18.2`；Web client inject 用 `@deepseek-ai/dsh-client-ui-renderer` 取代已删除的 `dsh-client-runtime`。
+- 本版不改变认证恢复、部分输出保留、Search 协议、图片、固定 endpoint 或 Windows 浏览器登录边界。详情见 [`docs/releases/v1.0.4.md`](docs/releases/v1.0.4.md)。
+
 ### `1.0.3` 修复边界
 
 - 仅在 200/SSE 开始前的 401/403 上，通过官方 Grok CLI 做一次有界共享会话刷新、重新读取凭据并最多重试一次；持续拒绝仍返回 `AUTH`，不新增 API Key 模式。
@@ -177,11 +184,11 @@ dsh web
 - 最终源码完成两层脱敏真实账号复验：原始 Web/X 协议探针各 1 次请求、各 64 events，分别观察到对应 Search 且终态 `completed`；生产 adapter 共完成 5 次 Responses，direct Web/X 均为 `stop`，Harness 形状的本地 `x_search` call/result 续跑三轮依次为 `tool-calls`、`tool-calls`、`stop`，前两轮各 1 次本地调用。该续跑没有在同一 wire request 中同时放入 Harness `x_search` function definition 与 xAI `{ type: "x_search" }` server descriptor；`1.0.1` 后续才隔离出这一 HTTP 400 冲突。未保存结果、URL、prompt、身份或凭据；这些不是发布、OAuth 或 Windows 真机证据。
 - manifest/lock 已同步为 `1.0.0`；Node 24 全量测试为 245 项、243 pass、0 fail、2 项平台跳过，生产依赖审计为 0 漏洞，确定性 build/bundle、72 项 dry-run pack、秘密模式扫描与 diff 检查均通过。代码 PR #28、main CI run [`33308371009`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33308371009)、最终 release commit、双平台 final CI、唯一制品、精确授权及 Registry/signature/attestation/provenance 回读均已完成。
 
-| 项目 | `1.0.3` 已发布兼容边界 |
+| 项目 | `1.0.4` 兼容边界 |
 | --- | --- |
-| DeepSeek Harness | 精确支持 `0.1.1-rc.2` |
+| DeepSeek Harness | 精确支持 `0.1.2-rc.1` |
 | Node.js | `>=24.19.0` |
-| macOS arm64 | 图片发送已完成真实 Harness 验证；`1.0.3` 增加流前认证恢复与安全部分输出保留 |
+| macOS arm64 | 图片发送已完成真实 Harness 验证；`1.0.4` 修复 `0.1.2-rc.1` settings 注册 |
 | Windows x64 | 代码路径与现有 slow-fake 保持不变；网络可达时由官方 CLI 生成 URL 并打开浏览器，该路径仍未完成 Windows 真机验收 |
 | macOS x64 / Linux | 不支持 |
 | Grok CLI | 不锁完整版本；严格校验官方路径、`login --oauth` 能力与生产 OIDC 凭据契约 |

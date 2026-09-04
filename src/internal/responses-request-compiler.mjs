@@ -1,4 +1,4 @@
-import { offloadRequestImagesWithPolicy } from "@deepseek-ai/dsh-llm"
+import { offloadRequestImagesWithPolicy, offloadedImageText } from "@deepseek-ai/dsh-llm"
 
 import {
   ResponsesRequestTooLargeError,
@@ -144,6 +144,7 @@ async function compileImageRequest({
   let messages = offloadRequestImagesWithPolicy(capturedMessages, {
     representation: "raw",
     maxImages: policy.maxImages,
+    placeholder: offloadedImageText,
   })
   const blocks = collectImageBlocks(messages)
   const refs = indexUniqueImageRefs(blocks, policy)
@@ -169,6 +170,7 @@ async function compileImageRequest({
     representation: "raw",
     maxBytes: policy.maxTotalBytes,
     byteLength: (ref) => versionsById.get(String(ref.attachmentId)).bytes,
+    placeholder: offloadedImageText,
   })
 
   while (true) {
@@ -181,6 +183,7 @@ async function compileImageRequest({
       messages = offloadRequestImagesWithPolicy(messages, {
         representation: "raw",
         maxImages: imageCount - 1,
+        placeholder: offloadedImageText,
       })
     }
   }

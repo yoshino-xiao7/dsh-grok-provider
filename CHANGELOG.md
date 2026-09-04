@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.4 - 2026-09-04
+
+- Stop named-importing the deleted `@deepseek-ai/dsh-settings` helpers `installSettingsSection` and `settingsNamespace`. Register the legal string constant `llm-grok` through `ctx.settings.installSection(...)` so the Host can load on DeepSeek Harness `0.1.2-rc.1`.
+- Keep composition-config fallback when the settings service is missing or reloaded. Enable, disable, and failed-enable rollback still preserve receipts, generations, and account state.
+- Raise required Harness peers to the `0.1.2-rc.1` boundary (`dsh-settings`, `dsh-llm`, `dsh-commands`, `dsh-subprocess`, matching client packages, Cordis `4.0.2`, Schemastery `3.18.2`) and replace the removed Web inject `@deepseek-ai/dsh-client-runtime` with `@deepseek-ai/dsh-client-ui-renderer`. Pass Harness `offloadedImageText` as the required image-offload placeholder.
+- Add a Host import regression against the published `dsh-settings@0.1.2-rc.1` module graph and scan every `dist/**` file so packed artifacts cannot reintroduce the deleted helpers. Authentication recovery, Search protocol, images, fixed endpoints, and the Windows browser-login boundary are unchanged.
+
 ## 1.0.3 - 2026-08-31
 
 - Recover one pre-stream 401/403 by asking the official Grok CLI to refresh its shared session, reloading the validated credential, and retrying the request exactly once. Concurrent rejections from the same credential revision share one bounded refresh; a persistent rejection remains `AUTH`.
