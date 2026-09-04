@@ -2,6 +2,8 @@
 
 ## 0. 当前状态
 
+`dsh-grok-provider@1.0.4` 正在修复 `1.0.3` 在 DeepSeek Harness `0.1.2-rc.1` 中因 named import 已删除的 `installSettingsSection` 而无法到达 ready 的问题。上一份已完成供应链回读的版本仍是 `1.0.3`。
+
 `dsh-grok-provider@1.0.3` 已正式发布并完成供应链回读：最终 release commit `07ebd35c56348a1b3296bd46d1a69f5b0f430241` 的 macOS 14 / Windows 2022 final CI run [`33378215345`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33378215345) 全绿，annotated tag object `7ec8a8a1086749e7ac1dfb0ef2bd50c821838363` peel 到该提交。仓库所有者明确授权的唯一 77 文件制品为 267,403 bytes packed、829,862 bytes unpacked；SHA-1 `6197c3d30ec1ef5f559371911d612f6236eee2f9`、SHA-256 `7f740c7258ab7eee0c96e1ddae3398b41a25e718cf267e244f8693c3c99aeb0d`、SRI `sha512-kJgN0NKKV7Te3oAgbPnEua/EQCLnj5S0KWAWrhP0ixudJBepplRFARYHCxwxOwbG87bnX07Mz/dxCoBiphWhqQ==`。Trusted Publisher run [`33379149158` attempt 1](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33379149158/attempts/1) 已完成；npm `latest=1.0.3`，冻结制品、唯一 GitHub Release asset 与 Registry tarball 逐字节一致。Node `24.19.0` / npm `11.5.1` 锁定 Registry 安装通过 Host/client smoke，生产依赖审计为 0 漏洞；1 个 Registry signature、2 个 attestations、安装图 11 个 signed packages / 2 个 attested packages，以及精确绑定 `release.yml` / `refs/tags/v1.0.3` / release commit / publish run 的 SLSA provenance 均已验证。
 
 `1.0.3` 修复流前 401/403 的一次官方 CLI 会话刷新与同请求重试，并在流开始后坚持不重放；无工具副作用的有界 text/reasoning 可在 transport interruption、干净过早 EOF 或连续两分钟无 wire bytes 时保留并提示用户发送“继续”。持续认证拒绝、工具调用、未知或畸形协议继续失败关闭。该发布不改变 Windows 浏览器登录边界。
@@ -45,7 +47,7 @@ dsh-grok-provider@0.1.0
 ## 2. 为什么是 `0.1.0`
 
 - 这是原创实现的首版，不继承第三方版本历史。
-- Harness 基线仍是 `0.1.1-rc.2`，上游接口和 Grok Proxy 契约都可能变化。
+- Harness 基线是 `0.1.2-rc.1`，上游接口和 Grok Proxy 契约都可能变化。
 - YukiRyou 受管市场要求根包为纯 `x.y.z`；`0.1.0` 合法，prerelease 不合法。
 - npm 的同一 name/version 一旦发布不可覆盖；所有门禁必须在发布前完成。
 
@@ -78,7 +80,7 @@ CHANGELOG.md
 
 `docs/` 与根目录中相互链接的中文默认页 `README.md`、英文版 `README.en.md`、`CONTRIBUTING.md`、`SECURITY.md` 和 `THIRD_PARTY_NOTICES.md` 一起进入 tarball，使安装后的架构、安全边界、第三方许可、社区维护方式和发布门禁链接保持可读。发布前的证据文档只记录脱敏事实、hash 与固定公开地址，不得包含 token、真实 prompt/响应或用户身份数据。
 
-目标为零普通 runtime dependencies。DSH peer 精确使用 `0.1.1-rc.2`；Cordis `4.0.1`、Schemastery `3.18.1` 由目标桌面 Runtime snapshot 满足。`@deepseek-ai/dsh-settings` 是 Host Search 设置链路的直接、非 optional peer；`@deepseek-ai/dsh-subprocess`、commands、connection 和 client UI/locale 等 profile-specific peer 保持 optional，并有 Web/TUI/headless 缺失-peer测试。插件不打包 settings provider 或本地 subprocess 实现。
+目标为零普通 runtime dependencies。DSH peer 精确使用 `0.1.2-rc.1`；Cordis `4.0.2`、Schemastery `3.18.2` 由目标桌面 Runtime snapshot 满足。`@deepseek-ai/dsh-settings` 是 Host Search 设置链路的直接、非 optional peer；`@deepseek-ai/dsh-subprocess`、commands、connection 和 client UI/locale/renderer 等 profile-specific peer 保持 optional，并有 Web/TUI/headless 缺失-peer测试。插件不打包 settings provider 或本地 subprocess 实现。
 
 `package.json` 同时固定公开 Registry：
 

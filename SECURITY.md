@@ -4,7 +4,7 @@
 
 ## 支持范围
 
-本安全策略对应 `dsh-grok-provider@1.0.3` 制品。它只在 200/SSE 开始前为 401/403 增加一次官方 CLI 会话刷新与同请求重试；同一凭据版本的并发拒绝共享一次刷新。流开始后绝不自动重放。只有已投影且有界的 text/reasoning 可在无工具调用、未知 chunk、协议异常或用户取消时被保留并附加中断提示；其他情况继续失败关闭。协议接受域、固定 origin、refresh-token 隔离、Search、模型、图片、工具和 URL 边界均不放宽。`0.1.8` 曾发布后撤回且版本号不可复用；网络可达 Windows 真机外部浏览器弹出仍未验收。
+本安全策略对应 `dsh-grok-provider@1.0.4` 制品。它把 Host settings 注册从已删除的 `installSettingsSection` named import 改为 `ctx.settings.installSection(...)`，以便在 DeepSeek Harness `0.1.2-rc.1` 中到达 ready。协议接受域、固定 origin、refresh-token 隔离、Search、模型、图片、工具和 URL 边界均不放宽。`1.0.3` 的流前一次官方 CLI 会话刷新与流后不重放规则保持不变。`0.1.8` 曾发布后撤回且版本号不可复用；网络可达 Windows 真机外部浏览器弹出仍未验收。
 
 `1.0.3` 不把 HTTP 401/403 解释为 API Key 模式，也不自行刷新 OAuth grant：固定且有界的官方 `grok models` 子进程拥有刷新行为，插件随后重新读取并严格校验共享凭据。第二次拒绝仍为 `AUTH`。SSE source 的无状态 transport failure 和干净过早 EOF 与畸形事件分开；只有前两者能进入安全部分输出保留，status-bearing transport error、工具调用和所有 `INVALID_RESPONSE` 均不得被吞掉。部分内容不生成 replay metadata，提示不包含上游错误正文。
 

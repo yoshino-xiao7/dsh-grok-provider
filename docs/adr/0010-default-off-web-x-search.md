@@ -26,7 +26,7 @@ Provider Host Config 增加两个独立 boolean：
 
 两项默认关闭。现有 Grok Build 设置页通过 Harness `settingsScope` 写入同一个 `llm-grok` 配置 namespace；不新增 Search RPC，不使用 `localStorage`，不维护第二份 renderer 状态。
 
-Host 必须通过 `@deepseek-ai/dsh-settings` 的 canonical `installSettingsSection` 注册同名 namespace。解析顺序为 schema 默认值、组合 entry config、持久化用户层；settings service 缺失或重载时回退组合配置。动态设置停留在 Adapter seam：Adapter 在每次调用开始、首次模型目录异步等待前读取一次，底层 request compiler 继续只接收该调用的冻结策略。
+Host 必须通过 `@deepseek-ai/dsh-settings` 的 `ctx.settings.installSection` 注册同名 namespace。解析顺序为 schema 默认值、组合 entry config、持久化用户层；settings service 缺失或重载时回退组合配置。动态设置停留在 Adapter seam：Adapter 在每次调用开始、首次模型目录异步等待前读取一次，底层 request compiler 继续只接收该调用的冻结策略。`1.0.4` 起不再 named import 已删除的 `installSettingsSection` / `settingsNamespace`。
 
 设置页必须就近说明远端检索、额外用量、citation 与 prompt injection 风险。插件不会打开、下载或预览 citation，也不会把 Search 结果直接执行为命令或文件操作。
 

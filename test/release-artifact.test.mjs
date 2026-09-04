@@ -21,15 +21,26 @@ function markdownSection(markdown, heading) {
   return markdown.slice(bodyStart, nextSection === -1 ? undefined : nextSection)
 }
 
-test("the exact 1.0.3 source release exports runtime artifacts and Web loader metadata", async () => {
+async function collectDistFiles(dir) {
+  const entries = await fs.readdir(dir, { withFileTypes: true })
+  const files = []
+  for (const entry of entries.sort((left, right) => left.name.localeCompare(right.name, "en"))) {
+    const full = path.join(dir, entry.name)
+    if (entry.isDirectory()) files.push(...await collectDistFiles(full))
+    else if (entry.isFile()) files.push(full)
+  }
+  return files
+}
+
+test("the exact 1.0.4 source release exports runtime artifacts and Web loader metadata", async () => {
   const attributes = await fs.readFile(path.join(root, ".gitattributes"), "utf8")
   assert.match(attributes, /^\*\.yml text eol=lf$/mu)
   const manifest = JSON.parse(await fs.readFile(path.join(root, "package.json"), "utf8"))
   assert.equal(manifest.name, "dsh-grok-provider")
-  assert.equal(manifest.version, "1.0.3")
+  assert.equal(manifest.version, "1.0.4")
   const lockfile = JSON.parse(await fs.readFile(path.join(root, "package-lock.json"), "utf8"))
-  assert.equal(lockfile.version, "1.0.3")
-  assert.equal(lockfile.packages[""].version, "1.0.3")
+  assert.equal(lockfile.version, "1.0.4")
+  assert.equal(lockfile.packages[""].version, "1.0.4")
   assert.deepEqual(manifest.repository, {
     type: "git",
     url: "git+https://github.com/yoshino-xiao7/dsh-grok-provider.git",
@@ -71,9 +82,26 @@ test("the exact 1.0.3 source release exports runtime artifacts and Web loader me
   assert.equal(manifest.dependencies, undefined)
   assert.equal(manifest.peerDependencies["@deepseek-ai/dsh-credentials"], undefined)
   assert.equal(manifest.devDependencies["@deepseek-ai/dsh-credentials"], undefined)
-  assert.equal(manifest.peerDependencies["@deepseek-ai/dsh-settings"], "0.1.1-rc.2")
-  assert.equal(manifest.devDependencies["@deepseek-ai/dsh-settings"], "0.1.1-rc.2")
+  assert.equal(manifest.peerDependencies["@deepseek-ai/cordis"], "4.0.2")
+  assert.equal(manifest.peerDependencies["@deepseek-ai/schemastery"], "3.18.2")
+  assert.equal(manifest.peerDependencies["@deepseek-ai/dsh-llm"], "0.1.2-rc.1")
+  assert.equal(manifest.peerDependencies["@deepseek-ai/dsh-settings"], "0.1.2-rc.1")
+  assert.equal(manifest.peerDependencies["@deepseek-ai/dsh-commands"], "0.1.2-rc.1")
+  assert.equal(manifest.peerDependencies["@deepseek-ai/dsh-subprocess"], "0.1.2-rc.1")
+  assert.equal(manifest.peerDependencies["@deepseek-ai/dsh-client-connection"], "0.1.2-rc.1")
+  assert.equal(manifest.peerDependencies["@deepseek-ai/dsh-client-locale"], "0.1.2-rc.1")
+  assert.equal(manifest.peerDependencies["@deepseek-ai/dsh-client-ui-settings"], "0.1.2-rc.1")
+  assert.equal(manifest.peerDependencies["@deepseek-ai/dsh-client-ui-renderer"], "0.1.2-rc.1")
+  assert.equal(manifest.peerDependencies["@deepseek-ai/dsh-client-runtime"], undefined)
+  assert.equal(manifest.devDependencies["@deepseek-ai/dsh-settings"], "0.1.2-rc.1")
   assert.equal(manifest.peerDependenciesMeta?.["@deepseek-ai/dsh-settings"], undefined)
+  assert.equal(manifest.peerDependenciesMeta?.["@deepseek-ai/dsh-client-ui-renderer"]?.optional, true)
+  assert.deepEqual(manifest.dsh.client.inject, [
+    "@deepseek-ai/dsh-client-connection",
+    "@deepseek-ai/dsh-client-locale",
+    "@deepseek-ai/dsh-client-ui-renderer",
+    "@deepseek-ai/dsh-client-ui-settings",
+  ])
   assert.equal(manifest.scripts.prepack, "npm run build")
   assert.equal(manifest.scripts["pack:check"], "npm pack --dry-run --json")
   assert.equal(
@@ -198,36 +226,36 @@ test("the exact 1.0.3 source release exports runtime artifacts and Web loader me
   assert.match(chineseReadme, /## 安全与隐私/u)
   assert.match(
     chinesePreamble,
-    /本说明对应 `dsh-grok-provider@1\.0\.3` 制品；`0\.1\.8` 曾发布后撤回且版本号不可复用。/u,
+    /本说明对应 `dsh-grok-provider@1\.0\.4` 制品；`0\.1\.8` 曾发布后撤回且版本号不可复用。/u,
   )
   assert.match(
     chinesePreamble,
-    /本 README 随 `1\.0\.3` 一起进入 npm tarball，下面的精确安装命令也固定为 `1\.0\.3`。/u,
+    /本 README 随 `1\.0\.4` 一起进入 npm tarball，下面的精确安装命令也固定为 `1\.0\.4`。/u,
   )
   assert.doesNotMatch(chineseReleaseSurface, /未发布|候选|继续安装/u)
   assert.deepEqual(
     chineseQuickStart.match(/dsh plugin --profile web add dsh-grok-provider@[0-9]+\.[0-9]+\.[0-9]+/gu),
-    ["dsh plugin --profile web add dsh-grok-provider@1.0.3"],
+    ["dsh plugin --profile web add dsh-grok-provider@1.0.4"],
   )
   assert.match(chineseReadme, /\[`THIRD_PARTY_NOTICES\.md`\]\(THIRD_PARTY_NOTICES\.md\)/u)
   assert.match(englishReadme, /## Quick start/u)
   assert.match(englishReadme, /## Security and privacy/u)
   assert.match(
     englishPreamble,
-    /This README describes the `dsh-grok-provider@1\.0\.3` artifact; version `0\.1\.8` was published and then withdrawn and cannot be reused\./u,
+    /This README describes the `dsh-grok-provider@1\.0\.4` artifact; version `0\.1\.8` was published and then withdrawn and cannot be reused\./u,
   )
   assert.match(
     englishPreamble,
-    /This README is included in the `1\.0\.3` npm tarball, and the exact installation command below is pinned to `1\.0\.3`\./u,
+    /This README is included in the `1\.0\.4` npm tarball, and the exact installation command below is pinned to `1\.0\.4`\./u,
   )
   assert.doesNotMatch(englishReleaseSurface, /unpublished|candidate|continue installing/iu)
   assert.deepEqual(
     englishQuickStart.match(/dsh plugin --profile web add dsh-grok-provider@[0-9]+\.[0-9]+\.[0-9]+/gu),
-    ["dsh plugin --profile web add dsh-grok-provider@1.0.3"],
+    ["dsh plugin --profile web add dsh-grok-provider@1.0.4"],
   )
   assert.match(englishReadme, /\[`THIRD_PARTY_NOTICES\.md`\]\(THIRD_PARTY_NOTICES\.md\)/u)
   const securityPolicy = await fs.readFile(path.join(root, "SECURITY.md"), "utf8")
-  assert.match(securityPolicy, /本安全策略对应 `dsh-grok-provider@1\.0\.3` 制品/u)
+  assert.match(securityPolicy, /本安全策略对应 `dsh-grok-provider@1\.0\.4` 制品/u)
   assert.match(
     securityPolicy,
     /Release security note: the published `1\.0\.2` artifact changes visible reasoning projection and its aligned replay envelope/u,
@@ -267,12 +295,12 @@ test("the exact 1.0.3 source release exports runtime artifacts and Web loader me
   assert.match(currentReleaseNotes, /不构成网络可达 Windows 真机外部浏览器弹出验收/u)
   assert.match(currentReleaseNotes, /is not real-device Windows external-browser acceptance/u)
   const nextReleaseNotes = await fs.readFile(
-    path.join(root, "docs/releases/v1.0.3.md"),
+    path.join(root, "docs/releases/v1.0.4.md"),
     "utf8",
   )
-  assert.match(nextReleaseNotes, /^# dsh-grok-provider v1\.0\.3$/mu)
-  assert.match(nextReleaseNotes, /已开始的请求绝不自动重放/u)
-  assert.match(nextReleaseNotes, /dsh plugin --profile web add dsh-grok-provider@1\.0\.3/u)
+  assert.match(nextReleaseNotes, /^# dsh-grok-provider v1\.0\.4$/mu)
+  assert.match(nextReleaseNotes, /installSection/u)
+  assert.match(nextReleaseNotes, /dsh plugin --profile web add dsh-grok-provider@1\.0\.4/u)
   assert.match(nextReleaseNotes, /<summary>English<\/summary>/u)
   const releaseNotes = await fs.readFile(
     path.join(root, "docs/releases/v1.0.1.md"),
@@ -316,7 +344,18 @@ test("the exact 1.0.3 source release exports runtime artifacts and Web loader me
 
   const host = await fs.readFile(path.join(root, "dist/host/index.mjs"), "utf8")
   const client = await fs.readFile(path.join(root, "dist/client/client.js"), "utf8")
+  for (const file of await collectDistFiles(path.join(root, "dist"))) {
+    const source = await fs.readFile(file, "utf8")
+    assert.doesNotMatch(
+      source,
+      /installSettingsSection|settingsNamespace/u,
+      `${path.relative(root, file)} must not import deleted settings helpers`,
+    )
+  }
   assert.match(host, /export const name = "llm-grok"/u)
+  assert.match(host, /const SETTINGS_NAMESPACE = "llm-grok"/u)
+  assert.match(host, /settings\.installSection\(/u)
+  assert.doesNotMatch(host, /installSettingsSection|settingsNamespace/u)
   assert.match(host, /packageJson from "\.\.\/\.\.\/package\.json" with \{ type: "json" \}/u)
   assert.match(host, /pluginVersion: packageJson\.version/u)
   assert.match(client, /id: "dsh-grok-provider"/u)

@@ -1,7 +1,7 @@
 # 能力路线图
 
-- 状态：**`1.0.3` 已正式发布并完成供应链回读**
-- 当前稳定版与本文对应制品：`1.0.3`
+- 状态：**`1.0.4` 正在修复 Harness `0.1.2-rc.1` settings 注册；上一份已完成供应链回读的版本为 `1.0.3`**
+- 当前稳定版与本文对应制品：`1.0.4`
 - 最近撤回：`0.1.8`（npm 版本号不可复用）
 - 当前已发布基线：`yukiryou/main@07ebd35c56348a1b3296bd46d1a69f5b0f430241`
 - 发布后证据分支：`yukiryou/v1.0.3-post-release-evidence`
@@ -189,6 +189,12 @@ const request = await requestCompiler.compile(options, preparedRoute)
 - 该切片改善偶发认证与长连接故障的恢复体验，不承诺网络永不中断，也不改变 Windows 浏览器登录、API Key、多账号、自定义 endpoint 或生成能力范围。
 - final release commit `07ebd35c56348a1b3296bd46d1a69f5b0f430241` 与双平台 CI run `33378215345` 全绿；唯一 77 文件、267,403-byte 授权制品的 SHA-256 为 `7f740c7258ab7eee0c96e1ddae3398b41a25e718cf267e244f8693c3c99aeb0d`。`v1.0.3`、GitHub Release、Trusted Publisher run `33379149158` attempt 1、npm `latest=1.0.3`、三方字节一致、签名、attestations、隔离安装与 SLSA provenance 回读均已完成。
 
+### `1.0.4` Harness settings 注册修复
+
+- `1.0.3` 在 dsh `0.1.2-rc.1` 中因 named import 已删除的 `installSettingsSection` 无法到达 ready。
+- Host 改用 `ctx.settings.installSection` 与字符串常量 `llm-grok`；peer 对齐 `0.1.2-rc.1`，Web inject 用 `dsh-client-ui-renderer` 取代 `dsh-client-runtime`。
+- 该切片不改变认证、Search 协议、图片、固定 endpoint 或 Windows 浏览器登录边界。
+
 ## 8. 后续：默认关闭的图片生成
 
 - 只接受已验证的内联 base64 结果并有界提交 Harness attachment。
@@ -203,4 +209,4 @@ const request = await requestCompiler.compile(options, preparedRoute)
 - ACP、`grok -p` Headless、Linux / macOS x64 发布承诺。
 - 厂商 `code_execution`；Harness 已有本地工具权限层。
 
-English summary: `1.0.3` is the current stable release from commit `07ebd35c56348a1b3296bd46d1a69f5b0f430241`. It performs one official-CLI-owned refresh and at most one retry for a pre-stream 401/403, never replays a started stream, and may preserve bounded side-effect-free text/reasoning after transport interruption, clean premature EOF, or a two-minute wire-byte idle deadline. Final CI run `33378215345` passed on macOS 14 and Windows 2022. Annotated tag object `7ec8a8a1086749e7ac1dfb0ef2bd50c821838363` peels to the release commit. Trusted Publisher run `33379149158` attempt 1 published the explicitly authorized unique 77-file artifact: 267,403 bytes packed, 829,862 bytes unpacked, SHA-1 `6197c3d30ec1ef5f559371911d612f6236eee2f9`, SHA-256 `7f740c7258ab7eee0c96e1ddae3398b41a25e718cf267e244f8693c3c99aeb0d`, and SRI `sha512-kJgN0NKKV7Te3oAgbPnEua/EQCLnj5S0KWAWrhP0ixudJBepplRFARYHCxwxOwbG87bnX07Mz/dxCoBiphWhqQ==`. npm reports `latest=1.0.3`; the frozen artifact, GitHub Release, and Registry bytes are identical. The locked Registry install, one package signature, two attestations, installed-graph signature audit, and SLSA provenance all verified. API-key, model, image, endpoint, URL, permission, and platform boundaries are unchanged; network-reachable browser launch on a physical Windows device remains unverified.
+English summary: `1.0.4` repairs Host settings registration for DeepSeek Harness `0.1.2-rc.1` by calling `ctx.settings.installSection` instead of the removed `installSettingsSection` named export. The previous published baseline remains `1.0.3` from commit `07ebd35c56348a1b3296bd46d1a69f5b0f430241`. API-key, model, image, endpoint, URL, permission, and platform boundaries are unchanged; network-reachable browser launch on a physical Windows device remains unverified.

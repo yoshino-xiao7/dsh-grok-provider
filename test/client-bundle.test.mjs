@@ -13,7 +13,7 @@ test("the browser bundle registers one localized loopback-only Grok settings sec
     inject: [
       "@deepseek-ai/dsh-client-connection",
       "@deepseek-ai/dsh-client-locale",
-      "@deepseek-ai/dsh-client-runtime",
+      "@deepseek-ai/dsh-client-ui-renderer",
       "@deepseek-ai/dsh-client-ui-settings",
     ],
     platform: "web",

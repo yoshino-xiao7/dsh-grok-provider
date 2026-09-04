@@ -17,7 +17,20 @@ import {
 } from "../src/internal/responses-request-compiler.mjs"
 import { UnsupportedResponsesRequestError } from "../src/internal/responses-request.mjs"
 
-test("the Host plugin registers and cleanly removes the Grok provider in the real LLM runtime", async () => {
+const hostApplySupported = process.platform === "darwin" || process.platform === "win32"
+
+test("the Host loads against dsh-settings 0.1.2-rc.1 without deleted named helpers", async () => {
+  const settings = await import("@deepseek-ai/dsh-settings")
+  assert.equal(settings.installSettingsSection, undefined)
+  assert.equal(settings.settingsNamespace, undefined)
+  assert.equal(typeof settings.default.prototype.installSection, "function")
+  assert.equal(grokPlugin.name, "llm-grok")
+  assert.equal(typeof grokPlugin.apply, "function")
+})
+
+test("the Host plugin registers and cleanly removes the Grok provider in the real LLM runtime", {
+  skip: hostApplySupported ? false : "Host apply is macOS/Windows only",
+}, async () => {
   const ctx = new Context()
   const llmFiber = ctx.plugin(LlmRuntime)
   await llmFiber
@@ -31,7 +44,9 @@ test("the Host plugin registers and cleanly removes the Grok provider in the rea
   await llmFiber.dispose()
 })
 
-test("the Host exposes one live llm-grok settings namespace with safe defaults", async () => {
+test("the Host exposes one live llm-grok settings namespace with safe defaults", {
+  skip: hostApplySupported ? false : "Host apply is macOS/Windows only",
+}, async () => {
   const ctx = new Context()
   const settingsFiber = ctx.plugin(MemorySettingsProvider)
   await settingsFiber
@@ -67,7 +82,9 @@ test("the Host exposes opt-in Search policy without a selectable authentication 
   assert.deepEqual(Object.keys(grokPlugin).sort(), ["Config", "apply", "inject", "name"])
 })
 
-test("the Host applies Search settings to later calls while prepared calls keep their snapshot", async () => {
+test("the Host applies Search settings to later calls while prepared calls keep their snapshot", {
+  skip: hostApplySupported ? false : "Host apply is macOS/Windows only",
+}, async () => {
   const originalFetch = globalThis.fetch
   const originalHome = process.env.HOME
   const originalUserProfile = process.env.USERPROFILE

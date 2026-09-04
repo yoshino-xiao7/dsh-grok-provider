@@ -1,4 +1,4 @@
-# DeepSeek Harness `0.1.1-rc.2` 接口契约
+# DeepSeek Harness `0.1.2-rc.1` 接口契约
 
 ## 1. 目标
 
@@ -6,37 +6,37 @@
 
 兼容基线：
 
-- DeepSeek Harness：`0.1.1-rc.2`
+- DeepSeek Harness：`0.1.2-rc.1`
 - Harness 内置 Node：`24.19.0`
 - 首版发布平台：`darwin-arm64`、`win32-x64`
 
 ## 2. Host peer packages
 
-首版预计需要以下版本。脚手架前必须按真实静态 import 图分为 required 与 optional peer：
+`1.0.4` 需要以下精确版本。脚手架前必须按真实静态 import 图分为 required 与 optional peer：
 
 ```json
 {
-  "@deepseek-ai/cordis": "4.0.1",
-  "@deepseek-ai/dsh-llm": "0.1.1-rc.2",
-  "@deepseek-ai/dsh-subprocess": "0.1.1-rc.2",
-  "@deepseek-ai/dsh-settings": "0.1.1-rc.2",
-  "@deepseek-ai/dsh-commands": "0.1.1-rc.2",
-  "@deepseek-ai/dsh-client-connection": "0.1.1-rc.2",
-  "@deepseek-ai/dsh-client-runtime": "0.1.1-rc.2",
-  "@deepseek-ai/dsh-client-locale": "0.1.1-rc.2",
-  "@deepseek-ai/dsh-client-ui-settings": "0.1.1-rc.2",
-  "@deepseek-ai/schemastery": "3.18.1"
+  "@deepseek-ai/cordis": "4.0.2",
+  "@deepseek-ai/dsh-llm": "0.1.2-rc.1",
+  "@deepseek-ai/dsh-subprocess": "0.1.2-rc.1",
+  "@deepseek-ai/dsh-settings": "0.1.2-rc.1",
+  "@deepseek-ai/dsh-commands": "0.1.2-rc.1",
+  "@deepseek-ai/dsh-client-connection": "0.1.2-rc.1",
+  "@deepseek-ai/dsh-client-ui-renderer": "0.1.2-rc.1",
+  "@deepseek-ai/dsh-client-locale": "0.1.2-rc.1",
+  "@deepseek-ai/dsh-client-ui-settings": "0.1.2-rc.1",
+  "@deepseek-ai/schemastery": "3.18.2"
 }
 ```
 
 初步分组：
 
-- required：`@deepseek-ai/cordis`、`@deepseek-ai/dsh-llm`、`@deepseek-ai/dsh-settings`、`@deepseek-ai/schemastery`。Host 通过 settings 包的 canonical helper 静态注册可选 settings service；包本身必须由 Runtime 提供。
+- required：`@deepseek-ai/cordis`、`@deepseek-ai/dsh-llm`、`@deepseek-ai/dsh-settings`、`@deepseek-ai/schemastery`。Host 通过 settings service 的 `installSection` 注册可选 settings namespace；包本身必须由 Runtime 提供。
 - profile-specific optional：subprocess、commands、connection 和 client UI packages。目标桌面 Runtime 必须实际挂载 subprocess service 才能提供官方 CLI 登录；缺失时模型 Provider 仍可读取已有有效官方凭据，但登录/注销动作不可用。
 
-全部放入 `peerDependencies`，optional 项同时声明 `peerDependenciesMeta.<name>.optional: true`。可选 peer 不得被 Host 入口无条件静态 import；需要通过独立 export、条件加载或已证明的 Runtime external 方式隔离。`@deepseek-ai/dsh-settings` 不是 optional peer，但 `ctx.settings` service 仍是可选能力；canonical helper 在 service 缺失或卸载时回退组合配置。Web、TUI、headless 三种缺失可选 service/peer 的测试必须通过。
+全部放入 `peerDependencies`，optional 项同时声明 `peerDependenciesMeta.<name>.optional: true`。可选 peer 不得被 Host 入口无条件静态 import；需要通过独立 export、条件加载或已证明的 Runtime external 方式隔离。`@deepseek-ai/dsh-settings` 不是 optional peer，但 `ctx.settings` service 仍是可选能力；`ctx.inject(["settings"], ...)` 在 service 缺失或卸载时回退组合配置。Web、TUI、headless 三种缺失可选 service/peer 的测试必须通过。
 
-这些包由 Harness Runtime 满足，不进入插件普通 dependency 图。版本在脚手架阶段以实际 rc.2 manifest 再核对；不自动放宽到未经测试的 Harness 版本。
+这些包由 Harness Runtime 满足，不进入插件普通 dependency 图。`1.0.4` 起精确钉在 `0.1.2-rc.1`；不自动放宽到未经测试的 Harness 版本。
 
 目标是零普通 runtime dependencies。登录进程只经过 Runtime 提供的 `ctx.subprocess`；HTTP、流解析、crypto、path 和用户 home 凭据读取使用 Node 24 内建能力。插件不依赖或打包 `@deepseek-ai/dsh-subprocess-local`。
 
@@ -56,7 +56,7 @@ export function apply(ctx, config) {
 
 可选服务不能加入强制 `inject`：
 
-- settings 使用可选安装 helper。
+- settings 使用 `ctx.inject(["settings"], ...)` 与 `settings.installSection`。
 - commands 使用 `ctx.inject(["commands"], ...)`。
 - Web RPC 使用 `ctx.inject(["connection"], ...)`。
 - CLI login/logout 使用 `ctx.inject(["subprocess"], (subprocessCtx) => ...)`；内部只能调用该 child context 的 `subprocessCtx.subprocess`。
@@ -237,7 +237,7 @@ bundle ID 必须由最终 `package.json.name` 在构建时注入，不能在包�
 
 客户端依赖图至少包含：
 
-- `@deepseek-ai/dsh-client-runtime`
+- `@deepseek-ai/dsh-client-ui-renderer`
 - `@deepseek-ai/dsh-client-ui-settings`
 - `@deepseek-ai/dsh-client-locale`
 - `@deepseek-ai/dsh-client-connection`
@@ -264,7 +264,7 @@ bundle ID 必须由最终 `package.json.name` 在构建时注入，不能在包�
     "client": {
       "platform": "web",
       "inject": [
-        "@deepseek-ai/dsh-client-runtime",
+        "@deepseek-ai/dsh-client-ui-renderer",
         "@deepseek-ai/dsh-client-ui-settings",
         "@deepseek-ai/dsh-client-locale",
         "@deepseek-ai/dsh-client-connection"
@@ -278,7 +278,7 @@ rc.2 的 Host 端 client-module scanner 会执行 `require.resolve("<package>/pa
 
 client bundle 导出 Cordis `inject` 与 `apply`，所需 services 至少为 `slots`、`locale`、`connection`。设置页通过 `ctx.slots.inject("settings.section", () => ctx.slots.register(...))` 注册。
 
-Harness `0.1.1-rc.2` 的 `settings.section` options 只有 `id`、`order` 与 `label`，没有图标字段；未知 section id 会由设置 shell 显示 `IconSettingsOutline16`。Provider 可用独立、effect-owned 的视觉兼容层，将结构和规范化标签均唯一精确匹配的 `Grok Build` 导航按钮标记为内嵌的 `IconThinkOutline16` 路径几何。该层不是 Host DOM API：只能在本地读取设置导航标签用于匹配，不得读取设置页正文或用户内容、不得模糊匹配其他按钮，也不得外传或发起网络请求；歧义或结构不符时保留宿主齿轮。独立 style 必须显式带本插件的 `data-plugin` ownership，避免被其他 bundle 的 materialize/HMR 认领和删除。唯一 MutationObserver 必须过滤无关页面变化、合并同轮更新，并在最后一个 effect disposer 中停用待执行任务、断开 observer、移除 marker/style。
+Harness `0.1.2-rc.1` 的 `settings.section` options 只有 `id`、`order` 与 `label`，没有图标字段；未知 section id 会由设置 shell 显示 `IconSettingsOutline16`。Provider 可用独立、effect-owned 的视觉兼容层，将结构和规范化标签均唯一精确匹配的 `Grok Build` 导航按钮标记为内嵌的 `IconThinkOutline16` 路径几何。该层不是 Host DOM API：只能在本地读取设置导航标签用于匹配，不得读取设置页正文或用户内容、不得模糊匹配其他按钮，也不得外传或发起网络请求；歧义或结构不符时保留宿主齿轮。独立 style 必须显式带本插件的 `data-plugin` ownership，避免被其他 bundle 的 materialize/HMR 认领和删除。唯一 MutationObserver 必须过滤无关页面变化、合并同轮更新，并在最后一个 effect disposer 中停用待执行任务、断开 observer、移除 marker/style。
 
 三类依赖必须分开：`dsh.client.inject` 只列提供所需 Cordis service 的 client plugin；bundle 动态 `require()` 且不是平台 seed 的 package 列入 `dsh.client.external`；React、UI primitives 等 Runtime 平台 seed 不进入 inject。Host/client 的真实静态和动态 import 图决定 peer 与 external，不能把所有 bundle require 一律塞进 inject。
 

@@ -4,11 +4,11 @@
 
 Use an already authenticated official Grok Build account from DeepSeek Harness, with dynamic model discovery, streaming reasoning, image input, optional Web/X Search, tool calls, and an account quota/model capability dashboard.
 
-> Unofficial community project; not affiliated with xAI or DeepSeek Harness. This README describes the `dsh-grok-provider@1.0.3` artifact; version `0.1.8` was published and then withdrawn and cannot be reused.
+> Unofficial community project; not affiliated with xAI or DeepSeek Harness. This README describes the `dsh-grok-provider@1.0.4` artifact; version `0.1.8` was published and then withdrawn and cannot be reused.
 
-`1.0.3` addresses two real-session interruption paths. A 401/403 received before streaming begins triggers one bounded refresh through the official Grok CLI and at most one retry. Once streaming starts, the request is never replayed. If a connection then ends after only safe text/reasoning output, the Provider preserves those chunks and asks the user to send “continue”; tool calls, unknown events, and malformed protocol still fail closed.
+`1.0.4` repairs the `dsh-grok-provider@1.0.3` startup failure on DeepSeek Harness `0.1.2-rc.1`: the Host no longer named-imports the removed `installSettingsSection` / `settingsNamespace` helpers and instead registers `llm-grok` through `ctx.settings.installSection(...)`. Authentication recovery, partial-output preservation, Search, images, and fixed endpoints are unchanged.
 
-This README is included in the `1.0.3` npm tarball, and the exact installation command below is pinned to `1.0.3`. npm Registry confirms that `dsh-grok-provider@1.0.3` is installable and `latest=1.0.3`; the Registry, GitHub Release, and frozen artifact are byte-identical.
+This README is included in the `1.0.4` npm tarball, and the exact installation command below is pinned to `1.0.4`. The previous version with completed supply-chain readback is `1.0.3`.
 
 ## What it provides
 
@@ -19,7 +19,7 @@ This README is included in the `1.0.3` npm tarball, and the exact installation c
 | Models | Discovers every model visible to the account at runtime; no static model allowlist |
 | Conversations | Streaming Responses text, reasoning, encrypted reasoning replay, usage, and finish reasons |
 | Images | Only exact `grok-4.6` accepts bounded JPEG/PNG images from Harness attachments; `grok-4.5` and all other models remain text-only |
-| Search | Exact `grok-4.6` provides default-off Web/X Search; `1.0.3` adds pre-stream authentication recovery and safe partial-output preservation without replaying a started stream |
+| Search | Exact `grok-4.6` provides default-off Web/X Search; `1.0.4` moves settings registration onto Harness `0.1.2-rc.1` `installSection` without changing the Search protocol |
 | Tools | Returns function calls to the Harness permission layer; the provider never executes tools, and local `web_search` / `x_search` remain when the corresponding Search setting is off |
 | Account dashboard | Login status, weekly/monthly quota, reset time, dynamic model capabilities and reasoning efforts |
 | Surfaces | Bilingual Web settings and a closed `/grok` TUI command set |
@@ -28,7 +28,7 @@ This README is included in the `1.0.3` npm tarball, and the exact installation c
 
 ### 1. Prerequisites
 
-- DeepSeek Harness `0.1.1-rc.2`
+- DeepSeek Harness `0.1.2-rc.1`
 - Node.js `24.19.0` or newer
 - macOS arm64 or Windows x64
 - Official Grok Build CLI with `login --oauth` support and the default Grok home
@@ -47,7 +47,7 @@ When the network is reachable and OIDC discovery succeeds, the official CLI open
 Install the exact version:
 
 ```sh
-dsh plugin --profile web add dsh-grok-provider@1.0.3
+dsh plugin --profile web add dsh-grok-provider@1.0.4
 dsh web
 ```
 
@@ -74,7 +74,7 @@ The Web settings page shows:
 
 When protobuf-backed billing includes a complete weekly/monthly period but omits a zero-valued percentage, the page restores “0% used / 100% remaining.” Other incomplete responses remain unknown.
 
-Harness `0.1.1-rc.2` does not expose an icon field on `settings.section`. The Provider embeds the MIT-licensed `IconThinkOutline16` path geometry from `@deepseek-ai/dsh-client-ui-primitives@0.1.0-rc.7` and displays it only when the `Grok Build` label and settings-dialog DOM structure produce one exact match; otherwise it safely keeps the Host gear. The compatibility observer, marker, and style are all removed when the plugin unloads.
+Harness `0.1.2-rc.1` does not expose an icon field on `settings.section`. The Provider embeds the MIT-licensed `IconThinkOutline16` path geometry from `@deepseek-ai/dsh-client-ui-primitives@0.1.0-rc.7` and displays it only when the `Grok Build` label and settings-dialog DOM structure produce one exact match; otherwise it safely keeps the Host gear. The compatibility observer, marker, and style are all removed when the plugin unloads.
 
 ## Plugin preview
 
@@ -145,6 +145,13 @@ Directory inclusion is not an endorsement by xAI or DeepSeek Harness. [Listing P
 
 ## Compatibility and scope
 
+### `1.0.4` repair boundary
+
+- The Host no longer named-imports `installSettingsSection` or `settingsNamespace` from `@deepseek-ai/dsh-settings`; it registers the legal string constant `llm-grok` through the settings service `installSection` API.
+- Composition config remains the fallback when the settings service is missing or reloaded. Enable, disable, and failed-enable rollback still keep receipts, generations, and account state.
+- Required peers now match Harness `0.1.2-rc.1` (`dsh-settings` / `dsh-llm`, Cordis `4.0.2`, Schemastery `3.18.2`). The Web client inject list uses `@deepseek-ai/dsh-client-ui-renderer` in place of the removed `dsh-client-runtime`.
+- Authentication recovery, partial-output preservation, Search protocol, images, fixed endpoints, and the Windows browser-login boundary are unchanged. See [`docs/releases/v1.0.4.md`](docs/releases/v1.0.4.md).
+
 ### `1.0.3` repair boundary
 
 - Only a 401/403 received before 200/SSE begins can trigger one bounded shared-session refresh through the official Grok CLI, credential reload, and at most one retry. A persistent rejection remains `AUTH`; no API-key mode is added.
@@ -177,11 +184,11 @@ Directory inclusion is not an endorsement by xAI or DeepSeek Harness. [Listing P
 - Two-layer redacted real-account verification passed against the final source: raw Web/X probes each completed one 64-event response, observed the requested Search kind, and reached `completed`; the production adapter completed 5 Responses calls, with direct Web/X both ending in `stop` and a Harness-shaped local `x_search` call/result continuation ending `tool-calls`, `tool-calls`, then `stop`, with one local call in each of the first two turns. That continuation did not place a Harness `x_search` function definition beside an xAI `{ type: "x_search" }` server descriptor in the same wire request; `1.0.1` later isolated that combination as an HTTP 400 conflict. No results, URLs, prompts, identity, or credentials were retained; this is not publication, OAuth, or real-device Windows evidence.
 - The manifest and lockfile are synchronized at `1.0.0`; the Node 24 suite reports 245 tests, 243 pass, 0 fail, and 2 platform skips. Production audit reports zero vulnerabilities, and the deterministic build/bundle comparison, 72-entry dry-run pack, secret scan, and diff check pass. Code PR #28, main CI run [`33308371009`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33308371009), the final release commit, dual-platform final CI, unique artifact, exact authorization, and Registry/signature/attestation/provenance readback are complete.
 
-| Item | Published `1.0.3` compatibility boundary |
+| Item | `1.0.4` compatibility boundary |
 | --- | --- |
-| DeepSeek Harness | Exact support for `0.1.1-rc.2` |
+| DeepSeek Harness | Exact support for `0.1.2-rc.1` |
 | Node.js | `>=24.19.0` |
-| macOS arm64 | Image sending has real-Harness confirmation; `1.0.3` adds pre-stream authentication recovery and safe partial-output preservation |
+| macOS arm64 | Image sending has real-Harness confirmation; `1.0.4` repairs `0.1.2-rc.1` settings registration |
 | Windows x64 | The code path and existing slow fakes are unchanged. On a reachable network the official CLI generates the URL and opens the browser, and that path still lacks real-device Windows acceptance |
 | macOS x64 / Linux | Unsupported |
 | Grok CLI | No full-version lock; official path, `login --oauth` capability, and production OIDC credential contract are enforced |

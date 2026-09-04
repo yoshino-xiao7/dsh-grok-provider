@@ -15,7 +15,7 @@
 
 ## 2. P0 用户目标
 
-- 在 Harness `0.1.1-rc.2` 中安装精确 npm 版本后出现 Grok Provider，并动态列出当前账号通过 Grok Build 可用的全部模型。
+- 在 Harness `0.1.2-rc.1` 中安装精确 npm 版本后出现 Grok Provider，并动态列出当前账号通过 Grok Build 可用的全部模型。
 - macOS 和 Windows 用户使用相同的插件包，不需要平台专属脚本。
 - 用户可从 Harness 发起官方 CLI 浏览器登录；插件能识别登录中、成功、取消、失败、凭据过期和未登录状态。
 - Web 设置页能区分官方 CLI 缺失、无效、检测不可用、OIDC discovery 网络超时与真人授权超时，并显示 Provider/已验证 CLI 版本；这些诊断不得暴露路径、stderr、代理配置或 OAuth URL。
@@ -158,6 +158,7 @@ Web 的“退出”或 TUI `/grok logout` 先中止本插件所有在途 Grok �
 - `1.0.1` 已发布：消除已启用 server Search 与 Harness 同名 function definition 的冲突，并保留真实 transport error 分类；不删除历史 calls/results，不改变本地工具权限边界。
 - `1.0.2` 已发布：隐藏完整闭合但始终严格空的 reasoning 可见投影，同时保留协议校验、output-index 顺序与 replay 边界。
 - `1.0.3` 已发布：流前 401/403 由官方 CLI single-flight 刷新共享会话并最多重试一次；流开始后不重放，无工具副作用的有界部分输出可在 transport interruption、干净过早 EOF 或连续两分钟无 wire bytes 时保留并提示“继续”。
+- `1.0.4` 修复：Host settings 注册改用 `ctx.settings.installSection`，peer 对齐 Harness `0.1.2-rc.1`，使 Runtime 能到达 ready。
 - 再后续独立切片：默认关闭的图片生成（内联结果 → Harness attachment）。
 
 `prompt_cache_key` 不与图片输入捆绑；若以后排期，需独立分析会话标识隐私和 POST 不自动重放边界。任意 URL 下载、API Key、企业 OIDC、ACP、Headless 和 Linux 仍不在路线内。公开协议可驱动隔离原型，但每个切片在声明能力、合并发布基线前必须有独立 ADR 与固定 CLI Chat Proxy spike；`0.1.4` 的 `grok-4.6` user/tool-result 红蓝语义门禁已于 2026-08-28 通过，`grok-4.5` 因语义不可靠失败关闭，最终 Harness attachment 复验见[上游证据页](./12-upstream-image-input-evidence.md)。
