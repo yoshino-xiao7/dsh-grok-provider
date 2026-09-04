@@ -228,7 +228,10 @@ English summary: every release must close documentation, security, tests, determ
 - [x] 新增 Host import 回归：真实 `@deepseek-ai/dsh-settings@0.1.2-rc.1` 不再导出已删除 helper，且 `llm-grok` 仍可注册/卸载。
 - [x] 发行契约扫描全部 `dist/**`，禁止打包产物再引用已删除 helper。
 - [x] 精确 Node `24.19.0` 全量测试、生产依赖审计与 `pack:check`。
-- [ ] 代码 PR 合并、双平台 CI、唯一制品冻结、所有者授权与 Trusted Publisher 回读。
+- [x] 代码 PR #41 合并为 `61c80fff0841e44c16dabb2cc803a80c1bdf5456`；main CI run [`33870741679`](https://github.com/yoshino-xiao7/dsh-grok-provider/actions/runs/33870741679) 的 macOS 14 / Windows 2022 均通过。
+- [ ] 发布证据 PR、最终 release commit 与唯一 tarball 尚未冻结；冻结前不得给出制品摘要或触发发布。
+- [ ] 仓库所有者需在最终提交、文件数、字节数和摘要明确后授权唯一 `dsh-grok-provider@1.0.4` 制品。
+- [ ] Annotated tag、唯一 GitHub Release asset、Trusted Publisher、Registry 字节、签名、attestations、隔离安装与 provenance 尚待完成。
 
 ## `1.0.0` Search 响应协议修复发布门禁
 

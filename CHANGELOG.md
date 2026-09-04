@@ -6,6 +6,7 @@
 - Keep composition-config fallback when the settings service is missing or reloaded. Enable, disable, and failed-enable rollback still preserve receipts, generations, and account state.
 - Raise required Harness peers to the `0.1.2-rc.1` boundary (`dsh-settings`, `dsh-llm`, `dsh-commands`, `dsh-subprocess`, matching client packages, Cordis `4.0.2`, Schemastery `3.18.2`) and replace the removed Web inject `@deepseek-ai/dsh-client-runtime` with `@deepseek-ai/dsh-client-ui-renderer`. Pass Harness `offloadedImageText` as the required image-offload placeholder.
 - Add a Host import regression against the published `dsh-settings@0.1.2-rc.1` module graph and scan every `dist/**` file so packed artifacts cannot reintroduce the deleted helpers. Authentication recovery, Search protocol, images, fixed endpoints, and the Windows browser-login boundary are unchanged.
+- Code PR #41 merged as `61c80fff0841e44c16dabb2cc803a80c1bdf5456`; main CI run `33870741679` passed on macOS 14 and Windows 2022. Artifact digests and publication evidence remain pending until the release-evidence commit is merged and one tarball is frozen from that exact commit.
 
 ## 1.0.3 - 2026-08-31
 
