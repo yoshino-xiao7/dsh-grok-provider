@@ -30,7 +30,37 @@ export function mapLlmError(error, signal) {
     })
   }
   if (error instanceof GrokTransportError) {
-    return new LlmError("The Grok Build request failed", error.status === 429 ? "RATE_LIMIT" : "PROVIDER_ERROR", {
+    if (error.status === 429) {
+      return new LlmError("The Grok Build request failed", "RATE_LIMIT", {
+        cause: error,
+        status: error.status,
+      })
+    }
+    // Pre-stream deadline abort: nothing was emitted, the host retry policy may
+    // replay the whole request safely.
+    if (error.timedOut === true && error.preStream === true) {
+      return new LlmError(
+        "The Grok Build request timed out before the Grok Build service responded",
+        "TIMEOUT",
+        { cause: error },
+      )
+    }
+    // Pre-stream connection failure (proxy route down, TLS reset, refused dial).
+    if (error.preStream === true) {
+      return new LlmError(
+        "The Grok Build request could not reach the Grok Build service",
+        "TRANSPORT",
+        { cause: error },
+      )
+    }
+    // Pre-stream 5xx from the fixed proxy (upstream gateway error).
+    if (typeof error.status === "number" && error.status >= 500) {
+      return new LlmError("The Grok Build request failed", "SERVER", {
+        cause: error,
+        status: error.status,
+      })
+    }
+    return new LlmError("The Grok Build request failed", "PROVIDER_ERROR", {
       cause: error,
       ...(error.status === undefined ? {} : { status: error.status }),
     })

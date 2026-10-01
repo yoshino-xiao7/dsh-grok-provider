@@ -789,6 +789,62 @@ test("Responses source failures retain the established LLM error mapping", async
   }
 })
 
+test("pre-stream transport failures map to retryable LLM codes while post-stream stays non-replayable", async () => {
+  const timeoutError = new GrokTransportError(undefined, {
+    phase: "responses",
+    timedOut: true,
+    preStream: true,
+  })
+  const networkError = new GrokTransportError(undefined, {
+    phase: "responses",
+    preStream: true,
+  })
+  const cases = [
+    [timeoutError, "TIMEOUT", undefined],
+    [networkError, "TRANSPORT", undefined],
+    [new GrokTransportError(500), "SERVER", 500],
+    [new GrokTransportError(502), "SERVER", 502],
+    [new GrokTransportError(503), "SERVER", 503],
+    // A deadline abort after bytes started must NOT be replayable: the safe
+    // partial-output preservation path owns that failure instead.
+    [new GrokTransportError(undefined, { phase: "responses", timedOut: true }), "PROVIDER_ERROR", undefined],
+    // Mid-stream socket failures keep the established non-retryable mapping.
+    [new GrokTransportError(), "PROVIDER_ERROR", undefined],
+  ]
+
+  for (const [sourceError, expectedCode, expectedStatus] of cases) {
+    const adapter = createGrokAdapter({
+      getGeneration: () => ({
+        id: 1,
+        transport: {
+          async listModels() { return catalog },
+          async *streamResponses() { throw sourceError },
+        },
+      }),
+      mapError: mapLlmError,
+    })
+    const prepared = await adapter.prepareCall("grok", "grok-4.6")
+
+    await assert.rejects(async () => {
+      for await (const _chunk of prepared.stream({
+        provider: "grok",
+        model: "grok-4.6",
+        messages: [{
+          id: `transport-${expectedCode.toLowerCase()}`,
+          role: "user",
+          source: { kind: "user" },
+          content: [{ type: "text", text: "Hello" }],
+        }],
+      })) {}
+    }, (error) => {
+      assert.equal(error?.code, expectedCode)
+      assert.equal(error?.failure?.status, expectedStatus)
+      assert.equal(error?.cause, sourceError)
+      return true
+    })
+  }
+})
+
 test("a transport disconnect after safe partial output preserves content without replaying", async () => {
   let requests = 0
   const adapter = createGrokAdapter({

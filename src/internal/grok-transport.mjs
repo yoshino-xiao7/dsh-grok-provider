@@ -7,10 +7,23 @@ const DEFAULT_RESPONSE_TIMEOUT_MS = 2 * 60 * 1000
 const MAX_TIMER_DELAY_MS = 2_147_483_647
 
 export class GrokTransportError extends Error {
-  constructor(status) {
+  /**
+   * @param {number | undefined} status - HTTP status when a response was received.
+   * @param {{ phase?: string, timedOut?: boolean, preStream?: boolean } | undefined} details
+   *   `phase` names the failing call (models / billing / responses);
+   *   `timedOut` marks an internal deadline abort;
+   *   `preStream` marks a failure before any response byte (retryable without
+   *   replaying partial output).
+   */
+  constructor(status, details = undefined) {
     super("The Grok Build transport request failed")
     this.name = "GrokTransportError"
     if (status !== undefined) this.status = status
+    if (details !== undefined) {
+      if (typeof details.phase === "string") this.phase = details.phase
+      if (details.timedOut === true) this.timedOut = true
+      if (details.preStream === true) this.preStream = true
+    }
   }
 }
 
@@ -60,7 +73,7 @@ export function createGrokTransport({
           } catch (error) {
             if (error instanceof GrokTransportError) throw error
             if (signal?.aborted && error?.name === "AbortError") throw error
-            throw new GrokTransportError()
+            throw classifyDeadlineFailure(deadline, "billing", true)
           } finally {
             response = undefined
             metadata = undefined
@@ -95,7 +108,7 @@ export function createGrokTransport({
           } catch (error) {
             if (error instanceof GrokTransportError) throw error
             if (signal?.aborted && error?.name === "AbortError") throw error
-            throw new GrokTransportError()
+            throw classifyDeadlineFailure(deadline, "models", true)
           } finally {
             response = undefined
             accessToken = undefined
@@ -122,6 +135,7 @@ export function createGrokTransport({
 
       let response
       let source
+      let receivedBytes = false
       const deadline = createDeadline(signal, responseTimeoutMs)
       try {
         response = await withAuthRecovery(credentialSource, async (accessToken) => {
@@ -145,13 +159,14 @@ export function createGrokTransport({
         source = response.body
         for await (const chunk of source) {
           if (!(chunk instanceof Uint8Array)) throw new GrokTransportError(response.status)
+          receivedBytes = true
           deadline.reset()
           yield chunk
         }
       } catch (error) {
         if (error instanceof GrokTransportError) throw error
         if (signal?.aborted && error?.name === "AbortError") throw error
-        throw new GrokTransportError()
+        throw classifyDeadlineFailure(deadline, "responses", !receivedBytes)
       } finally {
         deadline.dispose()
         source = undefined
@@ -160,6 +175,18 @@ export function createGrokTransport({
       }
     },
   })
+}
+
+/**
+ * Classify a non-HTTP transport failure: an internal deadline abort becomes
+ * `timedOut`, and `preStream` carries whether any response byte had arrived.
+ * Both flags let the error mapper separate retryable pre-stream failures from
+ * mid-stream stalls that must preserve partial output without replay.
+ */
+function classifyDeadlineFailure(deadline, phase, preStream) {
+  const timedOut =
+    deadline.signal.aborted === true && deadline.signal.reason?.name === "TimeoutError"
+  return new GrokTransportError(undefined, { phase, timedOut, preStream })
 }
 
 async function withAuthRecovery(credentialSource, operation) {

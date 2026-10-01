@@ -369,6 +369,68 @@ test("billing fails closed before fetch when the official credential has no safe
   assert.equal(fetchCalled, false)
 })
 
+test("Responses streaming classifies a pre-stream connection failure as a retryable transport error", async () => {
+  const transport = createGrokTransport({
+    credentialSource: { async withAccessToken(operation) { return operation("fixture-access-token") } },
+    fetch: async () => {
+      throw new Error("connect ECONNRESET")
+    },
+    attributionHeaders: () => ({ "user-agent": "fixture-harness" }),
+    clientIdentifier: "dsh-grok-provider",
+    clientVersion: "1.0.5",
+  })
+
+  const error = await rejectFromStream(transport, {
+    model: "grok-4.6",
+    input: "OK",
+    stream: true,
+    store: false,
+  })
+  assert.equal(error.name, "GrokTransportError")
+  assert.equal(error.preStream, true)
+  assert.equal(error.timedOut, undefined)
+  assert.equal(error.phase, "responses")
+})
+
+test("Responses streaming keeps a mid-stream socket failure outside the pre-stream classification", async () => {
+  const encoder = new TextEncoder()
+  const transport = createGrokTransport({
+    credentialSource: { async withAccessToken(operation) { return operation("fixture-access-token") } },
+    fetch: async () => ({
+      status: 200,
+      headers: new Headers({ "content-type": "text/event-stream" }),
+      body: (async function* () {
+        yield encoder.encode("data: first\n\n")
+        throw new Error("socket reset mid-stream")
+      })(),
+    }),
+    attributionHeaders: () => ({ "user-agent": "fixture-harness" }),
+    clientIdentifier: "dsh-grok-provider",
+    clientVersion: "1.0.5",
+  })
+
+  const error = await rejectFromStream(transport, {
+    model: "grok-4.6",
+    input: "OK",
+    stream: true,
+    store: false,
+  })
+  assert.equal(error.name, "GrokTransportError")
+  assert.equal(error.preStream, undefined)
+  assert.equal(error.timedOut, undefined)
+})
+
+async function rejectFromStream(transport, request) {
+  let error
+  try {
+    for await (const _chunk of transport.streamResponses(request)) {}
+  } catch (caught) {
+    error = caught
+  }
+  if (error === undefined) throw new Error("expected the stream to reject")
+  return error
+}
+
 test("model discovery owns a deadline and classifies an internal timeout as transport failure", async () => {
   const transport = createGrokTransport({
     credentialSource: { async withAccessToken(operation) { return operation("fixture-access-token") } },
